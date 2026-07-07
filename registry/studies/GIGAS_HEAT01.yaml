@@ -1,0 +1,76 @@
+# SIMULATED DEMO STUDY — synthetic data, not a real publication.
+study_id: GIGAS_HEAT01
+simulated: true
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "[SIMULATED] Demo RNA-seq dataset representing an acute/chronic heat-challenge experiment in adult C. gigas gill tissue. Constructed for AREE demonstration purposes; does not correspond to a real accession."
+species: "Crassostrea gigas"
+strain_or_population: "Pacific coast hatchery line (simulated)"
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: "cgigas_annotation_v1_demo"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000 (simulated)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Synthetic FASTQ/count data generated for demo purposes; standardized RNA-seq workflow output supplied directly as demo results."
+
+qc_status: "passed"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "acute_heat_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Acute heat shock, 34C for 2h, versus 20C ambient seawater"
+    stressor_standardized: "temperature"
+    exposure_intensity: "34C"
+    exposure_duration: "2h"
+    exposure_timing: "acute, single exposure"
+    control_condition: "20C ambient seawater, matched handling"
+    treatment_condition: "34C for 2h then sampled"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "decrease"
+    phenotype_unit: "percent_survival_at_temp"
+    resilience_classification: "resilience"
+    sample_size: 24
+    biological_replicates: 3
+    results_file: "data/demo/rnaseq/GIGAS_HEAT01_acute_heat_vs_control_dge_demo.tsv"
+  - comparison_id: "chronic_heat_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Chronic elevated temperature, 28C for 14 days, versus 20C ambient"
+    stressor_standardized: "temperature"
+    exposure_intensity: "28C"
+    exposure_duration: "14d"
+    exposure_timing: "chronic"
+    control_condition: "20C ambient seawater for 14 days"
+    treatment_condition: "28C ambient seawater for 14 days"
+    phenotype: "growth_under_stress"
+    phenotype_direction: "decrease"
+    phenotype_unit: "shell_length_mm"
+    resilience_classification: "resilience"
+    sample_size: 24
+    biological_replicates: 3
+    results_file: "data/demo/rnaseq/GIGAS_HEAT01_chronic_heat_vs_control_dge_demo.tsv"
+
+quality_flags: []
+limitations: "Simulated dataset; effect sizes and p-values are illustrative, not derived from real sequencing reads."
+
+provenance:
+  registered_by: "aree_demo_curator"
+  date_registered: "2026-07-06"
+  curation_notes: "Constructed to demonstrate raw-reanalysis mode and a two-comparison (acute + chronic) study."
+  source_links: []

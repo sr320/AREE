@@ -1,0 +1,131 @@
+---
+title: "AREE Proteomics Workflow Report"
+subtitle: "`r params$study_id` / `r params$comparison_id`"
+format:
+  html:
+    embed-resources: true
+    toc: true
+params:
+  standardized_table: "standardized.tsv"
+  manifest_json: "manifest.json"
+  study_id: "STUDY_ID"
+  comparison_id: "COMPARISON_ID"
+---
+
+<!--
+STATUS: real Quarto/R Markdown template with executable R chunks (ggplot2
+volcano plot, missingness summary, top-hits table). It has NOT been rendered
+against a real run's outputs in this build -- see
+workflows/proteomics/README.md. It is written to run unmodified against the
+files produced by modules/proteomics/standardize_output.nf and
+modules/proteomics/emit_manifest.nf, whether those came from raw_reanalysis
+or processed_results_harmonization mode.
+-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(jsonlite)
+library(dplyr)
+library(ggplot2)
+
+standardized <- read.delim(params$standardized_table, sep = "\t", stringsAsFactors = FALSE)
+manifest <- fromJSON(params$manifest_json)
+```
+
+## Run summary
+
+- **Study**: `r params$study_id`
+- **Comparison**: `r params$comparison_id`
+- **Mode**: `r manifest$mode`
+- **Workflow version**: `r manifest$workflow_version`
+- **Date generated**: `r manifest$date_generated`
+- **Provenance level**: `r manifest$provenance_level`
+
+```{r warnings-block, results='asis'}
+if (length(manifest$warnings) > 0) {
+  cat("### Warnings\n\n")
+  for (w in manifest$warnings) {
+    cat(sprintf("- %s\n", w))
+  }
+} else {
+  cat("No warnings recorded for this run.\n")
+}
+```
+
+## QC metrics
+
+```{r qc-table}
+qc <- as.data.frame(manifest$qc_metrics)
+knitr::kable(qc)
+```
+
+## Missingness distribution
+
+Per-protein `missingness_percent` from the standardized evidence-ready table.
+Values of `NA` indicate the source study/mode did not report missingness
+(this is left explicit, not imputed as zero, per docs/design.md section 4).
+
+```{r missingness-plot}
+if (all(is.na(standardized$missingness_percent))) {
+  cat("missingness_percent is entirely NA for this comparison -- no plot rendered.\n")
+} else {
+  ggplot(standardized, aes(x = missingness_percent)) +
+    geom_histogram(binwidth = 5, boundary = 0, fill = "#4C72B0", color = "white") +
+    labs(
+      x = "Missingness (%) per protein",
+      y = "Number of proteins",
+      title = "Per-protein missingness"
+    ) +
+    theme_minimal()
+}
+```
+
+## Volcano plot
+
+```{r volcano-plot}
+plot_df <- standardized %>%
+  filter(!is.na(log2FC), !is.na(padj)) %>%
+  mutate(
+    neg_log10_padj = -log10(pmax(padj, 1e-300)),
+    significant = padj < 0.05 & abs(log2FC) >= 1
+  )
+
+if (nrow(plot_df) == 0) {
+  cat("No rows with non-missing log2FC/padj -- no volcano plot rendered.\n")
+} else {
+  ggplot(plot_df, aes(x = log2FC, y = neg_log10_padj, color = significant)) +
+    geom_point(alpha = 0.7) +
+    geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey50") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey50") +
+    scale_color_manual(values = c(`TRUE` = "#C44E52", `FALSE` = "grey60")) +
+    labs(
+      x = "log2 fold change",
+      y = expression(-log[10](adjusted~p)),
+      title = "Differential protein abundance",
+      color = "padj < 0.05 & |log2FC| >= 1"
+    ) +
+    theme_minimal()
+}
+```
+
+## Top differentially abundant proteins
+
+```{r top-hits}
+top_hits <- standardized %>%
+  filter(!is.na(padj)) %>%
+  arrange(padj) %>%
+  head(20)
+
+knitr::kable(top_hits)
+```
+
+## Reproducibility
+
+```{r manifest-dump}
+str(manifest, max.level = 1)
+```
+
+This report was generated from `r params$standardized_table` and
+`r params$manifest_json` by the AREE proteomics workflow scaffold. It is
+intended to accompany, not replace, the standardized TSV as the
+machine-readable artifact consumed by `aree harmonize`.

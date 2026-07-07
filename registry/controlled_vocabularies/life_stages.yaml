@@ -1,0 +1,16 @@
+version: "0.1.0"
+terms:
+  - id: gamete
+    label: Gamete
+  - id: embryo
+    label: Embryo
+  - id: larva
+    label: Larva
+  - id: spat
+    label: Spat (post-settlement juvenile)
+  - id: juvenile
+    label: Juvenile
+  - id: adult
+    label: Adult
+  - id: broodstock
+    label: Broodstock

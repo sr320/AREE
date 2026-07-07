@@ -1,0 +1,59 @@
+# SIMULATED DEMO STUDY — synthetic data, not a real publication.
+study_id: GIGAS_PATH03
+simulated: true
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "[SIMULATED] Demo whole-genome bisulfite sequencing (WGBS) dataset representing a pathogen-challenge experiment in adult C. gigas digestive gland. Constructed for AREE demonstration purposes; does not correspond to a real accession."
+species: "Crassostrea gigas"
+strain_or_population: "Disease-challenge trial line (simulated)"
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: "cgigas_annotation_v1_demo"
+
+assay_type: ["methylation"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, WGBS (simulated)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Synthetic WGBS read data generated for demo purposes."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "OsHV1_challenge_vs_sham"
+    tissue: "digestive_gland"
+    life_stage: "adult"
+    stressor_original: "Injection challenge with OsHV-1-associated inoculum versus sham PBS injection, sampled at 72h"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "1x10^4 viral copies (simulated dose)"
+    exposure_duration: "72h"
+    exposure_timing: "single injection, acute sampling"
+    control_condition: "Sham PBS injection"
+    treatment_condition: "OsHV-1-associated inoculum injection"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_affected"
+    resilience_classification: "disease"
+    sample_size: 20
+    biological_replicates: 4
+    results_file: "data/demo/methylation/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_demo.tsv"
+
+quality_flags: ["single_timepoint"]
+limitations: "Simulated dataset. Single post-challenge timepoint; no survival curve collected, so disease_susceptibility is inferred from tissue pathology score rather than mortality."
+
+provenance:
+  registered_by: "aree_demo_curator"
+  date_registered: "2026-07-06"
+  curation_notes: "Demonstrates the methylation workflow's DMR-to-gene annotation and a multi-omics link to the hsp70 candidate via promoter hypomethylation."
+  source_links: []

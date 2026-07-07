@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use AREE, please cite it as below."
+title: "AREE — Aquaculture Resilience Evidence Engine"
+abstract: >-
+  An open, reproducible research resource that converts fragmented public omics
+  datasets into harmonized, comparable resilience-biomarker evidence for Pacific
+  oyster (Crassostrea gigas) and other aquaculture organisms, via standardized
+  reanalysis, cross-study harmonization, and meta-analysis.
+type: software
+version: "0.1.0"
+license: MIT
+repository-code: "https://github.com/your-org/AREE"
+keywords:
+  - aquaculture
+  - Crassostrea gigas
+  - resilience
+  - biomarker
+  - meta-analysis
+  - reproducibility
+  - bioinformatics
+authors:
+  - name: "AREE contributors"

@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aree"
+version = "0.1.0"
+description = "Aquaculture Resilience Evidence Engine (AREE) — reproducible bioinformatics pipelines for resilience biomarker discovery in Crassostrea gigas and other aquaculture species."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "click>=8.1",
+    "pyyaml>=6.0",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "jsonschema>=4.17",
+    "tabulate>=0.9",
+]
+
+[project.optional-dependencies]
+app = ["streamlit>=1.30"]
+dev = ["pytest>=7.4", "ruff>=0.4"]
+
+[project.scripts]
+aree = "aree.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+packages = [
+    "aree", "common", "intake", "harmonize", "meta_analysis",
+    "prioritize", "reporting", "validation",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,59 @@
+# SIMULATED DEMO STUDY — synthetic data, not a real publication.
+study_id: GIGAS_SAL04
+simulated: true
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "[SIMULATED] Demo proteomics dataset representing a low-salinity exposure in adult C. gigas gill tissue, released as a processed protein abundance table only. Constructed for AREE demonstration purposes; does not correspond to a real accession."
+species: "Crassostrea gigas"
+strain_or_population: "Estuarine population (simulated)"
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: "cgigas_annotation_v1_demo"
+
+assay_type: ["proteomics"]
+analysis_mode: "processed_results_harmonization"
+platform: "LC-MS/MS, DDA (simulated)"
+
+data_availability:
+  raw_data_available: false
+  processed_data_available: true
+  status: "available"
+  access_notes: "Only a processed, normalized protein abundance/differential-abundance table was deposited; raw spectra not available. This is the demo's example of processed-results-only harmonization."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "low_salinity_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Chronic exposure to 15 psu versus 30 psu ambient seawater for 21 days"
+    stressor_standardized: "salinity"
+    exposure_intensity: "15 psu"
+    exposure_duration: "21d"
+    exposure_timing: "chronic"
+    control_condition: "30 psu ambient seawater"
+    treatment_condition: "15 psu seawater"
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "decrease"
+    phenotype_unit: "percent_survival_at_salinity"
+    resilience_classification: "resilience"
+    sample_size: 15
+    biological_replicates: 5
+    results_file: "data/demo/proteomics/GIGAS_SAL04_low_salinity_vs_control_protein_abundance_demo.tsv"
+
+quality_flags: ["processed_only"]
+limitations: "Simulated dataset. Raw QC (spectral quality, missingness prior to imputation) cannot be independently verified because only the processed abundance table is available."
+
+provenance:
+  registered_by: "aree_demo_curator"
+  date_registered: "2026-07-06"
+  curation_notes: "Demonstrates processed_results_harmonization mode and protein-to-gene identifier translation via UniProt accessions."
+  source_links: []

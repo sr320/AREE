@@ -1,0 +1,38 @@
+# AREE environmental/experimental stressor ontology
+# `treatment_original` free text is always preserved separately; these terms
+# are the standardized mapping target only.
+version: "0.1.0"
+terms:
+  - id: temperature
+    label: Temperature
+    definition: Thermal stress, including acute heat/cold shock or chronic elevated/reduced temperature.
+  - id: ocean_acidification
+    label: Ocean acidification / pH
+    definition: Elevated pCO2 or reduced seawater pH.
+  - id: salinity
+    label: Salinity
+    definition: Deviation from optimal salinity, high or low.
+  - id: hypoxia
+    label: Hypoxia
+    definition: Reduced dissolved oxygen availability.
+  - id: pathogen_challenge
+    label: Pathogen challenge
+    definition: Experimental or natural exposure to a bacterial, viral, or parasitic pathogen.
+  - id: harmful_algal_bloom
+    label: Harmful algal bloom exposure
+    definition: Exposure to HAB-associated toxins or bloom-affected water/food.
+  - id: nutritional_limitation
+    label: Nutritional limitation
+    definition: Reduced food quality or quantity.
+  - id: freshwater_exposure
+    label: Freshwater exposure
+    definition: Acute or chronic exposure to reduced-salinity/freshwater conditions.
+  - id: pollutant_exposure
+    label: Pollutant exposure
+    definition: Exposure to a chemical contaminant (metals, hydrocarbons, microplastics, etc.).
+  - id: handling_transport_stress
+    label: Handling or transport stress
+    definition: Physical disturbance from handling, air exposure, or transport.
+  - id: multi_stressor
+    label: Multi-stressor exposure
+    definition: Two or more stressor classes applied concurrently or sequentially in the same treatment arm.

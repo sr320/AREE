@@ -1,0 +1,125 @@
+---
+title: "AREE Methylation Workflow Report"
+subtitle: "`r params$study_id` / `r params$comparison_id`"
+format:
+  html:
+    embed-resources: true
+    toc: true
+    theme: cosmo
+params:
+  study_id: "UNKNOWN_STUDY"
+  comparison_id: "UNKNOWN_COMPARISON"
+  standardized_table: "dmr_standardized.tsv"
+  manifest_json: "manifest.json"
+  mode: "processed_results_harmonization"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(jsonlite)
+```
+
+## Scaffold status
+
+**This report template has not been executed against real data in this
+build.** It is a structurally complete Quarto document designed to render
+against the outputs of `workflows/methylation/main.nf`. When run against the
+shipped demo processed-results table
+(`data/demo/methylation/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_demo.tsv`)
+it would produce real summary tables and plots from that (clearly-labeled
+simulated) data; it has not been rendered as part of this task.
+
+```{r load-data}
+dmr <- read.delim(params$standardized_table, sep = "\t", stringsAsFactors = FALSE)
+manifest <- tryCatch(fromJSON(params$manifest_json), error = function(e) NULL)
+```
+
+## Run identification
+
+- **Study ID:** `r params$study_id`
+- **Comparison ID:** `r params$comparison_id`
+- **Mode:** `r params$mode`
+- **Regions in standardized table:** `r nrow(dmr)`
+
+```{r manifest-summary}
+if (!is.null(manifest)) {
+    cat("Workflow:", manifest$workflow_name, manifest$workflow_version, "\n")
+    cat("Generated:", manifest$date_generated, "\n")
+    if (length(manifest$warnings) > 0) {
+        cat("\nWarnings:\n")
+        for (w in manifest$warnings) cat(" -", w, "\n")
+    }
+} else {
+    cat("No manifest.json found alongside this table; provenance fields unavailable.")
+}
+```
+
+## Hyper vs. hypo methylation
+
+```{r direction-table}
+knitr::kable(table(Direction = dmr$direction), col.names = c("Direction", "N regions"))
+```
+
+```{r direction-plot, fig.width=5, fig.height=4}
+if (nrow(dmr) > 0) {
+    counts <- table(dmr$direction)
+    barplot(
+        counts,
+        col = c(hyper = "#c0392b", hypo = "#2980b9")[names(counts)],
+        main = "DMRs by direction",
+        ylab = "Number of regions"
+    )
+} else {
+    plot.new()
+    title("No regions to plot")
+}
+```
+
+## Genomic context distribution
+
+```{r context-table}
+knitr::kable(table(Context = dmr$annotation_context), col.names = c("Annotation context", "N regions"))
+```
+
+```{r context-plot, fig.width=6, fig.height=4}
+if (nrow(dmr) > 0 && "annotation_context" %in% names(dmr)) {
+    ctx_counts <- sort(table(dmr$annotation_context), decreasing = TRUE)
+    barplot(
+        ctx_counts,
+        las = 2,
+        main = "Regions by genomic context",
+        ylab = "Number of regions"
+    )
+} else {
+    plot.new()
+    title("No annotation context data to plot")
+}
+```
+
+## Intergenic / gene-less regions
+
+Regions with no associated `gene_id` are intentionally retained in the
+standardized table (not dropped) and are harmonized downstream as
+`genomic_region` features with `mapping_confidence = unresolved`
+(see `src/harmonize/methylation.py`).
+
+```{r intergenic-summary}
+n_no_gene <- sum(is.na(dmr$gene_id) | trimws(as.character(dmr$gene_id)) == "")
+cat(n_no_gene, "of", nrow(dmr), "regions have no gene_id (kept as intergenic/unresolved).\n")
+```
+
+## Full standardized region table
+
+```{r full-table}
+knitr::kable(dmr)
+```
+
+## Provenance
+
+```{r manifest-raw}
+if (!is.null(manifest)) {
+    str(manifest, max.level = 1)
+} else {
+    cat("No manifest available.")
+}
+```

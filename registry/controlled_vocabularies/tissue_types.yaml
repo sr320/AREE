@@ -1,0 +1,20 @@
+version: "0.1.0"
+terms:
+  - id: gill
+    label: Gill
+  - id: mantle
+    label: Mantle
+  - id: digestive_gland
+    label: Digestive gland (hepatopancreas)
+  - id: adductor_muscle
+    label: Adductor muscle
+  - id: hemolymph
+    label: Hemolymph
+  - id: gonad
+    label: Gonad
+  - id: whole_larva
+    label: Whole larva
+  - id: whole_animal
+    label: Whole animal (juvenile/spat, pooled)
+  - id: mixed_tissue
+    label: Mixed/pooled tissue

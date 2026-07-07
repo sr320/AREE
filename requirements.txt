@@ -1,0 +1,12 @@
+# Runtime dependencies for AREE. For development, prefer:
+#   pip install -e ".[dev,app]"
+# This file mirrors the core + app dependencies in pyproject.toml for users
+# who want a plain requirements install.
+click>=8.1
+pyyaml>=6.0
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+jsonschema>=4.17
+tabulate>=0.9
+streamlit>=1.30

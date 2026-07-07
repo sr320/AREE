@@ -1,0 +1,59 @@
+# SIMULATED DEMO STUDY — synthetic data, not a real publication.
+study_id: GIGAS_OA02
+simulated: true
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "[SIMULATED] Demo RNA-seq dataset representing a larval ocean-acidification exposure in C. gigas. Constructed for AREE demonstration purposes; does not correspond to a real accession."
+species: "Crassostrea gigas"
+strain_or_population: "Hatchery broodstock cross (simulated)"
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: "cgigas_annotation_v1_demo"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000 (simulated)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Synthetic FASTQ/count data generated for demo purposes."
+
+qc_status: "passed"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "low_pH_vs_control"
+    tissue: "whole_larva"
+    life_stage: "larva"
+    stressor_original: "Larvae reared at pH 7.5 (pCO2 ~1600 uatm) versus ambient pH 8.0 from fertilization to D-hinge stage"
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "pH 7.5"
+    exposure_duration: "48h post-fertilization"
+    exposure_timing: "continuous from fertilization"
+    control_condition: "pH 8.0 ambient seawater"
+    treatment_condition: "pH 7.5 seawater"
+    phenotype: "larval_viability"
+    phenotype_direction: "decrease"
+    phenotype_unit: "percent_normal_D_hinge"
+    resilience_classification: "resilience"
+    sample_size: 18
+    biological_replicates: 3
+    results_file: "data/demo/rnaseq/GIGAS_OA02_low_pH_vs_control_dge_demo.tsv"
+
+quality_flags: []
+limitations: "Simulated dataset. Single timepoint only; no recovery/kinetics data collected."
+
+provenance:
+  registered_by: "aree_demo_curator"
+  date_registered: "2026-07-06"
+  curation_notes: "Deliberately includes an antioxidant-pathway gene (sod1) that is down-regulated here but up-regulated in GIGAS_LARV05 under the same larval_viability phenotype, to demonstrate how AREE surfaces conflicting same-phenotype cross-study evidence in meta-analysis (low direction_consistency) rather than averaging it away silently."
+  source_links: []

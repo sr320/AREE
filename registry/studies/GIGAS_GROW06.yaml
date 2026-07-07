@@ -1,0 +1,59 @@
+# SIMULATED DEMO STUDY — synthetic data, not a real publication.
+study_id: GIGAS_GROW06
+simulated: true
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "[SIMULATED] Demo metabolomics dataset representing juvenile growth performance under hypoxia, released as a processed metabolite feature table only. Constructed for AREE demonstration purposes; does not correspond to a real accession."
+species: "Crassostrea gigas"
+strain_or_population: "Grow-out farm cohort (simulated)"
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: "cgigas_annotation_v1_demo"
+
+assay_type: ["metabolomics"]
+analysis_mode: "processed_results_harmonization"
+platform: "LC-MS untargeted metabolomics (simulated)"
+
+data_availability:
+  raw_data_available: false
+  processed_data_available: true
+  status: "available"
+  access_notes: "Only a processed, annotated metabolite feature table was deposited."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "hypoxia_vs_control"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "Chronic hypoxia, dissolved oxygen 2 mg/L, versus normoxic 6 mg/L for 10 days"
+    stressor_standardized: "hypoxia"
+    exposure_intensity: "2 mg/L DO"
+    exposure_duration: "10d"
+    exposure_timing: "chronic"
+    control_condition: "6 mg/L DO (normoxic)"
+    treatment_condition: "2 mg/L DO (hypoxic)"
+    phenotype: "growth_under_stress"
+    phenotype_direction: "decrease"
+    phenotype_unit: "wet_weight_g"
+    resilience_classification: "resilience"
+    sample_size: 10
+    biological_replicates: 2
+    results_file: "data/demo/metabolomics/GIGAS_GROW06_hypoxia_vs_control_metabolite_features_demo.tsv"
+
+quality_flags: ["processed_only", "low_replication"]
+limitations: "Simulated dataset. Low biological replication (n=2 tanks per group); several metabolite features have only tentative (level 3) annotation confidence."
+
+provenance:
+  registered_by: "aree_demo_curator"
+  date_registered: "2026-07-06"
+  curation_notes: "Demonstrates metabolomics feature-table intake with annotation-confidence tracking and pathway/metabolite-class mapping."
+  source_links: []

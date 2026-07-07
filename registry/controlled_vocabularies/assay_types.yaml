@@ -1,0 +1,16 @@
+version: "0.1.0"
+terms:
+  - id: rnaseq
+    label: RNA-seq
+  - id: methylation
+    label: DNA methylation (WGBS/EM-seq)
+  - id: proteomics
+    label: Proteomics
+  - id: metabolomics
+    label: Metabolomics
+  - id: microarray
+    label: Microarray
+  - id: qpcr
+    label: Targeted qPCR
+  - id: genotyping
+    label: Genotyping / GWAS marker panel

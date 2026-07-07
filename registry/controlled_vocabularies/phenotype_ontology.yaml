@@ -1,0 +1,86 @@
+# AREE phenotype ontology
+# Each term has a `resilience_relevance` class so downstream code never treats
+# "changed under stress" as equivalent to "predicts resilience."
+#
+# resilience_relevance values:
+#   resilience       - direct measure of organismal capacity to survive/perform under adversity
+#   stress_response  - molecular/physiological response to a stressor, not itself an outcome measure
+#   disease          - disease susceptibility/resistance outcome
+#   exposure_only    - describes exposure/treatment, not an outcome phenotype
+version: "0.1.0"
+terms:
+  - id: survival
+    label: Survival
+    definition: Proportion of organisms surviving a defined exposure or challenge period.
+    resilience_relevance: resilience
+    unit_examples: ["percent_survival", "count_alive"]
+  - id: mortality
+    label: Mortality
+    definition: Proportion of organisms dying during or after a defined exposure period.
+    resilience_relevance: resilience
+    unit_examples: ["percent_mortality", "count_dead"]
+  - id: thermal_tolerance
+    label: Thermal tolerance
+    definition: Capacity to maintain function/survival under elevated or fluctuating temperature.
+    resilience_relevance: resilience
+    unit_examples: ["CTmax_C", "percent_survival_at_temp"]
+  - id: growth_under_stress
+    label: Growth under stress
+    definition: Growth rate or biomass accumulation measured during/after stressor exposure.
+    resilience_relevance: resilience
+    unit_examples: ["shell_length_mm", "wet_weight_g", "growth_rate_mm_per_day"]
+  - id: pathogen_load
+    label: Pathogen load
+    definition: Quantified pathogen burden in host tissue.
+    resilience_relevance: disease
+    unit_examples: ["copies_per_ng_DNA", "CFU_per_g_tissue"]
+  - id: disease_susceptibility
+    label: Disease susceptibility
+    definition: Likelihood or severity of disease outcome following pathogen challenge.
+    resilience_relevance: disease
+    unit_examples: ["percent_affected", "disease_index"]
+  - id: disease_resistance
+    label: Disease resistance
+    definition: Capacity to avoid or limit disease outcome following pathogen challenge.
+    resilience_relevance: resilience
+    unit_examples: ["percent_survival_post_challenge"]
+  - id: reproductive_performance
+    label: Reproductive performance
+    definition: Measures of fecundity, spawning success, or gamete quality.
+    resilience_relevance: resilience
+    unit_examples: ["eggs_per_female", "fertilization_rate_percent"]
+  - id: larval_viability
+    label: Larval viability
+    definition: Survival or normal development rate of larvae.
+    resilience_relevance: resilience
+    unit_examples: ["percent_normal_D_hinge", "percent_survival_to_settlement"]
+  - id: metabolic_resilience
+    label: Metabolic resilience
+    definition: Maintenance of metabolic function/energy balance under stress.
+    resilience_relevance: resilience
+    unit_examples: ["oxygen_consumption_rate", "metabolic_scope"]
+  - id: recovery_following_stress
+    label: Recovery following stress
+    definition: Rate or completeness of return to baseline function after stressor removal.
+    resilience_relevance: resilience
+    unit_examples: ["time_to_baseline_hr", "percent_function_recovered"]
+  - id: immune_responsiveness
+    label: Immune responsiveness
+    definition: Magnitude or quality of immune activation in response to challenge.
+    resilience_relevance: stress_response
+    unit_examples: ["hemocyte_count", "phenoloxidase_activity"]
+  - id: acidification_tolerance
+    label: Acidification tolerance
+    definition: Capacity to maintain function/survival under lowered pH / elevated pCO2.
+    resilience_relevance: resilience
+    unit_examples: ["percent_survival_low_pH", "calcification_rate"]
+  - id: salinity_tolerance
+    label: Salinity tolerance
+    definition: Capacity to maintain function/survival under salinity deviation from optimum.
+    resilience_relevance: resilience
+    unit_examples: ["percent_survival_at_salinity", "osmolality_maintained"]
+  - id: hypoxia_tolerance
+    label: Hypoxia tolerance
+    definition: Capacity to maintain function/survival under reduced dissolved oxygen.
+    resilience_relevance: resilience
+    unit_examples: ["critical_oxygen_tension", "percent_survival_hypoxia"]

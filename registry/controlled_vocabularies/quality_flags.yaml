@@ -1,0 +1,18 @@
+version: "0.1.0"
+terms:
+  - id: raw_data_available
+    label: Raw data available and reanalyzed
+  - id: processed_only
+    label: Only processed/summary results available (raw QC unverifiable)
+  - id: low_replication
+    label: Low biological replication (n < 3 per group)
+  - id: unbalanced_design
+    label: Unbalanced group sizes
+  - id: no_multiple_testing_correction
+    label: No multiple-testing correction reported
+  - id: ambiguous_phenotype_definition
+    label: Phenotype definition ambiguous or weakly operationalized
+  - id: single_timepoint
+    label: Single timepoint only (no recovery/kinetics data)
+  - id: identifier_mapping_uncertain
+    label: Feature identifier mapping uncertain

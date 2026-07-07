@@ -1,0 +1,62 @@
+# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
+# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
+# See docs/adding_a_study.md for field-by-field guidance.
+
+study_id: STUDY_ID_HERE
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
+species: "Crassostrea gigas"
+strain_or_population: null
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: null
+
+assay_type: ["rnaseq"]
+analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
+platform: null
+
+data_availability:
+  raw_data_available: false
+  processed_data_available: true
+  status: "available"  # available | restricted | embargoed | unavailable
+  access_notes: null
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+comparisons:
+  - comparison_id: "comp1"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "exact wording from the source paper"
+    stressor_standardized: "temperature"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "describe control arm"
+    treatment_condition: "describe treatment arm"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "decrease"
+    phenotype_unit: null
+    resilience_classification: "resilience"
+    sample_size: 0
+    biological_replicates: 0
+    results_file: null
+
+quality_flags: []
+limitations: null
+
+provenance:
+  registered_by: "your_name_or_handle"
+  date_registered: "YYYY-MM-DD"
+  curation_notes: null
+  source_links: []

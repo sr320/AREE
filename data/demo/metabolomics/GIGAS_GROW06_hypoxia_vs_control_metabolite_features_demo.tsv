@@ -1,0 +1,8 @@
+feature_id	putative_metabolite_name	annotation_confidence_level	metabolite_class	log2FC	pvalue	padj
+M001	ATP	1	nucleotide	-1.20	0.0080	0.0300
+M002	lactate	1	organic_acid	1.80	0.0004	0.0020
+M003	glycine_betaine	2	osmolyte	-0.50	0.1800	0.2500
+M004	succinate	1	organic_acid	1.50	0.0025	0.0100
+M005	unknown_feature_881	3	unknown	0.90	0.0600	0.1000
+M006	alanine	2	amino_acid	0.70	0.0450	0.0800
+M007	glucose	1	carbohydrate	-0.90	0.0210	0.0500

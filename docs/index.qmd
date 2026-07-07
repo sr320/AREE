@@ -1,0 +1,48 @@
+---
+title: "Aquaculture Resilience Evidence Engine (AREE)"
+---
+
+AREE is an open, reproducible research resource that converts fragmented public
+omics datasets into **harmonized, comparable resilience-biomarker evidence** for
+Pacific oyster (*Crassostrea gigas*) and, by design, other shellfish and
+aquaculture organisms.
+
+It is not a static resource list or a generic website. It is a versioned
+evidence-generation system with five connected layers:
+
+1. **Study registry & intake** — machine-readable registration of public
+   datasets with controlled vocabularies for phenotypes and stressors.
+2. **Standardized reanalysis workflows** — Nextflow scaffolds for RNA-seq,
+   methylation, proteomics, and metabolomics (raw-reanalysis or
+   processed-results modes).
+3. **Cross-study harmonization** — a shared evidence schema plus identifier
+   mapping with explicit confidence levels.
+4. **Meta-analysis & candidate prioritization** — random-effects pooling,
+   heterogeneity statistics, and a transparent (non-black-box) candidate score
+   with hard tier gates.
+5. **User-facing outputs** — this documentation site plus a Streamlit interface
+   and downloadable evidence cards.
+
+## Core principles
+
+- **Association, not proof.** AREE surfaces evidence convergence, never confirmed
+  mechanistic causation. A statistically significant hit in one study is never
+  presented as a validated biomarker.
+- **Provenance always.** Every result traces back to a source file, checksum,
+  parameter set, and workflow version.
+- **Missingness is explicit.** Missing metadata is recorded and reportable,
+  never silently dropped or imputed.
+- **Contradictions are surfaced.** Conflicting cross-study findings appear in
+  meta-analysis summaries and evidence cards rather than being averaged away.
+
+## Where to go next
+
+- New here? Read [Why this resource matters](why_it_matters.md) and
+  [Installation](installation.md).
+- Want to add a dataset? See [Adding a study](adding_a_study.md).
+- Curious how it works? See the [Technical architecture](architecture.md) and
+  the [Design document](design.md).
+
+> **Note on demo data.** Every dataset shipped in this build is clearly labeled
+> **simulated**. It exists to demonstrate the full pipeline end-to-end; do not
+> cite any demo result as real biological evidence.

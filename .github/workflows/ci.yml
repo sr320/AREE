@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  python-tests:
+    name: Python tests + demo pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,app]"
+
+      - name: Lint (ruff)
+        run: ruff check src tests
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Validate all demo studies
+        run: |
+          for f in registry/studies/GIGAS_*.yaml; do
+            aree validate-study "$f"
+          done
+
+      - name: Run full demo pipeline end-to-end
+        run: |
+          for f in registry/studies/GIGAS_*.yaml; do
+            aree register-study "$f" --update
+          done
+          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+            aree harmonize --study "$sid"
+          done
+          aree meta-analyze --feature-type gene
+          aree build-evidence-cards
+          test -f reports/evidence/evidence_table.tsv
+          test -d reports/evidence_cards
+
+  schema-validation:
+    name: JSON schema sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Check schemas are valid JSON Schema
+        run: |
+          python -c "import json, jsonschema; [jsonschema.Draft7Validator.check_schema(json.load(open(p))) for p in ['schemas/study.schema.json','schemas/evidence.schema.json']]; print('schemas OK')"
+
+  docs-render:
+    name: Render Quarto docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render docs site
+        run: quarto render docs

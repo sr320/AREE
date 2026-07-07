@@ -1,0 +1,78 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "AREE"
+  description: "Aquaculture Resilience Evidence Engine — reproducible resilience biomarker evidence for Crassostrea gigas and other aquaculture species."
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Why it matters"
+        href: why_it_matters.md
+      - text: "Architecture"
+        href: architecture.md
+      - text: "Design"
+        href: design.md
+    right:
+      - text: "Methods"
+        href: methods.md
+      - text: "Roadmap"
+        href: roadmap.md
+  sidebar:
+    style: docked
+    contents:
+      - section: "Getting started"
+        contents:
+          - text: "Overview"
+            href: index.qmd
+          - text: "Installation"
+            href: installation.md
+          - text: "Why this resource matters"
+            href: why_it_matters.md
+      - section: "Using AREE"
+        contents:
+          - text: "Adding a study"
+            href: adding_a_study.md
+          - text: "Defining a phenotype"
+            href: defining_a_phenotype.md
+          - text: "Resilience vs. exposure-only"
+            href: resilience_vs_exposure.md
+          - text: "Raw vs. processed harmonization"
+            href: raw_vs_processed.md
+          - text: "Identifier mapping"
+            href: identifier_mapping.md
+      - section: "Interpreting results"
+        contents:
+          - text: "Meta-analysis outputs"
+            href: interpreting_meta_analysis.md
+          - text: "Candidate biomarker scores"
+            href: interpreting_candidate_scores.md
+      - section: "Extending AREE"
+        contents:
+          - text: "Adding a new species"
+            href: adding_a_species.md
+          - text: "Handling genome-version changes"
+            href: handling_genome_versions.md
+          - text: "Contributing code and data"
+            href: contributing_code_and_data.md
+      - section: "Reference"
+        contents:
+          - text: "Design document"
+            href: design.md
+          - text: "Technical architecture"
+            href: architecture.md
+          - text: "Governance and provenance"
+            href: governance_and_provenance.md
+          - text: "Roadmap"
+            href: roadmap.md
+          - text: "Methods"
+            href: methods.md
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-copy: true
+    code-overflow: wrap

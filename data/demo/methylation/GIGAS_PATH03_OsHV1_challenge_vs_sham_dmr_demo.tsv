@@ -1,0 +1,9 @@
+region_id	chrom	start	end	gene_id	annotation_context	meth_diff_percent	qvalue	direction
+DMR001	demo_chr1	1204500	1204800	LOC105333935	promoter	-18.0	0.0100	hypo
+DMR002	demo_chr1	2210100	2210400	LOC105332810	promoter	-12.0	0.0300	hypo
+DMR003	demo_chr2	550200	550500	LOC105328990	exon	9.0	0.0400	hyper
+DMR004	demo_chr2	880300	880600	LOC105328500	promoter	-15.0	0.0200	hypo
+DMR005	demo_chr3	120400	120700	LOC105330001	intron	7.0	0.0900	hyper
+DMR006	demo_chr3	340100	340400	LOC105334500	promoter	-10.0	0.0450	hypo
+DMR007	demo_chr4	990000	990300		intergenic	5.0	0.1200	hyper
+DMR008	demo_chr4	1450200	1450500		intergenic	-6.0	0.1500	hypo

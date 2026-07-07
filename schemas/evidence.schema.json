@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aree.example.org/schemas/evidence.schema.json",
+  "title": "AREE Harmonized Evidence Record",
+  "description": "One row of the shared, assay-agnostic evidence table produced by src/aree/harmonize. Column set mirrors this schema; see src/aree/harmonize/schema.py for the canonical Python-side definition.",
+  "type": "object",
+  "required": [
+    "evidence_id", "study_id", "comparison_id",
+    "feature_id_original", "feature_id_standardized", "feature_type",
+    "species", "genome_assembly",
+    "molecular_direction", "effect_size", "effect_size_type",
+    "p_value", "sample_size",
+    "tissue", "life_stage", "stressor", "phenotype", "phenotype_direction",
+    "analysis_method", "mapping_confidence", "quality_flags",
+    "source_file", "workflow_version", "date_generated"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "evidence_id": {"type": "string", "description": "Deterministic hash/ID: study_id + comparison_id + feature_id_original + analysis_method."},
+    "study_id": {"type": "string"},
+    "comparison_id": {"type": "string"},
+    "feature_id_original": {"type": "string", "description": "Identifier exactly as reported in the source result file."},
+    "feature_id_standardized": {"type": ["string", "null"], "description": "Harmonized identifier per docs/identifier_mapping.md hierarchy. Null only if mapping_confidence is unresolved."},
+    "feature_type": {"type": "string", "description": "Feature type ontology term ID."},
+    "orthogroup_id": {"type": ["string", "null"]},
+    "annotation_context": {
+      "type": ["string", "null"],
+      "description": "Genomic annotation context for region-based features, e.g. promoter/exon/intron/intergenic (methylation) or gene/transcript otherwise null.",
+      "enum": ["promoter", "exon", "intron", "intergenic", null]
+    },
+    "species": {"type": "string"},
+    "genome_assembly": {"type": "string"},
+    "annotation_version": {"type": ["string", "null"]},
+    "molecular_direction": {
+      "type": "string",
+      "enum": ["up", "down", "hyper", "hypo", "increased", "decreased", "no_change", "ambiguous"],
+      "description": "Direction of the molecular effect (up/down for expression/abundance, hyper/hypo for methylation)."
+    },
+    "effect_size": {"type": ["number", "null"]},
+    "effect_size_type": {
+      "type": "string",
+      "enum": ["log2FoldChange", "logFC", "methylation_diff_percent", "standardized_mean_difference", "z_score", "other"]
+    },
+    "standard_error": {"type": ["number", "null"]},
+    "ci_lower": {"type": ["number", "null"]},
+    "ci_upper": {"type": ["number", "null"]},
+    "p_value": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "adjusted_p_value": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "sample_size": {"type": "integer", "minimum": 0},
+    "tissue": {"type": "string"},
+    "life_stage": {"type": "string"},
+    "stressor": {"type": "string", "description": "Standardized stressor ontology term ID."},
+    "phenotype": {"type": "string", "description": "Phenotype ontology term ID."},
+    "phenotype_direction": {
+      "type": "string",
+      "enum": ["increase", "decrease", "no_change", "mixed", "not_applicable"]
+    },
+    "analysis_method": {"type": "string", "description": "e.g. DESeq2, limma, methylKit, MSstats."},
+    "mapping_confidence": {
+      "type": "string",
+      "enum": ["exact", "one_to_one_ortholog", "one_to_many_ortholog", "many_to_one_ortholog", "inferred", "unresolved"]
+    },
+    "quality_flags": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "source_file": {"type": "string", "description": "Relative path + sha256 checksum, e.g. 'path#sha256:...'."},
+    "workflow_version": {"type": "string"},
+    "date_generated": {"type": "string", "format": "date"},
+    "generated_by": {"type": "string"}
+  }
+}

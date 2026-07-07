@@ -1,0 +1,16 @@
+version: "0.1.0"
+terms:
+  - id: gene
+    label: Gene
+  - id: transcript
+    label: Transcript
+  - id: protein
+    label: Protein
+  - id: methylation_region
+    label: Methylation region (DMR)
+  - id: methylation_locus
+    label: Methylation locus (single CpG/DML)
+  - id: metabolite_feature
+    label: Metabolite feature
+  - id: genomic_region
+    label: Genomic region (non-methylation, e.g. QTL/locus)

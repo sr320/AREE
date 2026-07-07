@@ -1,0 +1,6 @@
+This is an intentional empty placeholder file used by workflows/proteomics/main.nf
+in processed_results_harmonization mode, where no independently-computed
+missingness_report output exists (see modules/proteomics/standardize_output.nf
+and modules/proteomics/emit_manifest.nf, which check the incoming file's name
+for the literal string "NO_FILE" and treat it as "not supplied" rather than a
+real missingness summary).

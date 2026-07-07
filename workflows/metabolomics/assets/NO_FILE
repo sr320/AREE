@@ -1,0 +1,11 @@
+This is a sentinel placeholder file used by workflows/metabolomics/main.nf
+when an optional input (--metabolomics.metabolite_annotation_map or
+--metabolomics.metabolite_class_map) is not supplied. Nextflow stages this
+file under the literal name "NO_FILE"; the Python scripts in
+modules/metabolomics/annotation_confidence.nf and
+modules/metabolomics/pathway_mapping.nf check for that literal filename and
+skip the optional lookup-table join when they see it, falling back to
+conservative defaults (annotation_confidence_level=4 / metabolite_class=
+"unknown") instead of erroring.
+
+This file is intentionally not real data and is never parsed as a TSV/CSV.

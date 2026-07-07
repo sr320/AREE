@@ -1,0 +1,59 @@
+# SIMULATED DEMO STUDY — synthetic data, not a real publication.
+study_id: GIGAS_LARV05
+simulated: true
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: null
+
+citation: "[SIMULATED] Demo RNA-seq dataset representing a nutritional-limitation challenge in C. gigas larvae, released with legacy gene-symbol-only annotation. Constructed for AREE demonstration purposes; does not correspond to a real accession."
+species: "Crassostrea gigas"
+strain_or_population: "Commercial hatchery cross (simulated)"
+genome_assembly: "cgigas_uk_roslin_v1"
+annotation_version: "legacy_oyster_v9_symbols_only_demo"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 4000 (simulated)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Synthetic count data generated for demo purposes, deliberately annotated with legacy gene symbols only (no stable Gene/Ensembl IDs) to demonstrate imperfect identifier mapping."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "low_ration_vs_ad_libitum"
+    tissue: "whole_larva"
+    life_stage: "larva"
+    stressor_original: "Reduced microalgal ration (20% of ad libitum) versus ad libitum feeding from D-hinge to umbo stage"
+    stressor_standardized: "nutritional_limitation"
+    exposure_intensity: "20% ad libitum ration"
+    exposure_duration: "10d"
+    exposure_timing: "continuous"
+    control_condition: "Ad libitum microalgal ration"
+    treatment_condition: "20% ad libitum microalgal ration"
+    phenotype: "larval_viability"
+    phenotype_direction: "decrease"
+    phenotype_unit: "percent_survival_to_settlement"
+    resilience_classification: "resilience"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: "data/demo/rnaseq/GIGAS_LARV05_low_ration_vs_ad_libitum_dge_demo.tsv"
+
+quality_flags: ["identifier_mapping_uncertain", "low_replication"]
+limitations: "Simulated dataset. Source annotation provides only legacy gene symbols, several of which are ambiguous (one-to-many/many-to-one) or unresolved against the current reference; this is the demo's example of imperfect identifier mapping."
+
+provenance:
+  registered_by: "aree_demo_curator"
+  date_registered: "2026-07-06"
+  curation_notes: "Intentionally uses only gene-symbol identifiers to exercise the inferred/one_to_many/unresolved mapping-confidence paths in src/aree/harmonize."
+  source_links: []

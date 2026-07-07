@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv_verify/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Generated outputs (regenerate via `make demo` / `aree` commands)
+reports/evidence/
+reports/meta_analysis/
+reports/evidence_cards/
+reports/manifests/
+
+# OS
+.DS_Store
+
+# Quarto
+docs/_site/
+docs/.quarto/
+
+# Nextflow runtime artifacts
+.nextflow/
+.nextflow.log*
+workflows/*/work/
+workflows/*/results/
+workflows/*/report.html
+workflows/*/timeline.html
+workflows/*/trace.txt*
+workflows/*/dag.dot

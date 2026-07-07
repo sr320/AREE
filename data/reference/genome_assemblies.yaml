@@ -1,0 +1,11 @@
+# Reference genome/annotation versions referenced by demo studies.
+# IMPORTANT: assembly_id and ncbi_assembly_accession below are PLACEHOLDERS
+# for demo purposes only. Do not treat ncbi_assembly_accession as a verified
+# real accession — when curating a real study, look up and confirm the actual
+# current assembly accession from NCBI/Ensembl yourself rather than reusing
+# this value. See docs/handling_genome_versions.md.
+assemblies:
+  - assembly_id: "cgigas_uk_roslin_v1"
+    species: "Crassostrea gigas"
+    ncbi_assembly_accession: "PLACEHOLDER_CONFIRM_BEFORE_REAL_USE"
+    notes: "Chromosome-level assembly label used as the harmonization target for all demo studies. Demo DMR coordinates (data/demo/methylation/) are illustrative and not derived from real alignment or a verified real assembly accession."

@@ -1,0 +1,18 @@
+# Curated exceptions for gene-symbol-only inputs that do not resolve cleanly
+# via a single exact crosswalk match. Used by src/aree/harmonize/identifiers.py
+# as a fallback after exact ID and exact-symbol lookups fail or are ambiguous.
+# This is illustrative for the demo, not a production ortholog caller.
+version: "0.1.0"
+entries:
+  - source_symbol: "hsp70-like2"
+    standardized_id: "LOC105333935"
+    mapping_confidence: "one_to_many_ortholog"
+    note: "Symbol suggests a paralog of the canonical hsp70 locus; multiple candidate paralogs exist, best-guess target shown."
+  - source_symbol: "cgi-actin"
+    standardized_id: "LOC105341000"
+    mapping_confidence: "many_to_one_ortholog"
+    note: "Multiple actin paralogs in the source annotation collapse onto a single reference actin locus."
+  - source_symbol: "igf-like"
+    standardized_id: "LOC105336010"
+    mapping_confidence: "inferred"
+    note: "Partial/fuzzy symbol match to igf1; not a stable-ID match."

@@ -1,0 +1,28 @@
+# Ordered from strongest to weakest identifier-mapping trust.
+# Order matters: src/aree/harmonize code sorts/filters by this rank.
+version: "0.1.0"
+terms:
+  - id: exact
+    rank: 1
+    label: Exact match
+    definition: Direct match on a stable, unambiguous identifier (e.g. same NCBI Gene ID / Ensembl ID).
+  - id: one_to_one_ortholog
+    rank: 2
+    label: One-to-one ortholog
+    definition: Unambiguous one-to-one orthology relationship between source and reference identifier.
+  - id: one_to_many_ortholog
+    rank: 3
+    label: One-to-many ortholog
+    definition: Source identifier maps to more than one candidate reference identifier.
+  - id: many_to_one_ortholog
+    rank: 4
+    label: Many-to-one ortholog
+    definition: Multiple source identifiers collapse onto a single reference identifier.
+  - id: inferred
+    rank: 5
+    label: Inferred
+    definition: Mapping derived indirectly (e.g. via symbol match or sequence similarity below ortholog-calling thresholds).
+  - id: unresolved
+    rank: 6
+    label: Unresolved
+    definition: No confident mapping found. Retained in the evidence table; excluded from identifier-level pooling.
