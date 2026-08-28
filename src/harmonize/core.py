@@ -136,8 +136,28 @@ def harmonize_study(study_id: str, date_generated: str) -> pd.DataFrame:
     ]
     new_rows = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=EVIDENCE_COLUMNS)
     _upsert_evidence_table(new_rows)
+    _warn_if_analysis_status_stale(study)
     return new_rows
 
+
+
+def _warn_if_analysis_status_stale(study: dict) -> None:
+    """Flag a registered `analysis_status` that harmonization has just outdated.
+
+    `analysis_status` is curator-maintained, so it drifts: HESSER2024_VCOR sat at
+    `not_started` through several harmonization runs. This does not rewrite the
+    curator's YAML — a registration file is theirs to edit — but it makes the
+    staleness visible at the moment it is created.
+    """
+    status = study.get("analysis_status", "not_started")
+    if status in ("not_started", "in_progress"):
+        warnings.warn(
+            f"Study {study['study_id']} is registered with analysis_status="
+            f"{status!r} but has just been harmonized. Update "
+            f"registry/studies/{study['study_id']}.yaml to 'harmonized' and re-run "
+            "`aree register-study --update`.",
+            stacklevel=2,
+        )
 
 def harmonize_processed_table(study_id: str, input_path, date_generated: str) -> pd.DataFrame:
     """CLI entry point for `aree harmonize --study STUDY_ID --input path`.

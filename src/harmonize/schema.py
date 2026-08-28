@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import re
 
-from common import sha256_file
+from common import resolve_species, sha256_file
+
+from .identifiers import active_crosswalk_path, crosswalk_annotation_release
 
 EVIDENCE_COLUMNS = [
     # `simulated` separates fabricated demo evidence from evidence derived from a
@@ -17,7 +19,8 @@ EVIDENCE_COLUMNS = [
     # evidence table must be able to tell them apart without consulting the registry.
     "evidence_id", "study_id", "comparison_id", "simulated",
     "feature_id_original", "feature_id_standardized", "feature_type",
-    "orthogroup_id", "species", "genome_assembly", "annotation_version",
+    "orthogroup_id", "species", "species_taxid", "genome_assembly", "annotation_version",
+    "identifier_annotation_release",
     "annotation_context", "molecular_direction", "effect_size", "effect_size_type",
     "standard_error", "ci_lower", "ci_upper", "p_value", "adjusted_p_value",
     "sample_size", "tissue", "life_stage", "stressor", "phenotype",
@@ -57,3 +60,26 @@ def molecular_direction_from_effect(effect_size: float | None, up_label="up", do
     if effect_size < 0:
         return down_label
     return "no_change"
+
+
+def study_reference_fields(study: dict) -> dict:
+    """Species/assembly/annotation columns shared by every evidence record.
+
+    Centralized so the four assay harmonizers cannot drift apart on how a study's
+    reference context is recorded.
+
+    `species` preserves what the study reported; `species_taxid` is the canonical
+    identity that meta-analysis groups on, so Crassostrea gigas and Magallana
+    gigas do not become two species. `identifier_annotation_release` records the
+    annotation the crosswalk resolved identifiers against, which is often a
+    *different* assembly from `genome_assembly` — NCBI Gene IDs persist across
+    assemblies, but a reader must be able to see that the crossing happened.
+    """
+    species = resolve_species(study.get("species"))
+    return {
+        "species": study["species"],
+        "species_taxid": species.ncbi_taxid if species else None,
+        "genome_assembly": study["genome_assembly"],
+        "annotation_version": study.get("annotation_version"),
+        "identifier_annotation_release": crosswalk_annotation_release(active_crosswalk_path()),
+    }

@@ -20,7 +20,13 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 
 # `simulated` is part of the grouping key so that a pooled estimate can never mix
 # fabricated demo evidence with evidence from a real study.
-GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated"]
+#
+# `species_taxid` is the canonical species identity rather than the reported name:
+# grouping on the free-text name would both split one species across its accepted
+# synonyms (Crassostrea gigas / Magallana gigas) and, once a second species is
+# registered, silently pool across species. Cross-species evidence is only ever
+# meant to combine through orthogroups, which are not yet populated.
+GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid"]
 
 
 def _direction_consistency(effect_sizes: pd.Series) -> float:
@@ -48,7 +54,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
 
     results = []
     for keys, group in df.groupby(GROUP_KEYS, dropna=False):
-        feature_id, pheno, ftype, simulated = keys
+        feature_id, pheno, ftype, simulated, species_taxid = keys
         ses = [
             effective_standard_error(row.effect_size, row.standard_error, row.p_value)
             for row in group.itertuples()
@@ -65,6 +71,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "phenotype": pheno,
             "feature_type": ftype,
             "simulated": simulated,
+            "species_taxid": species_taxid,
             "k_studies": group["study_id"].nunique(),
             "studies": "|".join(sorted(group["study_id"].unique())),
             "n_evidence_records": len(group),

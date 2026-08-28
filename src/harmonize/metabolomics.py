@@ -17,6 +17,7 @@ from .schema import (
     make_evidence_id,
     molecular_direction_from_effect,
     source_file_ref,
+    study_reference_fields,
 )
 
 LEVEL_TO_CONFIDENCE = {1: "exact", 2: "inferred", 3: "unresolved", 4: "unresolved"}
@@ -33,6 +34,7 @@ def harmonize_metabolomics(
     analysis_method: str = "untargeted_LCMS",
 ) -> pd.DataFrame:
     df = pd.read_csv(results_path, sep="\t")
+    reference_fields = study_reference_fields(study)
     source_ref = source_file_ref(results_path)
     rows = []
 
@@ -58,9 +60,7 @@ def harmonize_metabolomics(
             "feature_id_standardized": standardized,
             "feature_type": "metabolite_feature",
             "orthogroup_id": None,
-            "species": study["species"],
-            "genome_assembly": study["genome_assembly"],
-            "annotation_version": study.get("annotation_version"),
+            **reference_fields,
             "annotation_context": None,
             "molecular_direction": direction,
             "effect_size": effect_size,

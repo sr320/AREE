@@ -10,7 +10,13 @@ from __future__ import annotations
 import pandas as pd
 
 from .identifiers import ResolvedIdentifier, resolve_identifier
-from .schema import EVIDENCE_COLUMNS, compute_quality_flags, make_evidence_id, source_file_ref
+from .schema import (
+    EVIDENCE_COLUMNS,
+    compute_quality_flags,
+    make_evidence_id,
+    source_file_ref,
+    study_reference_fields,
+)
 
 DIRECTION_MAP = {"hyper": "hyper", "hypo": "hypo"}
 
@@ -26,6 +32,7 @@ def harmonize_methylation(
     analysis_method: str = "methylKit",
 ) -> pd.DataFrame:
     df = pd.read_csv(results_path, sep="\t")
+    reference_fields = study_reference_fields(study)
     source_ref = source_file_ref(results_path)
     rows = []
 
@@ -52,9 +59,7 @@ def harmonize_methylation(
             "feature_id_standardized": resolved.feature_id_standardized,
             "feature_type": feature_type,
             "orthogroup_id": resolved.orthogroup_id,
-            "species": study["species"],
-            "genome_assembly": study["genome_assembly"],
-            "annotation_version": study.get("annotation_version"),
+            **reference_fields,
             "annotation_context": r.get("annotation_context"),
             "molecular_direction": DIRECTION_MAP.get(r.get("direction"), "ambiguous"),
             "effect_size": meth_diff,

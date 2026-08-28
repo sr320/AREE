@@ -60,10 +60,15 @@ its demo data. A dataset contribution PR typically includes:
   this is a scientific judgment call, not just a schema check
 - `stressor_original` preserves the source study's actual wording rather than
   being pre-collapsed into the standardized term
-- `genome_assembly` / `annotation_version` are recorded and, if new, added to
-  `data/reference/genome_assemblies.yaml` with a real, verified accession
-  (see [handling_genome_versions.md](handling_genome_versions.md) — do not
-  reuse the demo placeholder value)
+- `genome_assembly` resolves to an entry in
+  `data/reference/genome_assemblies.yaml`; if the assembly is new, add it there
+  with an accession you verified yourself against NCBI, not one copied from
+  another entry (see [handling_genome_versions.md](handling_genome_versions.md)).
+  `aree validate-study` fails until you do
+- `species` resolves to a term in
+  `registry/controlled_vocabularies/species.yaml`. If validation warns that you
+  used an accepted synonym, that is fine — the reported name is preserved — but
+  check the term lists the synonym you used
 - Provenance fields (`provenance.registered_by`, `provenance.date_registered`)
   are filled in
 

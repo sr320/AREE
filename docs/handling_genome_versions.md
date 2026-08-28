@@ -43,34 +43,72 @@ every record means:
 
 ## `data/reference/genome_assemblies.yaml`
 
-This file documents assembly metadata referenced by studies:
+This file is the registry of assemblies AREE knows about, and it is
+**load-bearing**: `aree validate-study` rejects a `genome_assembly` value that
+does not resolve to an entry here, so a typo or an undocumented assembly is
+caught at registration rather than surfacing later as evidence that cannot be
+compared. It also cross-checks the assembly's taxid against the study's species.
 
-```yaml
-assemblies:
-  - assembly_id: "cgigas_uk_roslin_v1"
-    species: "Crassostrea gigas"
-    ncbi_assembly_accession: "PLACEHOLDER_CONFIRM_BEFORE_REAL_USE"
-    notes: "Chromosome-level assembly label used as the harmonization target for all demo studies. Demo DMR coordinates (data/demo/methylation/) are illustrative and not derived from real alignment or a verified real assembly accession."
-```
+Every accession in the file was verified against the NCBI Datasets API on the
+date recorded in its `verified_against` header. Two assemblies are registered
+for the Pacific oyster:
 
-**This is explicitly a placeholder, not a verified real accession.** The
-file's own header comment states: "`assembly_id` and `ncbi_assembly_accession`
-below are PLACEHOLDERS for demo purposes only. Do not treat
-`ncbi_assembly_accession` as a verified real accession — when curating a real
-study, look up and confirm the actual current assembly accession from
-NCBI/Ensembl yourself rather than reusing this value." Do not cite this value
-in any real study registration or publication; it exists only so the demo
-has a self-consistent label to point at.
+| assembly_id | accession | role |
+|---|---|---|
+| `xbMagGiga1.1` | `GCF_963853765.1` | current NCBI reference (Sanger); the annotation AREE's crosswalk is built from |
+| `cgigas_uk_roslin_v1` | `GCF_902806645.1` / `GCA_902806645.1` | Roslin assembly; what most pre-2024 studies, including `HESSER2024_VCOR`, were mapped against |
+
+A study may write the `assembly_id`, either accession, or the two together as
+publications often do (`"GCA_902806645.1 (cgigas_uk_roslin_v1)"`) — all resolve
+to the same record.
+
+## The crossing between a study's assembly and AREE's annotation
+
+This is the case the file exists to make visible, and it is the normal case,
+not an edge case.
+
+`HESSER2024_VCOR` was mapped by its authors against the Roslin assembly. AREE
+standardizes its identifiers against the **current NCBI annotation**
+(`xbMagGiga1.1`, release `GCF_963853765.1-RS_2024_06`), because that is what
+the crosswalk is built from. Those are different assemblies from different
+sequencing centres.
+
+That is not an error. NCBI Gene IDs are stable identities that persist across
+assemblies and re-annotations, which is exactly why the identifier hierarchy
+prefers them — see [identifier_mapping.md](identifier_mapping.md). But a reader
+must be able to see that the crossing happened, so every evidence record now
+carries both:
+
+- `genome_assembly` — the assembly the **source study** used;
+- `identifier_annotation_release` — the annotation `feature_id_standardized`
+  actually refers to.
+
+For the real study those read `GCA_902806645.1 (cgigas_uk_roslin_v1)` and
+`GCF_963853765.1 (xbMagGiga1.1), annotation release GCF_963853765.1-RS_2024_06`
+respectively. For demo studies `identifier_annotation_release` is **empty**: the
+demo crosswalk is synthetic and has no annotation provenance to report, and
+inventing one would be worse than leaving it blank.
+
+When the two disagree, treat coordinate-based evidence (methylation regions,
+QTL intervals) with far more caution than gene-level evidence: coordinates do
+not survive an assembly change, whereas Gene IDs largely do. AREE does not yet
+perform liftover — see [roadmap.md](roadmap.md).
 
 ## Adding a real assembly entry
 
 When curating a real (non-demo) study:
 
-1. Look up the actual assembly accession from NCBI or Ensembl yourself (do
-   not copy the demo placeholder).
-2. Add a new entry to `data/reference/genome_assemblies.yaml` with a
-   descriptive `assembly_id`, the confirmed `ncbi_assembly_accession`, and
-   `notes` on annotation provenance.
+1. Look up the actual assembly accession from NCBI or Ensembl yourself. The
+   NCBI Datasets API answers this directly:
+
+   ```bash
+   curl -s "https://api.ncbi.nlm.nih.gov/datasets/v2alpha/genome/accession/GCF_963853765.1/dataset_report"
+   ```
+
+2. Add an entry to `data/reference/genome_assemblies.yaml` with a descriptive
+   `assembly_id`, the confirmed accessions, `ncbi_taxid`, and `notes` on
+   annotation provenance. Registration will fail until you do — that is
+   deliberate.
 3. Use that `assembly_id` value consistently in `genome_assembly` across the
    study record and every comparison's harmonized evidence records.
 4. If the source study used an older annotation than your reference

@@ -8,8 +8,9 @@ data-addition exercise, not a schema change.
 ## What is already species-agnostic
 
 - `schemas/study.schema.json` and `schemas/evidence.schema.json` both carry
-  `species` as a free-text field (e.g. `"Crassostrea gigas"`); nothing in
-  the schema restricts it to oysters.
+  `species`; nothing in the schema restricts it to oysters. The value is
+  validated against `registry/controlled_vocabularies/species.yaml`, so a new
+  species needs a term there — see step 1 below.
 - The phenotype ontology (`registry/controlled_vocabularies/phenotype_ontology.yaml`)
   and stressor ontology (`registry/controlled_vocabularies/stressor_ontology.yaml`)
   are defined in organism-agnostic terms (survival, thermal tolerance,
@@ -20,19 +21,39 @@ data-addition exercise, not a schema change.
   just YAML lists — add species-appropriate terms as needed rather than
   overloading an existing term to mean something different for a new
   species.
-- Meta-analysis and prioritization code (`src/meta_analysis`, `src/prioritize`)
-  group and score by `feature_id_standardized` + `phenotype` + `feature_type`
-  and do not reference species directly, so nothing there needs to change.
+- Meta-analysis groups by `feature_id_standardized` + `phenotype` +
+  `feature_type` + `simulated` + **`species_taxid`**. The species key is what
+  keeps two species from pooling into one estimate the moment a second species
+  is registered, so nothing in `src/meta_analysis` or `src/prioritize` needs to
+  change to onboard one — but understand that same-feature evidence from two
+  species will produce two separate pooled rows, by design. Combining across
+  species is only ever meant to happen through `orthogroup_id`, which is not
+  yet populated (see [roadmap.md](roadmap.md)).
 
 ## What you actually need to add
 
-1. **A `genome_assembly` reference.** Add an entry to
-   `data/reference/genome_assemblies.yaml` for the new species' assembly,
-   following the existing structure (`assembly_id`, `species`,
-   `ncbi_assembly_accession`, `notes`). See
-   [handling_genome_versions.md](handling_genome_versions.md) — verify the
-   real accession yourself; do not copy the current placeholder value.
-2. **A new identifier crosswalk**, most likely
+1. **A species vocabulary term.** Add a term to
+   `registry/controlled_vocabularies/species.yaml` with the accepted
+   `scientific_name`, its `ncbi_taxid`, and any `accepted_synonyms`.
+
+   Take the synonyms seriously. The Pacific oyster is the cautionary example
+   already in the file: it was moved from *Crassostrea* to *Magallana*, both
+   names are in current use, and every study registered in AREE so far says
+   *Crassostrea* while the reference crosswalk is built under *Magallana*.
+   Because both resolve to taxid 29159, they group as one animal. Omit a
+   synonym and you get a species silently split in two — with no error, just
+   two half-powered meta-analyses.
+
+   `aree validate-study` rejects a species that is not in this file, and warns
+   (without failing) when a study uses a synonym rather than the accepted name.
+
+2. **A `genome_assembly` reference.** Add an entry to
+   `data/reference/genome_assemblies.yaml` for the new species' assembly with
+   `assembly_id`, verified accessions, and `ncbi_taxid`. Validation cross-checks
+   that taxid against the species, so a mismatched pair fails at registration.
+   See [handling_genome_versions.md](handling_genome_versions.md) — verify the
+   accession yourself against NCBI.
+3. **A new identifier crosswalk**, most likely
    `data/mappings/<species>_gene_id_crosswalk.tsv`, following the same column
    structure as `data/mappings/gene_id_crosswalk.tsv`
    (`ncbi_gene_id`, `ensembl_gene_id`, `uniprot_accession`, `locus_id`,
@@ -43,12 +64,12 @@ data-addition exercise, not a schema change.
    this is a real, not-yet-implemented extension point, not something you can
    do purely by adding a data file. Track it as implementation work before
    registering a mixed-species batch.
-3. **Species-appropriate tissue/life-stage terms**, if the existing bivalve
+4. **Species-appropriate tissue/life-stage terms**, if the existing bivalve
    vocabulary doesn't fit (e.g. a finfish species will need different tissue
    terms than `gill`/`mantle`/`digestive_gland`). Add new terms to
    `tissue_types.yaml` / `life_stages.yaml` rather than repurposing existing
    ones.
-4. **Orthology context across species**, if you want cross-species candidate
+5. **Orthology context across species**, if you want cross-species candidate
    comparison (e.g. linking a *C. gigas* candidate to an ortholog in a second
    shellfish species). The `orthogroup_id` field exists in the crosswalk and
    evidence schema for exactly this purpose, but the demo crosswalk's
@@ -59,8 +80,8 @@ data-addition exercise, not a schema change.
 ## What you do not need to change
 
 - No schema changes: `schemas/study.schema.json` and
-  `schemas/evidence.schema.json` already carry `species` as a required
-  field.
+  `schemas/evidence.schema.json` already carry `species` as a required field,
+  and `species_taxid` is derived automatically from the vocabulary term.
 - No changes to `phenotype_ontology.yaml` or `stressor_ontology.yaml` unless
   the new species genuinely needs a phenotype/stressor concept not already
   covered — these vocabularies were designed to be organism-agnostic (see
