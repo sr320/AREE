@@ -28,9 +28,11 @@ process RENDER_REPORT {
     #!/usr/bin/env bash
     set -euo pipefail
 
-    cp "${report_template}" report_template.qmd
+    # The template is staged under its own name, so copying it to a fixed
+    # filename is a no-op that `cp` rejects as "identical". Render in place,
+    # as the rnaseq module does.
 
-    quarto render report_template.qmd \\
+    quarto render ${report_template} \\
       --to html \\
       --output "${study_id}_${comparison_id}_proteomics_report.html" \\
       -P standardized_table:"${standardized_table}" \\

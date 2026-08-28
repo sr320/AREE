@@ -17,6 +17,8 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     input:
     val study_id
     val comparison_id
+    val control_level
+    val treatment_level
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
@@ -50,6 +52,8 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         quant_dir      = "quants",
         study_id       = "${study_id}",
         comparison_id  = "${comparison_id}",
+        control_level   = "${control_level}",
+        treatment_level = "${treatment_level}",
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
         out_rdata      = "${study_id}_${comparison_id}_deseq2.RData"
     )
@@ -58,13 +62,61 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     # quant_subdir (name of the per-sample Salmon output directory), and
     # optionally covariates (batch, family_line, etc.).
     samples <- read.delim(args\$sample_sheet, stringsAsFactors = FALSE)
-    samples\$condition <- factor(samples\$condition, levels = c("control", "treatment"))
+
+    # The two condition levels are named by the caller rather than assumed to be
+    # literally "control"/"treatment". A real sample sheet carries the study's
+    # own group labels (e.g. Midori_Control / Midori_France), and a study whose
+    # groups are not named control/treatment must not silently produce an
+    # all-NA factor and a misleading DESeq2 error.
+    if (!"condition" %in% names(samples)) {
+        stop("sample sheet has no 'condition' column: ", args\$sample_sheet)
+    }
+    present <- unique(samples\$condition)
+    for (lvl in c(args\$control_level, args\$treatment_level)) {
+        if (!(lvl %in% present)) {
+            stop(sprintf(
+                "condition level '%s' is not present in the sample sheet. Levels found: %s",
+                lvl, paste(present, collapse = ", ")))
+        }
+    }
+
+    # A sample sheet may describe a whole BioProject; this contrast uses only
+    # the two groups named for it.
+    samples <- samples[samples\$condition %in% c(args\$control_level, args\$treatment_level), ]
+    samples\$condition <- factor(samples\$condition,
+                                levels = c(args\$control_level, args\$treatment_level))
+
+    n_per_group <- table(samples\$condition)
+    if (any(n_per_group < 2)) {
+        stop("each group needs at least 2 replicates; got ",
+             paste(sprintf("%s=%d", names(n_per_group), n_per_group), collapse = ", "))
+    }
+    if (any(n_per_group < 3)) {
+        warning("a group has fewer than 3 replicates; dispersion estimates will be unreliable")
+    }
+
+    # quant_subdir is optional: Salmon output directories are named for the
+    # sample by default, so fall back to sample_id rather than requiring the
+    # curator to duplicate the column.
+    if (!"quant_subdir" %in% names(samples)) {
+        samples\$quant_subdir <- samples\$sample_id
+    }
 
     quant_files <- file.path(args\$quant_dir, samples\$quant_subdir, "quant.sf")
     names(quant_files) <- samples\$sample_id
-    stopifnot(all(file.exists(quant_files)))
+    missing_quant <- quant_files[!file.exists(quant_files)]
+    if (length(missing_quant) > 0) {
+        stop("missing Salmon quant.sf for: ", paste(names(missing_quant), collapse = ", "))
+    }
 
+    # A headerless tx2gene would otherwise lose its first transcript silently.
     tx2gene <- read.delim(args\$tx2gene, header = TRUE, stringsAsFactors = FALSE)
+    if (!all(c("transcript_id", "gene_id") %in% names(tx2gene))) {
+        tx2gene <- read.delim(args\$tx2gene, header = FALSE, stringsAsFactors = FALSE)
+        if (ncol(tx2gene) < 2) stop("tx2gene must have at least 2 columns: ", args\$tx2gene)
+        tx2gene <- tx2gene[, 1:2]
+    }
+    names(tx2gene)[1:2] <- c("transcript_id", "gene_id")
 
     txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
 
@@ -81,7 +133,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
 
     res <- results(
         dds,
-        contrast = c("condition", "treatment", "control"),
+        contrast = c("condition", args\$treatment_level, args\$control_level),
         alpha    = 0.05
     )
 

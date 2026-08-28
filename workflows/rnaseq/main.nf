@@ -35,12 +35,16 @@ include { STANDARDIZE_OUTPUT }                  from '../../modules/rnaseq/stand
 include { EMIT_MANIFEST }                       from '../../modules/rnaseq/emit_manifest.nf'
 include { RENDER_REPORT }                       from '../../modules/rnaseq/render_report.nf'
 
-def VALID_MODES = ['raw_reanalysis', 'processed_results_harmonization']
+// Nextflow's strict DSL2 syntax (25.10+) forbids bare statements at script
+// level, so this is a function declaration rather than a top-level assignment.
+def validModes() {
+    ['raw_reanalysis', 'processed_results_harmonization']
+}
 
 workflow {
 
-    if (!(params.mode in VALID_MODES)) {
-        error "params.mode must be one of ${VALID_MODES}, got: ${params.mode}"
+    if (!(params.mode in validModes())) {
+        error "params.mode must be one of ${validModes()}, got: ${params.mode}"
     }
 
     log.info """
@@ -108,7 +112,14 @@ workflow {
             error "raw_reanalysis mode requires --tx2gene (transcript-to-gene map TSV) for DESeq2 gene-level summarization"
         }
         if (!params.sample_sheet) {
-            error "raw_reanalysis mode requires --sample_sheet (TSV with sample_id, condition, quant_subdir columns)"
+            error "raw_reanalysis mode requires --sample_sheet (TSV with sample_id and condition columns; quant_subdir optional)"
+        }
+        // The two condition levels are named explicitly rather than assumed to
+        // be "control"/"treatment": a real sample sheet carries the study's own
+        // group labels, and a whole-BioProject sheet may describe groups this
+        // contrast does not use.
+        if (!params.control_level || !params.treatment_level) {
+            error "raw_reanalysis mode requires --control_level and --treatment_level naming the two `condition` values to contrast"
         }
 
         quant_dirs_ch = SALMON_QUANT.out.quant_dir.map { sid, d -> d }.collect()
@@ -116,6 +127,8 @@ workflow {
         DIFFERENTIAL_EXPRESSION_DESEQ2(
             study_id,
             comparison_id,
+            params.control_level,
+            params.treatment_level,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)
@@ -171,17 +184,24 @@ workflow {
         EMIT_MANIFEST.out.manifest,
         report_template
     )
+
+    // Neither `params` nor `workflow` resolves inside a closure nested in the
+    // workflow body, so snapshot both into locals the handler can capture.
+    def _params = params
+    def _wf = workflow
+    // Moved inside the entry workflow: strict DSL2 (Nextflow 25.10+) rejects
+    // `workflow.onComplete` as a script-level statement.
+    workflow.onComplete {
+        log.info """
+        AREE RNA-seq workflow finished
+        -------------------------------
+        mode      : ${_params.mode}
+        status    : ${_wf.success ? 'OK' : 'FAILED'}
+        outdir    : ${_params.outdir}
+        duration  : ${_wf.duration}
+        NOTE: this run reflects DSL2 wiring/validation only in this build unless
+        executed against real containers and real inputs outside this environment.
+        """.stripIndent()
+    }
 }
 
-workflow.onComplete {
-    log.info """
-    AREE RNA-seq workflow finished
-    -------------------------------
-    mode      : ${params.mode}
-    status    : ${workflow.success ? 'OK' : 'FAILED'}
-    outdir    : ${params.outdir}
-    duration  : ${workflow.duration}
-    NOTE: this run reflects DSL2 wiring/validation only in this build unless
-    executed against real containers and real inputs outside this environment.
-    """.stripIndent()
-}

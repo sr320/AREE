@@ -1,0 +1,4 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem
+1	a4/eddab3	4390	STANDARDIZE_OUTPUT (GIGAS_SAL04:low_salinity_vs_control)	COMPLETED	0	2026-08-28 13:29:11.866	573ms	525ms	-	-	-
+2	84/cbbe78	4499	EMIT_MANIFEST (GIGAS_SAL04:low_salinity_vs_control)	COMPLETED	0	2026-08-28 13:29:12.466	367ms	321ms	-	-	-
+3	33/53d3e1	4537	RENDER_REPORT (GIGAS_SAL04:low_salinity_vs_control)	COMPLETED	0	2026-08-28 13:29:12.847	3.3s	3.3s	-	-	-
