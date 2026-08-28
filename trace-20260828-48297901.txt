@@ -1,4 +1,0 @@
-task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem
-1	e2/85c3b6	99435	STANDARDIZE_OUTPUT (GIGAS_HEAT01:acute_heat_vs_control)	COMPLETED	0	2026-08-28 13:24:59.152	849ms	793ms	-	-	-
-2	bf/b883f1	99483	EMIT_MANIFEST (GIGAS_HEAT01:acute_heat_vs_control)	COMPLETED	0	2026-08-28 13:25:00.160	128ms	75ms	-	-	-
-3	69/06ca1d	99515	RENDER_REPORT (GIGAS_HEAT01:acute_heat_vs_control)	FAILED	1	2026-08-28 13:25:00.329	4.1s	4s	-	-	-

@@ -51,10 +51,9 @@ workflow {
     AREE RNA-seq workflow
     ----------------------
     mode           : ${params.mode}
-    study_id       : ${params.rnaseq?.study_id}
-    comparison_id  : ${params.rnaseq?.comparison_id}
+    study_id       : ${params.rnaseq?.study_id ?: params.study_id}
+    comparison_id  : ${params.rnaseq?.comparison_id ?: params.comparison_id}
     outdir         : ${params.outdir}
-    NOTE: unexecuted scaffold in this build (see README.md).
     """.stripIndent()
 
     study_id      = params.rnaseq?.study_id ?: params.study_id

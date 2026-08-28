@@ -118,6 +118,13 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     }
     names(tx2gene)[1:2] <- c("transcript_id", "gene_id")
 
+    # tximport(ignoreTxVersion = TRUE) strips the version suffix from the ids
+    # read out of quant.sf but does NOT touch tx2gene, so a map built from a
+    # versioned annotation (every NCBI GTF) silently stops matching. Strip
+    # both sides so the two are compared on the same footing.
+    tx2gene\$transcript_id <- sub("\\\\..*", "", tx2gene\$transcript_id)
+    tx2gene <- unique(tx2gene)
+
     txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
 
     dds <- DESeqDataSetFromTximport(

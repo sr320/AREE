@@ -1,4 +1,0 @@
-task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem
-1	17/6d9880	2760	STANDARDIZE_OUTPUT (GIGAS_PATH03:OsHV1_challenge_vs_sham)	COMPLETED	0	2026-08-28 13:28:23.788	105ms	68ms	-	-	-
-2	e1/064452	2799	EMIT_MANIFEST (GIGAS_PATH03:OsHV1_challenge_vs_sham)	COMPLETED	0	2026-08-28 13:28:23.944	271ms	61ms	-	-	-
-3	1d/70345d	2891	RENDER_REPORT (GIGAS_PATH03:OsHV1_challenge_vs_sham)	COMPLETED	0	2026-08-28 13:28:24.229	3.5s	3.4s	-	-	-

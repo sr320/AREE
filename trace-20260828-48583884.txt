@@ -1,4 +1,0 @@
-task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem
-1	57/0f0646	5026	STANDARDIZE_OUTPUT (GIGAS_GROW06:hypoxia_vs_control)	COMPLETED	0	2026-08-28 13:29:45.023	814ms	771ms	-	-	-
-2	98/06d928	5142	EMIT_MANIFEST (GIGAS_GROW06:hypoxia_vs_control)	COMPLETED	0	2026-08-28 13:29:45.868	117ms	67ms	-	-	-
-3	f4/e50551	5176	RENDER_REPORT (GIGAS_GROW06:hypoxia_vs_control)	COMPLETED	0	2026-08-28 13:29:45.999	4s	4s	-	-	-
