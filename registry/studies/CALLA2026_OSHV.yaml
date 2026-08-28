@@ -1,0 +1,224 @@
+# SECOND REAL (non-simulated) STUDY REGISTERED IN AREE, and the first in
+# raw_reanalysis mode.
+#
+# Unlike HESSER2024_VCOR, this study deposited raw reads and no processed
+# result table. That is deliberate on AREE's part: reanalyzing raw data
+# produces AREE's own DESeq2 output, including lfcSE and an unadjusted
+# p-value, so the study can contribute to inverse-variance-weighted pooling —
+# which HESSER2024_VCOR cannot. See docs/candidate_studies.md.
+#
+# NOTHING HAS BEEN HARMONIZED FROM THIS STUDY YET. The sample sheet, FASTQ
+# manifest, and reference context below are complete and verified; the
+# workflow run that produces the result tables has not been executed (226 GB
+# of reads, 42 paired-end NovaSeq libraries). analysis_status reflects that
+# honestly. See docs/first_raw_reanalysis.md.
+
+study_id: CALLA2026_OSHV
+simulated: false
+
+accessions:
+  doi: "10.1016/j.fsi.2026.111154"
+  bioproject: "PRJNA1329250"
+  geo: null
+  sra: "SRP620802"   # verified against the ENA read-run report, not the publication
+  ena: "PRJNA1329250"
+  proteomexchange: null
+  other: "PMID:41581675"
+
+citation: "Calla B, Thompson NF, Burge CA (2026). Population-specific transcriptomics of Pacific oyster after exposure to a highly pathogenic, globally distributed virus. Fish & Shellfish Immunology 171:111154. https://doi.org/10.1016/j.fsi.2026.111154"
+
+species: "Magallana gigas"
+strain_or_population: "Two hatchery populations, Midori and Miyagi, reared at USDA-ARS Pacific Shellfish Research Unit, Newport, Oregon. NOTE: the deposited BioSample records spell the second population 'Myagi'; the publication spells it 'Miyagi'. The deposited spelling is preserved verbatim in data/studies/CALLA2026_OSHV/samplesheet.tsv."
+
+# AREE reanalyzes against the current NCBI reference annotation, which is also
+# what the identifier crosswalk is built from — so unlike HESSER2024_VCOR there
+# is no crossing between the study's assembly and AREE's. The publication
+# keywords mention a transcriptome assembly, i.e. the authors' own analysis may
+# not have used this reference; AREE's reanalysis does, and that difference is
+# a reason its results may not match the paper's figures exactly.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end RNA-seq (42 libraries, 1.56 billion read pairs, 472 Gbp)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 42 runs are public in SRA/ENA under PRJNA1329250 (226.4 GB). No count matrix or differential-expression table was deposited, and the publication is not open access, so no processed results are available to harmonize directly. FASTQ URLs with ENA MD5 checksums are recorded in data/studies/CALLA2026_OSHV/fastq_manifest.tsv."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# Comparisons: 2 populations x 3 OsHV-1 microvariant isolates, each against
+# the matched uninfected control of the same population. Group membership was
+# read from the deposited BioSample attributes (`breed`, `Viral strain`), not
+# transcribed from the paper — see data/studies/CALLA2026_OSHV/ena_provenance.json.
+#
+# ON PHENOTYPE CLASSIFICATION. The BioProject title says "Evaluating Pacific
+# oyster lineages for tolerance to Ostreid herpesvirus", but neither the
+# deposited metadata nor the publication abstract reports a survival or
+# mortality measurement for these animals; the paper's own framing is that its
+# results matter for "future work that focuses on developing Pacific oysters
+# that are tolerant". Classifying these comparisons as disease_resistance would
+# therefore assert a resilience phenotype that was never measured. They are
+# registered as disease_susceptibility / `disease`, consistent with
+# HESSER2024_VCOR's pathogen-vs-control arm, and flagged
+# ambiguous_phenotype_definition. See docs/resilience_vs_exposure.md.
+#
+# Exposure dose, duration, and sampling timepoint are NOT recorded in the
+# deposited metadata and the publication is paywalled, so they are left null
+# rather than guessed. Fill them in from the methods before treating any
+# effect size from this study as dose-comparable to another study.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "midori_oshv1_australia_vs_control"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "OsHV-1 microvariant, Australian isolate; challenge of Midori-population spat (dose and route not stated in deposited metadata)"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Midori-population spat, unchallenged control ('Viral strain = Control' in the deposited BioSample records)"
+    treatment_condition: "Midori-population spat challenged with the Australian OsHV-1 microvariant"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 11
+    biological_replicates: 5
+    results_file: null
+
+  - comparison_id: "midori_oshv1_france_vs_control"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "OsHV-1 microvariant, French isolate; challenge of Midori-population spat (dose and route not stated in deposited metadata)"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Midori-population spat, unchallenged control"
+    treatment_condition: "Midori-population spat challenged with the French OsHV-1 microvariant"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 11
+    biological_replicates: 5
+    results_file: null
+
+  - comparison_id: "midori_oshv1_usa_vs_control"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "OsHV-1 microvariant, USA (San Diego) isolate; challenge of Midori-population spat (dose and route not stated in deposited metadata)"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Midori-population spat, unchallenged control"
+    treatment_condition: "Midori-population spat challenged with the USA OsHV-1 microvariant"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 11
+    biological_replicates: 5
+    results_file: null
+
+  - comparison_id: "miyagi_oshv1_australia_vs_control"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "OsHV-1 microvariant, Australian isolate; challenge of Miyagi-population spat (dose and route not stated in deposited metadata)"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Miyagi-population spat, unchallenged control"
+    treatment_condition: "Miyagi-population spat challenged with the Australian OsHV-1 microvariant"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 11
+    biological_replicates: 5
+    results_file: null
+
+  - comparison_id: "miyagi_oshv1_france_vs_control"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "OsHV-1 microvariant, French isolate; challenge of Miyagi-population spat (dose and route not stated in deposited metadata)"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Miyagi-population spat, unchallenged control"
+    treatment_condition: "Miyagi-population spat challenged with the French OsHV-1 microvariant"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 11
+    biological_replicates: 5
+    results_file: null
+
+  - comparison_id: "miyagi_oshv1_usa_vs_control"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "OsHV-1 microvariant, USA (San Diego) isolate; challenge of Miyagi-population spat (dose and route not stated in deposited metadata)"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Miyagi-population spat, unchallenged control"
+    treatment_condition: "Miyagi-population spat challenged with the USA OsHV-1 microvariant"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 11
+    biological_replicates: 5
+    results_file: null
+
+quality_flags:
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) No survival, mortality, or viral-load phenotype is available for these
+  animals in the deposited metadata or the publication abstract, so the
+  population contrast that motivates the study (Midori vs Miyagi tolerance)
+  cannot be anchored to a measured resilience outcome here. Evidence from this
+  study is disease-associated, not resilience-validated. (2) Exposure dose,
+  route, duration, and sampling timepoint are absent from the deposited
+  metadata and the publication is not open access, so effect sizes are not
+  dose-comparable to other pathogen-challenge studies. (3) Tissue is whole
+  soft-tissue homogenate, so no tissue-specific resolution is possible and
+  hemocyte-specific signals are diluted. (4) The three viral isolates are
+  different OsHV-1 microvariants; the publication reports no marked difference
+  between the USA and Australian variant responses, but they are registered as
+  separate comparisons rather than pooled, because that is the authors'
+  conclusion and not something AREE should assume. (5) AREE reanalyzes against
+  the current NCBI reference annotation, which may differ from the authors' own
+  transcriptome-assembly-based analysis; results are not expected to reproduce
+  the paper's figures exactly and are not a replication of it. (6) The
+  reanalysis has not been run — see analysis_status.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-08-28"
+  curation_notes: >
+    Design (2 populations x 4 viral-strain levels, n=5 challenged / n=6 control)
+    was derived programmatically from the deposited BioSample attributes by
+    `aree fetch-samplesheet`, not transcribed from the publication, which is
+    paywalled. See data/studies/CALLA2026_OSHV/ena_provenance.json for the
+    queries and checksums. The publication was located by PubMed search after
+    the BioProject was selected; NCBI's BioProject-to-PubMed link was empty at
+    the time of curation.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1329250"
+    - "https://doi.org/10.1016/j.fsi.2026.111154"
+    - "https://pubmed.ncbi.nlm.nih.gov/41581675/"

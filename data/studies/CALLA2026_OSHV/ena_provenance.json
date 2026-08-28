@@ -1,0 +1,38 @@
+{
+  "study_id": "CALLA2026_OSHV",
+  "bioproject": "PRJNA1329250",
+  "date_generated": "2026-08-28",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1329250&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "breed",
+    "Viral strain"
+  ],
+  "n_runs": 42,
+  "n_samples": 42,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "Midori_Australia": 5,
+    "Midori_Control": 6,
+    "Midori_France": 5,
+    "Midori_USA": 5,
+    "Myagi_Australia": 5,
+    "Myagi_Control": 6,
+    "Myagi_France": 5,
+    "Myagi_USA": 5
+  },
+  "min_group_size": 5,
+  "total_fastq_bytes": 226394660021,
+  "outputs": {
+    "data/studies/CALLA2026_OSHV/samplesheet.tsv": "ec0f9abb7f0bc7b3c4053bda247f070242521e6373ccd2ce6ed0a26da557b1df",
+    "data/studies/CALLA2026_OSHV/fastq_manifest.tsv": "913b428009d8fcc3b3f60fe6dcd66f307c45eeb2a618c92ddd09bc35f2bab447"
+  }
+}

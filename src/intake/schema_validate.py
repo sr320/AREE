@@ -13,7 +13,15 @@ from pathlib import Path
 
 import jsonschema
 
-from common import SCHEMAS_DIR, load_json, load_vocab, load_yaml, resolve_assembly, resolve_species
+from common import (
+    DATA_DIR,
+    SCHEMAS_DIR,
+    load_json,
+    load_vocab,
+    load_yaml,
+    resolve_assembly,
+    resolve_species,
+)
 
 
 @dataclass
@@ -134,6 +142,27 @@ def validate_study_file(path) -> ValidationResult:
                     f"comparison {cid!r}: resilience_classification={declared!r} differs from "
                     f"phenotype_ontology default ({expected_relevance!r}) for phenotype "
                     f"{phenotype_id!r}. Confirm this override is intentional and documented."
+                )
+
+    # If a sample sheet was generated for this study, the BioProject it was
+    # generated from must be the one the study claims. This catches a study
+    # YAML drifting away from the data it actually describes, and it is the one
+    # accession check that can be made offline.
+    prov_path = (
+        DATA_DIR / "studies" / str(study.get("study_id")) / "ena_provenance.json"
+    )
+    if prov_path.exists():
+        declared = (study.get("accessions") or {}).get("bioproject")
+        try:
+            generated = load_json(prov_path).get("bioproject")
+        except (ValueError, OSError) as exc:
+            errors.append(f"could not read {prov_path.name}: {exc}")
+        else:
+            if declared != generated:
+                errors.append(
+                    f"accessions.bioproject is {declared!r} but the sample sheet in "
+                    f"data/studies/{study.get('study_id')}/ was generated from "
+                    f"{generated!r}. One of them is wrong."
                 )
 
     valid = len(errors) == 0

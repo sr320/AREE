@@ -131,6 +131,7 @@ AREE/
 |---|---|
 | `aree validate-study <file>` | Validate a study YAML against schema + controlled vocabularies |
 | `aree register-study <file> [--update]` | Add (or update) a study in the registry |
+| `aree fetch-samplesheet --bioproject <acc> --study <id>` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata |
 | `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies` | List registered studies and their pipeline status |
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
