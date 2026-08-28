@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import MAPPINGS_DIR, load_yaml
+from common import MAPPINGS_DIR, load_json, load_yaml
 
 # The demo crosswalk is the default so that `make demo` and the test suite run
 # against self-contained synthetic data. Curating a real study requires pointing
@@ -151,6 +151,27 @@ def _uniprot_index(path_str: str) -> dict:
     for acc in collisions:
         index[acc] = -1
     return index
+
+
+def crosswalk_annotation_release(crosswalk_path: Path) -> str | None:
+    """The reference annotation the active crosswalk was built from, if recorded.
+
+    This is the annotation every `feature_id_standardized` actually refers to,
+    which is frequently *not* the assembly the source study used. Surfacing it
+    per evidence record is what makes that crossing visible to a reader of the
+    evidence table rather than something buried in a provenance sidecar.
+
+    Returns None for the demo crosswalk, which is synthetic and has no
+    provenance record.
+    """
+    crosswalk_path = Path(crosswalk_path)
+    provenance = crosswalk_path.with_name(f"{crosswalk_path.stem}.provenance.json")
+    if not provenance.exists():
+        return None
+    try:
+        return load_json(provenance).get("ncbi_reference_annotation_at_build")
+    except (ValueError, OSError):
+        return None
 
 
 def retired_table_path(crosswalk_path: Path) -> Path | None:

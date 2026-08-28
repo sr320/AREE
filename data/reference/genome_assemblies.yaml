@@ -1,11 +1,48 @@
-# Reference genome/annotation versions referenced by demo studies.
-# IMPORTANT: assembly_id and ncbi_assembly_accession below are PLACEHOLDERS
-# for demo purposes only. Do not treat ncbi_assembly_accession as a verified
-# real accession — when curating a real study, look up and confirm the actual
-# current assembly accession from NCBI/Ensembl yourself rather than reusing
-# this value. See docs/handling_genome_versions.md.
+# Reference genome assemblies AREE knows about.
+#
+# Every `genome_assembly` value in a study registration must appear here, either
+# as an `assembly_id` or as one of its `aliases`. `aree validate-study` enforces
+# that, so a typo or an undocumented assembly is caught at registration rather
+# than surfacing later as evidence that cannot be compared.
+#
+# Accessions below were verified against the NCBI Datasets API on 2026-08-28.
+# When adding an assembly, look the accession up yourself and record the date —
+# do not copy one from another entry. See docs/handling_genome_versions.md.
+version: "0.2.0"
+verified_against: "NCBI Datasets API (api.ncbi.nlm.nih.gov/datasets/v2alpha), 2026-08-28"
+
 assemblies:
+  - assembly_id: "xbMagGiga1.1"
+    species: "Magallana gigas"
+    ncbi_taxid: 29159
+    ncbi_assembly_accession: "GCF_963853765.1"
+    genbank_accession: "GCA_963853765.1"
+    assembly_level: "Chromosome"
+    submitter: "Wellcome Sanger Institute"
+    is_ncbi_reference: true
+    annotation_release: "GCF_963853765.1-RS_2024_06"
+    annotation_release_date: "2024-06-20"
+    notes: >-
+      Current NCBI reference genome for the Pacific oyster. AREE's identifier
+      crosswalk (data/reference/crosswalk/) is built from the NCBI Gene records
+      of this annotation release, so this is the annotation that every
+      `feature_id_standardized` ultimately refers to, regardless of which
+      assembly the source study itself used.
+
   - assembly_id: "cgigas_uk_roslin_v1"
-    species: "Crassostrea gigas"
-    ncbi_assembly_accession: "PLACEHOLDER_CONFIRM_BEFORE_REAL_USE"
-    notes: "Chromosome-level assembly label used as the harmonization target for all demo studies. Demo DMR coordinates (data/demo/methylation/) are illustrative and not derived from real alignment or a verified real assembly accession."
+    species: "Magallana gigas"
+    ncbi_taxid: 29159
+    ncbi_assembly_accession: "GCF_902806645.1"
+    genbank_accession: "GCA_902806645.1"
+    assembly_level: "Chromosome"
+    submitter: "The Roslin Institute"
+    is_ncbi_reference: false
+    annotation_release: null
+    notes: >-
+      The assembly most C. gigas studies published before ~2024 were mapped
+      against, including HESSER2024_VCOR. It is no longer the NCBI reference.
+      Evidence from studies on this assembly is standardized through NCBI Gene
+      IDs, which persist across assemblies; the crossing is recorded per
+      evidence record in `identifier_annotation_release`. The demo studies also
+      carry this label, but their coordinates and effect sizes are fabricated —
+      the assembly record here is real, the demo data referencing it is not.

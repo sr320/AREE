@@ -85,6 +85,13 @@
     "species": {
       "type": "string"
     },
+    "species_taxid": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Canonical NCBI taxonomy id for `species`, resolved through registry/controlled_vocabularies/species.yaml. Meta-analysis groups on this rather than the reported name, so that accepted synonyms (Crassostrea gigas / Magallana gigas) are not treated as two species."
+    },
     "genome_assembly": {
       "type": "string"
     },
@@ -93,6 +100,13 @@
         "string",
         "null"
       ]
+    },
+    "identifier_annotation_release": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The reference annotation release that `feature_id_standardized` refers to, i.e. the annotation the identifier crosswalk was built from. Frequently differs from `genome_assembly`, which is the assembly the source study itself used; NCBI Gene IDs persist across assemblies, but the crossing must be visible. Null for the synthetic demo crosswalk."
     },
     "molecular_direction": {
       "type": "string",

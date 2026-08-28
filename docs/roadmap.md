@@ -50,6 +50,16 @@ for the assumptions this roadmap is consistent with.
   (`validate-study`, `register-study`, `list-studies`, `harmonize`,
   `meta-analyze`, `build-evidence-cards`) are implemented in
   `src/aree/cli.py` and run against the demo data on a clean install.
+- **Species and assembly reference data.**
+  `registry/controlled_vocabularies/species.yaml` maps scientific names and
+  accepted synonyms (*Crassostrea*/*Magallana gigas*) onto NCBI taxids, and
+  `data/reference/genome_assemblies.yaml` carries NCBI-verified accessions for
+  both oyster assemblies in use. Both are enforced by `aree validate-study`,
+  and evidence records now carry `species_taxid` plus
+  `identifier_annotation_release` so that the crossing between a study's
+  assembly and the annotation its identifiers were resolved against is
+  visible — see
+  [handling_genome_versions.md](handling_genome_versions.md).
 - **Automated tests.** `tests/` covers schema validation, registry
   (duplicate-ID handling), identifier mapping, meta-analysis, prioritization,
   evidence-card generation, and a full demo-pipeline integration test.
@@ -75,10 +85,6 @@ for the assumptions this roadmap is consistent with.
   ortholog-calling pipeline. It is sufficient to demonstrate the
   mapping-confidence mechanism but is not a real reference crosswalk — see
   [identifier_mapping.md](identifier_mapping.md).
-- **Genome assembly reference.** `data/reference/genome_assemblies.yaml`
-  currently holds one placeholder entry with an explicitly fake
-  `ncbi_assembly_accession` (`PLACEHOLDER_CONFIRM_BEFORE_REAL_USE`) — see
-  [handling_genome_versions.md](handling_genome_versions.md).
 
 ## Planned / not yet started
 

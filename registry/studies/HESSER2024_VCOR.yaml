@@ -24,6 +24,10 @@ accessions:
 citation: "Hesser J, Mueller RS, Langdon C, Schubiger CB (2024). Immunomodulatory effects of a probiotic combination treatment to improve the survival of Pacific oyster (Crassostrea gigas) larvae against infection by Vibrio coralliilyticus. Frontiers in Immunology 15:1380089. https://doi.org/10.3389/fimmu.2024.1380089"
 species: "Crassostrea gigas"
 strain_or_population: "Hatchery-produced larvae, Oregon State University (broodstock line not specified by the source)"
+# Resolves to the cgigas_uk_roslin_v1 record in data/reference/genome_assemblies.yaml.
+# Note that AREE standardizes identifiers against the *current* NCBI annotation
+# (xbMagGiga1.1 / RS_2024_06), not this assembly; every evidence record carries
+# that crossing in `identifier_annotation_release`.
 genome_assembly: "GCA_902806645.1 (cgigas_uk_roslin_v1)"
 annotation_version: null   # not stated by the source; see limitations
 
@@ -38,7 +42,9 @@ data_availability:
   access_notes: "No raw reads or count matrix deposited. The only public data are the annotated, significance-filtered DEG tables in supplementary Table S4 (CC BY 4.0). Retrieved from Europe PMC (PMC11033467)."
 
 qc_status: "passed_with_warnings"
-analysis_status: "not_started"
+# Updated when the study is harmonized. `aree harmonize` warns if this still
+# reads not_started after evidence has been produced.
+analysis_status: "harmonized"
 
 comparisons:
   # ---------------------------------------------------------------------------

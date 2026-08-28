@@ -1,0 +1,34 @@
+# Species controlled vocabulary.
+#
+# `species` in a study registration is free-form scientific name as the source
+# publication wrote it. This vocabulary maps that string onto a stable canonical
+# identity — an NCBI taxonomy id — so that two studies naming the same animal
+# differently still group together.
+#
+# This is not pedantry. The Pacific oyster was moved from Crassostrea to
+# Magallana, and both names appear throughout the current literature and in
+# public data. NCBI taxid 29159 carries "Magallana gigas" with "Crassostrea
+# gigas" as a synonym; AREE's own identifier crosswalk is built under the
+# Magallana name while every study registered so far says Crassostrea. Grouping
+# on the raw string would silently split one species into two.
+#
+# `accepted_synonyms` are alternative scientific names that denote the SAME
+# taxon. They are accepted on input and resolved to `ncbi_taxid`. Adding a
+# species means adding a term here plus a reference assembly in
+# data/reference/genome_assemblies.yaml — see docs/adding_a_species.md.
+version: "0.1.0"
+terms:
+  - id: magallana_gigas
+    label: Pacific oyster
+    scientific_name: "Magallana gigas"
+    accepted_synonyms:
+      - "Crassostrea gigas"
+    common_names:
+      - "Pacific oyster"
+      - "Japanese oyster"
+    ncbi_taxid: 29159
+    notes: >-
+      Reassigned from Crassostrea to Magallana (Salvi & Mariottini 2017). NCBI
+      taxonomy lists Magallana gigas as the scientific name and Crassostrea
+      gigas as a synonym under the same taxid, so both resolve here. AREE's
+      reference crosswalk is built from NCBI Gene for this taxid.

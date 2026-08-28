@@ -63,3 +63,83 @@ def check_in_vocab(value: str, name: str, field_label: str) -> None:
             f"{field_label!r} value {value!r} is not a valid term in "
             f"controlled vocabulary '{name}'. Valid ids: {sorted(ids)}"
         )
+
+
+# --------------------------------------------------------------------------- #
+# Species identity
+# --------------------------------------------------------------------------- #
+
+GENOME_ASSEMBLIES_PATH = DATA_DIR / "reference" / "genome_assemblies.yaml"
+
+
+class SpeciesRecord:
+    """A resolved species: what the study called it, and what it canonically is."""
+
+    __slots__ = ("term_id", "scientific_name", "ncbi_taxid", "as_reported", "is_synonym")
+
+    def __init__(self, term: dict, as_reported: str, is_synonym: bool):
+        self.term_id = term["id"]
+        self.scientific_name = term["scientific_name"]
+        self.ncbi_taxid = term["ncbi_taxid"]
+        self.as_reported = as_reported
+        self.is_synonym = is_synonym
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return f"SpeciesRecord({self.scientific_name!r}, taxid={self.ncbi_taxid})"
+
+
+def resolve_species(name: str) -> SpeciesRecord | None:
+    """Resolve a scientific name (or accepted synonym) to a canonical species.
+
+    Returns None if the name is not in the vocabulary. Matching ignores case and
+    surrounding whitespace but nothing else — a genuinely different name must be
+    added to the vocabulary deliberately, not guessed at.
+    """
+    if not name:
+        return None
+    wanted = str(name).strip().casefold()
+    for term in load_vocab("species").values():
+        if wanted == term["scientific_name"].casefold():
+            return SpeciesRecord(term, name, is_synonym=False)
+        for synonym in term.get("accepted_synonyms") or []:
+            if wanted == synonym.casefold():
+                return SpeciesRecord(term, name, is_synonym=True)
+    return None
+
+
+# --------------------------------------------------------------------------- #
+# Reference assemblies
+# --------------------------------------------------------------------------- #
+
+
+def load_assemblies() -> dict:
+    """Assembly records keyed by assembly_id."""
+    doc = load_yaml(GENOME_ASSEMBLIES_PATH)
+    return {a["assembly_id"]: a for a in doc["assemblies"]}
+
+
+def resolve_assembly(value: str) -> dict | None:
+    """Resolve a study's `genome_assembly` string to a known assembly record.
+
+    Accepts the assembly_id, either accession, or any declared alias. Studies
+    sometimes write the accession and the name together
+    ("GCA_902806645.1 (cgigas_uk_roslin_v1)"), so each whitespace/parenthesis
+    separated token is tried before giving up.
+    """
+    if not value:
+        return None
+    assemblies = load_assemblies()
+    tokens = [str(value).strip()]
+    tokens += [t.strip(" ()") for t in str(value).replace("(", " ").replace(")", " ").split()]
+
+    for token in tokens:
+        for record in assemblies.values():
+            candidates = {
+                record["assembly_id"],
+                record.get("ncbi_assembly_accession"),
+                record.get("genbank_accession"),
+                *(record.get("aliases") or []),
+            }
+            if token in {c for c in candidates if c}:
+                return record
+    return None

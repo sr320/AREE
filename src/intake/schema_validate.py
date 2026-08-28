@@ -13,7 +13,7 @@ from pathlib import Path
 
 import jsonschema
 
-from common import SCHEMAS_DIR, load_json, load_vocab, load_yaml
+from common import SCHEMAS_DIR, load_json, load_vocab, load_yaml, resolve_assembly, resolve_species
 
 
 @dataclass
@@ -62,6 +62,42 @@ def validate_study_file(path) -> ValidationResult:
     life_stage_ids = set(load_vocab("life_stages").keys())
     assay_ids = set(load_vocab("assay_types").keys())
     quality_flag_ids = set(load_vocab("quality_flags").keys())
+
+    # Species must resolve to a canonical taxon. A synonym is accepted (the
+    # literature uses both Crassostrea and Magallana for this animal) but is
+    # surfaced, because the registry row will read differently from the
+    # canonical name that evidence is grouped by.
+    species_name = study.get("species")
+    species = resolve_species(species_name)
+    if species is None:
+        errors.append(
+            f"species {species_name!r} is not in the species vocabulary "
+            "(registry/controlled_vocabularies/species.yaml). Add the species there "
+            "first — see docs/adding_a_species.md."
+        )
+    elif species.is_synonym:
+        warnings.append(
+            f"species {species_name!r} is an accepted synonym of "
+            f"{species.scientific_name!r} (NCBI taxid {species.ncbi_taxid}); evidence "
+            "will be grouped under the canonical name."
+        )
+
+    # The genome assembly must be one AREE has a record for, so that evidence can
+    # be traced to a real, versioned reference rather than a free-text label.
+    assembly_value = study.get("genome_assembly")
+    assembly = resolve_assembly(assembly_value)
+    if assembly is None:
+        errors.append(
+            f"genome_assembly {assembly_value!r} is not a known assembly "
+            "(data/reference/genome_assemblies.yaml). Add it there with a verified "
+            "NCBI accession — see docs/handling_genome_versions.md."
+        )
+    elif species is not None and assembly.get("ncbi_taxid") != species.ncbi_taxid:
+        errors.append(
+            f"genome_assembly {assembly['assembly_id']!r} belongs to taxid "
+            f"{assembly.get('ncbi_taxid')}, but species {species_name!r} is taxid "
+            f"{species.ncbi_taxid}"
+        )
 
     for assay in study.get("assay_type", []):
         if assay not in assay_ids:

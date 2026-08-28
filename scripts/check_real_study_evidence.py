@@ -62,6 +62,22 @@ def main() -> int:
                 "a statistic is being imputed"
             )
 
+    # The study was mapped by its authors against the Roslin assembly, but AREE
+    # standardizes identifiers against the current NCBI annotation. That crossing
+    # must stay visible on every record rather than being silently flattened.
+    releases = set(real["identifier_annotation_release"].dropna().unique())
+    if len(releases) != 1:
+        failures.append(
+            f"expected exactly one identifier_annotation_release, got {sorted(releases)}"
+        )
+    elif "xbMagGiga1.1" not in next(iter(releases)):
+        failures.append(f"unexpected annotation release: {next(iter(releases))}")
+
+    if set(real["species_taxid"].dropna().unique()) != {29159}:
+        failures.append(
+            f"species_taxid should be 29159, got {sorted(set(real['species_taxid'].dropna()))}"
+        )
+
     if failures:
         print(f"FAIL: {args.study}")
         for f in failures:
@@ -70,7 +86,8 @@ def main() -> int:
 
     print(
         f"OK: {args.study} — {len(real)} evidence records, "
-        f"{resolved:.1%} identifiers resolved, no imputed statistics"
+        f"{resolved:.1%} identifiers resolved, no imputed statistics, "
+        f"annotation crossing recorded ({next(iter(releases))})"
     )
     return 0
 
