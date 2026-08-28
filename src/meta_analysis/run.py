@@ -18,7 +18,9 @@ from .pooling import dersimonian_laird
 
 META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 
-GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type"]
+# `simulated` is part of the grouping key so that a pooled estimate can never mix
+# fabricated demo evidence with evidence from a real study.
+GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated"]
 
 
 def _direction_consistency(effect_sizes: pd.Series) -> float:
@@ -46,7 +48,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
 
     results = []
     for keys, group in df.groupby(GROUP_KEYS, dropna=False):
-        feature_id, pheno, ftype = keys
+        feature_id, pheno, ftype, simulated = keys
         ses = [
             effective_standard_error(row.effect_size, row.standard_error, row.p_value)
             for row in group.itertuples()
@@ -62,6 +64,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "feature_id_standardized": feature_id,
             "phenotype": pheno,
             "feature_type": ftype,
+            "simulated": simulated,
             "k_studies": group["study_id"].nunique(),
             "studies": "|".join(sorted(group["study_id"].unique())),
             "n_evidence_records": len(group),

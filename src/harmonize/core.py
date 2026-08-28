@@ -13,6 +13,7 @@ from .methylation import harmonize_methylation
 from .metabolomics import harmonize_metabolomics
 from .proteomics import harmonize_proteomics
 from .rnaseq import harmonize_rnaseq
+from .identifiers import active_crosswalk_path, crosswalk_for_study, retired_table_path, set_crosswalk_path
 from .schema import EVIDENCE_COLUMNS
 
 MANIFESTS_DIR = REPORTS_DIR / "manifests"
@@ -54,6 +55,10 @@ def _harmonize_comparison(study: dict, comparison: dict, date_generated: str) ->
     if not results_path.exists():
         raise FileNotFoundError(f"results_file not found: {results_path}")
 
+    # The study decides which crosswalk it resolves against, so that simulated and
+    # real studies can coexist in one evidence table without cross-contamination.
+    set_crosswalk_path(crosswalk_for_study(bool(study.get("simulated", False))))
+
     evidence_df = harmonizer(
         study, comparison, results_path,
         workflow_version=WORKFLOW_VERSION,
@@ -62,6 +67,22 @@ def _harmonize_comparison(study: dict, comparison: dict, date_generated: str) ->
     )
     _write_harmonize_manifest(study, comparison, results_path, evidence_df, date_generated)
     return evidence_df
+
+
+def _crosswalk_ref() -> dict:
+    """Path + checksum of the identifier crosswalk currently in force."""
+    path = active_crosswalk_path()
+    ref = {
+        "path": str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path),
+        "sha256": sha256_file(path) if path.exists() else None,
+    }
+    retired = retired_table_path(path)
+    if retired is not None and retired.exists():
+        ref["retired_gene_id_table"] = (
+            str(retired.relative_to(REPO_ROOT)) if retired.is_relative_to(REPO_ROOT) else str(retired)
+        )
+        ref["retired_gene_id_table_sha256"] = sha256_file(retired)
+    return ref
 
 
 def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evidence_df: pd.DataFrame, date_generated: str) -> Path:
@@ -76,7 +97,9 @@ def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evide
         "parameters": {
             "genome_assembly": study["genome_assembly"],
             "annotation_version": study.get("annotation_version"),
-            "identifier_crosswalk": "data/mappings/gene_id_crosswalk.tsv",
+            # Record the crosswalk that was actually used, with its checksum. A
+            # hardcoded path here silently misreported provenance for real studies.
+            "identifier_crosswalk": _crosswalk_ref(),
         },
         "software_versions": {"aree-harmonize": WORKFLOW_VERSION},
         "workflow_version": WORKFLOW_VERSION,

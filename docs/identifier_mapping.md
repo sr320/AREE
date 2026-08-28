@@ -22,13 +22,132 @@ Every evidence record keeps both:
 - `feature_id_standardized` — the harmonized identifier resolved via this
   hierarchy, or `null` if `mapping_confidence` is `unresolved`.
 
-The crosswalk table backing this resolution is
-`data/mappings/gene_id_crosswalk.tsv`. In the demo repository this crosswalk
-is entirely **synthetic** — its header comment says so explicitly: identifiers
-are internally self-consistent across `data/demo/*` but do not correspond to
-real NCBI/Ensembl/UniProt records. A real deployment replaces this file with
-an actual crosswalk built from the reference genome annotation (see
-[handling_genome_versions.md](handling_genome_versions.md)).
+## Which crosswalk is in force
+
+AREE ships **two** crosswalks and never merges them.
+
+| File | Contents | When it is used |
+|---|---|---|
+| `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Default. Keeps `make demo` and the test suite self-contained. |
+| `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Curating real studies. Selected explicitly. |
+
+Selection precedence is `set_crosswalk_path()` > `$AREE_CROSSWALK` > the demo
+crosswalk. To harmonize real data:
+
+```bash
+aree build-crosswalk                       # writes the real crosswalk + provenance sidecar
+export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+aree harmonize --study <STUDY_ID> --input <results.tsv>
+```
+
+**The two files must never be concatenated.** The demo crosswalk's LOC numbers
+are not unused placeholders — most of them collide with real NCBI GeneIDs that
+denote completely different genes. `LOC105333935` is labelled `hsp70` in the
+demo file but is really *ubiquitin carboxyl-terminal hydrolase 32*;
+`LOC105341000` is labelled `actin` but is really *ADAMTS adt-1*. A union would
+silently attach demo biology to real accessions, and nothing downstream would
+flag it.
+
+## The real crosswalk
+
+Built by `src/mappings/build_crosswalk.py` (`aree build-crosswalk`) from two
+public sources, with a `.provenance.json` sidecar recording source URLs, SHA-256
+checksums of both inputs and the output, retrieval date, and coverage:
+
+- **NCBI Gene `gene_info`**, filtered to taxid 29159 — GeneID, symbol, synonyms,
+  Ensembl xrefs, description, gene type.
+- **UniProtKB REST**, same organism — accession, reviewed status, GeneID xref.
+- **NCBI Gene `gene_history`**, same organism — GeneIDs NCBI has discontinued and
+  what replaced them (written to a separate sidecar, see below).
+
+Coverage as built (2026-08-27, NCBI annotation release `GCF_963853765.1-RS_2024_06`):
+
+| Column | Genes covered | % |
+|---|---|---|
+| `ncbi_gene_id`, `locus_id` | 33,356 | 100% |
+| `ensembl_gene_id` | 12,717 | 38.1% |
+| `uniprot_accession` | 2,790 | 8.4% |
+| named `gene_symbol` (non-LOC) | 650 | 2.0% |
+| `orthogroup_id` | 0 | 0% |
+
+Plus a sidecar, `mgigas_retired_gene_ids.tsv`, covering 9,057 discontinued
+GeneIDs that NCBI has remapped to a current gene.
+
+Three of these numbers deserve attention before anyone reads a proteomics
+result:
+
+1. **UniProt linkage is sparse (8.4%).** Of 58,641 UniProtKB entries for this
+   organism, only 3,170 carry any NCBI GeneID cross-reference; 55,501 carry
+   neither a GeneID nor a RefSeq xref. This is a property of the source data,
+   not of AREE. Proteomics evidence will therefore have a materially higher
+   `unresolved` rate than transcriptomics evidence, and that difference must not
+   be read as a biological signal.
+2. **Only 2% of genes have a real name.** The rest are `LOC`-form. Symbol-based
+   matching is close to useless for this species; identifier-based matching is
+   the only reliable path.
+3. **`orthogroup_id` is empty by design.** Real orthogroups require an ortholog
+   inference run (OrthoFinder/OrthoDB). Fabricating them would manufacture
+   cross-species confidence that does not exist, so the column ships empty and
+   `resolve_identifier` returns `None` for it.
+
+### Design decisions in the real crosswalk
+
+- **One row per NCBI GeneID.** GeneID anchors the table because it is the most
+  stable identifier across annotation releases. Emitting one row per
+  (gene, protein) pair would make a plain GeneID lookup return several rows,
+  which the resolver would correctly but misleadingly downgrade to
+  `many_to_one_ortholog`.
+- **UniProt is one-to-many, so two columns carry it.** `uniprot_accession` holds
+  a single representative (reviewed preferred); `uniprot_accessions_all` holds
+  the full `;`-delimited set. The resolver indexes *every* accession, so a study
+  reporting a non-representative accession still resolves `exact`. 302 genes
+  have more than one accession; 14 accessions are attributed to more than one
+  gene and are downgraded to `many_to_one_ortholog`.
+- **`locus_id` is `LOC<GeneID>` for every gene**, including genes that now carry
+  an official symbol. The LOC form unambiguously denotes that GeneID by NCBI
+  convention, and studies analysed against an older annotation routinely report
+  the LOC form for a gene that has since been named — `LOC105331241` is now
+  *coadhesin*. This is the single largest source of recoverable matches across
+  annotation versions (see [handling_genome_versions.md](handling_genome_versions.md)).
+- **`gene_synonyms` is emitted but not yet consulted** by `resolve_identifier`.
+  It is there for curators and for a future synonym-resolution step.
+
+### Retired GeneIDs
+
+*M. gigas* has been re-annotated several times, and a study analysed against an
+older annotation reports GeneIDs that no longer exist in the current one. NCBI
+retired 22,658 GeneIDs for this organism, and without handling them every one
+would resolve as `unresolved` — silently discarding real evidence from exactly
+the older studies AREE most wants to reanalyze.
+
+`mgigas_retired_gene_ids.tsv` records what NCBI says happened to each:
+
+| Outcome | Count | Resolution |
+|---|---|---|
+| Replaced by a current gene | 9,057 | resolves to the replacement, `inferred` |
+| Discontinued with no replacement | 13,601 | stays `unresolved` |
+
+`LOC105320012`, for instance, was discontinued and replaced by `105343733`; it
+now resolves, where before it did not.
+
+The confidence label is deliberately **`inferred`, not `exact`**, even though the
+replacement comes from NCBI itself and is unambiguous. The remap crosses an
+annotation version, and AREE's convention is that only a direct hit on the
+current annotation earns `exact`. If you disagree with that call, it is one
+constant in `src/harmonize/identifiers.py` — but note that changing it would
+make version-remapped evidence indistinguishable from directly matched evidence
+in every downstream meta-analysis.
+
+Retired IDs whose replacement is itself absent from the crosswalk are dropped at
+build time rather than chained, so no identifier resolves through a gene that
+does not exist.
+
+### Rebuilding
+
+The build streams ~230 MB from NCBI and takes roughly 15–20 minutes on a typical
+connection. The built crosswalk and its provenance sidecar are committed, so a
+rebuild is only needed when the NCBI annotation is updated. Raw downloaded
+sources land in `data/reference/crosswalk/_sources/` and are gitignored.
 
 ## `mapping_confidence` levels
 
@@ -58,7 +177,12 @@ handles two families of input:
 - **Stable ID columns** (`ncbi_gene_id`, `ensembl_gene_id`,
   `uniprot_accession`, `locus_id`): looked up directly against the crosswalk.
   A single match is `exact`; multiple matching rows collapse to
-  `many_to_one_ortholog`; no match is `unresolved`.
+  `many_to_one_ortholog`; no match is `unresolved`. Two of these get extra
+  handling for real data: `ensembl_gene_id` matches within a `;`-delimited list,
+  because NCBI records more than one Ensembl xref for some genes, and
+  `uniprot_accession` is resolved through a prebuilt index over
+  `uniprot_accessions_all` so that any accession for a gene — not just the
+  representative one stored in `uniprot_accession` — resolves `exact`.
 - **Gene symbols**: looked up case-insensitively against the crosswalk's
   `gene_symbol` column first. A single match is labeled `inferred` (not
   `exact`) — symbols are not guaranteed unique or stable, so even a clean

@@ -74,8 +74,19 @@ with tab_evidence:
         with col3:
             feature_type_f = st.multiselect("Feature type", sorted(evidence["feature_type"].dropna().unique()))
             mapping_f = st.multiselect("Mapping confidence", sorted(evidence["mapping_confidence"].dropna().unique()))
+            data_origin = st.radio(
+                "Data origin", ["All", "Real studies only", "Simulated only"], index=0,
+                help="Simulated demo evidence and evidence from real published studies are "
+                     "never pooled together; this filter makes the split explicit.",
+            )
 
         view = evidence.copy()
+        if "simulated" in view.columns:
+            flag = view["simulated"].astype(str).str.lower() == "true"
+            if data_origin == "Real studies only":
+                view = view[~flag]
+            elif data_origin == "Simulated only":
+                view = view[flag]
         for col, selected in [
             ("stressor", stressor_f), ("phenotype", phenotype_f), ("tissue", tissue_f),
             ("life_stage", life_stage_f), ("feature_type", feature_type_f), ("mapping_confidence", mapping_f),
@@ -84,7 +95,7 @@ with tab_evidence:
                 view = view[view[col].isin(selected)]
 
         display_cols = [
-            "study_id", "feature_id_standardized", "feature_type", "molecular_direction",
+            "study_id", "simulated", "feature_id_standardized", "feature_type", "molecular_direction",
             "effect_size", "adjusted_p_value", "tissue", "life_stage", "stressor",
             "phenotype", "mapping_confidence",
         ]

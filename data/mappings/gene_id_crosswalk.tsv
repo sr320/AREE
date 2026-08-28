@@ -1,7 +1,17 @@
-# SYNTHETIC DEMO CROSSWALK: all identifiers below are fabricated for AREE demo purposes.
-# They are internally self-consistent across data/demo/* but do NOT correspond to
-# real NCBI/Ensembl/UniProt records. Replace with a real crosswalk before curating
-# actual public datasets (see docs/identifier_mapping.md).
+# SYNTHETIC DEMO CROSSWALK — all gene identities below are fabricated for AREE demo purposes.
+#
+# WARNING: the LOC numbers used here are NOT unused placeholders. Most of them collide
+# with real NCBI GeneIDs for Magallana gigas that denote entirely different genes
+# (e.g. LOC105333935 is labelled 'hsp70' here but is really ubiquitin carboxyl-terminal
+# hydrolase 32; LOC105341000 is labelled 'actin' here but is really ADAMTS adt-1).
+# For that reason this file MUST NOT be merged with a real crosswalk — a union would
+# silently attach demo biology to real accessions.
+#
+# This file is the default only so that `make demo` and the test suite stay
+# self-contained. To harmonize real studies, build a real crosswalk and select it:
+#     aree build-crosswalk
+#     export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+# See docs/identifier_mapping.md.
 ncbi_gene_id	ensembl_gene_id	uniprot_accession	locus_id	gene_symbol	orthogroup_id
 LOC105333935	ENSCGRG00000001	K1QN12	LOC105333935	hsp70	OG0000001
 LOC105331241	ENSCGRG00000002	K1QN45	LOC105331241	sod1	OG0000002

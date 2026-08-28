@@ -33,6 +33,8 @@ website:
             href: why_it_matters.md
       - section: "Using AREE"
         contents:
+          - text: "Worked example: a real study"
+            href: first_real_study.md
           - text: "Adding a study"
             href: adding_a_study.md
           - text: "Defining a phenotype"

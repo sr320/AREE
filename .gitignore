@@ -31,3 +31,7 @@ workflows/*/report.html
 workflows/*/timeline.html
 workflows/*/trace.txt*
 workflows/*/dag.dot
+
+# Downloaded reference sources for crosswalk building (regenerate via `aree build-crosswalk`).
+# The built crosswalk + provenance sidecar ARE committed; these raw inputs are not.
+data/reference/crosswalk/_sources/

@@ -132,5 +132,40 @@ def build_evidence_cards_cmd(phenotype, feature_type):
         click.echo(f"  {tier}: {count}")
 
 
+@main.command("build-crosswalk")
+@click.option("--taxid", default=29159, show_default=True, type=int,
+              help="NCBI taxonomy id to build the crosswalk for.")
+@click.option("--slug", default="mgigas", show_default=True,
+              help="Output filename prefix, e.g. 'mgigas' -> mgigas_gene_id_crosswalk.tsv.")
+@click.option("--organism", default="Magallana gigas (Crassostrea gigas), Pacific oyster",
+              show_default=False, help="Human-readable organism label recorded in provenance.")
+@click.option("--gene-info", "gene_info", default=None, type=click.Path(exists=True),
+              help="Pre-downloaded taxid-filtered NCBI gene_info TSV.")
+@click.option("--uniprot", default=None, type=click.Path(exists=True),
+              help="Pre-downloaded UniProt TSV export.")
+@click.option("--download", is_flag=True, help="Force re-download of reference sources.")
+def build_crosswalk_cmd(taxid, slug, organism, gene_info, uniprot, download):
+    """Build a real identifier crosswalk from NCBI Gene and UniProtKB.
+
+    Downloads reference data from public sources (~230 MB streamed from NCBI) and
+    writes a crosswalk plus a JSON provenance sidecar to data/reference/crosswalk/.
+    """
+    from mappings.build_crosswalk import build
+
+    try:
+        path = build(taxid=taxid, organism=organism, gene_info_path=gene_info,
+                     uniprot_path=uniprot, download=download, slug=slug)
+    except (RuntimeError, ValueError, FileNotFoundError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    prov = path.with_suffix("").with_suffix(".provenance.json")
+    click.echo(click.style(f"Wrote {path}", fg="green"))
+    click.echo(f"Provenance: {prov}")
+    click.echo("")
+    click.echo("To harmonize real studies against it, set:")
+    click.echo(click.style(f"  export AREE_CROSSWALK={path}", fg="cyan"))
+
+
 if __name__ == "__main__":
     main()

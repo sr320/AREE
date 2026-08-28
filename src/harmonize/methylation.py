@@ -47,6 +47,7 @@ def harmonize_methylation(
             "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], feature_id_original, analysis_method),
             "study_id": study["study_id"],
             "comparison_id": comparison["comparison_id"],
+            "simulated": bool(study.get("simulated", False)),
             "feature_id_original": feature_id_original,
             "feature_id_standardized": resolved.feature_id_standardized,
             "feature_type": feature_type,

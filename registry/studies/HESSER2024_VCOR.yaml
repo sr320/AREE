@@ -1,0 +1,126 @@
+# FIRST REAL (non-simulated) STUDY REGISTERED IN AREE.
+#
+# Source: open-access (CC BY 4.0) supplementary Table S4 of Hesser et al. 2024,
+# Frontiers in Immunology. The authors deposited no raw sequence data, so this is
+# a processed_results_harmonization study — the mode AREE provides precisely for
+# studies whose only public artifact is a results table.
+#
+# Result files were produced from the published .xls by src/intake/supplementary_table.py;
+# see data/studies/HESSER2024_VCOR/intake_provenance.json for the checksummed record
+# of that conversion.
+
+study_id: HESSER2024_VCOR
+simulated: false
+
+accessions:
+  doi: "10.3389/fimmu.2024.1380089"
+  bioproject: null   # no raw sequence data was deposited by the authors
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: "PMC11033467"
+
+citation: "Hesser J, Mueller RS, Langdon C, Schubiger CB (2024). Immunomodulatory effects of a probiotic combination treatment to improve the survival of Pacific oyster (Crassostrea gigas) larvae against infection by Vibrio coralliilyticus. Frontiers in Immunology 15:1380089. https://doi.org/10.3389/fimmu.2024.1380089"
+species: "Crassostrea gigas"
+strain_or_population: "Hatchery-produced larvae, Oregon State University (broodstock line not specified by the source)"
+genome_assembly: "GCA_902806645.1 (cgigas_uk_roslin_v1)"
+annotation_version: null   # not stated by the source; see limitations
+
+assay_type: ["rnaseq"]
+analysis_mode: "processed_results_harmonization"
+platform: "Illumina RNA-seq (instrument model not stated by the source)"
+
+data_availability:
+  raw_data_available: false
+  processed_data_available: true
+  status: "available"
+  access_notes: "No raw reads or count matrix deposited. The only public data are the annotated, significance-filtered DEG tables in supplementary Table S4 (CC BY 4.0). Retrieved from Europe PMC (PMC11033467)."
+
+qc_status: "passed_with_warnings"
+analysis_status: "not_started"
+
+comparisons:
+  # ---------------------------------------------------------------------------
+  # Sheet 'Vcor v LOnly' of supplementary Table S4.
+  - comparison_id: "vcor_vs_larvae_only"
+    tissue: "whole_larva"
+    life_stage: "larva"
+    stressor_original: "Pathogenic Vibrio coralliilyticus strain RE22 added at 6.0 x 10^3 CFU/mL at 48 hours post-fertilization"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "6.0 x 10^3 CFU/mL"
+    exposure_duration: "24 h (48 hpf challenge to 72 hpf sampling)"
+    exposure_timing: "48 hours post-fertilization"
+    control_condition: "Larvae Only — no probiotic and no pathogen added (negative control)"
+    treatment_condition: "V. coralliilyticus RE22 challenge at 48 hpf without probiotic pre-treatment (positive control for disease)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent larval survival"
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/HESSER2024_VCOR/HESSER2024_VCOR_vcor_vs_larvae_only_dge.tsv"
+
+  # ---------------------------------------------------------------------------
+  # Sheet '18hrPB+Vc v LOnly' of supplementary Table S4.
+  # NOTE: this arm confounds two interventions (probiotic AND pathogen) against an
+  # untreated control, so the molecular signal cannot be attributed to the
+  # pathogen response or to the probiotic effect alone. Flagged accordingly.
+  - comparison_id: "probiotic_plus_vcor_vs_larvae_only"
+    tissue: "whole_larva"
+    life_stage: "larva"
+    stressor_original: "Probiotic combination (four strains, 3.0 x 10^5 CFU/mL total) at 18 hpf followed by Vibrio coralliilyticus RE22 at 6.0 x 10^3 CFU/mL at 48 hpf"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "probiotic 3.0 x 10^5 CFU/mL; V. coralliilyticus RE22 6.0 x 10^3 CFU/mL"
+    exposure_duration: "24 h from pathogen challenge (48 hpf) to sampling (72 hpf); probiotic present from 18 hpf"
+    exposure_timing: "probiotic 18 hpf; pathogen 48 hpf"
+    control_condition: "Larvae Only — no probiotic and no pathogen added (negative control)"
+    treatment_condition: "Probiotic combination at 18 hpf followed by V. coralliilyticus RE22 challenge at 48 hpf"
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent larval survival"
+    resilience_classification: "resilience"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/HESSER2024_VCOR/HESSER2024_VCOR_probiotic_plus_vcor_vs_larvae_only_dge.tsv"
+
+quality_flags:
+  - processed_only
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+  - identifier_mapping_uncertain
+
+limitations: >
+  (1) Only the authors' annotated, significance-filtered DEG lists are public
+  (|log2FC| >= 2 and BH-adjusted p < 0.05); the full DESeq2 result was not
+  released, so the evidence here is a truncated, significance-selected subset and
+  absence of a gene is NOT evidence of no effect. (2) The source reports no
+  standard error and no unadjusted p-value, so this study cannot contribute to
+  inverse-variance-weighted pooling. (3) n = 3 biological replicates per group,
+  a single timepoint (72 hpf), and whole-larva homogenate, so tissue-specific and
+  temporal resolution are absent. (4) The probiotic-plus-pathogen arm confounds
+  two interventions against an untreated control; its effect sizes must not be
+  read as a pure pathogen response or a pure probiotic effect. (5) The authors
+  aligned to assembly GCA_902806645.1 (cgigas_uk_roslin_v1) but did not state the
+  annotation release, and AREE's crosswalk is built on the current NCBI annotation
+  (GCF_963853765.1-RS_2024_06), so a subset of reported gene IDs resolve only via
+  NCBI's retired-GeneID remapping and carry mapping_confidence 'inferred'.
+  (6) A third published comparison ("18 hr PB Only", probiotic without pathogen)
+  was deliberately NOT registered: it involves no stressor, and forcing it into
+  the stressor ontology term 'pathogen_challenge' would misrepresent the design.
+
+provenance:
+  registered_by: "sr320"
+  date_registered: "2026-08-27"
+  curation_notes: >
+    Curated from the open-access (CC BY 4.0) supplementary material of the source
+    article; no raw data reanalysis was performed. Gene identifiers are preserved
+    exactly as published, including the 'gene-LOCxxxxxxxxx|LOCxxxxxxxxx' decoration
+    carried over from the source GFF; AREE resolves the embedded stable identifier
+    without altering feature_id_original. Conversion from the published .xls is
+    recorded with checksums in data/studies/HESSER2024_VCOR/intake_provenance.json.
+  source_links:
+    - "https://doi.org/10.3389/fimmu.2024.1380089"
+    - "https://europepmc.org/articles/PMC11033467"
+    - "https://www.frontiersin.org/articles/10.3389/fimmu.2024.1380089/full#supplementary-material"

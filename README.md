@@ -104,7 +104,8 @@ AREE/
 ├── data/
 │   ├── demo/                  # SIMULATED demo result tables per assay
 │   ├── reference/             # genome/annotation metadata
-│   └── mappings/              # identifier crosswalk + ambiguous-symbol map
+│   │   └── crosswalk/         # REAL identifier crosswalk + provenance sidecar
+│   └── mappings/              # SYNTHETIC demo crosswalk + ambiguous-symbol map
 ├── src/
 │   ├── common/                # shared paths, IO, vocabulary loaders
 │   ├── intake/                # schema validation + registry ingestion
@@ -112,6 +113,7 @@ AREE/
 │   ├── meta_analysis/         # random-effects pooling + heterogeneity
 │   ├── prioritize/            # transparent scoring + tier gating
 │   ├── reporting/             # evidence cards + provenance manifests
+│   ├── mappings/              # builds real crosswalks from NCBI Gene + UniProtKB
 │   ├── validation/            # reusable validation checks
 │   └── aree/                  # the `aree` CLI
 ├── app/                       # Streamlit interface
@@ -130,6 +132,47 @@ AREE/
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
 | `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table |
 | `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>]` | Generate per-candidate evidence cards |
+| `aree build-crosswalk [--taxid <n>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB |
+
+## Working with real data
+
+The quick start above runs on **simulated** studies and a **synthetic** crosswalk.
+AREE also ships one **real** registered study — `HESSER2024_VCOR`, curated from the
+open-access supplementary tables of
+[Hesser et al. 2024](https://doi.org/10.3389/fimmu.2024.1380089) (Vibrio
+coralliilyticus challenge of *C. gigas* larvae). Harmonizing it requires the real
+crosswalk:
+
+```bash
+export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+aree harmonize --study HESSER2024_VCOR
+```
+
+87.2% of its published identifiers resolve (274 `exact`, 32 `inferred` via NCBI's
+retired-GeneID remapping); every unresolved identifier is a gene NCBI discontinued
+without a replacement. Read
+[docs/first_real_study.md](docs/first_real_study.md) before curating your own — it
+records what broke the first time real data hit the pipeline.
+
+Real and simulated evidence are kept strictly apart: `simulated` is a column in the
+evidence schema and part of the meta-analysis grouping key, and each study selects
+its crosswalk from its own `simulated` flag, so a real study will refuse to run
+against the demo crosswalk.
+
+Rebuild it only when the NCBI annotation changes (streams ~230 MB, 15-20 min):
+
+```bash
+aree build-crosswalk
+```
+
+The demo and real crosswalks are deliberately never merged — the demo's LOC
+numbers collide with real NCBI GeneIDs that denote different genes. See
+[docs/identifier_mapping.md](docs/identifier_mapping.md) for the coverage
+figures and their consequences, in particular that UniProt links only 8.4% of
+*M. gigas* genes, so proteomics evidence carries a much higher `unresolved`
+rate than transcriptomics evidence. Identifiers retired by NCBI re-annotation
+(9,057 of them) resolve to their current replacement as `inferred`; the 13,601
+discontinued with no replacement stay `unresolved` by design.
 
 ## Documentation
 
