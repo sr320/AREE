@@ -136,14 +136,28 @@ AREE/
 
 ## Working with real data
 
-The quick start above runs entirely on **simulated** data and a **synthetic**
-identifier crosswalk. Harmonizing a real study requires selecting the real
-crosswalk, which is built from NCBI Gene and UniProtKB and ships with the repo:
+The quick start above runs on **simulated** studies and a **synthetic** crosswalk.
+AREE also ships one **real** registered study — `HESSER2024_VCOR`, curated from the
+open-access supplementary tables of
+[Hesser et al. 2024](https://doi.org/10.3389/fimmu.2024.1380089) (Vibrio
+coralliilyticus challenge of *C. gigas* larvae). Harmonizing it requires the real
+crosswalk:
 
 ```bash
 export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
-aree harmonize --study <STUDY_ID> --input path/to/supplementary_table.tsv
+aree harmonize --study HESSER2024_VCOR
 ```
+
+87.2% of its published identifiers resolve (274 `exact`, 32 `inferred` via NCBI's
+retired-GeneID remapping); every unresolved identifier is a gene NCBI discontinued
+without a replacement. Read
+[docs/first_real_study.md](docs/first_real_study.md) before curating your own — it
+records what broke the first time real data hit the pipeline.
+
+Real and simulated evidence are kept strictly apart: `simulated` is a column in the
+evidence schema and part of the meta-analysis grouping key, and each study selects
+its crosswalk from its own `simulated` flag, so a real study will refuse to run
+against the demo crosswalk.
 
 Rebuild it only when the NCBI annotation changes (streams ~230 MB, 15-20 min):
 

@@ -11,7 +11,11 @@ import re
 from common import sha256_file
 
 EVIDENCE_COLUMNS = [
-    "evidence_id", "study_id", "comparison_id",
+    # `simulated` separates fabricated demo evidence from evidence derived from a
+    # real published study. It is part of the schema rather than a report-time
+    # annotation because the two must never be pooled, and a reader of the
+    # evidence table must be able to tell them apart without consulting the registry.
+    "evidence_id", "study_id", "comparison_id", "simulated",
     "feature_id_original", "feature_id_standardized", "feature_type",
     "orthogroup_id", "species", "genome_assembly", "annotation_version",
     "annotation_context", "molecular_direction", "effect_size", "effect_size_type",

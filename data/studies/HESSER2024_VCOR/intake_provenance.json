@@ -1,0 +1,58 @@
+{
+  "study_id": "HESSER2024_VCOR",
+  "date_generated": "2026-08-27",
+  "converter": "src/intake/supplementary_table.py",
+  "source": {
+    "description": "Supplementary Table S4 (annotated differentially expressed genes per treatment vs Larvae Only control)",
+    "url": "https://www.frontiersin.org/articles/10.3389/fimmu.2024.1380089/full#supplementary-material",
+    "license": "CC BY 4.0",
+    "citation": "Hesser J, Mueller RS, Langdon C, Schubiger CB (2024). Immunomodulatory effects of a probiotic combination treatment to improve the survival of Pacific oyster (Crassostrea gigas) larvae against infection by Vibrio coralliilyticus. Front Immunol 15:1380089. https://doi.org/10.3389/fimmu.2024.1380089",
+    "local_copy": "data/studies/HESSER2024_VCOR/_source/fimmu-15-1380089-Table_S4.xls",
+    "sha256": "fdce7393109a3969f7ad21667f5f8284e23633c69cc078dbfc277fb691a8a9f9"
+  },
+  "conversions": [
+    {
+      "output_file": "data/studies/HESSER2024_VCOR/HESSER2024_VCOR_vcor_vs_larvae_only_dge.tsv",
+      "rows_in_source": 131,
+      "rows_written": 129,
+      "rows_dropped_missing_id_or_effect": 2,
+      "rows_dropped_non_numeric": 0,
+      "columns_reported_by_source": [
+        "gene_id",
+        "log2FoldChange",
+        "padj"
+      ],
+      "columns_absent_from_source": [
+        "lfcSE",
+        "pvalue"
+      ],
+      "output_sha256": "7cf312da596a1a5a63d0bc69acd98e746e1273214d7edcd199c8e61ef693a719",
+      "source_sheet": "Vcor v LOnly"
+    },
+    {
+      "output_file": "data/studies/HESSER2024_VCOR/HESSER2024_VCOR_probiotic_plus_vcor_vs_larvae_only_dge.tsv",
+      "rows_in_source": 223,
+      "rows_written": 222,
+      "rows_dropped_missing_id_or_effect": 0,
+      "rows_dropped_non_numeric": 1,
+      "columns_reported_by_source": [
+        "gene_id",
+        "log2FoldChange",
+        "padj"
+      ],
+      "columns_absent_from_source": [
+        "lfcSE",
+        "pvalue"
+      ],
+      "output_sha256": "21d68d5f497f83378856d849aaa7a41f8cfb7df1795a8dc2c1fa696a2e1cd12f",
+      "source_sheet": "18hrPB+Vc v LOnly"
+    }
+  ],
+  "transformation_notes": [
+    "Identifiers preserved verbatim, including the 'gene-LOCxxxxx|LOCxxxxx' decoration used by the source; harmonize.identifiers resolves the embedded stable id.",
+    "The source reports only log2FoldChange and a BH-adjusted p-value, so lfcSE and the raw p-value are empty. Meta-analysis weighting that requires a standard error cannot use this study.",
+    "The source table lists only ANNOTATED DEGs passing the authors' |log2FC| >= 2 and padj < 0.05 thresholds, not the full DESeq2 result. This is a truncated, significance-filtered table.",
+    "Sheet '18hrPB+Vc v LOnly' of the published file contains a repeated header row part-way down (source row 71); it is dropped by the numeric coercion step and counted as rows_dropped_non_numeric.",
+    "Sheet '18hrPB v LOnly' (probiotic only, no pathogen) was not converted: it has no stressor, and the AREE stressor ontology has no term for a beneficial-microbe exposure."
+  ]
+}

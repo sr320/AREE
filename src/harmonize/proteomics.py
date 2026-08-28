@@ -36,6 +36,7 @@ def harmonize_proteomics(
             "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], raw_id, analysis_method),
             "study_id": study["study_id"],
             "comparison_id": comparison["comparison_id"],
+            "simulated": bool(study.get("simulated", False)),
             "feature_id_original": raw_id,
             "feature_id_standardized": resolved.feature_id_standardized,
             "feature_type": "protein",

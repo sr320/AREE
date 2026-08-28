@@ -26,7 +26,7 @@ demo pipeline runs from the committed header-only registry).
 | `aree` CLI | `src/aree/cli.py` | all 6 required commands run on a clean machine |
 | Streamlit interface | `app/main.py` | browse/filter studies, evidence, candidates, search, CSV/TSV export; verified serving HTTP 200 |
 | Quarto documentation site | `docs/` | 18 pages render cleanly (`quarto render docs`) |
-| Test suite | `tests/` (68 tests) | schema, malformed input, duplicate IDs, provenance, mapping confidence, effect sizes, meta-analysis, score reproducibility, evidence-card generation, full CLI pipeline, crosswalk construction + selection + real-crosswalk invariants |
+| Test suite | `tests/` (83 tests) | schema, malformed input, duplicate IDs, provenance, mapping confidence, effect sizes, meta-analysis, score reproducibility, evidence-card generation, full CLI pipeline, crosswalk construction + selection + real-crosswalk invariants |
 | CI | `.github/workflows/ci.yml` | python tests + demo pipeline, schema sanity, docs render |
 
 ## Scaffolded but not yet production-ready
@@ -49,7 +49,9 @@ run" honesty statement.
 
 | Component | Status |
 |---|---|
-| Real crosswalk | Built, checksummed, and unit-tested, and resolution verified by hand against real GeneIDs, LOC forms, UniProt accessions (including non-representative and cross-gene-shared ones), Ensembl xrefs, and retired GeneIDs (both remappable and dead). **It has not yet been used to harmonize an actual published study**, because no real study is registered yet — that is the next step. |
+| Real crosswalk | Built, checksummed, unit-tested, **and now exercised end-to-end on a real published study** (`HESSER2024_VCOR`): 87.2% of 351 real identifiers resolved. |
+| Meta-analysis on real evidence | The one real study contributes **no pooled estimate**: its source reports no standard error and no unadjusted p-value, so AREE declines to pool rather than impute. Random-effects pooling has therefore still only been exercised on simulated inputs. |
+| Real-study coverage | One real study, one assay type (RNA-seq), one stressor (pathogen challenge). Cross-study meta-analysis on real data needs several more. |
 
 ## Planned future work
 

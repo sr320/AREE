@@ -64,6 +64,33 @@ def active_crosswalk_path() -> Path:
     return DEMO_CROSSWALK_PATH
 
 
+def crosswalk_for_study(simulated: bool) -> Path:
+    """The crosswalk a study must resolve against, decided by the study itself.
+
+    A simulated study resolves against the synthetic demo crosswalk; a real study
+    resolves against a real one. Letting a single global setting decide would
+    allow either half of that to be wrong — notably, harmonizing the demo studies
+    against the real crosswalk silently attaches real NCBI GeneIDs to fabricated
+    effect sizes, because the demo LOC numbers collide with real genes.
+
+    A real study with no real crosswalk selected is an error rather than a
+    silent fallback to the demo crosswalk.
+    """
+    if simulated:
+        return DEMO_CROSSWALK_PATH
+    if _CROSSWALK_OVERRIDE is not None:
+        return _CROSSWALK_OVERRIDE
+    env = os.environ.get(CROSSWALK_ENV_VAR)
+    if env:
+        return Path(env)
+    raise FileNotFoundError(
+        "This study is not simulated, so it cannot be harmonized against the "
+        "synthetic demo crosswalk. Build a real crosswalk with `aree build-crosswalk` "
+        f"and select it via ${CROSSWALK_ENV_VAR}, e.g.\n"
+        "  export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    )
+
+
 def set_crosswalk_path(path) -> None:
     """Select the crosswalk to resolve against, clearing cached lookups.
 
@@ -160,6 +187,37 @@ def _retired_map(path_str: str) -> dict:
     return dict(zip(df["discontinued_gene_id"], df["current_gene_id"]))
 
 
+# GFF/GTF-derived feature prefixes that published result tables commonly carry.
+_FEATURE_PREFIXES = ("gene-", "rna-", "cds-", "exon-", "id-")
+
+
+def identifier_candidates(raw_id: str) -> list:
+    """Candidate tokens to look up for a raw identifier, most literal first.
+
+    Published result tables rarely carry a bare identifier. Tables built from an
+    NCBI GFF routinely report things like ``gene-LOC105320749|LOC105320749`` —
+    a feature-type prefix plus a pipe-joined symbol. The decoration is
+    deterministic and the stable identifier is literally embedded, so stripping
+    it is lossless rather than a guess.
+
+    The verbatim value is always tried first, and the caller keeps it as
+    `feature_id_original`; this only affects what is looked up.
+    """
+    raw = str(raw_id).strip()
+    candidates = [raw]
+    for token in raw.split("|"):
+        token = token.strip()
+        if not token:
+            continue
+        for prefix in _FEATURE_PREFIXES:
+            if token.lower().startswith(prefix):
+                token = token[len(prefix):]
+                break
+        if token and token not in candidates:
+            candidates.append(token)
+    return candidates
+
+
 @lru_cache(maxsize=1)
 def _ambiguous_map() -> dict:
     doc = load_yaml(AMBIGUOUS_MAP_PATH)
@@ -192,32 +250,50 @@ def resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
         return ResolvedIdentifier(row["ncbi_gene_id"], "exact", row["orthogroup_id"] or None)
 
     if id_type in STABLE_ID_COLUMNS:
-        column = STABLE_ID_COLUMNS[id_type]
-        if column not in cw.columns:
-            return ResolvedIdentifier(None, "unresolved", None)
-        # Ensembl xrefs can be multi-valued (';'-delimited) in a real crosswalk.
-        if column == "ensembl_gene_id":
-            match = cw[
-                (cw[column] == raw_id)
-                | cw[column].str.split(";").apply(lambda ids: raw_id in ids)
-            ]
+        # `ncbi_gene_id` and `locus_id` are two spellings of the same thing:
+        # NCBI's LOC<GeneID> convention means "LOC105320749" and "105320749"
+        # denote one gene. Published tables use whichever their annotation
+        # pipeline emitted, so both columns are searched for either id_type
+        # rather than trusting the caller's guess from a column name.
+        if id_type in ("ncbi_gene_id", "locus_id"):
+            columns = ["ncbi_gene_id", "locus_id"]
         else:
-            match = cw[cw[column] == raw_id]
-        if len(match) == 1:
-            row = match.iloc[0]
-            return ResolvedIdentifier(row["ncbi_gene_id"], "exact", row["orthogroup_id"] or None)
-        if len(match) > 1:
-            row = match.iloc[0]
-            return ResolvedIdentifier(row["ncbi_gene_id"], "many_to_one_ortholog", row["orthogroup_id"] or None)
+            columns = [STABLE_ID_COLUMNS[id_type]]
+        columns = [c for c in columns if c in cw.columns]
+        if not columns:
+            return ResolvedIdentifier(None, "unresolved", None)
+
+        candidates = identifier_candidates(raw_id)
+        for candidate in candidates:
+            for column in columns:
+                # Ensembl xrefs can be multi-valued (';'-delimited) in a real crosswalk.
+                if column == "ensembl_gene_id":
+                    match = cw[
+                        (cw[column] == candidate)
+                        | cw[column].str.split(";").apply(lambda ids: candidate in ids)
+                    ]
+                else:
+                    match = cw[cw[column] == candidate]
+                if len(match) == 1:
+                    row = match.iloc[0]
+                    return ResolvedIdentifier(
+                        row["ncbi_gene_id"], "exact", row["orthogroup_id"] or None
+                    )
+                if len(match) > 1:
+                    row = match.iloc[0]
+                    return ResolvedIdentifier(
+                        row["ncbi_gene_id"], "many_to_one_ortholog", row["orthogroup_id"] or None
+                    )
 
         # Nothing in the current annotation. The identifier may be a GeneID that
         # NCBI has since retired — common for studies run on an older annotation.
         if id_type in ("ncbi_gene_id", "locus_id"):
-            probe = str(raw_id)
-            if id_type == "locus_id" and probe.startswith("LOC"):
-                probe = probe[3:]
-            current = _retired_map(str(active_crosswalk_path())).get(probe)
-            if current:
+            retired = _retired_map(str(active_crosswalk_path()))
+            for candidate in candidates:
+                probe = candidate[3:] if candidate.startswith("LOC") else candidate
+                current = retired.get(probe)
+                if not current:
+                    continue
                 repl = cw[cw["ncbi_gene_id"] == current]
                 if len(repl) == 1:
                     row = repl.iloc[0]
