@@ -7,13 +7,18 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import EVIDENCE_TABLE_PATH, REPO_ROOT, REPORTS_DIR, load_yaml, sha256_file, STUDIES_DIR
+from common import EVIDENCE_TABLE_PATH, REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_yaml, sha256_file
 
-from .methylation import harmonize_methylation
+from .identifiers import (
+    active_crosswalk_path,
+    crosswalk_for_study,
+    retired_table_path,
+    set_crosswalk_path,
+)
 from .metabolomics import harmonize_metabolomics
+from .methylation import harmonize_methylation
 from .proteomics import harmonize_proteomics
 from .rnaseq import harmonize_rnaseq
-from .identifiers import active_crosswalk_path, crosswalk_for_study, retired_table_path, set_crosswalk_path
 from .schema import EVIDENCE_COLUMNS
 
 MANIFESTS_DIR = REPORTS_DIR / "manifests"

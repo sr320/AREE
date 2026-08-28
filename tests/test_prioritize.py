@@ -1,4 +1,5 @@
 from conftest import harmonize_all_demo_studies
+
 from harmonize.core import load_evidence_table
 from meta_analysis.run import run_meta_analysis
 from prioritize.rank import build_candidates

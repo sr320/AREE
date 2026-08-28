@@ -13,7 +13,7 @@ from pathlib import Path
 
 import jsonschema
 
-from common import SCHEMAS_DIR, load_json, load_yaml, load_vocab
+from common import SCHEMAS_DIR, load_json, load_vocab, load_yaml
 
 
 @dataclass

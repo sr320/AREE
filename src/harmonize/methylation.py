@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .identifiers import resolve_identifier, ResolvedIdentifier
+from .identifiers import ResolvedIdentifier, resolve_identifier
 from .schema import EVIDENCE_COLUMNS, compute_quality_flags, make_evidence_id, source_file_ref
 
 DIRECTION_MAP = {"hyper": "hyper", "hypo": "hypo"}

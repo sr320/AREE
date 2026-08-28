@@ -21,7 +21,13 @@ dependencies = [
 
 [project.optional-dependencies]
 app = ["streamlit>=1.30"]
-dev = ["pytest>=7.4", "ruff>=0.4"]
+# Spreadsheet engines for `aree intake-supplementary` against published .xls/.xlsx
+# supplementary files. Not needed for CSV/TSV sources or for any other command.
+intake = ["xlrd>=2.0.1", "openpyxl>=3.1"]
+# ruff is pinned to a minor range: the lint rule set is declared explicitly in
+# [tool.ruff.lint] below, but new ruff minors still add checks under existing
+# rule prefixes. Bumping this range is a deliberate act, not a CI surprise.
+dev = ["pytest>=7.4", "ruff>=0.16.5,<0.17"]
 
 [project.scripts]
 aree = "aree.cli:main"
@@ -36,3 +42,17 @@ packages = [
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff]
+# Declared explicitly so that `ruff check` behaves identically here and in CI,
+# and does not silently acquire new rules when ruff's defaults change.
+target-version = "py39"
+line-length = 100
+extend-exclude = ["src/aree.egg-info"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+# Line length is not enforced: several modules carry long, deliberately
+# unwrapped literals (URLs, citation strings, column contracts) where breaking
+# the line hurts readability more than the length does.
+ignore = ["E501"]

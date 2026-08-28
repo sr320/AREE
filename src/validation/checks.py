@@ -2,7 +2,7 @@
 src/intake for CLI-facing validation."""
 from __future__ import annotations
 
-from intake.schema_validate import validate_study_file, ValidationResult
+from intake.schema_validate import ValidationResult, validate_study_file
 
 REQUIRED_PROVENANCE_FIELDS = ["registered_by", "date_registered"]
 

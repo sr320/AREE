@@ -4,7 +4,13 @@ from __future__ import annotations
 import pandas as pd
 
 from .identifiers import resolve_identifier
-from .schema import EVIDENCE_COLUMNS, compute_quality_flags, make_evidence_id, molecular_direction_from_effect, source_file_ref
+from .schema import (
+    EVIDENCE_COLUMNS,
+    compute_quality_flags,
+    make_evidence_id,
+    molecular_direction_from_effect,
+    source_file_ref,
+)
 
 
 def harmonize_rnaseq(

@@ -101,7 +101,7 @@ def _parse_flags(value) -> list[str]:
     return []
 
 
-def write_meta_analysis(phenotype: str | None, feature_type: str | None) -> "pd.DataFrame | None":
+def write_meta_analysis(phenotype: str | None, feature_type: str | None) -> pd.DataFrame | None:
     result = run_meta_analysis(phenotype, feature_type)
     META_ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
     label = f"{phenotype or 'all_phenotypes'}_{feature_type or 'all_features'}"

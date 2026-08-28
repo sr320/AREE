@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from conftest import harmonize_all_demo_studies
+
 from reporting.evidence_cards import build_evidence_cards
 
 

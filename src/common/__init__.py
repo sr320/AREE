@@ -25,12 +25,12 @@ class VocabError(ValueError):
 
 
 def load_yaml(path) -> dict:
-    with open(path, "r") as fh:
+    with open(path) as fh:
         return yaml.safe_load(fh)
 
 
 def load_json(path) -> dict:
-    with open(path, "r") as fh:
+    with open(path) as fh:
         return json.load(fh)
 
 

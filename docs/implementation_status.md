@@ -23,11 +23,13 @@ demo pipeline runs from the committed header-only registry).
 | Random-effects meta-analysis | `src/meta_analysis/` | DerSimonian–Laird, I²/τ², direction-consistency; excludes `unresolved` from pooling |
 | Transparent candidate scoring + tiers | `src/prioritize/` | named weighted components; hard gates that a score cannot override |
 | Evidence cards | `src/reporting/evidence_cards.py` | one per candidate incl. emerging; forest data, multi-omics context, limitations, next step |
-| `aree` CLI | `src/aree/cli.py` | all 6 required commands run on a clean machine |
+| `aree` CLI | `src/aree/cli.py` | all 6 required commands run on a clean machine, plus `build-crosswalk` and `intake-supplementary` |
 | Streamlit interface | `app/main.py` | browse/filter studies, evidence, candidates, search, CSV/TSV export; verified serving HTTP 200 |
 | Quarto documentation site | `docs/` | 18 pages render cleanly (`quarto render docs`) |
-| Test suite | `tests/` (83 tests) | schema, malformed input, duplicate IDs, provenance, mapping confidence, effect sizes, meta-analysis, score reproducibility, evidence-card generation, full CLI pipeline, crosswalk construction + selection + real-crosswalk invariants |
-| CI | `.github/workflows/ci.yml` | python tests + demo pipeline, schema sanity, docs render |
+| Reproducible supplementary intake | `src/intake/run_intake.py`, `data/studies/*/intake.yaml` | published artifact → AREE result tables via a committed config; source checksum verified before every conversion; `--check` regenerates into a temp dir and compares against committed files *and* provenance; never imputes a missing statistic |
+| Test suite | `tests/` (96 tests) | schema, malformed input, duplicate IDs, provenance, mapping confidence, effect sizes, meta-analysis, score reproducibility, evidence-card generation, full CLI pipeline, crosswalk construction + selection + real-crosswalk invariants, intake reproducibility + drift detection |
+| CI | `.github/workflows/ci.yml` | python tests + demo pipeline, real-study path (intake `--check` → register → harmonize against the real crosswalk → output assertions → clean-tree check), schema sanity, docs render |
+| Lint determinism | `pyproject.toml` `[tool.ruff]` | rule set declared explicitly and ruff pinned to a minor range, so CI cannot break on an upstream default change |
 
 ## Scaffolded but not yet production-ready
 
@@ -49,12 +51,15 @@ run" honesty statement.
 
 | Component | Status |
 |---|---|
-| Real crosswalk | Built, checksummed, unit-tested, **and now exercised end-to-end on a real published study** (`HESSER2024_VCOR`): 87.2% of 351 real identifiers resolved. |
+| Real crosswalk | Built, checksummed, unit-tested, **and exercised end-to-end on a real published study** (`HESSER2024_VCOR`): 87.2% of 351 real identifiers resolved. Now re-verified by CI on every push. |
 | Meta-analysis on real evidence | The one real study contributes **no pooled estimate**: its source reports no standard error and no unadjusted p-value, so AREE declines to pool rather than impute. Random-effects pooling has therefore still only been exercised on simulated inputs. |
 | Real-study coverage | One real study, one assay type (RNA-seq), one stressor (pathogen challenge). Cross-study meta-analysis on real data needs several more. |
+| Intake converter breadth | The intake config covers **differential-expression tables only** (the `gene_id`/`log2FoldChange`/`lfcSE`/`pvalue`/`padj` contract). Published methylation-region, protein-abundance, and metabolite-feature tables still need a per-study script; extending `convert_de_table` to those contracts is the obvious next increment. |
 
 ## Planned future work
 
+- Extending the intake converter beyond differential-expression tables to the
+  methylation, proteomics, and metabolomics input contracts.
 - Real ortholog mapping (OrthoFinder/OrthoDB) to populate `orthogroup_id`, which
   the real crosswalk ships empty rather than fabricating. Until then, cross-species
   evidence pooling is not supported.

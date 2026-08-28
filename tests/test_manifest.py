@@ -1,7 +1,6 @@
 import json
 
 
-
 def test_harmonize_emits_provenance_manifest(isolated_reports):
     from harmonize.core import harmonize_study
     harmonize_study("GIGAS_SAL04", date_generated="2026-01-01")
