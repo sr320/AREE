@@ -1,6 +1,7 @@
 import math
 
 from conftest import harmonize_all_demo_studies
+
 from meta_analysis.effect_sizes import approximate_se
 from meta_analysis.pooling import dersimonian_laird
 from meta_analysis.run import run_meta_analysis
@@ -52,6 +53,6 @@ def test_meta_analysis_flags_conflicting_direction_for_sod1(isolated_reports):
 def test_meta_analysis_excludes_unresolved_identifiers(isolated_reports):
     harmonize_all_demo_studies()
     result = run_meta_analysis(feature_type="gene")
-    assert "unresolved" not in set(
+    assert "unresolved" not in {
         conf for confs in result["mapping_confidences"] for conf in confs.split("|")
-    )
+    }

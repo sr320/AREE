@@ -131,7 +131,7 @@ def download_uniprot(taxid: int, dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     url = UNIPROT_STREAM_URL.format(taxid=taxid)
     cmd = f"curl -sS --fail --retry 3 {url!r}"
-    proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.run(cmd, shell=True, capture_output=True, check=False)
     if proc.returncode != 0:
         raise RuntimeError(f"UniProt download failed: {proc.stderr.decode().strip()}")
     with open(dest, "wb") as fh:

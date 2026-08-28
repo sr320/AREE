@@ -20,7 +20,7 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,app]"
+          pip install -e ".[dev,app,intake]"
 
       - name: Lint (ruff)
         run: ruff check src tests
@@ -46,6 +46,46 @@ jobs:
           aree build-evidence-cards
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
+
+  real-study:
+    name: Real-study path (intake -> harmonize)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,intake]"
+
+      # The committed derived TSVs must still follow from the committed published
+      # artifact. --check regenerates into a temp dir and compares checksums, so a
+      # hand-edited result file or a swapped source artifact fails here.
+      - name: Verify intake is reproducible from the published source
+        run: aree intake-supplementary data/studies/HESSER2024_VCOR/intake.yaml --check
+
+      - name: Validate and register the real study
+        run: |
+          aree validate-study registry/studies/HESSER2024_VCOR.yaml
+          aree register-study registry/studies/HESSER2024_VCOR.yaml --update
+
+      # Runs against the real 33k-gene NCBI/UniProt crosswalk committed to the repo,
+      # not the synthetic demo crosswalk.
+      - name: Harmonize against the real crosswalk
+        env:
+          AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+        run: aree harmonize --study HESSER2024_VCOR
+
+      - name: Check the harmonized output
+        run: python scripts/check_real_study_evidence.py
+
+      # Intake and harmonization must not leave the working tree dirty.
+      - name: Working tree must be clean
+        run: |
+          git status --porcelain -- data/ registry/studies/
+          test -z "$(git status --porcelain -- data/ registry/studies/)"
 
   schema-validation:
     name: JSON schema sanity

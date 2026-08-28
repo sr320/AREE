@@ -44,6 +44,9 @@ Requires Python ≥ 3.9.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,app]"
+
+# Add `intake` if you will convert published .xls/.xlsx supplementary tables:
+#   pip install -e ".[dev,app,intake]"
 ```
 
 See [docs/installation.md](docs/installation.md) for details.
@@ -128,6 +131,7 @@ AREE/
 |---|---|
 | `aree validate-study <file>` | Validate a study YAML against schema + controlled vocabularies |
 | `aree register-study <file> [--update]` | Add (or update) a study in the registry |
+| `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies` | List registered studies and their pipeline status |
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
 | `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table |
@@ -147,6 +151,19 @@ crosswalk:
 export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study HESSER2024_VCOR
 ```
+
+The result tables it harmonizes are themselves derived from the published
+supplementary spreadsheet by a committed, re-runnable intake config — no manual
+copy-paste step sits between the publication and the evidence:
+
+```bash
+aree intake-supplementary data/studies/HESSER2024_VCOR/intake.yaml --check
+```
+
+`--check` regenerates the tables into a temporary directory and compares
+checksums against both the committed files and the committed provenance, so a
+hand-edited result table or a swapped source artifact fails loudly. CI runs this
+on every push. Drop `--check` to actually rewrite the files.
 
 87.2% of its published identifiers resolve (274 `exact`, 32 `inferred` via NCBI's
 retired-GeneID remapping); every unresolved identifier is a gene NCBI discontinued

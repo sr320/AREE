@@ -1,9 +1,9 @@
 """End-to-end smoke test: the full demo pipeline (validate -> register -> harmonize ->
 meta-analyze -> build-evidence-cards) must run successfully on all 6 demo studies."""
 from click.testing import CliRunner
+from conftest import ALL_DEMO_STUDY_IDS
 
 from aree.cli import main
-from conftest import ALL_DEMO_STUDY_IDS
 
 
 def test_full_demo_pipeline_via_cli(isolated_reports, isolated_registry, tmp_path, monkeypatch):

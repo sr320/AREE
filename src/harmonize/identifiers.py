@@ -270,7 +270,9 @@ def resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
                 if column == "ensembl_gene_id":
                     match = cw[
                         (cw[column] == candidate)
-                        | cw[column].str.split(";").apply(lambda ids: candidate in ids)
+                        | cw[column].str.split(";").apply(
+                            lambda ids, wanted=candidate: wanted in ids
+                        )
                     ]
                 else:
                     match = cw[cw[column] == candidate]

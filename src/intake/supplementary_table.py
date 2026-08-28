@@ -96,11 +96,17 @@ def write_intake_provenance(
     citation: str,
     conversions: list,
     notes: list,
+    date_generated: str | None = None,
 ) -> None:
-    """Record how a published artifact became AREE result files."""
+    """Record how a published artifact became AREE result files.
+
+    `date_generated` records when these outputs were *derived*. Callers pass the
+    existing date when re-running produces byte-identical outputs, so that a
+    no-op re-run does not dirty the tree; it defaults to today otherwise.
+    """
     doc = {
         "study_id": study_id,
-        "date_generated": date.today().isoformat(),
+        "date_generated": date_generated or date.today().isoformat(),
         "converter": "src/intake/supplementary_table.py",
         "source": {
             "description": source_description,

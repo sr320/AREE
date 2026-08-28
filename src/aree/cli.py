@@ -13,6 +13,7 @@ from tabulate import tabulate
 from aree import __version__
 from harmonize.core import harmonize_processed_table, harmonize_study
 from intake.registry import DuplicateStudyError, list_studies, register_study
+from intake.run_intake import IntakeError, run_intake
 from intake.schema_validate import validate_study_file
 from meta_analysis.run import write_meta_analysis
 from reporting.evidence_cards import build_evidence_cards
@@ -73,6 +74,51 @@ def list_studies_cmd():
         [[r["study_id"], r["assay_type"], r["analysis_mode"], r["qc_status"], r["analysis_status"]] for r in rows],
         headers=["study_id", "assay_type", "analysis_mode", "qc_status", "analysis_status"],
     ))
+
+
+@main.command("intake-supplementary")
+@click.argument("config", type=click.Path(exists=True))
+@click.option("--check", is_flag=True,
+              help="Regenerate into a temporary directory and verify against the committed "
+                   "files and provenance, without modifying the repository.")
+def intake_supplementary_cmd(config, check):
+    """Convert a published supplementary table into AREE result files.
+
+    CONFIG is an intake YAML (see data/studies/HESSER2024_VCOR/intake.yaml).
+    Reshaping is mechanical only: no statistic is ever imputed, and identifiers
+    are preserved verbatim for `harmonize` to resolve.
+    """
+    try:
+        report = run_intake(config, check=check)
+    except IntakeError as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    for conv in report["conversions"]:
+        absent = ", ".join(conv["columns_absent_from_source"]) or "none"
+        click.echo(
+            f"  {conv['output_file']}: {conv['rows_written']} rows "
+            f"(dropped {conv['rows_dropped_missing_id_or_effect']} blank, "
+            f"{conv['rows_dropped_non_numeric']} non-numeric); "
+            f"not reported by source: {absent}"
+        )
+
+    if check:
+        if report["mismatches"]:
+            click.echo(click.style(
+                f"\n{report['study_id']}: intake is NOT reproducible from the committed source.",
+                fg="red",
+            ))
+            for m in report["mismatches"]:
+                click.echo(click.style(f"  - {m}", fg="red"))
+            sys.exit(1)
+        click.echo(click.style(
+            f"\n{report['study_id']}: committed result files reproduce exactly from the "
+            "committed source.", fg="green",
+        ))
+        return
+
+    click.echo(click.style(f"\nWrote {report['provenance_file']}", fg="green"))
 
 
 @main.command("harmonize")

@@ -146,10 +146,38 @@ was run.
 ```bash
 aree build-crosswalk                       # once; ~380 MB streamed from NCBI
 export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+
+# The published spreadsheet -> the two result tables AREE harmonizes.
+aree intake-supplementary data/studies/HESSER2024_VCOR/intake.yaml --check
+
 aree validate-study registry/studies/HESSER2024_VCOR.yaml
 aree register-study  registry/studies/HESSER2024_VCOR.yaml --update
 aree harmonize --study HESSER2024_VCOR
 ```
 
 The result files are committed, so the harmonize step runs without re-downloading
-anything from the publisher.
+anything from the publisher. The published source spreadsheet is committed too,
+which is what lets the intake step be verified rather than trusted: `--check`
+regenerates the tables into a temporary directory and compares checksums against
+both the committed files and `intake_provenance.json`. Drop `--check` to rewrite
+them; a re-run producing byte-identical output preserves the original
+`date_generated`, so verifying reproducibility never shows up as a diff.
+
+Reading `.xls`/`.xlsx` sources needs the optional spreadsheet engines:
+`pip install -e ".[intake]"`. CSV and TSV sources need nothing extra.
+
+### What the intake step deliberately will not do
+
+The conversion is mechanical: select and rename columns, drop rows with no
+identifier or no effect size, drop non-numeric rows (the published sheet
+`18hrPB+Vc v LOnly` contains a repeated header part-way down), and record all
+of it. It never imputes a missing statistic. Because this source reports only
+`log2FoldChange` and `padj`, the `lfcSE` and `pvalue` columns come out **empty**,
+and that emptiness is what later stops the study from being pooled. Turning
+that gap into a plausible-looking number in a spreadsheet would have hidden the
+single most important fact about this study.
+
+Two guards keep that honest: the source `sha256` in the intake config is
+verified before every conversion, and `scripts/check_real_study_evidence.py`
+(run by CI) fails if `standard_error` or `p_value` ever becomes populated for
+this study.

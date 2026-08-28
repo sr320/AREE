@@ -117,7 +117,88 @@ Confirm it landed:
 aree list-studies
 ```
 
-## 6. Next steps
+## 6. Convert the published result tables
+
+If the study is `processed_results_harmonization` mode — the common case for
+public data — its results arrive as a supplementary spreadsheet or CSV that
+does not match the column contract `aree harmonize` expects. Do **not** reshape
+it by hand. Write an intake config instead, so the step from publication to
+evidence is a command someone else can re-run and verify.
+
+Put the downloaded artifact under `data/studies/YOUR_STUDY_ID/_source/` and
+write `data/studies/YOUR_STUDY_ID/intake.yaml`:
+
+```yaml
+study_id: YOUR_STUDY_ID
+assay: rnaseq
+
+source:
+  description: Supplementary Table S2 (differential expression, treated vs control)
+  url: https://doi.org/...
+  license: CC BY 4.0
+  citation: Author A, Author B (2025). Title. Journal 1:23. https://doi.org/...
+  local_copy: data/studies/YOUR_STUDY_ID/_source/supp_table_s2.xlsx
+  sha256: <shasum -a 256 of that file>
+
+output_dir: data/studies/YOUR_STUDY_ID
+provenance_file: data/studies/YOUR_STUDY_ID/intake_provenance.json
+
+conversions:
+  - output_file: YOUR_STUDY_ID_treated_vs_control_dge.tsv
+    source_sheet: DEGs            # spreadsheets only; omit for CSV/TSV
+    column_map:                   # AREE column: source column
+      gene_id: Gene
+      log2FoldChange: log2FC
+      lfcSE: lfcSE
+      pvalue: pvalue
+      padj: FDR
+
+# Quote every note: an unquoted string containing ": " parses as a YAML mapping.
+transformation_notes:
+  - "Anything a reader would need to know to interpret the derived table."
+```
+
+Then:
+
+```bash
+aree intake-supplementary data/studies/YOUR_STUDY_ID/intake.yaml
+```
+
+Rules the intake step enforces, and why:
+
+- **Map only the columns the source actually reports.** Unmapped AREE columns
+  are emitted empty. If the publication reports no standard error, leave
+  `lfcSE` unmapped — an empty column correctly prevents inverse-variance
+  pooling, whereas a fabricated one silently corrupts every meta-analysis the
+  study enters. Nothing is ever imputed.
+- **Do not touch identifiers.** Decoration like `gene-LOC105331241|LOC105331241`
+  is preserved verbatim; [identifier_mapping.md](identifier_mapping.md)
+  describes how it is resolved later. `feature_id_original` must remain exactly
+  what the authors published.
+- **Do not filter beyond what the authors did.** If the published table is
+  already significance-filtered, say so in `transformation_notes` — it is a
+  study limitation, not something to correct here.
+- **The source `sha256` is verified before every conversion.** If the publisher
+  reissues the file, the intake fails rather than silently re-deriving results
+  from a different version. Resolve that deliberately.
+
+Supported sources are `.xls`, `.xlsx`, `.xlsm` (needs `pip install -e ".[intake]"`),
+`.csv`, `.tsv`, and `.txt`. Verify at any later time — and in CI — with:
+
+```bash
+aree intake-supplementary data/studies/YOUR_STUDY_ID/intake.yaml --check
+```
+
+which regenerates into a temporary directory and compares checksums against the
+committed files and provenance, without modifying anything.
+
+If your source is genuinely not a differential-expression table (a methylation
+region table, a protein abundance matrix, a metabolite feature table), the
+intake converter does not yet cover it — see
+[raw_vs_processed.md](raw_vs_processed.md) for the expected input shapes and
+prepare those tables by a documented script of your own for now.
+
+## 7. Next steps
 
 Once a study is registered, harmonize its results into the shared evidence
 table — see [raw_vs_processed.md](raw_vs_processed.md) for which mode applies
