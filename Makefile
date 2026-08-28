@@ -1,5 +1,5 @@
 # AREE task runner. Run `make help` for the list.
-.PHONY: help install test lint demo demo-clean register harmonize meta cards docs app clean
+.PHONY: help install test lint demo demo-clean register harmonize meta cards crosswalk docs app clean
 
 DEMO_STUDIES := GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06
 
@@ -10,6 +10,7 @@ help:
 	@echo "  lint         run ruff over src and tests"
 	@echo "  demo         run the full demo pipeline (register -> harmonize -> meta -> cards)"
 	@echo "  demo-clean   remove generated reports/ and the registry index, then run demo"
+	@echo "  crosswalk    rebuild the real NCBI/UniProt identifier crosswalk (~230 MB download)"
 	@echo "  docs         render the Quarto documentation site"
 	@echo "  app          launch the Streamlit interface"
 	@echo "  clean        remove generated reports/ and caches"
@@ -45,6 +46,9 @@ demo: register harmonize meta cards
 	@echo "  reports/manifests/"
 
 demo-clean: clean demo
+
+crosswalk:
+	aree build-crosswalk
 
 docs:
 	quarto render docs

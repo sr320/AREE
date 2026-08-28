@@ -104,7 +104,8 @@ AREE/
 ├── data/
 │   ├── demo/                  # SIMULATED demo result tables per assay
 │   ├── reference/             # genome/annotation metadata
-│   └── mappings/              # identifier crosswalk + ambiguous-symbol map
+│   │   └── crosswalk/         # REAL identifier crosswalk + provenance sidecar
+│   └── mappings/              # SYNTHETIC demo crosswalk + ambiguous-symbol map
 ├── src/
 │   ├── common/                # shared paths, IO, vocabulary loaders
 │   ├── intake/                # schema validation + registry ingestion
@@ -112,6 +113,7 @@ AREE/
 │   ├── meta_analysis/         # random-effects pooling + heterogeneity
 │   ├── prioritize/            # transparent scoring + tier gating
 │   ├── reporting/             # evidence cards + provenance manifests
+│   ├── mappings/              # builds real crosswalks from NCBI Gene + UniProtKB
 │   ├── validation/            # reusable validation checks
 │   └── aree/                  # the `aree` CLI
 ├── app/                       # Streamlit interface
@@ -130,6 +132,33 @@ AREE/
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
 | `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table |
 | `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>]` | Generate per-candidate evidence cards |
+| `aree build-crosswalk [--taxid <n>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB |
+
+## Working with real data
+
+The quick start above runs entirely on **simulated** data and a **synthetic**
+identifier crosswalk. Harmonizing a real study requires selecting the real
+crosswalk, which is built from NCBI Gene and UniProtKB and ships with the repo:
+
+```bash
+export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+aree harmonize --study <STUDY_ID> --input path/to/supplementary_table.tsv
+```
+
+Rebuild it only when the NCBI annotation changes (streams ~230 MB, 15-20 min):
+
+```bash
+aree build-crosswalk
+```
+
+The demo and real crosswalks are deliberately never merged — the demo's LOC
+numbers collide with real NCBI GeneIDs that denote different genes. See
+[docs/identifier_mapping.md](docs/identifier_mapping.md) for the coverage
+figures and their consequences, in particular that UniProt links only 8.4% of
+*M. gigas* genes, so proteomics evidence carries a much higher `unresolved`
+rate than transcriptomics evidence. Identifiers retired by NCBI re-annotation
+(9,057 of them) resolve to their current replacement as `inferred`; the 13,601
+discontinued with no replacement stay `unresolved` by design.
 
 ## Documentation
 

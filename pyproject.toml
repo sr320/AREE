@@ -30,7 +30,7 @@ aree = "aree.cli:main"
 package-dir = { "" = "src" }
 packages = [
     "aree", "common", "intake", "harmonize", "meta_analysis",
-    "prioritize", "reporting", "validation",
+    "prioritize", "reporting", "validation", "mappings",
 ]
 
 [tool.pytest.ini_options]

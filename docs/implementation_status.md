@@ -16,7 +16,8 @@ demo pipeline runs from the committed header-only registry).
 | Controlled vocabularies | `registry/controlled_vocabularies/` | phenotype (with resilience_relevance), stressor, assay, feature, tissue, life-stage, mapping-confidence, quality-flag |
 | Registry ingestion | `src/intake/registry.py` | duplicate detection, `--update` path, flat CSV index |
 | 6 simulated demo studies | `registry/studies/GIGAS_*.yaml` | RNA-seq ×2, methylation, proteomics, metabolomics, processed-only, imperfect-mapping, conflicting-direction cases all represented |
-| Identifier harmonization | `src/harmonize/identifiers.py` | full hierarchy + 6 mapping-confidence levels incl. `unresolved` |
+| Identifier harmonization | `src/harmonize/identifiers.py` | full hierarchy + 6 mapping-confidence levels incl. `unresolved`; multi-accession UniProt and multi-xref Ensembl handled; crosswalk selectable via `$AREE_CROSSWALK` |
+| **Real identifier crosswalk** | `data/reference/crosswalk/`, `src/mappings/build_crosswalk.py` | 33,356 real *M. gigas* genes from NCBI Gene + UniProtKB, plus a 9,057-entry retired-GeneID sidecar from NCBI gene_history; checksummed provenance with per-column coverage; rebuilt by `aree build-crosswalk` |
 | Per-assay harmonizers → shared evidence schema | `src/harmonize/{rnaseq,methylation,proteomics,metabolomics}.py` | both raw-reanalysis and processed-results inputs converge on one schema |
 | Provenance manifests | `src/harmonize/core.py` (`_write_harmonize_manifest`) | checksum, params, versions, warnings per comparison |
 | Random-effects meta-analysis | `src/meta_analysis/` | DerSimonian–Laird, I²/τ², direction-consistency; excludes `unresolved` from pooling |
@@ -25,7 +26,7 @@ demo pipeline runs from the committed header-only registry).
 | `aree` CLI | `src/aree/cli.py` | all 6 required commands run on a clean machine |
 | Streamlit interface | `app/main.py` | browse/filter studies, evidence, candidates, search, CSV/TSV export; verified serving HTTP 200 |
 | Quarto documentation site | `docs/` | 18 pages render cleanly (`quarto render docs`) |
-| Test suite | `tests/` (37 tests) | schema, malformed input, duplicate IDs, provenance, mapping confidence, effect sizes, meta-analysis, score reproducibility, evidence-card generation, full CLI pipeline |
+| Test suite | `tests/` (68 tests) | schema, malformed input, duplicate IDs, provenance, mapping confidence, effect sizes, meta-analysis, score reproducibility, evidence-card generation, full CLI pipeline, crosswalk construction + selection + real-crosswalk invariants |
 | CI | `.github/workflows/ci.yml` | python tests + demo pipeline, schema sanity, docs render |
 
 ## Scaffolded but not yet production-ready
@@ -44,10 +45,22 @@ to be runnable on a machine with Docker + Nextflow — but that has **not** been
 verified here. Each workflow README carries its own "What has and has not been
 run" honesty statement.
 
+## Built but not yet exercised end-to-end
+
+| Component | Status |
+|---|---|
+| Real crosswalk | Built, checksummed, and unit-tested, and resolution verified by hand against real GeneIDs, LOC forms, UniProt accessions (including non-representative and cross-gene-shared ones), Ensembl xrefs, and retired GeneIDs (both remappable and dead). **It has not yet been used to harmonize an actual published study**, because no real study is registered yet — that is the next step. |
+
 ## Planned future work
 
-- Real ortholog mapping (OrthoFinder/OrthoDB) replacing the small illustrative
-  crosswalk in `data/mappings/`.
+- Real ortholog mapping (OrthoFinder/OrthoDB) to populate `orthogroup_id`, which
+  the real crosswalk ships empty rather than fabricating. Until then, cross-species
+  evidence pooling is not supported.
+- Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
+  cross-references to NCBI GeneID — most likely by mapping RefSeq protein
+  accessions through the NCBI annotation rather than relying on UniProt xrefs.
+- Wiring `gene_synonyms` (already emitted in the real crosswalk) into
+  `resolve_identifier` so that legacy symbols from older publications resolve.
 - Additional species beyond *C. gigas* (schema already carries `species`; this
   is a data + reference addition, see [adding_a_species.md](adding_a_species.md)).
 - Execution of the raw-data Nextflow workflows against real public datasets,

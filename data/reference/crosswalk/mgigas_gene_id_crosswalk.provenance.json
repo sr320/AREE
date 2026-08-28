@@ -1,0 +1,78 @@
+{
+  "artifact": "mgigas_gene_id_crosswalk.tsv",
+  "artifact_sha256": "6d2534b319ff355a9814fab2c5c90a6fa50a0ed761bfc332c03835b0963e25a1",
+  "builder": "src/mappings/build_crosswalk.py",
+  "builder_version": "1.0.0",
+  "date_generated": "2026-08-27",
+  "organism": "Magallana gigas (Crassostrea gigas), Pacific oyster",
+  "ncbi_taxid": 29159,
+  "ncbi_reference_annotation_at_build": "GCF_963853765.1 (xbMagGiga1.1), annotation release GCF_963853765.1-RS_2024_06",
+  "sources": [
+    {
+      "name": "NCBI Gene gene_info",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Invertebrates/All_Invertebrates.gene_info.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/mgigas_gene_info.tsv",
+      "sha256_filtered": "c9128c8bd94a1520f6602b0f45dd1ebce8810368c7b7ebd465fcf4636f4e0e9b",
+      "records": 33356
+    },
+    {
+      "name": "UniProtKB",
+      "url": "https://rest.uniprot.org/uniprotkb/stream?query=organism_id:29159&fields=accession,reviewed,protein_name,gene_names,gene_primary,xref_geneid,xref_refseq&format=tsv&compressed=true",
+      "local_copy": "data/reference/crosswalk/_sources/mgigas_uniprot.tsv",
+      "sha256": "8f9f5a0282d95a8910c8a804ff9cb1144251cc66cf8740b8f59a59917cf3297e",
+      "entries_with_geneid_xref": 3170,
+      "genes_linked": 2790
+    },
+    {
+      "name": "NCBI Gene gene_history",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_history.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/mgigas_gene_history.tsv",
+      "sha256_filtered": "4e14e8c910007a44805dbb290673d85e1eec389fe7edc237927abfd51fc10df8",
+      "remappable_retired_ids": 9057,
+      "discontinued_without_replacement": 13601
+    }
+  ],
+  "coverage": {
+    "genes_total": 33356,
+    "with_ensembl_xref": {
+      "n": 12717,
+      "pct": 38.13
+    },
+    "with_uniprot_accession": {
+      "n": 2790,
+      "pct": 8.36
+    },
+    "with_multiple_uniprot_accessions": {
+      "n": 302,
+      "pct": 0.91
+    },
+    "with_named_symbol": {
+      "n": 650,
+      "pct": 1.95
+    },
+    "with_orthogroup": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "genes_by_type": {
+      "protein-coding": 26409,
+      "ncRNA": 5726,
+      "tRNA": 607,
+      "pseudo": 267,
+      "snRNA": 198,
+      "rRNA": 68,
+      "unknown": 45,
+      "snoRNA": 35,
+      "other": 1
+    },
+    "retired_gene_ids_remappable": 9057,
+    "retired_gene_ids_without_replacement": 13601
+  },
+  "known_limitations": [
+    "UniProt cross-references to NCBI GeneID are sparse for this organism; most TrEMBL entries carry no GeneID or RefSeq xref and therefore cannot be linked.",
+    "orthogroup_id is empty; cross-species evidence pooling requires an ortholog inference run that this builder does not perform.",
+    "Ensembl xrefs come from NCBI dbXrefs and reflect Ensembl Metazoa's assembly, which may differ from the current NCBI reference assembly.",
+    "gene_synonyms is emitted for curation and future symbol resolution but is not currently consulted by harmonize.identifiers.",
+    "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are labelled 'inferred' because the remap crosses an annotation version; GeneIDs discontinued without a replacement stay 'unresolved' by design."
+  ]
+}
