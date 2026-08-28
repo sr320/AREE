@@ -35,7 +35,9 @@ So the screen applied here, in priority order:
    this is not a formality.
 3. **Resilience-relevant contrast.** Prefer a tolerance/resistance phenotype
    (resistant vs susceptible lineages) over pure exposure (treated vs control),
-   per [resilience_vs_exposure.md](resilience_vs_exposure.md).
+   per [resilience_vs_exposure.md](resilience_vs_exposure.md). Judge this on
+   whether a phenotype was **measured**, not on how the title is worded — see
+   the correction above.
 4. **RNA-seq first**, because the intake converter currently handles only
    differential-expression tables and the RNA-seq workflow is the most complete.
 5. **Stressor and phenotype spread**, so that pooled groups have more than one
@@ -44,9 +46,24 @@ So the screen applied here, in priority order:
 
 ## Tier 1 — curate these first
 
+> **#1 is registered** as `CALLA2026_OSHV` — design verified, sample sheet and
+> FASTQ manifest generated, reanalysis not yet run. See
+> [first_raw_reanalysis.md](first_raw_reanalysis.md).
+>
+> **Correction from the first draft of this page.** #1 was listed here as a
+> study whose "contrast *is* a resilience phenotype, not an exposure", on the
+> strength of its BioProject title (*"Evaluating Pacific oyster lineages for
+> tolerance to Ostreid herpesvirus"*). Curating it showed that is not what the
+> deposited data contains: there is no survival, mortality, or viral-load
+> measurement for these animals, and the publication frames its results as
+> groundwork for *future* tolerance breeding. It is registered as
+> `disease_susceptibility`, not `disease_resistance`. A resilience-sounding
+> project title is not a resilience phenotype — check for a measured outcome
+> before promising one.
+
 | # | BioProject | Runs | Design (from run metadata) | Resilience context | Why first |
 |---|---|---|---|---|---|
-| 1 | `PRJNA1329250` | 42 RNA-seq | 2 groups × 4 lineages × n≈5 (`DO_CT`, `YA_FR`, …) | OsHV-1 tolerance across oyster lineages | The best available match to AREE's purpose: the contrast *is* a resilience phenotype, not an exposure. Same stressor class as the one real study already registered, so it can form the first genuine pooled group. |
+| 1 ✅ | `PRJNA1329250` | 42 RNA-seq | 2 populations × 4 viral-strain levels (Control/Australia/France/USA), n=5 challenged / n=6 control | OsHV-1 challenge in two hatchery populations | Well replicated across all eight groups, and the same stressor class as the study already registered, so the two can eventually pool. Calla et al. 2026 ([10.1016/j.fsi.2026.111154](https://doi.org/10.1016/j.fsi.2026.111154)). |
 | 2 | `PRJNA593309` | 43 RNA-seq | OsHV-1 × temperature (21/26/29 °C) × timepoint, n=3 | Disease resistance under thermal modulation | Multi-stressor, well replicated, and **published open access** — Delisle et al. 2020, *J Exp Biol* ([10.1242/jeb.226233](https://doi.org/10.1242/jeb.226233)). Pairs with #1 on pathogen challenge. |
 | 3 | `PRJNA826964` | 18 RNA-seq | control vs OA × 3 timepoints (7/28/56 d), n=3 | Ocean acidification, energy metabolism | Clean 2×3 factorial, small enough to reanalyze quickly, and opens a second stressor class. |
 

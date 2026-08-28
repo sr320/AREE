@@ -6,12 +6,15 @@ from __future__ import annotations
 
 import datetime
 import sys
+from pathlib import Path
 
 import click
 from tabulate import tabulate
 
 from aree import __version__
+from common import REPO_ROOT
 from harmonize.core import harmonize_processed_table, harmonize_study
+from intake.ena_samplesheet import ENAError, build_samplesheet
 from intake.registry import DuplicateStudyError, list_studies, register_study
 from intake.run_intake import IntakeError, run_intake
 from intake.schema_validate import validate_study_file
@@ -74,6 +77,53 @@ def list_studies_cmd():
         [[r["study_id"], r["assay_type"], r["analysis_mode"], r["qc_status"], r["analysis_status"]] for r in rows],
         headers=["study_id", "assay_type", "analysis_mode", "qc_status", "analysis_status"],
     ))
+
+
+@main.command("fetch-samplesheet")
+@click.option("--bioproject", required=True, help="ENA/SRA BioProject accession, e.g. PRJNA1329250.")
+@click.option("--study", "study_id", required=True, help="AREE study_id this project will be registered under.")
+@click.option("--condition-attribute", "condition_attributes", multiple=True, required=True,
+              help="Sample attribute defining an experimental group. Repeatable; "
+                   "values are combined in order to form the `condition` column.")
+@click.option("--attribute", "extra_attributes", multiple=True,
+              help="Additional sample attribute to carry into the sheet (repeatable).")
+@click.option("--out", "out_dir", default=None, type=click.Path(),
+              help="Output directory (default: data/studies/<study_id>/).")
+def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attributes, out_dir):
+    """Build a sample sheet + FASTQ manifest from a BioProject's deposited metadata.
+
+    Downloads no sequence data. Reads ENA's run report and sample attributes and
+    writes the design, the FASTQ URLs with ENA's MD5s, and a provenance record.
+    """
+    out_dir = Path(out_dir) if out_dir else REPO_ROOT / "data" / "studies" / study_id
+    try:
+        report = build_samplesheet(
+            bioproject,
+            study_id=study_id,
+            out_dir=out_dir,
+            condition_attributes=list(condition_attributes),
+            extra_attributes=list(extra_attributes),
+        )
+    except ENAError as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    click.echo(f"{report['bioproject']}: {report['n_runs']} runs / {report['n_samples']} samples")
+    click.echo(f"  strategies : {', '.join(report['library_strategies'])}")
+    click.echo(f"  layouts    : {', '.join(report['library_layouts'])}")
+    click.echo(f"  download   : {report['total_fastq_bytes'] / 1e9:.1f} GB of FASTQ")
+    click.echo("  groups:")
+    for group, n in report["group_sizes"].items():
+        click.echo(f"    {group:28} n={n}")
+
+    smallest = report["min_group_size"]
+    if smallest < 3:
+        click.echo(click.style(
+            f"\nWARNING: smallest group has n={smallest}. Differential expression needs "
+            "at least 3 biological replicates per group; this design may not support it.",
+            fg="yellow",
+        ))
+    click.echo(click.style(f"\nWrote samplesheet, FASTQ manifest, and provenance to {out_dir}", fg="green"))
 
 
 @main.command("intake-supplementary")

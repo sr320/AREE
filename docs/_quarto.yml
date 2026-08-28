@@ -39,6 +39,8 @@ website:
             href: adding_a_study.md
           - text: "Candidate studies to curate"
             href: candidate_studies.md
+          - text: "First raw reanalysis"
+            href: first_raw_reanalysis.md
           - text: "Defining a phenotype"
             href: defining_a_phenotype.md
           - text: "Resilience vs. exposure-only"

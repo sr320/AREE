@@ -35,3 +35,8 @@ workflows/*/dag.dot
 # Downloaded reference sources for crosswalk building (regenerate via `aree build-crosswalk`).
 # The built crosswalk + provenance sidecar ARE committed; these raw inputs are not.
 data/reference/crosswalk/_sources/
+
+# Staged sequence data for raw_reanalysis studies (hundreds of GB).
+# Sample sheets and checksummed FASTQ manifests ARE committed; reads are not.
+data/raw/
+results/
