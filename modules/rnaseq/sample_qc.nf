@@ -15,7 +15,11 @@ process SAMPLE_QC {
 
     output:
     path "multiqc_report.html", emit: report
-    path "multiqc_data", emit: data
+    // MultiQC names its data directory after the report file, so `-n
+    // multiqc_report.html` produces multiqc_report_data/. Declaring
+    // "multiqc_data" made the task fail as a missing output even though
+    // MultiQC had exited 0 and written everything.
+    path "multiqc_report_data", emit: data
     path "versions.yml", emit: versions
 
     script:

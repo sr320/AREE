@@ -44,21 +44,35 @@ def _load_study(study_id: str) -> dict:
     return load_yaml(path)
 
 
-def _harmonize_comparison(study: dict, comparison: dict, date_generated: str) -> pd.DataFrame:
+def _harmonize_comparison(
+    study: dict, comparison: dict, date_generated: str, results_override=None
+) -> pd.DataFrame:
+    """Harmonize one comparison.
+
+    `results_override` is the file the caller actually wants harmonized. It
+    takes precedence over the comparison's registered `results_file`, which is
+    what makes `aree harmonize --input` mean what it says and is the only way a
+    raw_reanalysis study — whose `results_file` is null until a workflow run
+    produces one — can be harmonized at all.
+    """
     assay_type = study["assay_type"][0]
     harmonizer = ASSAY_HARMONIZERS.get(assay_type)
     if harmonizer is None:
         raise ValueError(f"No harmonizer registered for assay_type {assay_type!r}")
 
-    results_file = comparison.get("results_file")
-    if not results_file:
-        raise ValueError(
-            f"comparison {comparison['comparison_id']!r} in study {study['study_id']!r} "
-            "has no results_file to harmonize."
-        )
-    results_path = REPO_ROOT / results_file
+    if results_override is not None:
+        results_path = Path(results_override)
+    else:
+        results_file = comparison.get("results_file")
+        if not results_file:
+            raise ValueError(
+                f"comparison {comparison['comparison_id']!r} in study {study['study_id']!r} "
+                "has no results_file to harmonize. For a raw_reanalysis study, pass the "
+                "workflow output with --input and name the comparison with --comparison."
+            )
+        results_path = REPO_ROOT / results_file
     if not results_path.exists():
-        raise FileNotFoundError(f"results_file not found: {results_path}")
+        raise FileNotFoundError(f"results file not found: {results_path}")
 
     # The study decides which crosswalk it resolves against, so that simulated and
     # real studies can coexist in one evidence table without cross-contamination.
@@ -74,17 +88,22 @@ def _harmonize_comparison(study: dict, comparison: dict, date_generated: str) ->
     return evidence_df
 
 
+def _repo_relative(path: Path) -> str:
+    """Repo-relative where possible, absolute otherwise."""
+    return str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path)
+
+
 def _crosswalk_ref() -> dict:
     """Path + checksum of the identifier crosswalk currently in force."""
     path = active_crosswalk_path()
     ref = {
-        "path": str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path),
+        "path": _repo_relative(path),
         "sha256": sha256_file(path) if path.exists() else None,
     }
     retired = retired_table_path(path)
     if retired is not None and retired.exists():
         ref["retired_gene_id_table"] = (
-            str(retired.relative_to(REPO_ROOT)) if retired.is_relative_to(REPO_ROOT) else str(retired)
+            _repo_relative(retired)
         )
         ref["retired_gene_id_table_sha256"] = sha256_file(retired)
     return ref
@@ -97,7 +116,9 @@ def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evide
         "comparison_id": comparison["comparison_id"],
         "assay_type": study["assay_type"][0],
         "analysis_mode": study["analysis_mode"],
-        "input_file": str(Path(results_path).relative_to(REPO_ROOT)),
+        # Workflow output legitimately lives outside the repo (results/, or a
+        # staging volume), so fall back to the absolute path rather than raising.
+        "input_file": _repo_relative(Path(results_path)),
         "input_checksum": f"sha256:{sha256_file(results_path)}",
         "parameters": {
             "genome_assembly": study["genome_assembly"],
@@ -159,22 +180,49 @@ def _warn_if_analysis_status_stale(study: dict) -> None:
             stacklevel=2,
         )
 
-def harmonize_processed_table(study_id: str, input_path, date_generated: str) -> pd.DataFrame:
+def harmonize_processed_table(
+    study_id: str, input_path, date_generated: str, comparison_id: str | None = None
+) -> pd.DataFrame:
     """CLI entry point for `aree harmonize --study STUDY_ID --input path`.
 
-    Finds the comparison(s) in the study whose declared results_file matches
-    input_path (by filename) and harmonizes just that comparison.
+    The comparison is identified either explicitly by `comparison_id`, or —
+    when it is omitted — by matching the input filename against a comparison's
+    declared `results_file`.
+
+    Filename matching alone is not enough for a raw_reanalysis study: the
+    Nextflow workflow names its output for the pipeline stage that produced it
+    (`..._dge_standardized.tsv`), which is deliberately not the same as any
+    path the curator wrote into the registry, and a raw-mode study has no
+    `results_file` to match against at registration time. Passing
+    `--comparison` is the supported way to connect a freshly produced workflow
+    output to the comparison it belongs to.
     """
     study = _load_study(study_id)
     input_path = Path(input_path)
-    matches = [c for c in study["comparisons"] if c.get("results_file") and Path(c["results_file"]).name == input_path.name]
-    if not matches:
-        raise ValueError(
-            f"No comparison in study {study_id!r} declares results_file matching {input_path.name!r}. "
-            "Check registry/studies/{study_id}.yaml comparisons[].results_file."
-        )
+    known = [c["comparison_id"] for c in study["comparisons"]]
 
-    frames = [_harmonize_comparison(study, comparison, date_generated) for comparison in matches]
+    if comparison_id:
+        matches = [c for c in study["comparisons"] if c["comparison_id"] == comparison_id]
+        if not matches:
+            raise ValueError(
+                f"Study {study_id!r} has no comparison {comparison_id!r}. Known: {known}"
+            )
+    else:
+        matches = [
+            c for c in study["comparisons"]
+            if c.get("results_file") and Path(c["results_file"]).name == input_path.name
+        ]
+        if not matches:
+            raise ValueError(
+                f"No comparison in study {study_id!r} declares results_file matching "
+                f"{input_path.name!r}, so the comparison cannot be inferred from the "
+                f"filename. Pass --comparison explicitly. Known comparisons: {known}"
+            )
+
+    frames = [
+        _harmonize_comparison(study, comparison, date_generated, results_override=input_path)
+        for comparison in matches
+    ]
     new_rows = pd.concat(frames, ignore_index=True)
     _upsert_evidence_table(new_rows)
     return new_rows

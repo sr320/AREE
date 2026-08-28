@@ -155,7 +155,11 @@ workflow {
 
         raw_results_for_standardize = processed_results_ch
 
-        qc_json_for_manifest = Channel.empty().collect()
+        // `Channel.empty().collect()` emits nothing at all, so EMIT_MANIFEST
+        // never received a value and it — plus RENDER_REPORT, which depends on
+        // its output — were silently skipped with no error. A value channel
+        // carrying an empty list is what 'no QC json in this mode' means.
+        qc_json_for_manifest = Channel.value([])
         input_files_for_checksum = processed_results_ch.collect()
         versions_ch = Channel.empty()
     }

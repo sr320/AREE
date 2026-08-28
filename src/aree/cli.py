@@ -175,13 +175,18 @@ def intake_supplementary_cmd(config, check):
 @click.option("--study", "study_id", required=True, help="Registered study_id.")
 @click.option("--input", "input_path", required=False, type=click.Path(exists=True),
               help="Processed results file to harmonize. If omitted, harmonizes every comparison in the study.")
+@click.option("--comparison", "comparison_id", default=None,
+              help="comparison_id the --input file belongs to. Required when the filename "
+                   "does not match a declared results_file, e.g. for workflow output.")
 @click.option("--date", "date_generated", default=None, help="Override date_generated (ISO 8601). Defaults to today.")
-def harmonize_cmd(study_id, input_path, date_generated):
+def harmonize_cmd(study_id, input_path, comparison_id, date_generated):
     """Harmonize a processed study result table (or an entire study) into the shared evidence table."""
     date_generated = date_generated or _today()
     try:
         if input_path:
-            df = harmonize_processed_table(study_id, input_path, date_generated=date_generated)
+            df = harmonize_processed_table(
+                study_id, input_path, date_generated=date_generated, comparison_id=comparison_id
+            )
         else:
             df = harmonize_study(study_id, date_generated=date_generated)
     except (FileNotFoundError, ValueError) as exc:

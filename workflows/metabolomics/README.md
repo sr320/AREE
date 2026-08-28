@@ -1,6 +1,6 @@
 # AREE metabolomics workflow (scaffold)
 
-STATUS: **unexecuted structural scaffold.** Every process below has real,
+STATUS: **`processed_results_harmonization` mode is executed and verified; the raw feature-table path is not.** This workflow now runs end to end in processed mode (3/3 processes green) against the demo table. It did **not** run before 2026-08-28 — see `../../docs/first_raw_reanalysis.md` for the defects that prevented it, including bare script-level statements that stopped it compiling on Nextflow 26.04. No container has been pulled; the verified run used `-profile local` with natively installed tools. Every process below has real,
 syntactically checked script logic (pandas, limma, Quarto/R Markdown) that
 would run correctly given a real container runtime and real input files, but
 nothing in this directory has actually been executed with `nextflow run` in

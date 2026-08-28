@@ -45,7 +45,8 @@ include { STANDARDIZE_OUTPUT }     from '../../modules/proteomics/standardize_ou
 include { EMIT_MANIFEST }          from '../../modules/proteomics/emit_manifest.nf'
 include { RENDER_REPORT }          from '../../modules/proteomics/render_report.nf'
 
-workflow_version = '0.1.0-scaffold'
+// Function, not a bare assignment: strict DSL2 forbids script-level statements.
+def workflowVersion() { '0.1.0-scaffold' }
 
 def requireParam(String name, value) {
     if (!value) {
@@ -137,7 +138,7 @@ workflow {
         mode_ch,
         STANDARDIZE_OUTPUT.out.standardized.map { sid, cid, f -> f },
         manifest_qc_input,
-        Channel.value(workflow_version),
+        Channel.value(workflowVersion()),
         start_time_ch
     )
 
@@ -148,16 +149,23 @@ workflow {
         EMIT_MANIFEST.out.manifest,
         Channel.value(report_template)
     )
+
+    // Neither `params` nor `workflow` resolves inside a closure nested in the
+    // workflow body, so snapshot both into locals the handler can capture.
+    def _params = params
+    def _wf = workflow
+    // Moved inside the entry workflow: strict DSL2 (Nextflow 25.10+) rejects
+    // `workflow.onComplete` as a script-level statement.
+    workflow.onComplete {
+        log.info """
+        AREE proteomics workflow scaffold complete.
+        mode        : ${_params.mode}
+        study_id    : ${_params.proteomics?.study_id}
+        comparison  : ${_params.proteomics?.comparison_id}
+        outdir      : ${_params.outdir}
+        status      : ${_wf.success ? 'OK' : 'FAILED'}
+        NOTE: this scaffold has not been validated end-to-end against real data.
+        """.stripIndent()
+    }
 }
 
-workflow.onComplete {
-    log.info """
-    AREE proteomics workflow scaffold complete.
-    mode        : ${params.mode}
-    study_id    : ${params.proteomics?.study_id}
-    comparison  : ${params.proteomics?.comparison_id}
-    outdir      : ${params.outdir}
-    status      : ${workflow.success ? 'OK' : 'FAILED'}
-    NOTE: this scaffold has not been validated end-to-end against real data.
-    """.stripIndent()
-}

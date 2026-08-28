@@ -227,16 +227,23 @@ workflow {
     } else {
         error "Unknown params.mode '${params.mode}': expected 'raw_reanalysis' or 'processed_results_harmonization'"
     }
+
+    // Neither `params` nor `workflow` resolves inside a closure nested in the
+    // workflow body, so snapshot both into locals the handler can capture.
+    def _params = params
+    def _wf = workflow
+    // Moved inside the entry workflow: strict DSL2 (Nextflow 25.10+) rejects
+    // `workflow.onComplete` as a script-level statement.
+    workflow.onComplete {
+        log.info """
+        AREE methylation workflow (${_params.mode}) finished.
+        Study:      ${_params.methylation?.study_id}
+        Comparison: ${_params.methylation?.comparison_id}
+        Output dir: ${_params.outdir}/methylation
+        Success:    ${_wf.success}
+        NOTE: this is a scaffold workflow; see workflows/methylation/README.md
+        for what has and has not actually been executed/verified.
+        """
+    }
 }
 
-workflow.onComplete {
-    log.info """
-    AREE methylation workflow (${params.mode}) finished.
-    Study:      ${params.methylation?.study_id}
-    Comparison: ${params.methylation?.comparison_id}
-    Output dir: ${params.outdir}/methylation
-    Success:    ${workflow.success}
-    NOTE: this is a scaffold workflow; see workflows/methylation/README.md
-    for what has and has not actually been executed/verified.
-    """
-}

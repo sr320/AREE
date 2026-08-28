@@ -38,17 +38,23 @@ demo pipeline runs from the committed header-only registry).
 
 | Component | Location | What's real | What's missing |
 |---|---|---|---|
-| RNA-seq Nextflow workflow | `workflows/rnaseq/`, `modules/rnaseq/` | DSL2 wiring correct; DAG executes in `-stub-run` mode; real fastp/salmon/DESeq2 command lines written | not run against real FASTQ; containers not pulled; DESeq2 R script not executed |
-| Methylation Nextflow workflow | `workflows/methylation/`, `modules/methylation/` | DSL2 wiring; real Bismark/methylKit command lines; both modes structured | not run against real bisulfite data; R scripts unexecuted |
-| Proteomics Nextflow workflow | `workflows/proteomics/`, `modules/proteomics/` | DSL2 wiring; limma diff-abundance; Python steps stdlib/pandas-only and would run today | not run inside Nextflow; no raw abundance-matrix fixture |
-| Metabolomics Nextflow workflow | `workflows/metabolomics/`, `modules/metabolomics/` | DSL2 wiring; annotation-confidence + pathway-mapping steps | not run against real feature-table data |
-| Container images | `containers/README.md` | declared image tags per step | no image built or pulled in this build |
+| RNA-seq Nextflow workflow | `workflows/rnaseq/`, `modules/rnaseq/` | **Executed end to end against real public FASTQ** (PRJNA1329250, 11 libraries, 38 processes): FASTQC → fastp → Salmon index → Salmon quant → MultiQC → DESeq2 → standardize → manifest → report. Produced 22,301 genes with real `lfcSE`. Also runs `processed_results_harmonization` end to end | run natively (Homebrew tools), **not** inside the declared containers; run on subsampled reads, not at full depth; only one of six comparisons; no methylation/proteomics/metabolomics equivalent |
+| Methylation Nextflow workflow | `workflows/methylation/`, `modules/methylation/` | parses and runs `processed_results_harmonization` end to end; real Bismark/methylKit command lines | raw path never run against bisulfite data; R scripts unexecuted |
+| Proteomics Nextflow workflow | `workflows/proteomics/`, `modules/proteomics/` | parses and runs `processed_results_harmonization` end to end; limma diff-abundance written | raw path not run; no raw abundance-matrix fixture |
+| Metabolomics Nextflow workflow | `workflows/metabolomics/`, `modules/metabolomics/` | parses and runs `processed_results_harmonization` end to end | raw path not run against real feature-table data |
+| Container images | `containers/README.md` | declared image tags per step | **no image has ever been pulled or built.** The one real execution used Homebrew-installed tools via `-profile local`, so the container specifications remain entirely unverified |
 
-The `processed_results_harmonization` mode of each workflow depends only on
-lightweight, real, pullable images (`python:3.11-slim`, Quarto) and is expected
-to be runnable on a machine with Docker + Nextflow — but that has **not** been
-verified here. Each workflow README carries its own "What has and has not been
-run" honesty statement.
+`processed_results_harmonization` is now **verified** for all four workflows —
+but it was not runnable before 2026-08-28. Three of the four did not compile at
+all on Nextflow 26.04 (strict DSL2 rejects script-level statements), and
+metabolomics silently skipped two of its three processes while exiting 0. The
+sixteen defects found and fixed are catalogued in
+[first_raw_reanalysis.md](first_raw_reanalysis.md#what-the-pilot-found).
+
+The previous version of this table claimed "DSL2 wiring correct; DAG executes
+in `-stub-run` mode". That was written against an older Nextflow and had become
+false; it is recorded here because a status page that quietly corrects itself is
+worth less than one that says what it got wrong.
 
 ## Built but not yet exercised end-to-end
 
