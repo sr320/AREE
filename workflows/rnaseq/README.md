@@ -5,16 +5,24 @@ trimming, pseudoalignment/quantification, sample QC, differential
 expression, effect-size calculation, and a standardized, enrichment-ready
 result table plus a human-readable report.
 
-**Status: structurally complete Nextflow DSL2 scaffold. Nothing in this
-directory has been executed against real data in this build.** There was no
-compute budget and no real (or synthetic) FASTQ/BAM data available in this
-environment. Every process declares a real container image and a real tool
-command line, and the DESeq2 step embeds a real, syntactically valid R
-script — but no container has been pulled, no `nextflow run` has been
-invoked, and no output file in this repository was produced by actually
-running this pipeline. Treat everything here as reviewed-but-unexecuted
-scaffold code, consistent with `docs/design.md` section 9 ("Explicit
-assumptions").
+**Status: executed end to end against real public FASTQ.** On 2026-08-28 this
+workflow ran the full `raw_reanalysis` path — FASTQC → fastp → Salmon index →
+Salmon quant → MultiQC → DESeq2 → standardize → manifest → report, 38 processes
+green — on 11 libraries from BioProject PRJNA1329250 (`CALLA2026_OSHV`), and
+produced 22,301 genes with real `lfcSE`. `processed_results_harmonization` mode
+also runs end to end.
+
+Two important qualifications:
+
+* the run used **subsampled reads** (first 1M pairs per library) and covered one
+  of six comparisons, so it validates the pipeline, not the biology, and its
+  output has not been harmonized into the evidence table;
+* it ran **natively** via `-profile local` with Homebrew-installed tools. **No
+  container has ever been pulled**, so every image tag below remains unverified.
+
+Getting there required fixing sixteen defects, several of which prevented this
+workflow from compiling at all on Nextflow 26.04. They are catalogued in
+`../../docs/first_raw_reanalysis.md`.
 
 ## Two modes
 
@@ -129,12 +137,14 @@ manifest JSON is a separate, complementary artifact — it documents how the
 TSV was produced (or, in harmonization mode, that it was *not* independently
 regenerated from raw data), not the evidence records themselves.
 
-## What has and has not been run in this build
+## What has and has not been run
 
-- **Not run**: `nextflow run main.nf` has not been invoked. No container in
-  `../../containers/README.md`'s table has been pulled or executed. No
-  FASTQ, BAM, Salmon index, or DESeq2 RData file in this repository was
-  produced by this pipeline.
+- **Run**: the full `raw_reanalysis` path against real public FASTQ
+  (PRJNA1329250, 11 libraries, subsampled), and `processed_results_harmonization`
+  against the demo table. Both complete green.
+- **Not run**: any container from `../../containers/README.md`; a full-depth
+  run; any comparison other than `midori_oshv1_france_vs_control`; the
+  `-profile docker` or `-profile apptainer` paths.
 - **Real, inspectable**: every `process` block declares a real upstream
   container tag, a real `label` (`process_low|process_medium|process_high`
   per `../../config/base.config`), typed `input:`/`output:` channels, and a

@@ -66,17 +66,14 @@ for the assumptions this roadmap is consistent with.
 
 ## Scaffolded but not yet production-ready
 
-- **Nextflow raw-data workflows.** `workflows/{rnaseq,methylation,proteomics,metabolomics}/`
-  each contain a `main.nf`, `nextflow.config`, and a Quarto report template
-  (`assets/report_template.qmd`). These are structurally complete scaffolds
-  — channel definitions, process stubs, config, container references — but
-  have **not been executed against real FASTQ/BAM/spectra** in this build.
-  The demo's `raw_reanalysis`-mode studies (`GIGAS_HEAT01`, `GIGAS_OA02`,
-  `GIGAS_PATH03`) use pre-staged standardized result tables under
-  `data/demo/` rather than live Nextflow execution — there was no raw data or
-  compute budget available to run them for real in this environment. Treat
-  these as a documented starting point for real execution, not a validated
-  pipeline.
+- **Nextflow workflows.** All four now run `processed_results_harmonization`
+  end to end, and `workflows/rnaseq` has additionally run the full
+  `raw_reanalysis` path against real public FASTQ (PRJNA1329250, subsampled;
+  see [first_raw_reanalysis.md](first_raw_reanalysis.md)). None of this was
+  true before 2026-08-28 — three of the four did not compile on current
+  Nextflow. Still outstanding: full-depth runs, the raw paths for methylation,
+  proteomics and metabolomics, and any execution inside the declared
+  containers.
 - **Containers.** `containers/README.md` documents the intended
   Docker/Apptainer approach, but container images/definitions themselves are
   not yet built.
