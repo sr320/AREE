@@ -169,4 +169,11 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     END_VERSIONS
     """
 
+    stub:
+    """
+    printf 'gene_id\tbaseMean\tlog2FoldChange\tlfcSE\tstat\tpvalue\tpadj\nGENE1\t10\t1\t0.2\t5\t0.001\t0.01\n' > ${study_id}_${comparison_id}_deseq2_raw.tsv
+    touch ${study_id}_${comparison_id}_deseq2.RData
+    echo '${task.process}:' > versions.yml
+    """
+
 }

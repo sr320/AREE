@@ -1,10 +1,11 @@
 # AREE proteomics workflow
 
-STATUS: **`processed_results_harmonization` mode is executed and verified; the raw abundance-matrix path is not.** This workflow now runs end to end in processed mode (3/3 processes green) against the demo table. It did **not** run before 2026-08-28 — see `../../docs/first_raw_reanalysis.md` for the defects that prevented it, including bare script-level statements that stopped it compiling on Nextflow 26.04. No container has been pulled; the verified run used `-profile local` with natively installed tools. This directory contains real
-DSL2 Nextflow wiring and real per-tool logic, but no process here has been
-run in this build — there is no compute budget or real mass-spec data in
-this repository. Read this file before assuming anything below has been
-validated end-to-end.
+STATUS: **`processed_results_harmonization` mode is executed, verified, and
+covered by current-version CI; the raw abundance-matrix path is not.** It did
+not run before 2026-08-28; see `../../docs/first_raw_reanalysis.md` for the
+defects that prevented it. No container has been pulled. The raw branch contains
+real DSL2 wiring and per-tool logic, but no abundance-matrix fixture or real raw
+study has exercised it.
 
 ## What this workflow does
 

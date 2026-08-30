@@ -6,6 +6,11 @@ importantly, explains that the tier is decided by hard gates checked
 **before** the score, not by the score itself. A high score cannot promote a
 weakly-supported candidate into a strong tier.
 
+Candidate identity also includes `simulated` and `species_taxid`. Assay
+diversity, mapping confidence, quality flags, forest data, and card filenames
+are calculated within that partition, so a demo record or another species can
+never promote or overwrite a real single-species candidate.
+
 ## The score: a transparent weighted sum
 
 `src/prioritize/scoring.py` computes a 0-1 value for each named component and

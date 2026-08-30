@@ -33,4 +33,12 @@ process SAMPLE_QC {
         multiqc: \$(multiqc --version | sed -e 's/multiqc, version //')
     END_VERSIONS
     """
+
+    stub:
+    """
+    touch multiqc_report.html
+    mkdir multiqc_report_data
+    touch multiqc_report_data/multiqc_data.json
+    echo '${task.process}:' > versions.yml
+    """
 }

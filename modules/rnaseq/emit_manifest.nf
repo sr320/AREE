@@ -118,4 +118,11 @@ process EMIT_MANIFEST {
         python: \$(python3 --version | sed 's/Python //')
     END_VERSIONS
     """
+
+    stub:
+    """
+    printf '{"study_id":"%s","comparison_id":"%s","mode":"%s","stub":true}\n' \
+        '${study_id}' '${comparison_id}' '${mode}' > ${study_id}_${comparison_id}_manifest.json
+    echo '${task.process}:' > versions.yml
+    """
 }

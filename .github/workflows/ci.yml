@@ -87,6 +87,65 @@ jobs:
           git status --porcelain -- data/ registry/studies/
           test -z "$(git status --porcelain -- data/ registry/studies/)"
 
+  nextflow-smoke:
+    name: Nextflow workflow smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python runtime
+        run: pip install -e .
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Install current Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: "26.04.0"
+
+      - name: Run every processed-results workflow
+        run: |
+          nextflow run workflows/rnaseq -profile demo,local \
+            --outdir /tmp/aree-smoke/rnaseq \
+            -work-dir /tmp/aree-smoke/work-rnaseq
+          nextflow run workflows/methylation -profile demo,local \
+            --outdir /tmp/aree-smoke/methylation \
+            -work-dir /tmp/aree-smoke/work-methylation
+          nextflow run workflows/proteomics -profile demo,local \
+            --outdir /tmp/aree-smoke/proteomics \
+            -work-dir /tmp/aree-smoke/work-proteomics
+          nextflow run workflows/metabolomics -profile demo,local \
+            --outdir /tmp/aree-smoke/metabolomics \
+            -work-dir /tmp/aree-smoke/work-metabolomics
+
+      - name: Exercise the RNA-seq raw DAG with tiny paired FASTQ fixtures
+        run: |
+          nextflow run workflows/rnaseq -profile local -stub-run \
+            --mode raw_reanalysis \
+            --study_id CI_RNASEQ \
+            --comparison_id treatment_vs_control \
+            --reads 'tests/fixtures/rnaseq_raw/*_R{1,2}.fastq' \
+            --transcript_fasta tests/fixtures/rnaseq_raw/reference.fa \
+            --gtf tests/fixtures/rnaseq_raw/annotation.gtf \
+            --tx2gene tests/fixtures/rnaseq_raw/tx2gene.tsv \
+            --sample_sheet tests/fixtures/rnaseq_raw/samples.tsv \
+            --control_level control \
+            --treatment_level treatment \
+            --outdir /tmp/aree-smoke/rnaseq-raw \
+            -work-dir /tmp/aree-smoke/work-rnaseq-raw
+
+      - name: Assert workflow artifacts exist
+        run: |
+          test -f /tmp/aree-smoke/rnaseq/rnaseq/standardized/GIGAS_HEAT01_acute_heat_vs_control_dge_standardized.tsv
+          test -f /tmp/aree-smoke/methylation/methylation/standardized/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_standardized.tsv
+          test -f /tmp/aree-smoke/proteomics/proteomics/standardize_output/GIGAS_SAL04_low_salinity_vs_control_protein_abundance_standardized.tsv
+          test -f /tmp/aree-smoke/metabolomics/metabolomics/standardized/GIGAS_GROW06_hypoxia_vs_control_metabolite_features_standardized.tsv
+          test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/standardized/CI_RNASEQ_treatment_vs_control_dge_standardized.tsv
+
   schema-validation:
     name: JSON schema sanity
     runs-on: ubuntu-latest

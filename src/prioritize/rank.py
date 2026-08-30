@@ -26,16 +26,50 @@ def _parse_flags(value) -> list:
     return []
 
 
+def _partition_value(value) -> str:
+    if isinstance(value, bool):
+        return str(value).lower()
+    return str(value).strip().lower()
+
+
+def _partition_mask(evidence_df: pd.DataFrame, simulated, species_taxid) -> pd.Series:
+    return (
+        evidence_df["simulated"].map(_partition_value).eq(_partition_value(simulated))
+        & evidence_df["species_taxid"].map(_partition_value).eq(_partition_value(species_taxid))
+    )
+
+
 def _assay_diversity_map(evidence_df: pd.DataFrame) -> dict:
     mapped = evidence_df[evidence_df["feature_id_standardized"].notna()]
-    return mapped.groupby("feature_id_standardized")["feature_type"].nunique().to_dict()
+    mapped = mapped.assign(
+        _simulated=mapped["simulated"].map(_partition_value),
+        _species_taxid=mapped["species_taxid"].map(_partition_value),
+    )
+    return mapped.groupby(
+        ["feature_id_standardized", "_simulated", "_species_taxid"]
+    )["feature_type"].nunique().to_dict()
 
 
-def _evidence_subset(evidence_df: pd.DataFrame, feature_id: str, phenotype: str, feature_type: str) -> pd.DataFrame:
+def _evidence_subset(
+    evidence_df: pd.DataFrame,
+    feature_id: str,
+    phenotype: str,
+    feature_type: str,
+    simulated,
+    species_taxid,
+    contributing_evidence_ids: str | None = None,
+) -> pd.DataFrame:
+    evidence_ids = set(str(contributing_evidence_ids or "").split("|"))
     return evidence_df[
         (evidence_df["feature_id_standardized"] == feature_id)
         & (evidence_df["phenotype"] == phenotype)
         & (evidence_df["feature_type"] == feature_type)
+        & _partition_mask(evidence_df, simulated, species_taxid)
+        & (
+            evidence_df["evidence_id"].astype(str).isin(evidence_ids)
+            if contributing_evidence_ids
+            else True
+        )
     ]
 
 
@@ -49,11 +83,22 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
     for _, meta_row in meta_df.iterrows():
         meta_dict = meta_row.to_dict()
         subset = _evidence_subset(
-            evidence_df, meta_dict["feature_id_standardized"], meta_dict["phenotype"], meta_dict["feature_type"]
+            evidence_df,
+            meta_dict["feature_id_standardized"],
+            meta_dict["phenotype"],
+            meta_dict["feature_type"],
+            meta_dict["simulated"],
+            meta_dict["species_taxid"],
+            meta_dict.get("contributing_evidence_ids"),
         )
         mapping_confidences = sorted(subset["mapping_confidence"].unique())
         quality_flags = sorted({f for flags in subset["quality_flags"] for f in _parse_flags(flags)})
-        n_distinct_assays = assay_diversity.get(meta_dict["feature_id_standardized"], 1)
+        assay_key = (
+            meta_dict["feature_id_standardized"],
+            _partition_value(meta_dict["simulated"]),
+            _partition_value(meta_dict["species_taxid"]),
+        )
+        n_distinct_assays = assay_diversity.get(assay_key, 1)
 
         meta_dict["n_distinct_assays"] = n_distinct_assays
         components = compute_components(meta_dict, mapping_confidences, quality_flags)

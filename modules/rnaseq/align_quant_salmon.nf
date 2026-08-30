@@ -33,6 +33,13 @@ process SALMON_INDEX {
         salmon: \$(salmon --version | sed 's/salmon //')
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir salmon_index
+    touch salmon_index/versionInfo.json
+    echo '${task.process}:' > versions.yml
+    """
 }
 
 process SALMON_QUANT {
@@ -69,5 +76,12 @@ process SALMON_QUANT {
     ${task.process}:
         salmon: \$(salmon --version | sed 's/salmon //')
     END_VERSIONS
+    """
+
+    stub:
+    """
+    mkdir ${sample_id}
+    printf 'Name\tLength\tEffectiveLength\tTPM\tNumReads\nTX1\t100\t80\t1\t1\n' > ${sample_id}/quant.sf
+    echo '${task.process}:' > versions.yml
     """
 }

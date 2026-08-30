@@ -29,4 +29,11 @@ process FASTQC {
         fastqc: \$(fastqc --version | sed 's/FastQC v//')
     END_VERSIONS
     """
+
+    stub:
+    """
+    touch ${sample_id}_R1_fastqc.zip ${sample_id}_R2_fastqc.zip
+    touch ${sample_id}_R1_fastqc.html ${sample_id}_R2_fastqc.html
+    echo '${task.process}:' > versions.yml
+    """
 }

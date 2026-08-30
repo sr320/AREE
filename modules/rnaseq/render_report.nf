@@ -41,4 +41,10 @@ process RENDER_REPORT {
         quarto: \$(quarto --version)
     END_VERSIONS
     """
+
+    stub:
+    """
+    printf '<html><body>AREE RNA-seq stub report</body></html>\n' > ${study_id}_${comparison_id}_rnaseq_report.html
+    echo '${task.process}:' > versions.yml
+    """
 }

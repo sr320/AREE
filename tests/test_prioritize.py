@@ -1,3 +1,4 @@
+import pandas as pd
 from conftest import harmonize_all_demo_studies
 
 from harmonize.core import load_evidence_table
@@ -64,3 +65,54 @@ def test_hsp70_reaches_high_priority_tier(isolated_reports):
 
     hsp70 = candidates[candidates["feature_id_standardized"] == "LOC105333935"].iloc[0]
     assert hsp70["tier"] == "high_priority_cross_study"
+
+
+def test_assay_diversity_never_crosses_origin_or_species_partitions():
+    meta_df = pd.DataFrame([{
+        "feature_id_standardized": "GENE1",
+        "phenotype": "survival",
+        "feature_type": "gene",
+        "simulated": False,
+        "species_taxid": 29159,
+        "k_studies": 1,
+        "studies": "REAL_GENE",
+        "n_evidence_records": 1,
+        "total_sample_size": 12,
+        "pooled_effect": 1.0,
+        "pooled_se": 0.2,
+        "ci_lower": 0.6,
+        "ci_upper": 1.4,
+        "z": 5.0,
+        "p_value": 1e-4,
+        "q_statistic": 0.0,
+        "i_squared": 0.0,
+        "tau_squared": 0.0,
+        "direction_consistency": 1.0,
+        "distinct_tissues": 1,
+        "distinct_life_stages": 1,
+        "distinct_stressors": "temperature",
+        "contributing_evidence_ids": "real-gene",
+    }])
+    evidence_df = pd.DataFrame([
+        {
+            "evidence_id": "real-gene", "feature_id_standardized": "GENE1",
+            "phenotype": "survival", "feature_type": "gene", "simulated": False,
+            "species_taxid": 29159, "mapping_confidence": "exact", "quality_flags": [],
+        },
+        {
+            "evidence_id": "sim-protein", "feature_id_standardized": "GENE1",
+            "phenotype": "survival", "feature_type": "protein", "simulated": True,
+            "species_taxid": 29159, "mapping_confidence": "inferred",
+            "quality_flags": ["processed_only"],
+        },
+        {
+            "evidence_id": "other-species-protein", "feature_id_standardized": "GENE1",
+            "phenotype": "survival", "feature_type": "protein", "simulated": False,
+            "species_taxid": 99999, "mapping_confidence": "exact", "quality_flags": [],
+        },
+    ])
+
+    candidate = build_candidates(meta_df, evidence_df).iloc[0]
+    assert candidate["n_distinct_assays"] == 1
+    assert candidate["mapping_confidences"] == "exact"
+    assert candidate["quality_flags_union"] == ""

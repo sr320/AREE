@@ -8,14 +8,23 @@ than a summary you should trust.
 ## How pooling works
 
 `src/meta_analysis/run.py` groups the evidence table by
-`(feature_id_standardized, phenotype, feature_type)` — never across feature
-types, since a log2FoldChange and a methylation percent-difference are not on
-a comparable scale. Records with `mapping_confidence == "unresolved"` are
+`(feature_id_standardized, phenotype, feature_type, simulated, species_taxid)`
+— never across feature types, demo/real origins, or species, since those are
+not comparable pools. Records with `mapping_confidence == "unresolved"` are
 excluded from pooling (no stable identity to group on) but remain visible in
 the raw evidence table. Within each group, effect sizes and standard errors
 are pooled with a random-effects (DerSimonian–Laird) estimator implemented
 directly in Python (`src/meta_analysis/pooling.py`) — see
 [methods.md](methods.md) for the statistical detail.
+
+Only records with a reported standard error, or enough information to derive
+one from an unadjusted p-value, enter the pool. All replication counts and
+summary context are calculated from that same poolable subset. When multiple
+source identifiers collapse to the same standardized identifier within one
+comparison, only a uniquely higher-confidence mapping is retained. If one
+study contributes multiple comparisons to the same group, AREE stops with an
+actionable error: without covariance information, those contrasts cannot be
+treated as independent observations.
 
 ## Output columns
 
@@ -23,8 +32,11 @@ directly in Python (`src/meta_analysis/pooling.py`) — see
 |---|---|
 | `k_studies` | number of distinct `study_id` values contributing |
 | `studies` | pipe-separated list of contributing study IDs |
-| `n_evidence_records` | number of evidence rows pooled (can exceed `k_studies` if a study contributes multiple comparisons) |
-| `total_sample_size` | sum of `sample_size` across distinct (study, comparison) pairs |
+| `n_evidence_records` | number of poolable evidence rows; equals `k_studies` under the current one-effect-per-study policy |
+| `n_available_records` | all mapped records in the group, including records that lack a usable SE |
+| `n_excluded_unpoolable` / `excluded_studies` | records/studies visible as evidence but absent from the numerical pool |
+| `n_excluded_duplicate_mappings` | lower-confidence aliases removed when multiple source IDs resolve to one feature within a comparison |
+| `total_sample_size` | sum of `sample_size` across the poolable study-level effects |
 | `pooled_effect` | random-effects pooled estimate of the effect size |
 | `pooled_se` | standard error of the pooled effect |
 | `ci_lower` / `ci_upper` | 95% CI on the pooled effect (`pooled_effect ± 1.96 × pooled_se`) |

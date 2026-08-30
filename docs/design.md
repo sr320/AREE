@@ -167,7 +167,7 @@ schema — meta-analysis code does not need to know which mode produced a row.
 See repository tree in [README.md](../README.md). Key separation:
 
 - `registry/` — data *about* studies (facts, never derived).
-- `workflows/` + `modules/` — Nextflow scaffolds for raw-data reanalysis.
+- `workflows/` + `modules/` — Nextflow workflows for raw-data reanalysis.
 - `src/aree/` — the Python package: intake/validation, harmonization,
   meta-analysis, prioritization, evidence-card reporting. This is where
   "comparable evidence" is actually produced.
@@ -182,10 +182,9 @@ See repository tree in [README.md](../README.md). Key separation:
   demo study record and in filenames (`*_demo.tsv`). No real accession numbers
   are invented; the final response lists *real* candidate datasets to curate
   next, described by type/context rather than fabricated IDs.
-- Nextflow workflows are structurally complete scaffolds (channels, process
-  stubs, config, container references, manifest emission) but are not executed
-  against real FASTQ in this build — no compute budget/raw data available in
-  this environment. This is called out in the Phase 4 status table.
+- The RNA-seq workflow has executed end to end against subsampled real FASTQ;
+  the other raw paths and every declared container profile remain unverified.
+  CI runs all processed-result paths and a stubbed RNA-seq raw-DAG smoke test.
 - Ortholog mapping uses a small illustrative crosswalk table
   (`data/mappings/`), not a full OrthoFinder/OrthoDB integration.
 - Meta-analysis uses a standard random-effects (DerSimonian–Laird) estimator

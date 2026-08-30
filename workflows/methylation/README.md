@@ -1,10 +1,11 @@
 # AREE methylation / WGBS / EM-seq workflow
 
-STATUS: **`processed_results_harmonization` mode is executed and verified; the Bismark/methylKit raw path is not.** This workflow now runs end to end in processed mode (3/3 processes green) against the demo table. It did **not** run before 2026-08-28 — see `../../docs/first_raw_reanalysis.md` for the defects that prevented it, including bare script-level statements that stopped it compiling on Nextflow 26.04. No container has been pulled; the verified run used `-profile local` with natively installed tools. This directory contains real
-DSL2 Nextflow wiring and real per-tool command lines, but no process here has
-been run in this build — there is no compute budget or real/synthetic
-bisulfite FASTQ data in this repository. Read this file before assuming
-anything below has been validated end-to-end.
+STATUS: **`processed_results_harmonization` mode is executed, verified, and
+covered by current-version CI; the Bismark/methylKit raw path is not.** It did
+not run before 2026-08-28; see `../../docs/first_raw_reanalysis.md` for the
+defects that prevented it. No container has been pulled. The raw branch contains
+real DSL2 wiring and tool commands, but no bisulfite FASTQ fixture or real raw
+study has exercised them.
 
 ## What this workflow does
 

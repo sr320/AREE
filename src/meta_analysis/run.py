@@ -1,11 +1,10 @@
 """Orchestrate meta-analysis over the harmonized evidence table.
 
-Groups evidence records by (feature_id_standardized, phenotype, feature_type)
-— never across feature types, since a log2FoldChange and a methylation
-percent-difference are not on a comparable scale — and pools effect sizes
-within each group. Records with mapping_confidence == 'unresolved' are
-excluded from pooling (no stable identity to group on) but remain visible in
-the raw evidence table.
+Groups evidence records by standardized feature, phenotype, feature type,
+simulation status, and species. Only statistically poolable records contribute
+to the estimate or replication metadata. Records with unresolved identifiers
+remain visible in the evidence table, while repeated within-study contrasts
+fail closed because AREE does not yet model their covariance.
 """
 from __future__ import annotations
 
@@ -27,6 +26,83 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 # registered, silently pool across species. Cross-species evidence is only ever
 # meant to combine through orthogroups, which are not yet populated.
 GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid"]
+MAPPING_CONFIDENCE_RANK = {
+    "exact": 5,
+    "one_to_one_ortholog": 4,
+    "inferred": 3,
+    "many_to_one_ortholog": 2,
+    "one_to_many_ortholog": 1,
+    "unresolved": 0,
+}
+
+
+def _poolable_group(group: pd.DataFrame) -> pd.DataFrame:
+    """Return only records that can actually enter inverse-variance pooling."""
+    poolable = group.copy()
+    poolable["_effective_se"] = [
+        effective_standard_error(row.effect_size, row.standard_error, row.p_value)
+        for row in group.itertuples()
+    ]
+    return poolable[
+        poolable["_effective_se"].notna() & (poolable["_effective_se"] > 0)
+    ].copy()
+
+
+def _deduplicate_identifier_collisions(group: pd.DataFrame, keys: tuple) -> tuple[pd.DataFrame, int]:
+    """Keep a uniquely best mapping when source IDs collapse within a comparison.
+
+    A lower-confidence alias must not become a second biological effect. Equal-
+    confidence collisions remain ambiguous and fail closed.
+    """
+    selected = []
+    excluded_count = 0
+    for (study_id, comparison_id), comparison_group in group.groupby(
+        ["study_id", "comparison_id"], sort=False
+    ):
+        if len(comparison_group) == 1:
+            selected.append(comparison_group.index[0])
+            continue
+        ranks = comparison_group["mapping_confidence"].map(MAPPING_CONFIDENCE_RANK).fillna(-1)
+        best = comparison_group[ranks == ranks.max()]
+        if len(best) != 1:
+            feature_id, phenotype, feature_type, simulated, species_taxid = keys
+            originals = ", ".join(sorted(comparison_group["feature_id_original"].astype(str)))
+            raise ValueError(
+                "Multiple source identifiers with equal mapping confidence resolve to the same "
+                f"meta-analysis feature. Group feature={feature_id!r}, phenotype={phenotype!r}, "
+                f"feature_type={feature_type!r}, simulated={simulated!r}, "
+                f"species_taxid={species_taxid!r}; study={study_id!r}, "
+                f"comparison={comparison_id!r}; source identifiers: {originals}. Resolve the "
+                "identifier collision explicitly before pooling."
+            )
+        selected.append(best.index[0])
+        excluded_count += len(comparison_group) - 1
+    return group.loc[selected].copy(), excluded_count
+
+
+def _reject_correlated_within_study_effects(group: pd.DataFrame, keys: tuple) -> None:
+    """Fail closed when one study contributes multiple effects to one pool.
+
+    AREE does not yet carry the covariance needed to combine contrasts that
+    reuse samples or controls. Treating them as independent would understate
+    uncertainty, so require curation/modeling rather than choosing a contrast
+    or correlation silently.
+    """
+    duplicated = group[group.duplicated("study_id", keep=False)]
+    if duplicated.empty:
+        return
+    details = "; ".join(
+        f"{study_id}: {', '.join(sorted(study_group['comparison_id'].astype(str).unique()))}"
+        for study_id, study_group in duplicated.groupby("study_id")
+    )
+    feature_id, phenotype, feature_type, simulated, species_taxid = keys
+    raise ValueError(
+        "Meta-analysis cannot treat multiple comparisons from one study as independent. "
+        f"Group feature={feature_id!r}, phenotype={phenotype!r}, "
+        f"feature_type={feature_type!r}, simulated={simulated!r}, "
+        f"species_taxid={species_taxid!r} contains {details}. Select one prespecified "
+        "comparison per study or implement a covariance-aware within-study model."
+    )
 
 
 def _direction_consistency(effect_sizes: pd.Series) -> float:
@@ -55,16 +131,17 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     results = []
     for keys, group in df.groupby(GROUP_KEYS, dropna=False):
         feature_id, pheno, ftype, simulated, species_taxid = keys
-        ses = [
-            effective_standard_error(row.effect_size, row.standard_error, row.p_value)
-            for row in group.itertuples()
-        ]
-        usable = [(e, se) for e, se in zip(group["effect_size"], ses) if se is not None and se > 0]
-        if not usable:
+        poolable = _poolable_group(group)
+        if poolable.empty:
             continue
-        yi = [u[0] for u in usable]
-        sei = [u[1] for u in usable]
+        poolable, n_duplicate_mappings = _deduplicate_identifier_collisions(poolable, keys)
+        _reject_correlated_within_study_effects(poolable, keys)
+
+        yi = poolable["effect_size"].astype(float).tolist()
+        sei = poolable["_effective_se"].astype(float).tolist()
         pooled = dersimonian_laird(yi, sei)
+
+        excluded = group.loc[~group.index.isin(poolable.index)]
 
         results.append({
             "feature_id_standardized": feature_id,
@@ -72,10 +149,15 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "feature_type": ftype,
             "simulated": simulated,
             "species_taxid": species_taxid,
-            "k_studies": group["study_id"].nunique(),
-            "studies": "|".join(sorted(group["study_id"].unique())),
-            "n_evidence_records": len(group),
-            "total_sample_size": int(group.drop_duplicates(["study_id", "comparison_id"])["sample_size"].sum()),
+            "k_studies": poolable["study_id"].nunique(),
+            "studies": "|".join(sorted(poolable["study_id"].unique())),
+            "n_evidence_records": len(poolable),
+            "n_available_records": len(group),
+            "n_excluded_unpoolable": len(excluded),
+            "n_excluded_duplicate_mappings": n_duplicate_mappings,
+            "excluded_studies": "|".join(sorted(excluded["study_id"].unique())),
+            "contributing_evidence_ids": "|".join(sorted(poolable["evidence_id"].astype(str))),
+            "total_sample_size": int(poolable["sample_size"].sum()),
             "pooled_effect": pooled.pooled_effect,
             "pooled_se": pooled.pooled_se,
             "ci_lower": pooled.ci_lower,
@@ -85,12 +167,12 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "q_statistic": pooled.q_statistic,
             "i_squared": pooled.i_squared,
             "tau_squared": pooled.tau_squared,
-            "direction_consistency": _direction_consistency(group["effect_size"]),
-            "distinct_tissues": group["tissue"].nunique(),
-            "distinct_life_stages": group["life_stage"].nunique(),
-            "distinct_stressors": "|".join(sorted(group["stressor"].unique())),
-            "mapping_confidences": "|".join(sorted(group["mapping_confidence"].unique())),
-            "quality_flags_union": "|".join(sorted({f for flags in group["quality_flags"] for f in _parse_flags(flags)})),
+            "direction_consistency": _direction_consistency(poolable["effect_size"]),
+            "distinct_tissues": poolable["tissue"].nunique(),
+            "distinct_life_stages": poolable["life_stage"].nunique(),
+            "distinct_stressors": "|".join(sorted(poolable["stressor"].unique())),
+            "mapping_confidences": "|".join(sorted(poolable["mapping_confidence"].unique())),
+            "quality_flags_union": "|".join(sorted({f for flags in poolable["quality_flags"] for f in _parse_flags(flags)})),
         })
 
     result_df = pd.DataFrame(results)

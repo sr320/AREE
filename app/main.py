@@ -21,7 +21,7 @@ st.set_page_config(page_title="AREE — Aquaculture Resilience Evidence Engine",
 st.title("AREE — Aquaculture Resilience Evidence Engine")
 st.caption(
     "Harmonized, cross-study resilience biomarker evidence for Pacific oyster (Crassostrea gigas) "
-    "and other aquaculture species. All datasets shipped in this build are SIMULATED demo data."
+    "and other aquaculture species. Simulated demo and real-study evidence are explicitly separated."
 )
 
 st.warning(
@@ -125,7 +125,8 @@ with tab_candidates:
                                     default=sorted(candidates["tier"].unique()))
             view = candidates[candidates["tier"].isin(tier_f)] if tier_f else candidates
             show_cols = [
-                "feature_id_standardized", "phenotype", "feature_type", "tier", "score",
+                "feature_id_standardized", "phenotype", "feature_type", "simulated",
+                "species_taxid", "tier", "score",
                 "k_studies", "n_distinct_assays", "direction_consistency", "i_squared", "pooled_effect",
             ]
             st.dataframe(view[show_cols], use_container_width=True, hide_index=True)

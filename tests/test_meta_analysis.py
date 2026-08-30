@@ -1,7 +1,10 @@
 import math
 
+import pandas as pd
+import pytest
 from conftest import harmonize_all_demo_studies
 
+from harmonize.core import load_evidence_table
 from meta_analysis.effect_sizes import approximate_se
 from meta_analysis.pooling import dersimonian_laird
 from meta_analysis.run import run_meta_analysis
@@ -56,3 +59,73 @@ def test_meta_analysis_excludes_unresolved_identifiers(isolated_reports):
     assert "unresolved" not in {
         conf for confs in result["mapping_confidences"] for conf in confs.split("|")
     }
+
+
+def test_unpoolable_study_does_not_count_as_replication(isolated_reports):
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    source = evidence[
+        (evidence["feature_id_standardized"] == "LOC105331241")
+        & (evidence["phenotype"] == "larval_viability")
+    ].iloc[0]
+
+    poolable = source.copy()
+    poolable["evidence_id"] = "poolable"
+    poolable["study_id"] = "POOLABLE_STUDY"
+    poolable["comparison_id"] = "poolable_comparison"
+    poolable["standard_error"] = 0.2
+    poolable["p_value"] = 0.01
+
+    unavailable = source.copy()
+    unavailable["evidence_id"] = "unavailable"
+    unavailable["study_id"] = "UNAVAILABLE_STUDY"
+    unavailable["comparison_id"] = "unavailable_comparison"
+    unavailable["standard_error"] = None
+    unavailable["p_value"] = None
+
+    path = isolated_reports["evidence_table_path"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([poolable, unavailable]).to_csv(path, sep="\t", index=False)
+
+    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
+    assert result["k_studies"] == 1
+    assert result["studies"] == "POOLABLE_STUDY"
+    assert result["n_evidence_records"] == 1
+    assert result["n_available_records"] == 2
+    assert result["n_excluded_unpoolable"] == 1
+    assert result["excluded_studies"] == "UNAVAILABLE_STUDY"
+
+
+def test_multiple_comparisons_from_one_study_fail_closed(isolated_reports):
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    source = evidence[
+        (evidence["feature_id_standardized"] == "LOC105331241")
+        & (evidence["phenotype"] == "larval_viability")
+    ].iloc[0]
+
+    rows = []
+    for comparison_id, effect in [("contrast_a", 1.0), ("contrast_b", 1.2)]:
+        row = source.copy()
+        row["evidence_id"] = comparison_id
+        row["study_id"] = "SHARED_STUDY"
+        row["comparison_id"] = comparison_id
+        row["effect_size"] = effect
+        row["standard_error"] = 0.2
+        row["p_value"] = 0.01
+        rows.append(row)
+
+    path = isolated_reports["evidence_table_path"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_csv(path, sep="\t", index=False)
+
+    with pytest.raises(ValueError, match="multiple comparisons from one study"):
+        run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+
+
+def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_reports):
+    harmonize_all_demo_studies()
+    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    hsp70 = result[result["feature_id_standardized"] == "LOC105333935"].iloc[0]
+    assert hsp70["n_excluded_duplicate_mappings"] == 1
+    assert hsp70["n_evidence_records"] == hsp70["k_studies"] == 2

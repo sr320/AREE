@@ -16,9 +16,9 @@ and evidence convergence across studies and molecular layers — never confirmed
 mechanistic causation — and it never presents a statistically significant hit
 in a single study as a validated biomarker.
 
-> **All datasets shipped in this repository are clearly labeled SIMULATED demo
-> data.** They exist to exercise the full pipeline end-to-end. Real public
-> datasets can be added with minimal modification (see
+> **Every demo dataset is clearly labeled SIMULATED and is kept separate from
+> real evidence.** The repository also contains registered real public studies;
+> only harmonized real-study outputs may be interpreted as real evidence (see
 > [docs/adding_a_study.md](docs/adding_a_study.md)).
 
 ## The five layers

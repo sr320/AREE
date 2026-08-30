@@ -14,7 +14,7 @@ import pandas as pd
 from common import REPORTS_DIR, load_vocab
 from harmonize.core import load_evidence_table
 from meta_analysis.run import run_meta_analysis
-from prioritize.rank import build_candidates
+from prioritize.rank import _partition_mask, _partition_value, build_candidates
 
 EVIDENCE_CARDS_DIR = REPORTS_DIR / "evidence_cards"
 
@@ -37,12 +37,22 @@ def _slug(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", str(value))
 
 
-def _forest_points(evidence_df: pd.DataFrame, feature_id: str, phenotype: str, feature_type: str) -> list:
+def _forest_points(
+    evidence_df: pd.DataFrame,
+    feature_id: str,
+    phenotype: str,
+    feature_type: str,
+    simulated,
+    species_taxid,
+    contributing_evidence_ids: str,
+) -> list:
     subset = evidence_df[
         (evidence_df["feature_id_standardized"] == feature_id)
         & (evidence_df["phenotype"] == phenotype)
         & (evidence_df["feature_type"] == feature_type)
+        & _partition_mask(evidence_df, simulated, species_taxid)
     ]
+    contributing_ids = set(str(contributing_evidence_ids).split("|"))
     points = []
     for _, r in subset.iterrows():
         points.append({
@@ -58,11 +68,18 @@ def _forest_points(evidence_df: pd.DataFrame, feature_id: str, phenotype: str, f
             "adjusted_p_value": r["adjusted_p_value"],
             "molecular_direction": r["molecular_direction"],
             "mapping_confidence": r["mapping_confidence"],
+            "included_in_pool": str(r["evidence_id"]) in contributing_ids,
         })
     return points
 
 
-def _other_omics_context(evidence_df: pd.DataFrame, feature_id: str, this_feature_type: str) -> list:
+def _other_omics_context(
+    evidence_df: pd.DataFrame,
+    feature_id: str,
+    this_feature_type: str,
+    simulated,
+    species_taxid,
+) -> list:
     """Evidence for this same standardized feature from OTHER assay/feature types,
     possibly under a different phenotype — this is the explicit, inspectable basis
     for the multi_omics_convergence tier, so a reader can see exactly which studies
@@ -70,6 +87,7 @@ def _other_omics_context(evidence_df: pd.DataFrame, feature_id: str, this_featur
     other = evidence_df[
         (evidence_df["feature_id_standardized"] == feature_id)
         & (evidence_df["feature_type"] != this_feature_type)
+        & _partition_mask(evidence_df, simulated, species_taxid)
     ]
     return other[[
         "study_id", "feature_type", "phenotype", "tissue", "molecular_direction", "effect_size", "mapping_confidence"
@@ -88,6 +106,9 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     lines.append("## Candidate identifiers")
     lines.append(f"- Standardized feature ID: `{candidate['feature_id_standardized']}`")
     lines.append(f"- Feature type: `{candidate['feature_type']}`")
+    lines.append(f"- Species taxid: `{candidate['species_taxid']}`")
+    simulated = _partition_value(candidate["simulated"]) == "true"
+    lines.append(f"- Data origin: `{'simulated' if simulated else 'real'}`")
     lines.append(f"- Mapping confidence across contributing studies: {candidate['mapping_confidences']}")
     lines.append("")
     lines.append("## Evidence summary")
@@ -104,14 +125,16 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
                       "stable biomarker, until the source of heterogeneity is resolved.")
     lines.append("")
     lines.append("## Per-study evidence (forest-plot data)")
-    lines.append("| study | tissue | life stage | stressor | effect | SE | p | direction | mapping confidence |")
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    lines.append("| study | tissue | life stage | stressor | effect | SE | p | pooled | direction | mapping confidence |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|")
     for p in forest_points:
         se = f"{p['standard_error']:.3f}" if p["standard_error"] == p["standard_error"] and p["standard_error"] is not None else "n/a"
         pv = f"{p['p_value']:.3g}" if p["p_value"] == p["p_value"] and p["p_value"] is not None else "n/a"
         lines.append(
             f"| {p['study_id']} | {p['tissue']} | {p['life_stage']} | {p['stressor']} | "
-            f"{p['effect_size']:.3f} | {se} | {pv} | {p['molecular_direction']} | {p['mapping_confidence']} |"
+            f"{p['effect_size']:.3f} | {se} | {pv} | "
+            f"{'yes' if p['included_in_pool'] else 'no'} | {p['molecular_direction']} | "
+            f"{p['mapping_confidence']} |"
         )
     lines.append("")
     lines.append("## Multi-omics context")
@@ -132,7 +155,8 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     lines.append("## Limitations")
     lines.append(f"- Quality flags present across contributing evidence: {candidate['quality_flags_union'] or 'none recorded'}")
     lines.append("- This candidate reflects association, not confirmed mechanistic causation.")
-    lines.append("- All contributing demo studies in this build use simulated data; do not cite this card as real evidence.")
+    if simulated:
+        lines.append("- This card contains simulated demo evidence; do not cite it as real evidence.")
     lines.append("")
     lines.append("## Recommended next validation step")
     lines.append(NEXT_STEP_BY_TIER.get(candidate["tier"], NEXT_STEP_BY_TIER["emerging"]))
@@ -166,12 +190,32 @@ def build_evidence_cards(phenotype: str | None = None, feature_type: str | None 
     index = []
     for _, candidate in candidates_df.iterrows():
         candidate = candidate.to_dict()
-        forest_points = _forest_points(full_evidence, candidate["feature_id_standardized"], candidate["phenotype"], candidate["feature_type"])
-        other_omics = _other_omics_context(full_evidence, candidate["feature_id_standardized"], candidate["feature_type"])
+        forest_points = _forest_points(
+            full_evidence,
+            candidate["feature_id_standardized"],
+            candidate["phenotype"],
+            candidate["feature_type"],
+            candidate["simulated"],
+            candidate["species_taxid"],
+            candidate["contributing_evidence_ids"],
+        )
+        other_omics = _other_omics_context(
+            full_evidence,
+            candidate["feature_id_standardized"],
+            candidate["feature_type"],
+            candidate["simulated"],
+            candidate["species_taxid"],
+        )
         phenotype_label = phenotype_vocab.get(candidate["phenotype"], {}).get("label", candidate["phenotype"])
 
         card_md = _card_markdown(candidate, forest_points, other_omics, phenotype_label)
-        slug = _slug(f"{candidate['feature_id_standardized']}_{candidate['phenotype']}_{candidate['feature_type']}")
+        origin = (
+            "simulated" if _partition_value(candidate["simulated"]) == "true" else "real"
+        )
+        slug = _slug(
+            f"{candidate['feature_id_standardized']}_{candidate['phenotype']}_"
+            f"{candidate['feature_type']}_{origin}_taxid{candidate['species_taxid']}"
+        )
         card_path = EVIDENCE_CARDS_DIR / f"{slug}.md"
         card_path.write_text(card_md)
 
@@ -179,6 +223,8 @@ def build_evidence_cards(phenotype: str | None = None, feature_type: str | None 
             "feature_id_standardized": candidate["feature_id_standardized"],
             "feature_type": candidate["feature_type"],
             "phenotype": candidate["phenotype"],
+            "simulated": candidate["simulated"],
+            "species_taxid": candidate["species_taxid"],
             "tier": candidate["tier"],
             "score": candidate["score"],
             "k_studies": candidate["k_studies"],

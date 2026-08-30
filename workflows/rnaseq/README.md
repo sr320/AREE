@@ -153,14 +153,13 @@ regenerated from raw data), not the evidence records themselves.
   DAG in `main.nf` uses real `Channel.fromFilePairs`/`Channel.fromPath`
   factories and real `if (params.mode == ...)` branching — it is not a
   linear echo-only stub chain.
-- **Known gaps before this could actually run**: no synthetic FASTQ/BAM
-  fixtures exist anywhere in this repository (see `../../config/demo.config`
-  header), so `raw_reanalysis` mode cannot currently be smoke-tested even in
-  CI; only `processed_results_harmonization` mode is demo-able today. Image
-  tags in `../../containers/README.md` have not been re-verified as current.
-  The `DIFFERENTIAL_EXPRESSION_DESEQ2` process includes a `stub:` block
-  (usable with `nextflow run -stub-run`) so the DAG can at least be
-  structurally exercised without a real Bioconductor container.
+- **CI coverage**: tiny paired FASTQ, reference, annotation, tx2gene, and sample
+  fixtures live under `../../tests/fixtures/rnaseq_raw`. Every RNA-seq process
+  has an explicit `stub:` output contract, so current Nextflow can exercise the
+  complete raw DAG without a bioinformatics toolchain. This verifies channels,
+  parameter validation, and artifact handoffs only; it is not a container test
+  and produces no biologically meaningful result. Image tags in
+  `../../containers/README.md` remain unverified.
 
 ## Profiles
 

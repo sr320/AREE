@@ -2,10 +2,10 @@
 /*
  * AREE :: RNA-seq reanalysis / harmonization workflow
  *
- * STATUS: structurally complete DSL2 scaffold. NOT executed against real
- * FASTQ or real processed tables in this build — no compute budget or real
- * public data was available in this environment. See README.md "What has
- * and has not been run" before treating any output as validated.
+ * STATUS: executed end to end against subsampled real FASTQ and against the
+ * bundled processed-results demo. CI also exercises the raw DAG with tiny
+ * paired FASTQ fixtures under `-stub-run`. Containers and full-depth biology
+ * remain unverified; see README.md "What has and has not been run".
  *
  * Implements CLAUDE.md Layer 2 section A (RNA-seq):
  *   FASTQ QC -> adapter trimming -> pseudoalignment/quant -> sample QC ->
@@ -198,9 +198,8 @@ workflow {
         status    : ${_wf.success ? 'OK' : 'FAILED'}
         outdir    : ${_params.outdir}
         duration  : ${_wf.duration}
-        NOTE: this run reflects DSL2 wiring/validation only in this build unless
-        executed against real containers and real inputs outside this environment.
+        NOTE: interpret biological output only when the run used full-depth,
+        quality-controlled inputs; stub runs validate wiring only.
         """.stripIndent()
     }
 }
-

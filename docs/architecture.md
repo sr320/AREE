@@ -42,16 +42,16 @@ vs. control, sample sizes, data availability — never derived results. See
 **Directories:** `workflows/{rnaseq,methylation,proteomics,metabolomics}/`,
 `modules/`, `containers/`, `config/`.
 
-Nextflow scaffolds for raw-data reanalysis: FASTQ/read QC, alignment or
+Nextflow workflows for raw-data reanalysis: FASTQ/read QC, alignment or
 pseudoalignment, quantification or methylation calling, differential
 analysis, and standardized result-table emission, per assay type. Every
-workflow is designed to emit a machine-readable manifest (parameters, tool
-versions, input checksums, QC metrics) alongside its result table. As of this
-build these are structurally complete scaffolds — channels, process
-definitions, config, container references — but have not been executed
-against real FASTQ data; see [roadmap.md](roadmap.md) for exactly what that
-means in practice. The demo's `raw_reanalysis`-mode studies use pre-staged
-standardized output under `data/demo/` rather than a live Nextflow run.
+workflow emits a machine-readable manifest (parameters, tool versions, input
+checksums, QC metrics) alongside its result table. The RNA-seq raw path has
+executed end to end against subsampled real FASTQ, and all four processed-result
+paths execute end to end. Current-version CI runs those processed paths and
+structurally exercises the RNA-seq raw DAG with tiny fixtures and explicit
+stubs. Container profiles and the other raw paths remain unverified; see
+[roadmap.md](roadmap.md).
 
 ## Layer 3: Cross-study Harmonization
 

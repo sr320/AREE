@@ -1,7 +1,7 @@
 # Installation
 
-AREE is a standard Python `src`-layout package plus a set of Nextflow workflow
-scaffolds and a Streamlit app. This page covers the Python package, which is
+AREE is a standard Python `src`-layout package plus Nextflow workflows and a
+Streamlit app. This page covers the Python package, which is
 what the `aree` CLI, harmonization, meta-analysis, and prioritization code
 depend on.
 
@@ -12,7 +12,7 @@ depend on.
 - (optional) [Quarto](https://quarto.org) if you plan to render `docs/` as a
   static site
 - (optional) Nextflow + Docker/Apptainer if you plan to execute the raw-data
-  workflow scaffolds under `workflows/` — see
+  workflows under `workflows/` — see
   [roadmap.md](roadmap.md) for the current status of that path
 
 ## Install

@@ -2,7 +2,8 @@
 /*
  * AREE proteomics reanalysis / harmonization workflow
  *
- * STATUS: structurally complete DSL2 scaffold. Real Channel factories, real
+ * STATUS: processed_results_harmonization executes end to end and is covered
+ * by current-version CI. The raw abundance-matrix path remains unexecuted. Real Channel factories, real
  * `if (params.mode == ...)` branching, and real per-process pandas/R logic
  * (see modules/proteomics/*.nf headers for per-step honesty notes). This
  * workflow has NOT been executed end-to-end against real data in this build
@@ -168,4 +169,3 @@ workflow {
         """.stripIndent()
     }
 }
-

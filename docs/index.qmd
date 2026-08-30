@@ -12,7 +12,7 @@ evidence-generation system with five connected layers:
 
 1. **Study registry & intake** — machine-readable registration of public
    datasets with controlled vocabularies for phenotypes and stressors.
-2. **Standardized reanalysis workflows** — Nextflow scaffolds for RNA-seq,
+2. **Standardized reanalysis workflows** — Nextflow workflows for RNA-seq,
    methylation, proteomics, and metabolomics (raw-reanalysis or
    processed-results modes).
 3. **Cross-study harmonization** — a shared evidence schema plus identifier
@@ -43,6 +43,7 @@ evidence-generation system with five connected layers:
 - Curious how it works? See the [Technical architecture](architecture.md) and
   the [Design document](design.md).
 
-> **Note on demo data.** Every dataset shipped in this build is clearly labeled
-> **simulated**. It exists to demonstrate the full pipeline end-to-end; do not
-> cite any demo result as real biological evidence.
+> **Note on demo data.** Every demo dataset is labeled **simulated** and is
+> partitioned from real evidence during pooling, ranking, and reporting. The
+> repository also includes registered real public studies; do not cite a demo
+> result as real biological evidence.

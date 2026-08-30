@@ -35,4 +35,12 @@ process TRIM_FASTP {
         fastp: \$(fastp --version 2>&1 | sed -e 's/fastp //g')
     END_VERSIONS
     """
+
+    stub:
+    """
+    touch ${sample_id}_trimmed_R1.fastq.gz ${sample_id}_trimmed_R2.fastq.gz
+    echo '{}' > ${sample_id}.fastp.json
+    touch ${sample_id}.fastp.html
+    echo '${task.process}:' > versions.yml
+    """
 }

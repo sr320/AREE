@@ -37,13 +37,17 @@ for the assumptions this roadmap is consistent with.
   table (`data/mappings/ambiguous_symbol_map.yaml`).
 - **Meta-analysis.** `src/meta_analysis/pooling.py` implements
   DerSimonian-Laird random-effects pooling with Q, I², and tau² directly in
-  Python; `aree meta-analyze` runs against the demo evidence table and
-  produces real pooled results, including the genuine conflicting-evidence
-  case documented in
+  Python. Only records with a usable standard error contribute to the pooled
+  estimate or replication count; lower-confidence aliases within one
+  comparison are de-duplicated, and multiple contrasts from one study fail
+  closed until a covariance-aware model or prespecified contrast is supplied.
+  `aree meta-analyze` runs against the demo evidence table and produces pooled
+  results, including the conflicting-evidence case documented in
   [interpreting_meta_analysis.md](interpreting_meta_analysis.md).
 - **Candidate prioritization.** `src/prioritize/scoring.py` and
   `src/prioritize/rank.py` implement the full transparent scoring formula and
-  the three-tier hard-gated ranking system; `aree build-evidence-cards`
+  the three-tier hard-gated ranking system. Simulation status and species taxid
+  remain partition keys through ranking and reporting; `aree build-evidence-cards`
   generates a markdown card per candidate plus an `index.json` under
   `reports/evidence_cards/`.
 - **CLI.** All six commands documented in the README/design docs
@@ -62,7 +66,11 @@ for the assumptions this roadmap is consistent with.
   [handling_genome_versions.md](handling_genome_versions.md).
 - **Automated tests.** `tests/` covers schema validation, registry
   (duplicate-ID handling), identifier mapping, meta-analysis, prioritization,
-  evidence-card generation, and a full demo-pipeline integration test.
+  evidence-card generation, origin/species collision regression cases, and a
+  full demo-pipeline integration test.
+- **CI, interface, and documentation.** `.github/workflows/ci.yml` runs Python,
+  real-study, schema, documentation, and Nextflow smoke jobs; `app/main.py`
+  provides the Streamlit browser; `docs/_quarto.yml` renders this site.
 
 ## Scaffolded but not yet production-ready
 
@@ -73,39 +81,33 @@ for the assumptions this roadmap is consistent with.
   true before 2026-08-28 — three of the four did not compile on current
   Nextflow. Still outstanding: full-depth runs, the raw paths for methylation,
   proteomics and metabolomics, and any execution inside the declared
-  containers.
+  containers. CI executes all four processed paths on Nextflow 26.04 and uses
+  tiny paired FASTQ fixtures plus `-stub-run` to exercise the RNA-seq raw DAG;
+  the stub run verifies wiring and artifact contracts, not tool execution or
+  biological validity.
 - **Containers.** `containers/README.md` documents the intended
   Docker/Apptainer approach, but container images/definitions themselves are
   not yet built.
-- **Ortholog mapping.** The identifier crosswalk is a small, illustrative,
-  entirely synthetic table (21 genes), not a full OrthoFinder/OrthoDB-based
-  ortholog-calling pipeline. It is sufficient to demonstrate the
-  mapping-confidence mechanism but is not a real reference crosswalk — see
-  [identifier_mapping.md](identifier_mapping.md).
+- **Ortholog mapping.** A real 33,356-gene *M. gigas* identifier crosswalk is
+  committed and used for real studies, but its `orthogroup_id` field remains
+  empty. Cross-species pooling still needs a real OrthoFinder/OrthoDB-derived
+  orthology layer — see [identifier_mapping.md](identifier_mapping.md).
 
-## Planned / not yet started
+## Next milestones
 
-- **CI.** No `.github/workflows/` are present in this build yet. The design
-  calls for GitHub Actions covering Python tests, R checks, schema
-  validation, demo-report rendering, linting, and end-to-end demo-command
-  checks — these are specified but not implemented.
-- **Streamlit app.** `app/` does not yet contain a `main.py`; the interactive
-  filter/search interface described in [architecture.md](architecture.md#layer-5-user-facing-outputs)
-  is planned but not built in this pass. The CLI and the generated
-  `reports/` artifacts (evidence table, meta-analysis tables, evidence cards)
-  are usable in the meantime without the interactive app.
-- **Quarto site configuration.** This `docs/` directory contains the
-  narrative and reference Markdown content, but `_quarto.yml`/site
-  configuration for rendering it as a browsable static site is handled
-  separately and is not part of this documentation pass.
-- **Real public datasets.** All six registered studies are synthetic demo
-  data, clearly labeled `simulated: true`. No real public *C. gigas* dataset
-  has been curated into the registry yet.
-- **Additional species.** The schema and vocabularies are species-agnostic
-  (see [adding_a_species.md](adding_a_species.md)), but onboarding a second
-  species also requires a small code change to support multiple identifier
-  crosswalks (`src/harmonize/identifiers.py` currently points at one fixed
-  crosswalk path) — this has not been implemented.
+- **First full-depth real raw reanalysis.** Run all prespecified
+  `CALLA2026_OSHV` contrasts at full depth, but do not combine its repeated
+  contrasts as independent effects. Select one comparison per study/phenotype
+  or implement a covariance-aware within-study model first.
+- **First real cross-study pool.** Curate and reanalyze a compatible independent
+  pathogen-challenge study such as `PRJNA593309`, aligning phenotype and
+  contrast definitions before pooling.
+- **Container verification.** Execute the CI fixtures with the declared Docker
+  images, pin an AREE utility image, and record introspected rather than declared
+  software versions.
+- **Additional species.** The schema and vocabularies are species-aware and
+  ranking/reporting partitions on `species_taxid`; onboarding another species
+  still requires its reference data and identifier crosswalk.
 - **Expanded ontologies.** Phenotype, stressor, tissue, and life-stage
   vocabularies cover the terms specified in the founding proposal but will
   need extension as more species and study types are added (e.g. finfish

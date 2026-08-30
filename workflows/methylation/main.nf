@@ -2,16 +2,9 @@
 /*
  * AREE methylation / WGBS / EM-seq workflow
  *
- * STATUS: unexecuted structural scaffold. See README.md in this directory
- * for a full, honest description of what has and has not been run. In
- * short: this is real DSL2 wiring with real tool CLI invocations in the
- * per-process modules, but no process in this workflow has actually been
- * executed against FASTQ, BAM, or a real reference genome in this build.
- * The `processed_results_harmonization` branch *could* be run today against
- * the shipped demo TSV (data/demo/methylation/*_demo.tsv) since it has no
- * heavyweight bioinformatics dependency beyond Python's standard library and
- * Quarto, but that execution has not been performed as part of this task
- * either.
+ * STATUS: processed_results_harmonization executes end to end against the
+ * bundled demo and is covered by current-version CI. The raw Bismark/methylKit
+ * path and all declared containers remain unexecuted; see README.md.
  *
  * Branches on params.mode:
  *   - raw_reanalysis:
@@ -246,4 +239,3 @@ workflow {
         """
     }
 }
-

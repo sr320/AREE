@@ -2,11 +2,9 @@
 /*
  * AREE metabolomics workflow scaffold
  * ------------------------------------
- * STATUS: unexecuted structural scaffold. See README.md "What has and has
- * not been run" before treating any output of a real `nextflow run` of this
- * file as validated. Every process below has real, syntactically checked
- * script logic (pandas / limma / Quarto) but none has been run against a
- * real container runtime in this build.
+ * STATUS: processed_results_harmonization executes end to end against the
+ * bundled demo and is covered by current-version CI. The raw feature-table
+ * path and all declared containers remain unexecuted; see README.md.
  *
  * Implements CLAUDE.md Layer 2.D (Metabolomics):
  *   metabolite feature table intake -> annotation confidence tracking ->

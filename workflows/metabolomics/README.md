@@ -1,12 +1,11 @@
-# AREE metabolomics workflow (scaffold)
+# AREE metabolomics workflow
 
-STATUS: **`processed_results_harmonization` mode is executed and verified; the raw feature-table path is not.** This workflow now runs end to end in processed mode (3/3 processes green) against the demo table. It did **not** run before 2026-08-28 — see `../../docs/first_raw_reanalysis.md` for the defects that prevented it, including bare script-level statements that stopped it compiling on Nextflow 26.04. No container has been pulled; the verified run used `-profile local` with natively installed tools. Every process below has real,
-syntactically checked script logic (pandas, limma, Quarto/R Markdown) that
-would run correctly given a real container runtime and real input files, but
-nothing in this directory has actually been executed with `nextflow run` in
-this build. No compute budget or real/synthetic raw metabolomics data (mzML,
-XCMS/MZmine feature tables) exists in this repository. See "What has and has
-not been run" below before treating any hypothetical output as validated.
+STATUS: **`processed_results_harmonization` mode is executed, verified, and
+covered by current-version CI; the raw feature-table path is not.** It did not
+run before 2026-08-28; see `../../docs/first_raw_reanalysis.md` for the defects
+that prevented it. No container has been pulled. The raw branch contains real
+script logic, but no raw feature-table fixture or real raw study has exercised
+it.
 
 This implements Layer 2.D ("Metabolomics") of the AREE reanalysis workflows
 described in `CLAUDE.md`: metabolite feature table intake, annotation
