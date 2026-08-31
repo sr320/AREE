@@ -137,9 +137,7 @@ jobs:
 
       - name: Exercise the RNA-seq raw DAG with tiny paired FASTQ fixtures
         run: |
-          nextflow run workflows/rnaseq -profile local -stub-run \
-            -process.cpus 2 \
-            -process.memory 4.GB \
+          nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
             --mode raw_reanalysis \
             --study_id CI_RNASEQ \
             --comparison_id treatment_vs_control \
