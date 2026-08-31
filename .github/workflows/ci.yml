@@ -148,6 +148,7 @@ jobs:
             --sample_sheet tests/fixtures/rnaseq_raw/samples.tsv \
             --control_level control \
             --treatment_level treatment \
+            --max_cpus 4 \
             --outdir /tmp/aree-smoke/rnaseq-raw \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw
 
