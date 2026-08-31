@@ -7,7 +7,7 @@
 process SAMPLE_QC {
     tag "cohort"
     label 'process_low'
-    container 'biocontainers/multiqc:1.21--pyhdfd78af_0'
+    container 'quay.io/biocontainers/multiqc:1.21--pyhdfd78af_0'
     publishDir "${params.outdir}/rnaseq/multiqc", mode: params.publish_mode
 
     input:

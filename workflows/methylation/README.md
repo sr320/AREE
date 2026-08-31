@@ -163,9 +163,9 @@ necessarily hardcoded since no container was pulled in this build).
 ## Containers
 
 Every process uses the exact image tags declared in `containers/README.md`:
-`biocontainers/fastqc:0.12.1--hdfd78af_0`,
-`biocontainers/trim-galore:0.6.10--hdfd78af_0`,
-`biocontainers/bismark:0.24.2--hdfd78af_1`,
+`quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0`,
+`quay.io/biocontainers/trim-galore:0.6.10--hdfd78af_0`,
+`quay.io/biocontainers/bismark:0.24.2--hdfd78af_0`,
 `bioconductor/bioconductor_docker:RELEASE_3_18` (methylKit DMR calling,
 GenomicRanges/rtracklayer annotation), `python:3.11-slim` (standardize/
 manifest steps, stdlib only), `ghcr.io/quarto-dev/quarto:1.5.57` (report).

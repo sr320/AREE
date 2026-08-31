@@ -7,7 +7,7 @@
 process FASTQC {
     tag "${sample_id}"
     label 'process_low'
-    container 'biocontainers/fastqc:0.12.1--hdfd78af_0'
+    container 'quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0'
     publishDir "${params.outdir}/rnaseq/fastqc", mode: params.publish_mode
 
     input:

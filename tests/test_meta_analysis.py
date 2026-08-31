@@ -128,4 +128,5 @@ def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_report
     result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
     hsp70 = result[result["feature_id_standardized"] == "LOC105333935"].iloc[0]
     assert hsp70["n_excluded_duplicate_mappings"] == 1
+    assert hsp70["n_excluded_unpoolable"] == 0
     assert hsp70["n_evidence_records"] == hsp70["k_studies"] == 2

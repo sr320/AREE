@@ -6,7 +6,7 @@
 process TRIM_FASTP {
     tag "${sample_id}"
     label 'process_medium'
-    container 'biocontainers/fastp:0.23.4--h5f740d0_0'
+    container 'quay.io/biocontainers/fastp:0.23.4--h5f740d0_0'
     publishDir "${params.outdir}/rnaseq/trimmed", mode: params.publish_mode
 
     input:

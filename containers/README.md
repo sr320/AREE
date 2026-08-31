@@ -24,11 +24,11 @@ not asserting that we built/tested it here.
 
 | Step | Image (illustrative tag) |
 |---|---|
-| FastQC | `biocontainers/fastqc:0.12.1--hdfd78af_0` |
-| fastp | `biocontainers/fastp:0.23.4--h5f740d0_0` |
+| FastQC | `quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0` |
+| fastp | `quay.io/biocontainers/fastp:0.23.4--h5f740d0_0` |
 | Salmon (pseudoalignment + quant) | `combinelab/salmon:1.10.3` |
-| STAR (alternative alignment) | `biocontainers/star:2.7.11b--h43eeafb_0` |
-| Sample QC / MultiQC | `biocontainers/multiqc:1.21--pyhdfd78af_0` |
+| STAR (alternative alignment) | `quay.io/biocontainers/star:2.7.11b--h43eeafb_0` |
+| Sample QC / MultiQC | `quay.io/biocontainers/multiqc:1.21--pyhdfd78af_0` |
 | DESeq2 differential expression | `bioconductor/bioconductor_docker:RELEASE_3_18` |
 | Report render (Quarto) | `ghcr.io/quarto-dev/quarto:1.5.57` |
 
@@ -36,10 +36,10 @@ not asserting that we built/tested it here.
 
 | Step | Image (illustrative tag) |
 |---|---|
-| FastQC | `biocontainers/fastqc:0.12.1--hdfd78af_0` |
-| Trim Galore | `biocontainers/trim-galore:0.6.10--hdfd78af_0` |
-| Bismark (genome prep + align + dedup) | `biocontainers/bismark:0.24.2--hdfd78af_1` |
-| Bismark methylation extractor | `biocontainers/bismark:0.24.2--hdfd78af_1` |
+| FastQC | `quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0` |
+| Trim Galore | `quay.io/biocontainers/trim-galore:0.6.10--hdfd78af_0` |
+| Bismark (genome prep + align + dedup) | `quay.io/biocontainers/bismark:0.24.2--hdfd78af_0` |
+| Bismark methylation extractor | `quay.io/biocontainers/bismark:0.24.2--hdfd78af_0` |
 | methylKit DML/DMR + annotation (R/Bioconductor) | `bioconductor/bioconductor_docker:RELEASE_3_18` |
 | Report render (Quarto) | `ghcr.io/quarto-dev/quarto:1.5.57` |
 

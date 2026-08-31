@@ -10,7 +10,7 @@
 
 process BISMARK_GENOME_PREPARATION {
     label 'process_high'
-    container 'biocontainers/bismark:0.24.2--hdfd78af_1'
+    container 'quay.io/biocontainers/bismark:0.24.2--hdfd78af_0'
     publishDir "${params.outdir}/methylation/bismark_genome", mode: params.publish_mode
 
     input:
@@ -38,7 +38,7 @@ process BISMARK_GENOME_PREPARATION {
 process BISMARK_ALIGN {
     tag "${sample_id}"
     label 'process_high'
-    container 'biocontainers/bismark:0.24.2--hdfd78af_1'
+    container 'quay.io/biocontainers/bismark:0.24.2--hdfd78af_0'
     publishDir "${params.outdir}/methylation/bismark_align", mode: params.publish_mode
 
     input:
@@ -75,7 +75,7 @@ process BISMARK_ALIGN {
 process BISMARK_DEDUPLICATE {
     tag "${sample_id}"
     label 'process_medium'
-    container 'biocontainers/bismark:0.24.2--hdfd78af_1'
+    container 'quay.io/biocontainers/bismark:0.24.2--hdfd78af_0'
     publishDir "${params.outdir}/methylation/bismark_dedup", mode: params.publish_mode
 
     input:

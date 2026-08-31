@@ -17,7 +17,7 @@
 process COVERAGE_FILTER {
     tag "${sample_id}"
     label 'process_medium'
-    container 'biocontainers/bismark:0.24.2--hdfd78af_1'
+    container 'quay.io/biocontainers/bismark:0.24.2--hdfd78af_0'
     publishDir "${params.outdir}/methylation/coverage_filtered", mode: params.publish_mode
 
     input:

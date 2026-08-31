@@ -131,17 +131,16 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     results = []
     for keys, group in df.groupby(GROUP_KEYS, dropna=False):
         feature_id, pheno, ftype, simulated, species_taxid = keys
-        poolable = _poolable_group(group)
-        if poolable.empty:
+        poolable_candidates = _poolable_group(group)
+        unpoolable = group.loc[~group.index.isin(poolable_candidates.index)]
+        if poolable_candidates.empty:
             continue
-        poolable, n_duplicate_mappings = _deduplicate_identifier_collisions(poolable, keys)
+        poolable, n_duplicate_mappings = _deduplicate_identifier_collisions(poolable_candidates, keys)
         _reject_correlated_within_study_effects(poolable, keys)
 
         yi = poolable["effect_size"].astype(float).tolist()
         sei = poolable["_effective_se"].astype(float).tolist()
         pooled = dersimonian_laird(yi, sei)
-
-        excluded = group.loc[~group.index.isin(poolable.index)]
 
         results.append({
             "feature_id_standardized": feature_id,
@@ -153,9 +152,9 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "studies": "|".join(sorted(poolable["study_id"].unique())),
             "n_evidence_records": len(poolable),
             "n_available_records": len(group),
-            "n_excluded_unpoolable": len(excluded),
+            "n_excluded_unpoolable": len(unpoolable),
             "n_excluded_duplicate_mappings": n_duplicate_mappings,
-            "excluded_studies": "|".join(sorted(excluded["study_id"].unique())),
+            "excluded_studies": "|".join(sorted(unpoolable["study_id"].unique())),
             "contributing_evidence_ids": "|".join(sorted(poolable["evidence_id"].astype(str))),
             "total_sample_size": int(poolable["sample_size"].sum()),
             "pooled_effect": pooled.pooled_effect,

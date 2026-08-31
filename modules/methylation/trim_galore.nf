@@ -8,7 +8,7 @@
 process TRIM_GALORE {
     tag "${sample_id}"
     label 'process_medium'
-    container 'biocontainers/trim-galore:0.6.10--hdfd78af_0'
+    container 'quay.io/biocontainers/trim-galore:0.6.10--hdfd78af_0'
     publishDir "${params.outdir}/methylation/trimmed", mode: params.publish_mode
 
     input:
