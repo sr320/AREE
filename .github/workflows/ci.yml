@@ -138,6 +138,8 @@ jobs:
       - name: Exercise the RNA-seq raw DAG with tiny paired FASTQ fixtures
         run: |
           nextflow run workflows/rnaseq -profile local -stub-run \
+            -process.cpus 2 \
+            -process.memory 4.GB \
             --mode raw_reanalysis \
             --study_id CI_RNASEQ \
             --comparison_id treatment_vs_control \
@@ -148,7 +150,6 @@ jobs:
             --sample_sheet tests/fixtures/rnaseq_raw/samples.tsv \
             --control_level control \
             --treatment_level treatment \
-            --max_cpus 4 \
             --outdir /tmp/aree-smoke/rnaseq-raw \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw
 
