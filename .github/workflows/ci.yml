@@ -111,6 +111,7 @@ jobs:
             any::ggplot2
             any::jsonlite
             any::knitr
+            any::rmarkdown
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
