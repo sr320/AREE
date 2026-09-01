@@ -1,0 +1,45 @@
+{
+  "study_id": "DELISLE2020_OSHV_TEMP",
+  "bioproject": "PRJNA593309",
+  "date_generated": "2026-08-31",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA593309&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "temp",
+    "time_post_infection"
+  ],
+  "n_runs": 43,
+  "n_samples": 43,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "21_0": 3,
+    "21_12h": 3,
+    "21_24h": 3,
+    "21_48h": 3,
+    "21_96h": 3,
+    "26_0": 3,
+    "26_12h": 2,
+    "26_24h": 2,
+    "26_48h": 3,
+    "26_96h": 3,
+    "29_0": 3,
+    "29_12h": 3,
+    "29_24h": 3,
+    "29_48h": 3,
+    "29_96h": 3
+  },
+  "min_group_size": 2,
+  "total_fastq_bytes": 47251758035,
+  "outputs": {
+    "/Volumes/Zarra/aree-prjna593309-intake/samplesheet.tsv": "175ab3b7213bf507e9c61e3e007d5b28a58e7a5c6d9ecb24b266fd791c8c0b75",
+    "/Volumes/Zarra/aree-prjna593309-intake/fastq_manifest.tsv": "feddd34f4ae601ce0cdc518ce37be157ed1d0b7ce5b7bd833b440a7aa2b6a28a"
+  }
+}

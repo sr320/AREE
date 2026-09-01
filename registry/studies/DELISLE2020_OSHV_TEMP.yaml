@@ -1,0 +1,91 @@
+# Independent real raw-reanalysis partner for CALLA2026_OSHV.
+#
+# This study is registered with one deliberately conservative comparison:
+# OsHV-1-infected oysters at 21°C, 96 h post-infection, against the matched
+# 21°C 0 h control. That keeps the first cross-study pool compatible with
+# CALLA2026_OSHV's pathogen-challenge-vs-control comparisons without also
+# introducing temperature-vs-temperature or repeated-timepoint contrasts that
+# would require additional meta-analysis grouping decisions.
+
+study_id: DELISLE2020_OSHV_TEMP
+simulated: false
+
+accessions:
+  doi: "10.1242/jeb.226233"
+  bioproject: "PRJNA593309"
+  geo: null
+  sra: null
+  ena: "PRJNA593309"
+  proteomexchange: null
+  other: "PMID:32816959; PMC7578350"
+
+citation: "Delisle L, Pauletto M, Vidal-Dupiol J, Petton B, Bargelloni L, Montagnani C, Pernet F, Corporeau C, Fleury E (2020). High temperature induces transcriptomic changes in Crassostrea gigas that hinder progress of ostreid herpesvirus (OsHV-1) and promote survival. Journal of Experimental Biology 223(20):jeb226233. https://doi.org/10.1242/jeb.226233"
+
+species: "Magallana gigas"
+strain_or_population: "Specific pathogen-free Pacific oysters produced at Ifremer Argenton; eight-month-old whole animals sampled from OsHV-1 temperature-challenge experiment."
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 4000, paired-end RNA-seq (43 libraries; 47.3 GB FASTQ reported by ENA)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ are public in ENA/SRA under PRJNA593309. AREE sample sheet and FASTQ manifest were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+comparisons:
+  - comparison_id: "oshv1_21c_96h_vs_21c_0h"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "OsHV-1 infection at 21°C, sampled 96 h post-infection, compared with matched 21°C 0 h control oysters"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: "96 h post-infection"
+    exposure_timing: "96 h post-infection"
+    control_condition: "21°C, 0 h control oysters before OsHV-1 infection"
+    treatment_condition: "21°C OsHV-1-infected oysters sampled 96 h post-infection"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "survival / OsHV-1 DNA load reported in the source study"
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+quality_flags:
+  - single_timepoint
+
+limitations: >
+  (1) Only one endpoint is registered initially to create an independent,
+  compatible pathogen-challenge comparison for CALLA2026_OSHV without adding
+  repeated within-study timepoint contrasts to the same meta-analysis group.
+  (2) The deposited BioSample metadata encode temperature and time
+  post-infection, but not all protocol details needed for strict
+  dose-comparability with CALLA2026_OSHV. (3) The full raw reanalysis has not
+  yet been run, so this study contributes no evidence until the RNA-seq workflow
+  is executed and harmonized. (4) Two 26°C timepoint groups have n=2 in ENA and
+  should not be used for differential-expression contrasts without an explicit
+  low-replication decision.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-08-31"
+  curation_notes: >
+    Registered from live ENA metadata for PRJNA593309 and the open-access
+    Delisle et al. 2020 article. The condition column in
+    data/studies/DELISLE2020_OSHV_TEMP/samplesheet.tsv is generated from the
+    deposited `temp` and `time_post_infection` sample attributes. The initial
+    comparison intentionally uses 21_96h versus 21_0 to match CALLA2026_OSHV's
+    disease_susceptibility/pathogen_challenge evidence axis; temperature
+    modulation contrasts can be added later as separate, non-pooling questions.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA593309"
+    - "https://doi.org/10.1242/jeb.226233"
+    - "https://pubmed.ncbi.nlm.nih.gov/32816959/"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC7578350/"
