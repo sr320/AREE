@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from numbers import Integral, Real
 from pathlib import Path
 
 import pandas as pd
@@ -212,6 +213,22 @@ def _retired_map(path_str: str) -> dict:
 _FEATURE_PREFIXES = ("gene-", "rna-", "cds-", "exon-", "id-")
 
 
+def stringify_identifier(raw_id) -> str:
+    """Return a stable string representation for feature identifiers.
+
+    Pandas row iteration may coerce an integer GeneID column to floats when the
+    same row also contains floating-point statistics. A real NCBI GeneID like
+    ``105337716`` can therefore arrive here as ``105337716.0`` even though the
+    source table stored an integer identifier. Preserve the integral value in
+    that case so exact crosswalk lookups keep working.
+    """
+    if isinstance(raw_id, Integral):
+        return str(raw_id)
+    if isinstance(raw_id, Real) and float(raw_id).is_integer():
+        return str(int(raw_id))
+    return str(raw_id).strip()
+
+
 def identifier_candidates(raw_id: str) -> list:
     """Candidate tokens to look up for a raw identifier, most literal first.
 
@@ -224,7 +241,7 @@ def identifier_candidates(raw_id: str) -> list:
     The verbatim value is always tried first, and the caller keeps it as
     `feature_id_original`; this only affects what is looked up.
     """
-    raw = str(raw_id).strip()
+    raw = stringify_identifier(raw_id)
     candidates = [raw]
     for token in raw.split("|"):
         token = token.strip()

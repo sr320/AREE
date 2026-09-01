@@ -92,6 +92,11 @@ def test_identifier_candidates_leaves_a_plain_id_alone():
     assert identifier_candidates("105320749") == ["105320749"]
 
 
+def test_identifier_candidates_normalizes_integral_float_gene_ids():
+    """Regression: pandas iterrows() can coerce integer GeneIDs to floats."""
+    assert identifier_candidates(105320749.0) == ["105320749"]
+
+
 def test_decorated_identifier_resolves_exactly(real_crosswalk):
     resolved = resolve_identifier("gene-LOC105320749|LOC105320749", "ncbi_gene_id")
     assert resolved.mapping_confidence == "exact"
@@ -105,6 +110,14 @@ def test_loc_form_and_numeric_form_are_interchangeable(real_crosswalk):
     for id_type in ("ncbi_gene_id", "locus_id"):
         assert resolve_identifier("LOC105320749", id_type).feature_id_standardized == "105320749"
         assert resolve_identifier("105320749", id_type).feature_id_standardized == "105320749"
+
+
+def test_integral_float_gene_id_resolves_exactly(real_crosswalk):
+    """Regression: full-depth CALLA harmonization received GeneIDs as floats
+    during pandas row iteration, making otherwise exact NCBI IDs unresolved."""
+    resolved = resolve_identifier(105320749.0, "ncbi_gene_id")
+    assert resolved.mapping_confidence == "exact"
+    assert resolved.feature_id_standardized == "105320749"
 
 
 # --------------------------------------------------------------------------- #

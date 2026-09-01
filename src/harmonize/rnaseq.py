@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .identifiers import resolve_identifier
+from .identifiers import resolve_identifier, stringify_identifier
 from .schema import (
     EVIDENCE_COLUMNS,
     compute_quality_flags,
@@ -36,18 +36,19 @@ def harmonize_rnaseq(
     reference_fields = study_reference_fields(study)
     source_ref = source_file_ref(results_path)
     rows = []
-    for _, r in df.iterrows():
+    for r in df.to_dict("records"):
         raw_id = r[id_col]
+        feature_id_original = stringify_identifier(raw_id)
         resolved = resolve_identifier(raw_id, id_type)
         effect_size = float(r["log2FoldChange"]) if pd.notna(r.get("log2FoldChange")) else None
         direction = molecular_direction_from_effect(effect_size)
 
         rows.append({
-            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], raw_id, analysis_method),
+            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], feature_id_original, analysis_method),
             "study_id": study["study_id"],
             "comparison_id": comparison["comparison_id"],
             "simulated": bool(study.get("simulated", False)),
-            "feature_id_original": raw_id,
+            "feature_id_original": feature_id_original,
             "feature_id_standardized": resolved.feature_id_standardized,
             "feature_type": "gene",
             "orthogroup_id": resolved.orthogroup_id,

@@ -248,6 +248,15 @@ def _upsert_evidence_table(new_rows: pd.DataFrame) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", FutureWarning)
         if len(existing) and len(new_rows):
+            replacement_keys = new_rows[
+                ["study_id", "comparison_id", "analysis_method"]
+            ].drop_duplicates()
+            existing = existing.merge(
+                replacement_keys.assign(_replace=True),
+                on=["study_id", "comparison_id", "analysis_method"],
+                how="left",
+            )
+            existing = existing[existing["_replace"].isna()].drop(columns=["_replace"])
             existing = existing[~existing["evidence_id"].isin(new_rows["evidence_id"])]
             combined = pd.concat([existing, new_rows], ignore_index=True) if len(existing) else new_rows
         elif len(existing):

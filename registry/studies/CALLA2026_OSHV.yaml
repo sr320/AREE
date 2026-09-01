@@ -49,8 +49,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 42 runs are public in SRA/ENA under PRJNA1329250 (226.4 GB). No count matrix or differential-expression table was deposited, and the publication is not open access, so no processed results are available to harmonize directly. FASTQ URLs with ENA MD5 checksums are recorded in data/studies/CALLA2026_OSHV/fastq_manifest.tsv."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # Comparisons: 2 populations x 3 OsHV-1 microvariant isolates, each against
@@ -181,7 +181,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 11
     biological_replicates: 5
-    results_file: null
+    results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_miyagi_oshv1_usa_vs_control_dge_standardized.tsv"
 
 quality_flags:
   - single_timepoint
@@ -205,7 +205,11 @@ limitations: >
   the current NCBI reference annotation, which may differ from the authors' own
   transcriptome-assembly-based analysis; results are not expected to reproduce
   the paper's figures exactly and are not a replication of it. (6) The
-  reanalysis has not been run — see analysis_status.
+  Miyagi USA-vs-control comparison has been run at full read depth and
+  harmonized; the remaining five registered comparisons are still pending.
+  The workflow report task hit the known Quarto cleanup issue on the exFAT
+  Zarra work directory, so its HTML report was rendered manually from an APFS
+  staging directory.
 
 provenance:
   registered_by: sr320

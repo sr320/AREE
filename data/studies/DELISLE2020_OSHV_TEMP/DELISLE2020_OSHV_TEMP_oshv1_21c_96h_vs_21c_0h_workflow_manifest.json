@@ -1,0 +1,43 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "DELISLE2020_OSHV_TEMP",
+  "comparison_id": "oshv1_21c_96h_vs_21c_0h",
+  "input_files": [
+    {
+      "name": "DELISLE2020_OSHV_TEMP_oshv1_21c_96h_vs_21c_0h_dge_standardized.tsv",
+      "sha256": "912bdec7201a319baeaeb24cfee6205443836b4be4604bc3c8f73af0ee889df2"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "DELISLE2020_OSHV_TEMP",
+    "comparison_id": "oshv1_21c_96h_vs_21c_0h",
+    "outdir": "/private/tmp/aree-delisle-full/results/oshv1_21c_96h_vs_21c_0h"
+  },
+  "software_versions": {
+    "fastqc": "0.12.1",
+    "fastp": "0.23.4",
+    "salmon": "1.10.3",
+    "star": "2.7.11b",
+    "multiqc": "1.21",
+    "bioconductor_docker": "RELEASE_3_18",
+    "deseq2": "1.42.0",
+    "tximport": "1.30.0",
+    "quarto": "1.5.57",
+    "python": "3.11"
+  },
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-09-01T09:26:47.312481-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "warnings": []
+}

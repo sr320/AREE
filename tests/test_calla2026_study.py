@@ -132,10 +132,21 @@ def test_unknown_exposure_parameters_are_null_not_invented(study):
         assert comp["exposure_timing"] is None
 
 
-def test_analysis_status_reflects_that_nothing_has_been_run(study):
-    assert study["analysis_status"] == "not_started"
-    assert study["qc_status"] == "not_started"
-    assert all(c["results_file"] is None for c in study["comparisons"])
+def test_analysis_status_reflects_partial_full_depth_reanalysis(study):
+    """One full-depth comparison has been run; the remaining five are still pending."""
+    assert study["analysis_status"] == "in_progress"
+    assert study["qc_status"] == "in_progress"
+    completed = {
+        c["comparison_id"]: c["results_file"]
+        for c in study["comparisons"]
+        if c["results_file"] is not None
+    }
+    assert completed == {
+        "miyagi_oshv1_usa_vs_control": (
+            "data/studies/CALLA2026_OSHV/"
+            "CALLA2026_OSHV_miyagi_oshv1_usa_vs_control_dge_standardized.tsv"
+        )
+    }
 
 
 def test_ambiguous_phenotype_is_flagged(study):

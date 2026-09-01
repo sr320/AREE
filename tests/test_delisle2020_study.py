@@ -9,6 +9,7 @@ from __future__ import annotations
 import csv
 import json
 
+import pandas as pd
 import pytest
 import yaml
 
@@ -51,11 +52,18 @@ def test_samplesheet_matches_live_ena_design_snapshot(samplesheet, ena_provenanc
 def test_registered_comparison_is_the_pool_compatible_pathogen_endpoint(study):
     assert [c["comparison_id"] for c in study["comparisons"]] == ["oshv1_21c_96h_vs_21c_0h"]
     comp = study["comparisons"][0]
+    assert study["analysis_status"] == "harmonized"
+    assert study["qc_status"] == "in_progress"
     assert comp["stressor_standardized"] == "pathogen_challenge"
     assert comp["phenotype"] == "disease_susceptibility"
     assert comp["resilience_classification"] == "disease"
     assert comp["sample_size"] == 6
     assert comp["biological_replicates"] == 3
+    assert comp["results_file"] == (
+        "data/studies/DELISLE2020_OSHV_TEMP/"
+        "DELISLE2020_OSHV_TEMP_oshv1_21c_96h_vs_21c_0h_dge_standardized.tsv"
+    )
+    assert (DATA_DIR.parent / comp["results_file"]).exists()
 
 
 def test_registered_comparison_groups_are_replicated(samplesheet):
@@ -84,6 +92,21 @@ def test_fastq_manifest_covers_every_run_as_paired_end(samplesheet):
     assert runs_in_sheet == runs_in_manifest
     assert len(manifest) == 2 * len(runs_in_sheet)
     assert all(len(r["md5"]) == 32 for r in manifest)
+
+
+def test_committed_outputs_support_the_first_real_cross_study_pool(study):
+    calla_path = DATA_DIR / "studies" / "CALLA2026_OSHV" / (
+        "CALLA2026_OSHV_miyagi_oshv1_usa_vs_control_dge_standardized.tsv"
+    )
+    delisle_path = DATA_DIR / "studies" / "DELISLE2020_OSHV_TEMP" / (
+        "DELISLE2020_OSHV_TEMP_oshv1_21c_96h_vs_21c_0h_dge_standardized.tsv"
+    )
+    calla = pd.read_csv(calla_path, sep="\t", usecols=["gene_id"], dtype=str)
+    delisle = pd.read_csv(delisle_path, sep="\t", usecols=["gene_id"], dtype=str)
+
+    shared_gene_ids = set(calla["gene_id"]) & set(delisle["gene_id"])
+    assert len(shared_gene_ids) == 23094
+    assert study["comparisons"][0]["phenotype"] == "disease_susceptibility"
 
 
 def test_bioproject_mismatch_is_caught(tmp_path, monkeypatch):

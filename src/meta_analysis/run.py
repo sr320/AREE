@@ -119,7 +119,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
         raise FileNotFoundError(
             f"No evidence table at {EVIDENCE_TABLE_PATH}. Run `aree harmonize` for each study first."
         )
-    df = pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t")
+    df = pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False)
     df = df[df["mapping_confidence"] != "unresolved"]
     df = df[df["feature_id_standardized"].notna() & df["effect_size"].notna()]
 
