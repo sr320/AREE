@@ -91,12 +91,30 @@ pooling would run on anything but simulated data.
   AREE currently has no real salinity evidence — but it is a feature, not a
   curation task.
 
-- **Heat-resistant vs heat-susceptible families** (Baja California breeding
-  program), Escobedo-Fregoso et al. 2023, *Comp Biochem Physiol D*
-  ([10.1016/j.cbd.2023.101089](https://doi.org/10.1016/j.cbd.2023.101089)).
+- **Heat-resistant vs heat-susceptible families** (CIBNOR breeding program,
+  Baja California Sur), Arredondo-Espinoza et al. 2023, *Comp Biochem Physiol
+  Part D Genomics Proteomics* 47:101089
+  ([10.1016/j.cbd.2023.101089](https://doi.org/10.1016/j.cbd.2023.101089),
+  PMID 37269757). Earlier drafts of this page cited it as "Escobedo-Fregoso et
+  al." — she is the last and corresponding author; the first author is
+  Arredondo-Espinoza. Author list and journal name verified against PubMed on
+  2026-09-05.
+
   The framing is exactly what AREE wants — RR vs SS phenotypes from a breeding
-  program under oscillatory thermal challenge. I could not confirm a public
-  raw-data accession for it; worth chasing, possibly by contacting the authors.
+  program under an oscillatory thermal challenge (26–34 °C, 30 days, sampled at
+  day 0 and day 30). It would be AREE's **first real study with a measured
+  resilience outcome**, and its first thermal stressor; every real candidate in
+  the current pool is `disease_associated` for want of exactly this. Per-group
+  replication is not stated in the abstract and must be confirmed before
+  registration.
+
+  No public raw-data accession could be located as of 2026-09-05: BioProject
+  searches on organism plus thermal-challenge terms and on author/CIBNOR both
+  returned nothing, and the Europe PMC record reports no associated data or
+  supplement with no open-access full text to read the availability statement
+  from. Note that **`sr320` is a co-author**, so lab storage and a direct ask to
+  the corresponding author are better first moves than cold outreach. Tracked in
+  [issue #6](https://github.com/sr320/AREE/issues/6).
 
 ## Rejected, and why it matters
 
@@ -125,4 +143,4 @@ Check `sample_alias` before downloading anything.
   no reads in ENA. AREE's phenotype ontology carries `hypoxia_tolerance`, but
   there may be no public transcriptomic dataset to populate it.
 
-Bibliographic metadata for the two cited papers was retrieved from PubMed.
+Bibliographic metadata for every cited paper was retrieved from PubMed — including the author order, which one of them had wrong until 2026-09-05.
