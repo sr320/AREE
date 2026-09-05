@@ -3,6 +3,11 @@
 A candidate's numeric score never promotes it past these gates — this is the
 mechanism that keeps "significant in one study" from reading as "validated"
 (see docs/design.md section 6).
+
+Ranking is a single grouped pass over the evidence table. Each candidate's
+evidence subset is looked up from a precomputed index instead of re-filtering
+the whole table per candidate, which is what makes a genome-wide pool of
+30,000+ candidates rank in seconds rather than tens of minutes.
 """
 from __future__ import annotations
 
@@ -10,12 +15,23 @@ import ast
 
 import pandas as pd
 
-from .scoring import candidate_score, compute_components
+from .scoring import candidate_score, compute_components, significance_p_value
 
 HIGH_PRIORITY_MIN_STUDIES = 2
 HIGH_PRIORITY_MIN_DIRECTION_CONSISTENCY = 0.7
 HIGH_PRIORITY_MIN_QUALITY_SCORE = 0.4
+# Two genome-wide studies agree in sign for roughly half of all null genes, so
+# study count and direction consistency alone cannot define the top tier. The
+# pooled effect must also survive family-wise false-discovery control.
+HIGH_PRIORITY_MAX_ADJUSTED_P = 0.05
 MULTI_OMICS_MIN_ASSAYS = 2
+
+# Order in which tiers are presented: strongest evidence first.
+TIER_ORDER = ["high_priority_cross_study", "multi_omics_convergence", "emerging"]
+
+PARTITION_COLUMNS = ["_simulated", "_species_taxid"]
+CANDIDATE_GROUP_COLUMNS = ["feature_id_standardized", "phenotype", "feature_type", *PARTITION_COLUMNS]
+FEATURE_GROUP_COLUMNS = ["feature_id_standardized", *PARTITION_COLUMNS]
 
 
 def _parse_flags(value) -> list:
@@ -32,73 +48,87 @@ def _partition_value(value) -> str:
     return str(value).strip().lower()
 
 
-def _partition_mask(evidence_df: pd.DataFrame, simulated, species_taxid) -> pd.Series:
+def add_partition_columns(evidence_df: pd.DataFrame) -> pd.DataFrame:
+    """Return the evidence with normalized `_simulated` / `_species_taxid` columns.
+
+    `simulated` arrives as a bool in memory but as the text "True"/"False" from a
+    TSV, and `species_taxid` as int or text; normalizing once here is what lets
+    every downstream grouping key be compared by plain equality. Idempotent.
+    """
+    if all(col in evidence_df.columns for col in PARTITION_COLUMNS):
+        return evidence_df
+    return evidence_df.assign(
+        _simulated=evidence_df["simulated"].map(_partition_value),
+        _species_taxid=evidence_df["species_taxid"].map(_partition_value),
+    )
+
+
+def candidate_key(meta_row: dict) -> tuple:
     return (
-        evidence_df["simulated"].map(_partition_value).eq(_partition_value(simulated))
-        & evidence_df["species_taxid"].map(_partition_value).eq(_partition_value(species_taxid))
+        str(meta_row["feature_id_standardized"]),
+        meta_row["phenotype"],
+        meta_row["feature_type"],
+        _partition_value(meta_row["simulated"]),
+        _partition_value(meta_row["species_taxid"]),
     )
 
 
-def _assay_diversity_map(evidence_df: pd.DataFrame) -> dict:
-    mapped = evidence_df[evidence_df["feature_id_standardized"].notna()]
-    mapped = mapped.assign(
-        _simulated=mapped["simulated"].map(_partition_value),
-        _species_taxid=mapped["species_taxid"].map(_partition_value),
-    )
-    return mapped.groupby(
-        ["feature_id_standardized", "_simulated", "_species_taxid"]
-    )["feature_type"].nunique().to_dict()
+class EvidenceIndex:
+    """Positional indices into a normalized evidence frame, built once per run."""
 
-
-def _evidence_subset(
-    evidence_df: pd.DataFrame,
-    feature_id: str,
-    phenotype: str,
-    feature_type: str,
-    simulated,
-    species_taxid,
-    contributing_evidence_ids: str | None = None,
-) -> pd.DataFrame:
-    evidence_ids = set(str(contributing_evidence_ids or "").split("|"))
-    return evidence_df[
-        (evidence_df["feature_id_standardized"] == feature_id)
-        & (evidence_df["phenotype"] == phenotype)
-        & (evidence_df["feature_type"] == feature_type)
-        & _partition_mask(evidence_df, simulated, species_taxid)
-        & (
-            evidence_df["evidence_id"].astype(str).isin(evidence_ids)
-            if contributing_evidence_ids
-            else True
+    def __init__(self, evidence_df: pd.DataFrame):
+        evidence = add_partition_columns(evidence_df)
+        mapped = evidence[evidence["feature_id_standardized"].notna()].copy()
+        mapped["feature_id_standardized"] = mapped["feature_id_standardized"].astype(str)
+        self.evidence = mapped
+        self._by_candidate = mapped.groupby(CANDIDATE_GROUP_COLUMNS, sort=False).indices
+        self._by_feature = mapped.groupby(FEATURE_GROUP_COLUMNS, sort=False).indices
+        self.assay_diversity = (
+            mapped.groupby(FEATURE_GROUP_COLUMNS)["feature_type"].nunique().to_dict()
         )
-    ]
+
+    def _slice(self, index, key) -> pd.DataFrame:
+        positions = index.get(key)
+        if positions is None:
+            return self.evidence.iloc[0:0]
+        return self.evidence.iloc[positions]
+
+    def for_candidate(self, meta_row: dict) -> pd.DataFrame:
+        """All records for this feature / phenotype / feature type / partition."""
+        return self._slice(self._by_candidate, candidate_key(meta_row))
+
+    def contributing(self, meta_row: dict) -> pd.DataFrame:
+        """The records that actually entered the pooled estimate."""
+        subset = self.for_candidate(meta_row)
+        ids = meta_row.get("contributing_evidence_ids")
+        if not ids or ids != ids:
+            return subset
+        wanted = set(str(ids).split("|"))
+        return subset[subset["evidence_id"].astype(str).isin(wanted)]
+
+    def other_feature_types(self, meta_row: dict) -> pd.DataFrame:
+        """Records for the same feature and partition from OTHER feature types."""
+        key = candidate_key(meta_row)
+        same_feature = self._slice(self._by_feature, (key[0], key[3], key[4]))
+        return same_feature[same_feature["feature_type"] != meta_row["feature_type"]]
+
+    def n_distinct_assays(self, meta_row: dict) -> int:
+        key = candidate_key(meta_row)
+        return int(self.assay_diversity.get((key[0], key[3], key[4]), 1))
 
 
 def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.DataFrame:
     if len(meta_df) == 0:
         return pd.DataFrame()
 
-    assay_diversity = _assay_diversity_map(evidence_df)
+    index = EvidenceIndex(evidence_df)
 
     rows = []
-    for _, meta_row in meta_df.iterrows():
-        meta_dict = meta_row.to_dict()
-        subset = _evidence_subset(
-            evidence_df,
-            meta_dict["feature_id_standardized"],
-            meta_dict["phenotype"],
-            meta_dict["feature_type"],
-            meta_dict["simulated"],
-            meta_dict["species_taxid"],
-            meta_dict.get("contributing_evidence_ids"),
-        )
+    for meta_dict in meta_df.to_dict("records"):
+        subset = index.contributing(meta_dict)
         mapping_confidences = sorted(subset["mapping_confidence"].unique())
         quality_flags = sorted({f for flags in subset["quality_flags"] for f in _parse_flags(flags)})
-        assay_key = (
-            meta_dict["feature_id_standardized"],
-            _partition_value(meta_dict["simulated"]),
-            _partition_value(meta_dict["species_taxid"]),
-        )
-        n_distinct_assays = assay_diversity.get(assay_key, 1)
+        n_distinct_assays = index.n_distinct_assays(meta_dict)
 
         meta_dict["n_distinct_assays"] = n_distinct_assays
         components = compute_components(meta_dict, mapping_confidences, quality_flags)
@@ -109,6 +139,7 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             and components["phenotype_relevance_score"] > 0.1
             and meta_dict["direction_consistency"] >= HIGH_PRIORITY_MIN_DIRECTION_CONSISTENCY
             and components["quality_score"] >= HIGH_PRIORITY_MIN_QUALITY_SCORE
+            and significance_p_value(meta_dict) <= HIGH_PRIORITY_MAX_ADJUSTED_P
         )
         is_multi_omics = n_distinct_assays >= MULTI_OMICS_MIN_ASSAYS
 
@@ -132,4 +163,16 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         })
 
     out = pd.DataFrame(rows)
-    return out.sort_values(["tier", "score"], ascending=[True, False])
+    return sort_candidates(out)
+
+
+def sort_candidates(candidates: pd.DataFrame) -> pd.DataFrame:
+    """Strongest tier first, then score descending within tier."""
+    if len(candidates) == 0:
+        return candidates
+    tier_rank = candidates["tier"].map({t: i for i, t in enumerate(TIER_ORDER)}).fillna(len(TIER_ORDER))
+    return (
+        candidates.assign(_tier_rank=tier_rank)
+        .sort_values(["_tier_rank", "score"], ascending=[True, False])
+        .drop(columns="_tier_rank")
+    )

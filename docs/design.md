@@ -136,7 +136,9 @@ audit or tune the score. The function is pure (same inputs → same score) so
 
 1. **High-priority cross-study candidates** — ≥2 independent studies,
    interpretable phenotype (not exposure-only), direction-consistency ≥ 0.7,
-   acceptable quality flags.
+   acceptable quality flags, and a pooled effect that survives
+   Benjamini–Hochberg control within its phenotype/feature-type family
+   (adjusted p ≤ 0.05).
 2. **Multi-omics convergence candidates** — evidence from ≥2 distinct molecular
    layers mapped to the same standardized feature/orthogroup, with the mapping
    path shown explicitly in the evidence card (this is why

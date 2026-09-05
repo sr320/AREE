@@ -26,6 +26,25 @@ study contributes multiple comparisons to the same group, AREE stops with an
 actionable error: without covariance information, those contrasts cannot be
 treated as independent observations.
 
+## Multiple testing
+
+Every pooled p-value is adjusted with the Benjamini–Hochberg procedure within
+its **test family**: all features pooled for the same
+`(phenotype, feature_type, simulated, species_taxid)`. A genome-wide
+reanalysis contributes one test per gene to that family — the first real
+OsHV-1 pool (`CALLA2026_OSHV` + `DELISLE2020_OSHV_TEMP`) has 23,094 — and at
+that scale 4,687 genes were nominally significant at `p < 0.05` by chance and
+signal together. `adjusted_p_value` is the number to read; `p_value` is kept
+for transparency.
+
+The family is deliberately the same set of keys the CLI can filter on
+(`--phenotype`, `--feature-type`), so a feature's `adjusted_p_value` is
+identical whether you ran one phenotype or all of them. Filtering never
+shrinks the denominator.
+
+The adjustment is per family, not across families: a 12-gene simulated demo
+pool and a 23,000-gene real pool are corrected against their own sizes.
+
 ## Output columns
 
 | column | meaning |
@@ -40,7 +59,9 @@ treated as independent observations.
 | `pooled_effect` | random-effects pooled estimate of the effect size |
 | `pooled_se` | standard error of the pooled effect |
 | `ci_lower` / `ci_upper` | 95% CI on the pooled effect (`pooled_effect ± 1.96 × pooled_se`) |
-| `z`, `p_value` | test statistic and two-sided p-value for the pooled effect |
+| `z`, `p_value` | test statistic and two-sided p-value for the pooled effect (computed with the normal survival function, so it stays strictly positive even for very large |z|) |
+| `adjusted_p_value` | Benjamini–Hochberg false-discovery-rate adjusted `p_value`, computed within the test family described below |
+| `n_tests_in_family` | number of features tested in that family — the denominator the adjustment was made against |
 | `q_statistic` | Cochran's Q, the weighted sum of squared deviations from the fixed-effect estimate |
 | `i_squared` | percentage of total variation attributable to between-study heterogeneity rather than sampling error |
 | `tau_squared` | estimated between-study variance component |
@@ -73,6 +94,7 @@ this row for gene `LOC105331241` (`sod1`, superoxide dismutase 1):
 | `pooled_se` | 0.800 |
 | `ci_lower` / `ci_upper` | -1.759 / 1.377 |
 | `p_value` | 0.811 |
+| `adjusted_p_value` | 0.811 (12 tests in the `larval_viability`/`gene`/simulated family) |
 | `i_squared` | 93.6% |
 | `tau_squared` | 1.198 |
 | `direction_consistency` | 0.5 |

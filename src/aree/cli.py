@@ -19,7 +19,8 @@ from intake.registry import DuplicateStudyError, list_studies, register_study
 from intake.run_intake import IntakeError, run_intake
 from intake.schema_validate import validate_study_file
 from meta_analysis.run import write_meta_analysis
-from reporting.evidence_cards import build_evidence_cards
+from prioritize.rank import TIER_ORDER
+from reporting.evidence_cards import DEFAULT_MAX_ADJUSTED_P, build_evidence_cards_report
 
 
 def _today() -> str:
@@ -210,27 +211,48 @@ def meta_analyze_cmd(phenotype, feature_type):
         click.echo("No poolable evidence found for the given filters.")
         return
     click.echo(tabulate(
-        result[["feature_id_standardized", "phenotype", "feature_type", "k_studies", "pooled_effect", "p_value", "i_squared"]].head(20),
+        result[["feature_id_standardized", "phenotype", "feature_type", "k_studies", "pooled_effect",
+                "p_value", "adjusted_p_value", "n_tests_in_family", "i_squared"]].head(20),
         headers="keys", showindex=False, floatfmt=".3g",
     ))
     click.echo(f"\nFull results ({len(result)} rows) written to {out_path}")
+    click.echo("adjusted_p_value is Benjamini-Hochberg within each phenotype / feature-type / "
+               "origin / species family (n_tests_in_family).")
 
 
 @main.command("build-evidence-cards")
 @click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
 @click.option("--feature-type", default=None, help="Feature type to filter on (default: all).")
-def build_evidence_cards_cmd(phenotype, feature_type):
-    """Generate one evidence card per candidate biomarker under reports/evidence_cards/."""
-    index = build_evidence_cards(phenotype=phenotype, feature_type=feature_type)
-    if not index:
+@click.option("--max-adjusted-p", default=DEFAULT_MAX_ADJUSTED_P, show_default=True, type=float,
+              help="Render a card only for candidates whose BH-adjusted pooled p, or at least one "
+                   "contributing study's adjusted p, is at or below this value. Every candidate is "
+                   "still listed in reports/evidence_cards/candidates.tsv.")
+@click.option("--all-cards", is_flag=True,
+              help="Render a card for every candidate regardless of significance. On a genome-wide "
+                   "pool this means tens of thousands of files.")
+def build_evidence_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards):
+    """Rank candidate biomarkers and write evidence cards under reports/evidence_cards/."""
+    report = build_evidence_cards_report(
+        phenotype=phenotype, feature_type=feature_type,
+        max_adjusted_p=max_adjusted_p, all_cards=all_cards,
+    )
+    if report.n_candidates == 0:
         click.echo("No candidates found for the given filters. Run `aree meta-analyze` first if needed.")
         return
-    click.echo(click.style(f"Wrote {len(index)} evidence cards to reports/evidence_cards/", fg="green"))
+    index = report.index
+    click.echo(click.style(
+        f"Ranked {report.n_candidates} candidates ({report.candidates_path}); "
+        f"Wrote {len(index)} evidence cards to {report.candidates_path.parent}/", fg="green",
+    ))
+    if not all_cards:
+        click.echo(f"  cards rendered for candidates with adjusted p <= {max_adjusted_p} "
+                   "(pooled, or in any contributing study); pass --all-cards to render every candidate")
     tiers = {}
     for row in index:
         tiers[row["tier"]] = tiers.get(row["tier"], 0) + 1
-    for tier, count in sorted(tiers.items()):
-        click.echo(f"  {tier}: {count}")
+    for tier in TIER_ORDER:
+        if tier in tiers:
+            click.echo(f"  {tier}: {tiers[tier]}")
 
 
 @main.command("build-crosswalk")

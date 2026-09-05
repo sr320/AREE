@@ -85,9 +85,13 @@ transparent, weighted candidate score (`scoring.py`) and assigns one of three
 tiers using hard gates that a score cannot override (`rank.py`). See
 [interpreting_meta_analysis.md](interpreting_meta_analysis.md) and
 [interpreting_candidate_scores.md](interpreting_candidate_scores.md).
-`aree build-evidence-cards` (`src/reporting/evidence_cards.py`) renders one
-markdown evidence card per candidate under `reports/evidence_cards/`,
-regardless of tier, plus an `index.json` summary.
+`aree build-evidence-cards` (`src/reporting/evidence_cards.py`) ranks every
+candidate into `reports/evidence_cards/candidates.tsv` and renders a markdown
+evidence card for each candidate with a significant signal (pooled or
+study-level BH-adjusted p ≤ 0.05 by default; `--all-cards` renders all), plus
+an `index.json` of the cards written. Ranking and card rendering are a single
+indexed pass over the evidence table, so a genome-wide pool of ~30,000
+candidates ranks in seconds.
 
 ## Layer 5: User-facing Outputs
 

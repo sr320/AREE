@@ -130,3 +130,76 @@ def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_report
     assert hsp70["n_excluded_duplicate_mappings"] == 1
     assert hsp70["n_excluded_unpoolable"] == 0
     assert hsp70["n_evidence_records"] == hsp70["k_studies"] == 2
+
+
+# --------------------------------------------------------------------------- #
+# Numerical precision and multiple testing
+# --------------------------------------------------------------------------- #
+
+
+def test_pooled_p_value_does_not_underflow_to_zero():
+    """z = 20 gives p ~ 5e-89; `2 * (1 - cdf)` returned exactly 0.0 here and
+    printed as 'p = 0' on real evidence cards."""
+    result = dersimonian_laird([4.0], [0.2])
+    assert result.z == 20.0
+    assert 0.0 < result.p_value < 1e-80
+
+
+def test_benjamini_hochberg_matches_reference_values():
+    from meta_analysis.pooling import benjamini_hochberg
+
+    adjusted = benjamini_hochberg([0.01, 0.04, 0.03, 0.20])
+    # ranks: 0.01 -> 0.01*4/1 = 0.04; 0.03 -> 0.03*4/2 = 0.06; 0.04 -> 0.04*4/3 = 0.0533,
+    # then the step-up makes 0.03's value min(0.06, 0.0533) = 0.0533; 0.20 -> 0.20.
+    assert [round(a, 4) for a in adjusted] == [0.04, 0.0533, 0.0533, 0.2]
+    assert (adjusted <= 1.0).all()
+
+
+def test_benjamini_hochberg_leaves_nan_out_of_the_family():
+    import math
+
+    from meta_analysis.pooling import benjamini_hochberg
+
+    adjusted = benjamini_hochberg([0.02, float("nan"), 0.5])
+    assert math.isnan(adjusted[1])
+    # n = 2, not 3: 0.02 * 2 / 1 = 0.04
+    assert math.isclose(adjusted[0], 0.04)
+
+
+def test_adjusted_p_is_computed_within_family_and_invariant_to_filters(isolated_reports):
+    """The family is (phenotype, feature_type, simulated, species_taxid), which is
+    exactly what the CLI can filter on, so the same feature gets the same adjusted
+    p whether the run covered one phenotype or every phenotype."""
+    harmonize_all_demo_studies()
+    everything = run_meta_analysis(feature_type="gene")
+    one_phenotype = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+
+    assert "adjusted_p_value" in everything.columns
+    assert (everything["adjusted_p_value"] >= everything["p_value"] - 1e-12).all()
+
+    hsp70_all = everything[
+        (everything["feature_id_standardized"] == "LOC105333935")
+        & (everything["phenotype"] == "larval_viability")
+    ].iloc[0]
+    hsp70_one = one_phenotype[one_phenotype["feature_id_standardized"] == "LOC105333935"].iloc[0]
+    assert hsp70_all["adjusted_p_value"] == hsp70_one["adjusted_p_value"]
+    assert hsp70_all["n_tests_in_family"] == hsp70_one["n_tests_in_family"] == len(one_phenotype)
+
+
+def test_numeric_gene_ids_survive_as_text(isolated_reports):
+    """Real NCBI GeneIDs are all digits. If the meta-analysis reads them as
+    integers while the evidence loader keeps text, no candidate can find its
+    own evidence records."""
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    row = evidence.iloc[0].copy()
+    row["feature_id_standardized"] = "105317636"
+    row["feature_id_original"] = "105317636"
+    row["evidence_id"] = "numeric-id-row"
+    row["standard_error"] = 0.2
+    row["p_value"] = 0.01
+    pd.DataFrame([row]).to_csv(isolated_reports["evidence_table_path"], sep="\t", index=False)
+
+    result = run_meta_analysis(feature_type=row["feature_type"])
+    assert result["feature_id_standardized"].tolist() == ["105317636"]
+    assert result["feature_id_standardized"].dtype == object

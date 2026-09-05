@@ -15,8 +15,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from common import EVIDENCE_TABLE_PATH, STUDY_REGISTRY_CSV, load_vocab  # noqa: E402
-from meta_analysis.run import run_meta_analysis  # noqa: E402
 from harmonize.core import load_evidence_table  # noqa: E402
+from meta_analysis.run import run_meta_analysis  # noqa: E402
 from prioritize.rank import build_candidates  # noqa: E402
 
 

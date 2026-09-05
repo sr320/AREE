@@ -77,3 +77,77 @@ def test_card_files_and_evidence_are_partitioned_by_origin_and_species(isolated_
         assert sum(name in content for name in [
             "SIMULATED_STUDY", "REAL_STUDY", "OTHER_SPECIES"
         ]) == 1
+
+
+def test_every_candidate_is_listed_but_only_signals_get_a_card(isolated_reports):
+    """A genome-wide pool yields a candidate per gene. All of them belong in
+    candidates.tsv; only those with a significant signal (pooled or in a
+    contributing study) get a markdown card by default."""
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    source = evidence[
+        (evidence["feature_id_standardized"] == "LOC105333935")
+        & (evidence["phenotype"] == "larval_viability")
+    ].iloc[0]
+
+    rows = []
+    for study_id, effect in [("NULL_A", 0.10), ("NULL_B", 0.12)]:
+        row = source.copy()
+        row["evidence_id"] = f"{study_id}-row"
+        row["study_id"] = study_id
+        row["comparison_id"] = f"{study_id}-comparison"
+        row["feature_id_standardized"] = "GENE_NULL"
+        row["feature_id_original"] = "GENE_NULL"
+        row["effect_size"] = effect
+        row["standard_error"] = 0.3
+        row["p_value"] = 0.7
+        row["adjusted_p_value"] = 0.95
+        rows.append(row)
+    for study_id, effect in [("SIG_A", 1.5), ("SIG_B", 1.7)]:
+        row = source.copy()
+        row["evidence_id"] = f"{study_id}-row"
+        row["study_id"] = study_id
+        row["comparison_id"] = f"{study_id}-comparison"
+        row["feature_id_standardized"] = "GENE_SIG"
+        row["feature_id_original"] = "GENE_SIG"
+        row["effect_size"] = effect
+        row["standard_error"] = 0.2
+        row["p_value"] = 1e-9
+        row["adjusted_p_value"] = 1e-7
+        rows.append(row)
+    path = isolated_reports["evidence_table_path"]
+    pd.DataFrame(rows).to_csv(path, sep="\t", index=False)
+
+    index = build_evidence_cards(phenotype="larval_viability", feature_type="gene")
+    cards_dir = isolated_reports["cards_dir"]
+    candidates = pd.read_csv(cards_dir / "candidates.tsv", sep="\t")
+
+    assert set(candidates["feature_id_standardized"]) == {"GENE_NULL", "GENE_SIG"}
+    assert [e["feature_id_standardized"] for e in index] == ["GENE_SIG"]
+    written = candidates.set_index("feature_id_standardized")["card_file"]
+    assert Path(written["GENE_SIG"]).exists()
+    assert pd.isna(written["GENE_NULL"])
+
+    everything = build_evidence_cards(
+        phenotype="larval_viability", feature_type="gene", all_cards=True
+    )
+    assert {e["feature_id_standardized"] for e in everything} == {"GENE_NULL", "GENE_SIG"}
+
+
+def test_conflicting_candidate_keeps_its_card_via_study_level_significance(isolated_reports):
+    """sod1 pools to nothing (p = 0.81) because two studies disagree, but one of
+    them reported adjusted p = 0.03, so the conflict is surfaced on a card."""
+    harmonize_all_demo_studies()
+    index = build_evidence_cards(phenotype="larval_viability", feature_type="gene")
+    sod1 = next(e for e in index if e["feature_id_standardized"] == "LOC105331241")
+    assert sod1["adjusted_p_value"] > 0.05
+    assert Path(sod1["card_file"]).exists()
+
+
+def test_card_reports_the_adjusted_pooled_p_and_family_size(isolated_reports):
+    harmonize_all_demo_studies()
+    index = build_evidence_cards(phenotype="larval_viability", feature_type="gene")
+    hsp70 = next(e for e in index if e["feature_id_standardized"] == "LOC105333935")
+    content = Path(hsp70["card_file"]).read_text()
+    assert "BH-adjusted across the" in content
+    assert "| adj. p |" in content

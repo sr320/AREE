@@ -116,3 +116,71 @@ def test_assay_diversity_never_crosses_origin_or_species_partitions():
     assert candidate["n_distinct_assays"] == 1
     assert candidate["mapping_confidences"] == "exact"
     assert candidate["quality_flags_union"] == ""
+
+
+def _two_study_meta_row(**overrides) -> dict:
+    row = {
+        "feature_id_standardized": "GENE_NULL", "phenotype": "disease_susceptibility",
+        "feature_type": "gene", "simulated": False, "species_taxid": 29159,
+        "k_studies": 2, "studies": "A|B", "n_evidence_records": 2, "total_sample_size": 17,
+        "pooled_effect": 0.12, "pooled_se": 0.3, "ci_lower": -0.47, "ci_upper": 0.71, "z": 0.4,
+        "p_value": 0.69, "adjusted_p_value": 0.93, "n_tests_in_family": 23094,
+        "q_statistic": 0.1, "i_squared": 0.0, "tau_squared": 0.0,
+        "direction_consistency": 1.0, "distinct_tissues": 1, "distinct_life_stages": 1,
+        "distinct_stressors": "pathogen_challenge", "contributing_evidence_ids": "a|b",
+    }
+    row.update(overrides)
+    return row
+
+
+def _two_study_evidence() -> pd.DataFrame:
+    return pd.DataFrame([
+        {"evidence_id": "a", "study_id": "A", "feature_id_standardized": "GENE_NULL",
+         "phenotype": "disease_susceptibility", "feature_type": "gene", "simulated": False,
+         "species_taxid": 29159, "mapping_confidence": "exact", "quality_flags": []},
+        {"evidence_id": "b", "study_id": "B", "feature_id_standardized": "GENE_NULL",
+         "phenotype": "disease_susceptibility", "feature_type": "gene", "simulated": False,
+         "species_taxid": 29159, "mapping_confidence": "exact", "quality_flags": []},
+    ])
+
+
+def test_high_priority_gate_requires_adjusted_significance():
+    """Two genome-wide studies agree in sign for about half of all null genes.
+    Replication + direction agreement without a significant pooled effect must
+    not reach the top tier."""
+    candidate = build_candidates(pd.DataFrame([_two_study_meta_row()]), _two_study_evidence()).iloc[0]
+    assert candidate["k_studies"] == 2
+    assert candidate["direction_consistency"] == 1.0
+    assert candidate["tier"] == "emerging"
+    assert not candidate["is_high_priority"]
+
+
+def test_high_priority_gate_uses_adjusted_not_raw_p():
+    """Nominally significant but not after BH: still not high priority."""
+    row = _two_study_meta_row(p_value=0.004, adjusted_p_value=0.31)
+    candidate = build_candidates(pd.DataFrame([row]), _two_study_evidence()).iloc[0]
+    assert candidate["tier"] == "emerging"
+
+    row = _two_study_meta_row(p_value=1e-6, adjusted_p_value=0.003, pooled_effect=1.4)
+    candidate = build_candidates(pd.DataFrame([row]), _two_study_evidence()).iloc[0]
+    assert candidate["tier"] == "high_priority_cross_study"
+
+
+def test_candidates_are_ordered_strongest_tier_first(isolated_reports):
+    from prioritize.rank import TIER_ORDER
+
+    harmonize_all_demo_studies()
+    meta_df = run_meta_analysis(feature_type="gene")
+    candidates = build_candidates(meta_df, load_evidence_table())
+    ranks = candidates["tier"].map({t: i for i, t in enumerate(TIER_ORDER)}).tolist()
+    assert ranks == sorted(ranks)
+    assert candidates["tier"].iloc[0] == "high_priority_cross_study"
+
+
+def test_ranking_matches_candidates_to_numeric_gene_ids():
+    """Candidate rows and evidence rows must agree on identifier type, or the
+    forest data and mapping confidences silently come out empty."""
+    meta = pd.DataFrame([_two_study_meta_row(feature_id_standardized="105317636")])
+    evidence = _two_study_evidence().assign(feature_id_standardized="105317636")
+    candidate = build_candidates(meta, evidence).iloc[0]
+    assert candidate["mapping_confidences"] == "exact"

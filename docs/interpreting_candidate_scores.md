@@ -61,6 +61,7 @@ is_high_priority = (
     and phenotype_relevance_score > 0.1
     and direction_consistency >= 0.7
     and quality_score >= 0.4
+    and adjusted_p_value <= 0.05
 )
 is_multi_omics = n_distinct_assays >= 2
 ```
@@ -73,6 +74,12 @@ Tier assignment, in order:
      [resilience_vs_exposure.md](resilience_vs_exposure.md))
    - `direction_consistency >= 0.7`
    - `quality_score >= 0.4` (i.e. fewer than ~3 of 5 quality flags present)
+   - `adjusted_p_value <= 0.05` — the pooled effect survives
+     Benjamini–Hochberg control within its phenotype / feature-type family
+     (see [interpreting_meta_analysis.md](interpreting_meta_analysis.md#multiple-testing)).
+     Without this gate, two genome-wide studies promote every gene whose
+     effects happen to share a sign: on the first real OsHV-1 pool that was
+     12,658 of 23,094 genes, 8,533 of them with pooled `p > 0.05`.
 2. **`multi_omics_convergence`** — evidence from `>= 2` distinct
    `feature_type`s mapped to the same standardized feature (checked only if
    the candidate did not already qualify for `high_priority_cross_study`).
@@ -94,19 +101,38 @@ Likewise, the conflicting-evidence example in
 This is the concrete mechanism (see `design.md` section 6) that prevents
 "statistically significant in one study" from reading as "validated": the
 score is informative for ranking *within* a tier, but tier membership itself
-is gated on replication, directional agreement, phenotype relevance, and
-quality — properties a single striking p-value cannot substitute for.
+is gated on replication, directional agreement, phenotype relevance,
+quality, and family-wise significance — properties a single striking p-value
+cannot substitute for. `significance_score` itself is also computed from
+`adjusted_p_value`, not the raw pooled p.
 
 ## Reading the output
 
-`aree build-evidence-cards` writes one evidence card per candidate under
-`reports/evidence_cards/`, plus an `index.json` summarizing tier and score
-for every candidate. Every candidate gets a card regardless of tier —
-`emerging` candidates are not hidden, they are labeled. Each card shows the
-component breakdown (`component_*` columns), the tier, the contributing
-studies, and (where feasible) a forest-style summary of per-study effect
-estimates, so a reviewer can see exactly which inputs drove the score rather
-than trusting a single number.
+`aree build-evidence-cards` ranks every candidate and writes two things under
+`reports/evidence_cards/`:
+
+- **`candidates.tsv`** — every ranked candidate, all tiers, with the full
+  `component_*` breakdown, the meta-analysis fields, and a `card_file` column.
+  This is the complete, auditable ranking; `emerging` candidates are not
+  hidden, they are labeled.
+- **One markdown card per candidate that carries a significant signal**, plus
+  an `index.json` listing those cards. A candidate qualifies when its pooled
+  `adjusted_p_value` is at or below `--max-adjusted-p` (default 0.05), *or*
+  when at least one contributing study reported an adjusted p at or below it.
+  The second clause is what keeps conflicting-direction candidates on a card:
+  `LOC105331241`/`sod1` pools to `p = 0.81` because two studies disagree, but
+  one of them reported `padj = 0.03`, and that conflict is exactly what a
+  reader needs to see.
+
+The threshold exists because a genome-wide pool yields one candidate per gene.
+Rendering ~30,000 cards for genes with no signal anywhere took tens of minutes
+and buried the reader; the first real OsHV-1 pool renders a few thousand
+instead. Pass `--all-cards` to render every candidate regardless.
+
+Each card shows the tier, the contributing studies, the pooled and
+BH-adjusted p-values with the family size, and a forest-style table of
+per-study effect estimates with each study's own adjusted p, so a reviewer can
+see exactly which inputs drove the score rather than trusting a single number.
 
 ## Related documentation
 

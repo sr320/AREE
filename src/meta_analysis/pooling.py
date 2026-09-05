@@ -1,6 +1,7 @@
 """Random-effects (DerSimonian-Laird) meta-analysis, implemented directly for
 auditability (see docs/design.md Assumptions — no compiled R meta package
-dependency in the MVP).
+dependency in the MVP), plus Benjamini-Hochberg false-discovery-rate control
+for the family of pooled tests a run produces.
 """
 from __future__ import annotations
 
@@ -22,6 +23,18 @@ class PooledResult:
     q_statistic: float
     i_squared: float
     tau_squared: float
+
+
+def two_sided_p_from_z(z: float) -> float:
+    """Two-sided normal p-value that stays strictly positive for large |z|.
+
+    `2 * (1 - norm.cdf(|z|))` underflows to exactly 0.0 once |z| exceeds ~8.3,
+    which on a genome-wide pool happened for hundreds of genes and printed as
+    "p = 0" on their evidence cards. The survival function keeps precision in
+    the tail, so the ordering among very small p-values is preserved and the
+    BH adjustment downstream sees real numbers.
+    """
+    return float(2.0 * norm.sf(abs(z)))
 
 
 def dersimonian_laird(effect_sizes, standard_errors) -> PooledResult:
@@ -55,7 +68,7 @@ def dersimonian_laird(effect_sizes, standard_errors) -> PooledResult:
         i_squared = max(0.0, (q_statistic - df) / q_statistic) * 100 if q_statistic > 0 else 0.0
 
     z = pooled_effect / pooled_se if pooled_se > 0 else 0.0
-    p_value = float(2 * (1 - norm.cdf(abs(z))))
+    p_value = two_sided_p_from_z(z)
     ci_lower = pooled_effect - 1.96 * pooled_se
     ci_upper = pooled_effect + 1.96 * pooled_se
 
@@ -71,3 +84,27 @@ def dersimonian_laird(effect_sizes, standard_errors) -> PooledResult:
         i_squared=i_squared,
         tau_squared=tau_squared,
     )
+
+
+def benjamini_hochberg(p_values) -> np.ndarray:
+    """Benjamini-Hochberg adjusted p-values (FDR q-values) for one test family.
+
+    Returns an array aligned with the input. NaN inputs stay NaN and do not
+    count toward the family size. Values are monotone in the input ordering
+    and clipped to [0, 1], following the standard step-up procedure.
+    """
+    p = np.asarray(p_values, dtype=float)
+    out = np.full(p.shape, np.nan)
+    valid = ~np.isnan(p)
+    n = int(valid.sum())
+    if n == 0:
+        return out
+    pv = p[valid]
+    order = np.argsort(pv, kind="mergesort")
+    ranked = pv[order] * n / np.arange(1, n + 1)
+    adjusted = np.minimum.accumulate(ranked[::-1])[::-1]
+    adjusted = np.clip(adjusted, 0.0, 1.0)
+    restored = np.empty(n)
+    restored[order] = adjusted
+    out[valid] = restored
+    return out

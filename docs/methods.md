@@ -82,7 +82,12 @@ effect size and p-value under a normal approximation
 (*se = |effect| / Φ⁻¹(1 − p/2)*), a documented fallback rather than a silent
 assumption. A single-study group falls back to that study's own estimate
 (tau² = 0, I² = 0) rather than a degenerate random-effects computation.
-Direction consistency is reported separately as the fraction of contributing
+Because a genome-wide reanalysis contributes one pooled test per gene, pooled
+p-values are adjusted for multiple testing with the Benjamini–Hochberg
+procedure within each test family, defined as all features pooled for one
+phenotype, feature type, data origin, and species; both the raw and adjusted
+values and the family size are reported. Direction consistency is reported
+separately as the fraction of contributing
 records whose effect-size sign agrees with the majority sign across the
 group; low direction consistency combined with high I² is treated as
 evidence of genuine cross-study disagreement rather than as noise to be

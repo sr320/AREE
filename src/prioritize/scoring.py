@@ -13,6 +13,7 @@ that a high score alone cannot override.
 from __future__ import annotations
 
 import math
+from functools import lru_cache
 
 from common import load_vocab
 
@@ -53,19 +54,44 @@ def _clip01(x: float) -> float:
     return max(0.0, min(1.0, x))
 
 
+@lru_cache(maxsize=1)
+def _phenotype_relevance() -> dict:
+    """phenotype term id -> resilience_relevance class, loaded once.
+
+    Scoring is called once per candidate, and a genome-wide pool has tens of
+    thousands of candidates; re-reading the ontology YAML on each call was a
+    measurable share of ranking time.
+    """
+    return {
+        term_id: term.get("resilience_relevance", "exposure_only")
+        for term_id, term in load_vocab("phenotype_ontology").items()
+    }
+
+
+def significance_p_value(meta_row: dict) -> float:
+    """The p-value the score and the tier gates judge significance on.
+
+    The BH-adjusted pooled p is preferred; the raw pooled p is the fallback for
+    callers that build a meta row by hand without running the family-wise
+    adjustment. Either way the result is bounded away from zero so log10 is
+    defined.
+    """
+    adjusted = meta_row.get("adjusted_p_value")
+    p = adjusted if adjusted is not None and adjusted == adjusted else meta_row["p_value"]
+    return max(float(p), 1e-300)
+
+
 def compute_components(meta_row: dict, mapping_confidences: list, quality_flags: list) -> dict:
     """Compute the 0-1 component scores for one candidate (one meta-analysis row).
 
     meta_row is expected to have the columns produced by
     meta_analysis.run.run_meta_analysis (k_studies, total_sample_size,
-    pooled_effect, p_value, direction_consistency, distinct_tissues,
-    distinct_life_stages, i_squared, phenotype).
+    pooled_effect, p_value, adjusted_p_value, direction_consistency,
+    distinct_tissues, distinct_life_stages, i_squared, phenotype).
     """
-    phenotype_vocab = load_vocab("phenotype_ontology")
-    relevance = phenotype_vocab.get(meta_row["phenotype"], {}).get("resilience_relevance", "exposure_only")
+    relevance = _phenotype_relevance().get(meta_row["phenotype"], "exposure_only")
 
-    p = max(meta_row["p_value"], 1e-300)
-    significance_score = _clip01(-math.log10(p) / 5.0)  # p=1e-5 -> 1.0
+    significance_score = _clip01(-math.log10(significance_p_value(meta_row)) / 5.0)  # q=1e-5 -> 1.0
 
     worst_mapping = min(
         (MAPPING_CONFIDENCE_SCORE.get(m, 0.0) for m in mapping_confidences), default=0.0

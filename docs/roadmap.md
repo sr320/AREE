@@ -47,9 +47,10 @@ for the assumptions this roadmap is consistent with.
 - **Candidate prioritization.** `src/prioritize/scoring.py` and
   `src/prioritize/rank.py` implement the full transparent scoring formula and
   the three-tier hard-gated ranking system. Simulation status and species taxid
-  remain partition keys through ranking and reporting; `aree build-evidence-cards`
-  generates a markdown card per candidate plus an `index.json` under
-  `reports/evidence_cards/`.
+  remain partition keys through ranking and reporting; the top tier additionally
+  requires a BH-adjusted pooled p ≤ 0.05. `aree build-evidence-cards` ranks every
+  candidate into `reports/evidence_cards/candidates.tsv` and renders a markdown
+  card (plus `index.json`) for each candidate with a significant signal.
 - **CLI.** All six commands documented in the README/design docs
   (`validate-study`, `register-study`, `list-studies`, `harmonize`,
   `meta-analyze`, `build-evidence-cards`) are implemented in

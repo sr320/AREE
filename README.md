@@ -135,8 +135,8 @@ AREE/
 | `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies` | List registered studies and their pipeline status |
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
-| `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table |
-| `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>]` | Generate per-candidate evidence cards |
+| `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table, with BH-adjusted p-values per phenotype / feature-type family |
+| `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>] [--max-adjusted-p <q>] [--all-cards]` | Rank every candidate into `reports/evidence_cards/candidates.tsv` and write an evidence card for each one with a BH-adjusted p ≤ `q` (default 0.05, pooled or in any contributing study) |
 | `aree build-crosswalk [--taxid <n>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB |
 
 ## Working with real data

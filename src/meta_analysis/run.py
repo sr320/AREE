@@ -5,15 +5,22 @@ simulation status, and species. Only statistically poolable records contribute
 to the estimate or replication metadata. Records with unresolved identifiers
 remain visible in the evidence table, while repeated within-study contrasts
 fail closed because AREE does not yet model their covariance.
+
+Every pooled p-value is then adjusted for multiple testing (Benjamini-Hochberg)
+within its test family — the set of features pooled for one phenotype, feature
+type, origin, and species. A genome-wide reanalysis contributes tens of
+thousands of tests to a family, and an unadjusted pooled p is not evidence at
+that scale.
 """
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from common import EVIDENCE_TABLE_PATH, REPORTS_DIR
 
 from .effect_sizes import effective_standard_error
-from .pooling import dersimonian_laird
+from .pooling import benjamini_hochberg, dersimonian_laird
 
 META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 
@@ -26,6 +33,13 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 # registered, silently pool across species. Cross-species evidence is only ever
 # meant to combine through orthogroups, which are not yet populated.
 GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid"]
+
+# The multiple-testing family is everything in GROUP_KEYS except the feature
+# itself. Because the CLI can only filter on phenotype and feature type — both
+# family keys — the adjusted p-value of a given feature is the same whether the
+# run covered one phenotype or all of them.
+FAMILY_KEYS = ["phenotype", "feature_type", "simulated", "species_taxid"]
+
 MAPPING_CONFIDENCE_RANK = {
     "exact": 5,
     "one_to_one_ortholog": 4,
@@ -34,6 +48,27 @@ MAPPING_CONFIDENCE_RANK = {
     "one_to_many_ortholog": 1,
     "unresolved": 0,
 }
+
+# Identifier columns must be read as text. Real NCBI GeneIDs are all digits, and
+# pandas' default inference turned them into integers here while the evidence
+# loader used by ranking and reporting kept them as strings — so no candidate
+# row from a real study matched its own evidence records.
+_ID_COLUMNS = {
+    "evidence_id": str, "study_id": str, "comparison_id": str,
+    "feature_id_original": str, "feature_id_standardized": str, "orthogroup_id": str,
+}
+
+RESULT_COLUMNS = [
+    "feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid",
+    "k_studies", "studies", "n_evidence_records", "n_available_records",
+    "n_excluded_unpoolable", "n_excluded_duplicate_mappings", "excluded_studies",
+    "contributing_evidence_ids", "total_sample_size",
+    "pooled_effect", "pooled_se", "ci_lower", "ci_upper", "z",
+    "p_value", "adjusted_p_value", "n_tests_in_family",
+    "q_statistic", "i_squared", "tau_squared", "direction_consistency",
+    "distinct_tissues", "distinct_life_stages", "distinct_stressors",
+    "mapping_confidences", "quality_flags_union",
+]
 
 
 def _poolable_group(group: pd.DataFrame) -> pd.DataFrame:
@@ -114,12 +149,38 @@ def _direction_consistency(effect_sizes: pd.Series) -> float:
     return float(majority_count / len(nonzero))
 
 
+def _load_evidence_for_pooling() -> pd.DataFrame:
+    return pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False, dtype=_ID_COLUMNS)
+
+
+def adjust_within_families(result_df: pd.DataFrame) -> pd.DataFrame:
+    """Add BH-adjusted p-values and the family size to a meta-analysis table.
+
+    Families are defined by FAMILY_KEYS. The adjustment is recomputed from the
+    rows present, so it must be applied to a complete family — which
+    `run_meta_analysis` guarantees, because its only filters are family keys.
+    """
+    result_df = result_df.copy()
+    if len(result_df) == 0:
+        result_df["adjusted_p_value"] = pd.Series(dtype=float)
+        result_df["n_tests_in_family"] = pd.Series(dtype=int)
+        return result_df
+    adjusted = np.full(len(result_df), np.nan)
+    n_tests = np.zeros(len(result_df), dtype=int)
+    for positions in result_df.groupby(FAMILY_KEYS, dropna=False, sort=False).indices.values():
+        adjusted[positions] = benjamini_hochberg(result_df["p_value"].to_numpy()[positions])
+        n_tests[positions] = len(positions)
+    result_df["adjusted_p_value"] = adjusted
+    result_df["n_tests_in_family"] = n_tests
+    return result_df
+
+
 def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = None) -> pd.DataFrame:
     if not EVIDENCE_TABLE_PATH.exists():
         raise FileNotFoundError(
             f"No evidence table at {EVIDENCE_TABLE_PATH}. Run `aree harmonize` for each study first."
         )
-    df = pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False)
+    df = _load_evidence_for_pooling()
     df = df[df["mapping_confidence"] != "unresolved"]
     df = df[df["feature_id_standardized"].notna() & df["effect_size"].notna()]
 
@@ -176,6 +237,8 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
 
     result_df = pd.DataFrame(results)
     if len(result_df):
+        result_df = adjust_within_families(result_df)
+        result_df = result_df[RESULT_COLUMNS]
         result_df = result_df.sort_values(["phenotype", "feature_type", "p_value"])
     return result_df
 

@@ -12,9 +12,8 @@ tells you which command to run.
 """
 from __future__ import annotations
 
-import streamlit as st
-
 import data_access as da
+import streamlit as st
 
 st.set_page_config(page_title="AREE — Aquaculture Resilience Evidence Engine", layout="wide")
 
@@ -128,6 +127,7 @@ with tab_candidates:
                 "feature_id_standardized", "phenotype", "feature_type", "simulated",
                 "species_taxid", "tier", "score",
                 "k_studies", "n_distinct_assays", "direction_consistency", "i_squared", "pooled_effect",
+                "adjusted_p_value",
             ]
             st.dataframe(view[show_cols], use_container_width=True, hide_index=True)
             st.download_button("Download candidates (CSV)", view.to_csv(index=False),
@@ -136,7 +136,7 @@ with tab_candidates:
             st.subheader("Tier legend")
             st.markdown(
                 "- **high_priority_cross_study** — ≥2 independent studies, interpretable phenotype, "
-                "direction consistency ≥ 0.7, acceptable quality.\n"
+                "direction consistency ≥ 0.7, acceptable quality, and BH-adjusted pooled p ≤ 0.05.\n"
                 "- **multi_omics_convergence** — same standardized feature supported by ≥2 molecular layers.\n"
                 "- **emerging** — single-study or otherwise unconfirmed; **requires replication**."
             )
