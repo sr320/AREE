@@ -39,6 +39,7 @@ meta:
 
 cards:
 	aree build-evidence-cards
+	aree top-candidates
 
 demo: register harmonize meta cards
 	@echo ""
@@ -46,6 +47,7 @@ demo: register harmonize meta cards
 	@echo "  reports/evidence/evidence_table.tsv"
 	@echo "  reports/meta_analysis/"
 	@echo "  reports/evidence_cards/"
+	@echo "  reports/top_candidates_summary.md"
 	@echo "  reports/manifests/"
 
 demo-clean: clean demo
@@ -75,5 +77,6 @@ app:
 
 clean:
 	rm -rf reports/evidence reports/meta_analysis reports/evidence_cards reports/manifests
+	rm -f reports/top_candidates_summary.md
 	rm -rf .pytest_cache .ruff_cache
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +

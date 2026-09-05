@@ -74,8 +74,9 @@ aree harmonize --study GIGAS_SAL04 \
 aree meta-analyze --phenotype thermal_tolerance --feature-type gene
 aree meta-analyze --feature-type gene
 
-# 5. Generate biomarker evidence cards
+# 5. Generate biomarker evidence cards, then summarize the top candidates per phenotype
 aree build-evidence-cards --phenotype thermal_tolerance
+aree top-candidates --n 10
 
 # 6. Build the docs site / launch the interface
 quarto render docs
@@ -137,6 +138,7 @@ AREE/
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
 | `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table, with BH-adjusted p-values per phenotype / feature-type family |
 | `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>] [--max-adjusted-p <q>] [--all-cards]` | Rank every candidate into `reports/evidence_cards/candidates.tsv` and write an evidence card for each one with a BH-adjusted p ≤ `q` (default 0.05, pooled or in any contributing study) |
+| `aree top-candidates [--n <N>] [--candidates <path>] [--out <path>]` | Regroup an existing `candidates.tsv` by phenotype and write the top `N` (default 10) per phenotype, ranked by tier then score, to `reports/top_candidates_summary.md` |
 | `aree build-crosswalk [--taxid <n>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB |
 
 ## Working with real data

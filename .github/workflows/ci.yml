@@ -44,8 +44,10 @@ jobs:
           done
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
+          aree top-candidates
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
+          test -f reports/top_candidates_summary.md
 
   real-study:
     name: Real-study path (intake -> harmonize)
