@@ -18,7 +18,12 @@ import pandas as pd
 
 from common import load_vocab
 
-from .scoring import candidate_score, compute_components, significance_p_value
+from .scoring import (
+    candidate_score,
+    compute_components,
+    phenotype_relevance,
+    significance_p_value,
+)
 
 HIGH_PRIORITY_MIN_STUDIES = 2
 HIGH_PRIORITY_MIN_DIRECTION_CONSISTENCY = 0.7
@@ -37,6 +42,21 @@ LAYER_SUPPORT_MAX_ADJUSTED_P = 0.05
 
 # Order in which tiers are presented: strongest evidence first.
 TIER_ORDER = ["high_priority_cross_study", "multi_omics_convergence", "emerging"]
+
+# What KIND of evidence supports a candidate, independent of how strong it is.
+# The tier answers "how well replicated?"; this answers "replicated evidence of
+# what?" — and they are not the same question. Two studies agreeing that a gene
+# responds to OsHV-1 infection is well-replicated *disease-response* evidence;
+# it is not evidence that the gene marks a resilient animal, because neither
+# study measured survival. Keeping these orthogonal is what stops a strong tier
+# from being read as a resilience claim (see docs/resilience_vs_exposure.md).
+EVIDENCE_CLASS_BY_RELEVANCE = {
+    "resilience": "resilience_associated",
+    "disease": "disease_associated",
+    "stress_response": "stress_response",
+    "exposure_only": "exposure_only",
+}
+DEFAULT_EVIDENCE_CLASS = "exposure_only"
 
 PARTITION_COLUMNS = ["_simulated", "_species_taxid"]
 CANDIDATE_GROUP_COLUMNS = ["feature_id_standardized", "phenotype", "feature_type", *PARTITION_COLUMNS]
@@ -83,6 +103,40 @@ def molecular_layers() -> dict:
 
 def layer_of(feature_type: str) -> str:
     return molecular_layers().get(feature_type, str(feature_type))
+
+
+def evidence_class(meta_row: dict) -> str:
+    """What kind of evidence this candidate rests on, from its phenotype."""
+    return EVIDENCE_CLASS_BY_RELEVANCE.get(
+        phenotype_relevance(meta_row["phenotype"]), DEFAULT_EVIDENCE_CLASS
+    )
+
+
+def pooled_stressors(meta_row: dict) -> list:
+    """The standardized stressors behind the pooled estimate.
+
+    `distinct_stressors` holds pipe-separated names, not a count, unlike its
+    two similarly-named siblings — see docs/interpreting_meta_analysis.md.
+    """
+    return sorted({s for s in str(meta_row.get("distinct_stressors") or "").split("|") if s})
+
+
+def context_replication(meta_row: dict) -> str:
+    """Whether independent studies replicate a result across biological contexts.
+
+    `k_studies` counts studies; this counts *contexts*. Two studies of the same
+    stressor in the same tissue at the same life stage replicate the assay, not
+    the biology's generality — a distinction that disappears if only the study
+    count is reported.
+    """
+    if meta_row["k_studies"] < HIGH_PRIORITY_MIN_STUDIES:
+        return "single_study"
+    varies = (
+        len(pooled_stressors(meta_row)) > 1
+        or meta_row["distinct_tissues"] > 1
+        or meta_row["distinct_life_stages"] > 1
+    )
+    return "multi_context" if varies else "single_context"
 
 
 def candidate_key(meta_row: dict) -> tuple:
@@ -200,6 +254,9 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             **meta_dict,
             "score": score,
             "tier": tier,
+            "evidence_class": evidence_class(meta_dict),
+            "context_replication": context_replication(meta_dict),
+            "pooled_stressors": "|".join(pooled_stressors(meta_dict)),
             "is_high_priority": is_high_priority,
             "is_multi_omics_convergence": is_multi_omics,
             "molecular_layer": own_layer,

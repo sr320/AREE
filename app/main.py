@@ -123,13 +123,22 @@ with tab_candidates:
             tier_f = st.multiselect("Tier", sorted(candidates["tier"].unique()),
                                     default=sorted(candidates["tier"].unique()))
             view = candidates[candidates["tier"].isin(tier_f)] if tier_f else candidates
+            if "evidence_class" in view.columns:
+                class_f = st.multiselect(
+                    "Evidence class", sorted(view["evidence_class"].dropna().unique()),
+                    default=sorted(view["evidence_class"].dropna().unique()),
+                )
+                if class_f:
+                    view = view[view["evidence_class"].isin(class_f)]
             show_cols = [
                 "feature_id_standardized", "phenotype", "feature_type", "simulated",
-                "species_taxid", "tier", "score",
+                "species_taxid", "tier", "evidence_class", "context_replication", "score",
                 "k_studies", "n_supporting_layers", "direction_consistency", "i_squared", "pooled_effect",
                 "adjusted_p_value",
             ]
-            st.dataframe(view[show_cols], use_container_width=True, hide_index=True)
+            # A candidates.tsv written before evidence_class existed still loads.
+            st.dataframe(view[[c for c in show_cols if c in view.columns]],
+                         use_container_width=True, hide_index=True)
             st.download_button("Download candidates (CSV)", view.to_csv(index=False),
                                file_name="aree_candidates.csv", mime="text/csv")
 
@@ -141,6 +150,16 @@ with tab_candidates:
                 "each with a significant record for the same standardized feature under the **same phenotype**, "
                 "including the candidate's own layer.\n"
                 "- **emerging** — single-study or otherwise unconfirmed; **requires replication**."
+            )
+
+            st.subheader("Evidence class")
+            st.markdown(
+                "The tier says how well replicated a signal is; `evidence_class` says what it is "
+                "evidence **of**, taken from the phenotype the contributing studies actually "
+                "measured. Only `resilience_associated` candidates rest on a measured resilience "
+                "outcome. A `disease_associated` or `stress_response` candidate in the top tier is "
+                "well-replicated evidence of a *response*, not evidence that the feature marks a "
+                "resilient animal — see the card's \"What this evidence does and does not show\"."
             )
 
 

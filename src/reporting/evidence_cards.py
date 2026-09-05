@@ -52,6 +52,102 @@ NEXT_STEP_BY_TIER = {
     ),
 }
 
+# What a candidate's evidence class licenses you to say. The tier says how well
+# replicated the signal is; these say what it is a signal *of*. A reader who
+# sees only `high_priority_cross_study` will read "resilience biomarker", which
+# is wrong for every candidate whose contributing studies never measured a
+# resilience outcome.
+EVIDENCE_CLASS_STATEMENT = {
+    "resilience_associated": (
+        "The contributing studies measured a **resilience outcome** (survival, tolerance, or "
+        "recovery), so this association is with resilience itself rather than with exposure alone."
+    ),
+    "disease_associated": (
+        "The contributing studies measured a **disease outcome or challenge response**, not a "
+        "resilience outcome. This is evidence that the feature responds to, or tracks with, "
+        "disease state — *not* evidence that it distinguishes resistant animals from susceptible "
+        "ones. Establishing that requires a study in which survival or pathogen load was measured "
+        "per animal."
+    ),
+    "stress_response": (
+        "The contributing studies measured a **stress response**, not a resilience outcome. A "
+        "consistent response to a stressor is expected of many genes and does not imply the "
+        "responding animals fared better."
+    ),
+    "exposure_only": (
+        "The contributing studies report **exposure only** — a treatment was applied but no "
+        "phenotype was measured. Treat this as a context annotation, not biomarker evidence."
+    ),
+}
+
+CONTEXT_REPLICATION_STATEMENT = {
+    "single_study": (
+        "Only one study contributes, so nothing here is replicated."
+    ),
+    "single_context": (
+        "The contributing studies share one stressor, one tissue, and one life stage. The finding "
+        "is replicated across studies but not across biological contexts, so its generality beyond "
+        "this context is untested."
+    ),
+    # multi_context is built per candidate by _context_statement: a blanket
+    # "spans several contexts" would overclaim for the real OsHV-1 pool, where
+    # only life stage varies and the stressor is identical in both studies.
+}
+
+
+def _context_statement(candidate: dict) -> str:
+    """What replication across contexts this candidate actually has.
+
+    Names the dimensions that vary and the ones that do not, rather than
+    asserting generality the pool has not established."""
+    replication = candidate.get("context_replication", "single_study")
+    if replication != "multi_context":
+        return CONTEXT_REPLICATION_STATEMENT.get(
+            replication, CONTEXT_REPLICATION_STATEMENT["single_study"]
+        )
+
+    dimensions = {
+        "stressor": len([x for x in str(candidate.get("pooled_stressors") or "").split("|") if x]),
+        "tissue": int(candidate.get("distinct_tissues") or 0),
+        "life stage": int(candidate.get("distinct_life_stages") or 0),
+    }
+    varies = sorted(name for name, n in dimensions.items() if n > 1)
+    constant = sorted(name for name, n in dimensions.items() if n == 1)
+    sentence = (
+        f"The contributing studies differ in {_join(varies)}, so the signal is not specific to a "
+        f"single {_join(varies, 'or')}."
+    )
+    if constant:
+        sentence += (
+            f" They share the same {_join(constant)}, so generality beyond "
+            f"{'that' if len(constant) == 1 else 'those'} is untested."
+        )
+    return sentence
+
+
+def _join(items: list, conjunction: str = "and") -> str:
+    if len(items) <= 1:
+        return items[0] if items else ""
+    return f"{', '.join(items[:-1])} {conjunction} {items[-1]}"
+
+# The next step that actually advances the evidence, which depends on what is
+# missing — replication, a measured phenotype, or a mechanism — not only on tier.
+NEXT_STEP_BY_EVIDENCE_CLASS = {
+    "disease_associated": (
+        "Before validation spend, close the phenotype gap: measure this feature in animals whose "
+        "survival or pathogen load was recorded individually, so the association can be tested "
+        "against resistance rather than against infection status."
+    ),
+    "stress_response": (
+        "Before validation spend, close the phenotype gap: pair this measurement with a recorded "
+        "resilience outcome, so a stress response can be distinguished from a protective one."
+    ),
+    "exposure_only": (
+        "Not actionable as a biomarker candidate until a phenotype is measured in a study "
+        "contributing to it."
+    ),
+}
+
 FOREST_COLUMNS = [
     "study_id", "comparison_id", "tissue", "life_stage", "stressor", "effect_size",
     "effect_size_type", "standard_error", "p_value", "adjusted_p_value",
@@ -121,9 +217,20 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     lines.append(f"# Evidence card: {candidate['feature_id_standardized']} — {phenotype_label}")
     lines.append("")
     lines.append(f"**Tier:** `{candidate['tier']}`  **Score:** {candidate['score']} / 100")
+    evidence_class = candidate.get("evidence_class", "exposure_only")
+    lines.append(f"**Evidence class:** `{evidence_class}`  "
+                 f"**Context replication:** `{candidate.get('context_replication', 'single_study')}`")
     lines.append("")
     lines.append("> AREE candidate scores are associations across available evidence, not validated biomarkers. "
                   "See Limitations below before acting on this card.")
+    lines.append("")
+    lines.append("## What this evidence does and does not show")
+    lines.append(EVIDENCE_CLASS_STATEMENT.get(evidence_class, EVIDENCE_CLASS_STATEMENT["exposure_only"]))
+    lines.append("")
+    lines.append(_context_statement(candidate))
+    lines.append("")
+    lines.append(f"Stressor(s) behind the pooled estimate: "
+                 f"`{candidate.get('pooled_stressors') or 'none recorded'}`.")
     lines.append("")
     lines.append("## Candidate identifiers")
     lines.append(f"- Standardized feature ID: `{candidate['feature_id_standardized']}`")
@@ -201,11 +308,24 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     lines.append("## Limitations")
     lines.append(f"- Quality flags present across contributing evidence: {candidate['quality_flags_union'] or 'none recorded'}")
     lines.append("- This candidate reflects association, not confirmed mechanistic causation.")
+    if evidence_class != "resilience_associated":
+        lines.append(f"- No contributing study measured a resilience outcome; the evidence class is "
+                     f"`{evidence_class}`. A strong tier here means well-replicated evidence of that "
+                     "class, not a resilience biomarker.")
     if simulated:
         lines.append("- This card contains simulated demo evidence; do not cite it as real evidence.")
     lines.append("")
     lines.append("## Recommended next validation step")
-    lines.append(NEXT_STEP_BY_TIER.get(candidate["tier"], NEXT_STEP_BY_TIER["emerging"]))
+    # The phenotype gap outranks the replication gap: confirming an expression
+    # difference that was never tied to an outcome does not make it a biomarker.
+    phenotype_gap_step = NEXT_STEP_BY_EVIDENCE_CLASS.get(evidence_class)
+    if phenotype_gap_step:
+        lines.append(phenotype_gap_step)
+        lines.append("")
+        lines.append(f"Once a resilience outcome is available, the tier-appropriate step is: "
+                     f"{NEXT_STEP_BY_TIER.get(candidate['tier'], NEXT_STEP_BY_TIER['emerging'])}")
+    else:
+        lines.append(NEXT_STEP_BY_TIER.get(candidate["tier"], NEXT_STEP_BY_TIER["emerging"]))
     lines.append("")
     return "\n".join(lines)
 
@@ -291,6 +411,8 @@ def build_evidence_cards_report(
             "simulated": candidate["simulated"],
             "species_taxid": candidate["species_taxid"],
             "tier": candidate["tier"],
+            "evidence_class": candidate.get("evidence_class"),
+            "context_replication": candidate.get("context_replication"),
             "score": candidate["score"],
             "k_studies": candidate["k_studies"],
             "adjusted_p_value": candidate.get("adjusted_p_value"),

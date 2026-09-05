@@ -4,7 +4,13 @@ import pandas as pd
 from conftest import harmonize_all_demo_studies
 
 from harmonize.core import load_evidence_table
-from reporting.evidence_cards import build_evidence_cards
+from prioritize.rank import EvidenceIndex, add_partition_columns, build_candidates
+from reporting.evidence_cards import (
+    _card_markdown,
+    _context_statement,
+    _forest_points,
+    build_evidence_cards,
+)
 
 
 def test_build_evidence_cards_generates_files(isolated_reports):
@@ -178,3 +184,78 @@ def test_intergenic_methylation_regions_stay_in_the_methylation_layer(isolated_r
     assert set(intergenic["mapping_confidence"]) == {"unresolved"}
     assert intergenic["feature_id_standardized"].isna().all()
     assert "genomic_region" not in set(evidence["feature_type"])
+
+
+def test_card_states_the_evidence_class_and_the_phenotype_gap():
+    """A disease-phenotype card must say what it is not, and lead with the gap.
+
+    Built from a synthetic two-study pool rather than the demo: the demo's only
+    `disease_susceptibility` records are methylation regions that never reach a
+    pooled estimate, so it cannot exercise this path at all. The real OsHV-1
+    pool can and does — every one of its ~1,994 top-tier candidates is
+    disease-associated, and the tier label alone reads as a resilience claim to
+    anyone skimming.
+    """
+    meta_row = {
+        "feature_id_standardized": "GENE_D", "phenotype": "disease_susceptibility",
+        "feature_type": "gene", "simulated": False, "species_taxid": 29159,
+        "k_studies": 2, "studies": "A|B", "n_evidence_records": 2, "total_sample_size": 17,
+        "pooled_effect": 3.0, "pooled_se": 0.3, "ci_lower": 2.4, "ci_upper": 3.6, "z": 10.0,
+        "p_value": 1e-23, "adjusted_p_value": 1e-20, "n_tests_in_family": 23094,
+        "q_statistic": 0.1, "i_squared": 0.0, "tau_squared": 0.0,
+        "direction_consistency": 1.0, "distinct_tissues": 1, "distinct_life_stages": 1,
+        "distinct_stressors": "pathogen_challenge", "contributing_evidence_ids": "a|b",
+    }
+    evidence = pd.DataFrame([
+        {"evidence_id": eid, "study_id": sid, "feature_id_standardized": "GENE_D",
+         "phenotype": "disease_susceptibility", "feature_type": "gene", "simulated": False,
+         "species_taxid": 29159, "mapping_confidence": "exact", "quality_flags": [],
+         "comparison_id": "c", "tissue": "whole_animal", "life_stage": "spat",
+         "stressor": "pathogen_challenge", "effect_size": 3.0, "effect_size_type": "log2FoldChange",
+         "standard_error": 0.3, "p_value": 1e-23, "adjusted_p_value": 1e-20,
+         "molecular_direction": "up"}
+        for eid, sid in [("a", "A"), ("b", "B")]
+    ])
+    candidate = build_candidates(pd.DataFrame([meta_row]), evidence).iloc[0].to_dict()
+    index = EvidenceIndex(add_partition_columns(evidence))
+    content = _card_markdown(
+        candidate, _forest_points(index, candidate), [], "Disease susceptibility"
+    )
+
+    assert candidate["tier"] == "high_priority_cross_study"
+    assert "**Evidence class:** `disease_associated`" in content
+    assert "**Context replication:** `single_context`" in content
+    assert "What this evidence does and does not show" in content
+    assert "distinguishes resistant animals from susceptible" in content
+    assert "No contributing study measured a resilience outcome" in content
+    # The phenotype gap comes before the tier's validation advice, not instead of it.
+    assert content.index("close the phenotype gap") < content.index(
+        "Once a resilience outcome is available"
+    )
+
+
+def test_resilience_phenotype_card_makes_no_phenotype_gap_claim(isolated_reports):
+    harmonize_all_demo_studies()
+    index = build_evidence_cards(phenotype="thermal_tolerance", feature_type="gene")
+    content = Path(index[0]["card_file"]).read_text()
+
+    assert "**Evidence class:** `resilience_associated`" in content
+    assert "close the phenotype gap" not in content
+    assert "No contributing study measured a resilience outcome" not in content
+
+
+def test_multi_context_statement_names_what_varies_and_what_does_not():
+    """The real OsHV-1 pool differs in life stage only; the card must say so.
+
+    `multi_context` is true of it — spat vs. juvenile — but a blanket "spans
+    several contexts" would let a reader infer stressor generality that two
+    OsHV-1 challenges cannot support.
+    """
+    candidate = {
+        "context_replication": "multi_context", "pooled_stressors": "pathogen_challenge",
+        "distinct_tissues": 1, "distinct_life_stages": 2,
+    }
+    statement = _context_statement(candidate)
+    assert "differ in life stage" in statement
+    assert "share the same stressor and tissue" in statement
+    assert "untested" in statement

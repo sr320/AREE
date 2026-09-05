@@ -284,3 +284,83 @@ def test_demo_cross_layer_overlaps_are_all_cross_phenotype(isolated_reports):
     candidates = build_candidates(meta_df, load_evidence_table())
     assert (candidates["tier"] != "multi_omics_convergence").all()
     assert (candidates["n_supporting_layers"] <= 1).all()
+
+
+def test_score_does_not_saturate_above_the_old_ceilings():
+    """Two candidates that both clear the old caps must still be distinguishable.
+
+    Before 2026-09-05, `effect_magnitude_score` clipped at |log2FC| = 2 and
+    `significance_score` at adjusted p = 1e-5, so 126 of the 1,994 high-priority
+    candidates in the first real OsHV-1 pool scored an identical 68.57 — ties in
+    exactly the region a reader picks validation targets from.
+    """
+    at_old_cap = _two_study_meta_row(pooled_effect=2.0, adjusted_p_value=1e-5)
+    far_beyond = _two_study_meta_row(pooled_effect=5.8, adjusted_p_value=1e-75)
+
+    score_at_cap = candidate_score(compute_components(at_old_cap, ["exact"], []))
+    score_beyond = candidate_score(compute_components(far_beyond, ["exact"], []))
+
+    assert score_beyond > score_at_cap
+    # And the two components that used to clip are each strictly ordered.
+    assert (compute_components(far_beyond, ["exact"], [])["effect_magnitude_score"]
+            > compute_components(at_old_cap, ["exact"], [])["effect_magnitude_score"])
+    assert (compute_components(far_beyond, ["exact"], [])["significance_score"]
+            > compute_components(at_old_cap, ["exact"], [])["significance_score"])
+
+
+def test_saturating_components_stay_within_bounds_at_extremes():
+    extreme = _two_study_meta_row(
+        k_studies=500, total_sample_size=10**6, pooled_effect=1e6, adjusted_p_value=1e-300,
+        distinct_tissues=50, distinct_life_stages=50,
+    )
+    for key, value in compute_components(extreme, ["exact"], []).items():
+        assert 0.0 <= value <= 1.0, f"{key}={value} out of bounds"
+
+
+def test_disease_phenotype_is_not_labeled_resilience_evidence():
+    """A strong tier must not be readable as a resilience claim.
+
+    Both real OsHV-1 studies measure `disease_susceptibility` — infection
+    response, with no survival or viral load recorded per animal — so their
+    candidates are disease-associated evidence however well replicated.
+    """
+    candidate = build_candidates(
+        pd.DataFrame([_two_study_meta_row(adjusted_p_value=1e-20, pooled_effect=3.0)]),
+        _two_study_evidence(),
+    ).iloc[0]
+
+    assert candidate["tier"] == "high_priority_cross_study"
+    assert candidate["evidence_class"] == "disease_associated"
+
+
+def test_resilience_phenotype_is_labeled_resilience_evidence():
+    candidate = build_candidates(
+        pd.DataFrame([_two_study_meta_row(phenotype="survival", adjusted_p_value=1e-20)]),
+        _two_study_evidence().assign(phenotype="survival"),
+    ).iloc[0]
+    assert candidate["evidence_class"] == "resilience_associated"
+
+
+def test_context_replication_separates_study_count_from_context_breadth():
+    evidence = _two_study_evidence()
+
+    narrow = build_candidates(pd.DataFrame([_two_study_meta_row()]), evidence).iloc[0]
+    assert narrow["k_studies"] == 2
+    assert narrow["context_replication"] == "single_context"
+    assert narrow["pooled_stressors"] == "pathogen_challenge"
+
+    broad = build_candidates(
+        pd.DataFrame([_two_study_meta_row(distinct_life_stages=2)]), evidence
+    ).iloc[0]
+    assert broad["context_replication"] == "multi_context"
+
+    two_stressors = build_candidates(
+        pd.DataFrame([_two_study_meta_row(distinct_stressors="pathogen_challenge|temperature")]),
+        evidence,
+    ).iloc[0]
+    assert two_stressors["context_replication"] == "multi_context"
+
+    single = build_candidates(
+        pd.DataFrame([_two_study_meta_row(k_studies=1)]), evidence
+    ).iloc[0]
+    assert single["context_replication"] == "single_study"

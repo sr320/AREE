@@ -54,6 +54,29 @@ def _clip01(x: float) -> float:
     return max(0.0, min(1.0, x))
 
 
+def _saturating(value: float, half: float) -> float:
+    """Map an unbounded non-negative quantity into [0, 1) without a ceiling.
+
+    Returns `v / (v + half)`: strictly increasing over the whole domain, equal
+    to 0.5 at `half`, and asymptotic to — never equal to — 1.0.
+
+    This replaces `min(1, v / ceiling)` for every component whose input is
+    unbounded. Clipping was fine on the simulated demo, where nothing reached
+    the ceiling. On the first genome-wide real pool it broke the top of the
+    ranking: `|pooled_effect|` clipped at 2 and adjusted p clipped at 1e-5, so
+    126 of the 1,994 high-priority candidates scored an identical 68.57 despite
+    effects spanning 2 to 9.7 log2FC and adjusted p spanning 1e-5 to 1e-75 —
+    ties in exactly the region a reader is choosing validation targets from.
+
+    Each `half` below is the value that used to be the ceiling, so the ordering
+    of the old score is preserved and only the saturation is removed. Scores are
+    therefore lower in absolute terms than before 2026-09-05; compare candidates
+    within a run, not across this change.
+    """
+    v = max(0.0, float(value))
+    return v / (v + half)
+
+
 @lru_cache(maxsize=1)
 def _phenotype_relevance() -> dict:
     """phenotype term id -> resilience_relevance class, loaded once.
@@ -66,6 +89,11 @@ def _phenotype_relevance() -> dict:
         term_id: term.get("resilience_relevance", "exposure_only")
         for term_id, term in load_vocab("phenotype_ontology").items()
     }
+
+
+def phenotype_relevance(phenotype: str) -> str:
+    """The phenotype's `resilience_relevance` class, defaulting to exposure_only."""
+    return _phenotype_relevance().get(phenotype, "exposure_only")
 
 
 def significance_p_value(meta_row: dict) -> float:
@@ -90,25 +118,31 @@ def compute_components(meta_row: dict, mapping_confidences: list, quality_flags:
     distinct_tissues, distinct_life_stages, i_squared, phenotype) plus
     n_supporting_layers, which prioritize.rank adds.
     """
-    relevance = _phenotype_relevance().get(meta_row["phenotype"], "exposure_only")
+    relevance = phenotype_relevance(meta_row["phenotype"])
 
-    significance_score = _clip01(-math.log10(significance_p_value(meta_row)) / 5.0)  # q=1e-5 -> 1.0
+    # -log10(q) is itself unbounded, so saturate on that scale: q=1e-5 -> 0.5.
+    significance_score = _saturating(-math.log10(significance_p_value(meta_row)), 5.0)
 
     worst_mapping = min(
         (MAPPING_CONFIDENCE_SCORE.get(m, 0.0) for m in mapping_confidences), default=0.0
     )
 
     return {
-        "n_studies_score": _clip01(meta_row["k_studies"] / 5.0),
-        "sample_size_score": _clip01(meta_row["total_sample_size"] / 100.0),
-        "effect_magnitude_score": _clip01(abs(meta_row["pooled_effect"]) / 2.0),
+        # Unbounded inputs: saturating, so more studies / bigger n / bigger
+        # effect / smaller q always ranks strictly higher.
+        "n_studies_score": _saturating(meta_row["k_studies"], 5.0),
+        "sample_size_score": _saturating(meta_row["total_sample_size"], 100.0),
+        "effect_magnitude_score": _saturating(abs(meta_row["pooled_effect"]), 2.0),
         "significance_score": significance_score,
+        "context_breadth_score": _saturating(
+            meta_row["distinct_tissues"] * meta_row["distinct_life_stages"], 3.0
+        ),
+        # Bounded inputs keep the clip: the number of molecular layers is capped
+        # by the feature_types vocabulary, and the rest are already 0-1 by
+        # construction, so clipping them saturates nothing that could go higher.
+        "assay_diversity_score": _clip01(meta_row.get("n_supporting_layers", 1) / 3.0),
         "direction_consistency_score": _clip01(meta_row["direction_consistency"]),
         "phenotype_relevance_score": PHENOTYPE_RELEVANCE_SCORE.get(relevance, 0.1),
-        "context_breadth_score": _clip01(
-            (meta_row["distinct_tissues"] * meta_row["distinct_life_stages"]) / 3.0
-        ),
-        "assay_diversity_score": _clip01(meta_row.get("n_supporting_layers", 1) / 3.0),
         "mapping_confidence_score": worst_mapping,
         "quality_score": _clip01(1 - len(quality_flags) / 5.0),
         "heterogeneity_penalty": _clip01(meta_row.get("i_squared", 0.0) / 100.0),

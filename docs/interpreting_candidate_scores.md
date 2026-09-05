@@ -20,16 +20,40 @@ positive components:
 
 | component | weight | what it measures | source |
 |---|---|---|---|
-| `n_studies_score` | 20 | independent replication (`k_studies / 5`, capped at 1) | count of distinct `study_id` |
+| `n_studies_score` | 20 | independent replication (`k / (k + 5)`) | count of distinct `study_id` |
 | `direction_consistency_score` | 20 | agreement in effect direction across studies | meta-analysis `direction_consistency` |
-| `sample_size_score` | 10 | total biological replication (`total_sample_size / 100`, capped) | sum of `sample_size` |
-| `effect_magnitude_score` | 10 | typical absolute pooled effect (`|pooled_effect| / 2`, capped) | pooled `effect_size` |
-| `significance_score` | 10 | adjusted-significance strength (`-log10(p) / 5`, capped) | pooled `p_value` |
+| `sample_size_score` | 10 | total biological replication (`n / (n + 100)`) | sum of `sample_size` |
+| `effect_magnitude_score` | 10 | absolute pooled effect (`\|e\| / (\|e\| + 2)`) | pooled `effect_size` |
+| `significance_score` | 10 | adjusted-significance strength (`s / (s + 5)` where `s = -log10(q)`) | pooled `adjusted_p_value` |
 | `phenotype_relevance_score` | 10 | resilience (1.0) > disease (0.8) > stress_response (0.4) > exposure_only (0.1) | phenotype's `resilience_relevance` |
 | `assay_diversity_score` | 10 | molecular layers with a significant record for this feature under this phenotype (`n_supporting_layers / 3`, capped) | `feature_type` → `molecular_layer`, `adjusted_p_value` |
-| `context_breadth_score` | 5 | spread across tissues × life stages (`/3`, capped) | distinct `tissue` × `life_stage` |
+| `context_breadth_score` | 5 | spread across tissues × life stages (`c / (c + 3)`) | distinct `tissue` × `life_stage` |
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
+
+### Why the unbounded components saturate instead of clipping
+
+Every component whose input has no natural upper bound uses `v / (v + half)`,
+which is strictly increasing everywhere, equals 0.5 at `half`, and approaches
+but never reaches 1.0. Each `half` above is the value that used to be a hard
+cap, so the ordering is unchanged and only the ceiling is gone.
+
+This replaced `min(1, v / cap)` on **2026-09-05**, because clipping broke the
+ranking exactly where it matters. On the first genome-wide real pool,
+`|pooled_effect|` clipped at 2 and adjusted p clipped at `1e-5`; 126 of the
+1,994 high-priority candidates therefore scored an identical **68.57** despite
+pooled effects spanning 2 to 9.7 log2FC and adjusted p spanning `1e-5` to
+`1e-75`. A reader choosing validation targets from the top of that list was
+choosing between ties. After the change the largest tie group is 10, and those
+are rounding collisions at two decimal places, not saturation.
+
+The components with genuinely bounded inputs still clip: `direction_consistency`
+and `quality_score` are 0-1 by construction, and `assay_diversity_score` is
+capped by the number of molecular layers in the `feature_types` vocabulary.
+
+Absolute scores are lower than before this change — nothing reaches a
+component value of 1.0 any more. Compare candidates within one run, not across
+this change.
 
 Separately, a **heterogeneity penalty** of up to 15 points is subtracted,
 scaled by `i_squared / 100` — high cross-study heterogeneity directly reduces
@@ -121,6 +145,41 @@ is gated on replication, directional agreement, phenotype relevance,
 quality, and family-wise significance — properties a single striking p-value
 cannot substitute for. `significance_score` itself is also computed from
 `adjusted_p_value`, not the raw pooled p.
+
+## Evidence class: the tier answers a different question
+
+The tier says **how well replicated** a signal is. It does not say **what the
+signal is evidence of** — and a reader who sees `high_priority_cross_study`
+will reasonably assume "resilience biomarker". For the first real pool that
+assumption is wrong for every candidate.
+
+Each candidate therefore carries two more columns, computed in
+`src/prioritize/rank.py` and printed at the top of its evidence card:
+
+| column | values | meaning |
+|---|---|---|
+| `evidence_class` | `resilience_associated`, `disease_associated`, `stress_response`, `exposure_only` | the `resilience_relevance` of the phenotype the contributing studies actually measured |
+| `context_replication` | `single_study`, `single_context`, `multi_context` | whether the contributing studies vary in stressor, tissue, or life stage — replication of the *biology*, as distinct from replication of the study |
+
+Both real OsHV-1 studies measure `disease_susceptibility`: animals were
+challenged with the virus, but no survival or per-animal viral load was
+recorded. So all 1,994 top-tier candidates are `disease_associated`, not
+`resilience_associated`. They are well-replicated evidence of an infection
+response. Whether any of them distinguishes an animal that survives from one
+that does not is a question these data cannot answer, and the card says so
+rather than leaving the tier to imply otherwise.
+
+`context_replication` is `multi_context` for that pool, but only because the
+two studies used different life stages (spat vs. juvenile); the stressor and
+tissue are identical. The card names the dimensions that vary and the ones
+that do not, instead of asserting a generality the pool has not established.
+
+Because the phenotype gap outranks the replication gap, a card whose
+`evidence_class` is not `resilience_associated` leads its recommended next
+step with closing that gap — measuring the feature in animals whose outcome
+was recorded — and only then gives the tier-appropriate validation advice.
+Confirming an expression difference that was never tied to an outcome does not
+turn it into a biomarker.
 
 ## Reading the output
 

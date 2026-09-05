@@ -67,7 +67,7 @@ pool and a 23,000-gene real pool are corrected against their own sizes.
 | `tau_squared` | estimated between-study variance component |
 | `direction_consistency` | fraction of contributing records agreeing with the majority effect-direction sign |
 | `distinct_tissues`, `distinct_life_stages` | breadth of biological contexts represented |
-| `distinct_stressors` | pipe-separated list of standardized stressors contributing |
+| `distinct_stressors` | pipe-separated **list** of standardized stressors contributing — a list of names, not a count, unlike the two columns above it |
 | `mapping_confidences` | union of mapping-confidence levels among contributing records |
 | `quality_flags_union` | union of quality flags among contributing records |
 
