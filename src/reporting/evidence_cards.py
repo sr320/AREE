@@ -58,8 +58,8 @@ FOREST_COLUMNS = [
     "molecular_direction", "mapping_confidence",
 ]
 OTHER_OMICS_COLUMNS = [
-    "study_id", "feature_type", "phenotype", "tissue", "molecular_direction", "effect_size",
-    "mapping_confidence",
+    "study_id", "feature_type", "_layer", "phenotype", "tissue", "molecular_direction",
+    "effect_size", "adjusted_p_value", "mapping_confidence", "_significant",
 ]
 
 
@@ -83,12 +83,20 @@ def _forest_points(index: EvidenceIndex, candidate: dict) -> list:
 
 
 def _other_omics_context(index: EvidenceIndex, candidate: dict) -> list:
-    """Evidence for this same standardized feature from OTHER assay/feature types,
-    possibly under a different phenotype — this is the explicit, inspectable basis
-    for the multi_omics_convergence tier, so a reader can see exactly which studies
-    and phenotypes are being linked and judge for themselves whether that's a fair link."""
-    other = index.other_feature_types(candidate)
-    return other[OTHER_OMICS_COLUMNS].drop_duplicates().to_dict("records")
+    """Evidence for this same standardized feature from OTHER molecular layers.
+
+    Every row is shown, under any phenotype, so the reader can see all adjacent
+    evidence. Each row is marked `counts_as_convergent_support` when it is for
+    this candidate's own phenotype AND its study reported adjusted p <= 0.05 —
+    those are the only rows the multi_omics_convergence gate credits."""
+    other = index.other_layers(candidate)
+    rows = other[OTHER_OMICS_COLUMNS].drop_duplicates().to_dict("records")
+    for row in rows:
+        row["layer"] = row.pop("_layer")
+        row["significant"] = bool(row.pop("_significant"))
+        row["same_phenotype"] = row["phenotype"] == candidate["phenotype"]
+        row["counts_as_convergent_support"] = row["same_phenotype"] and row["significant"]
+    return rows
 
 
 def has_significant_signal(candidate: dict, forest_points: list, max_adjusted_p: float) -> bool:
@@ -157,19 +165,38 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
         )
     lines.append("")
     lines.append("## Multi-omics context")
+    own_layer = candidate.get("molecular_layer", candidate["feature_type"])
+    supporting = [x for x in str(candidate.get("supporting_layers") or "").split("|") if x]
+    lines.append(
+        f"This candidate's own layer is `{own_layer}`. Layers with a significant record "
+        f"(adjusted p ≤ 0.05) for this feature under `{candidate['phenotype']}`: "
+        f"{', '.join(f'`{x}`' for x in supporting) if supporting else 'none'}."
+    )
+    if candidate.get("is_multi_omics_convergence"):
+        lines.append(
+            "**How the layers were linked:** each layer's records were mapped to the same "
+            f"standardized identifier `{candidate['feature_id_standardized']}` "
+            f"(mapping confidence: {candidate['mapping_confidences']}); the link is shared gene "
+            "identity, not a measured regulatory relationship. Direction across layers is shown "
+            "below and is not required to agree."
+        )
     if other_omics:
-        lines.append("Evidence for this same standardized feature from other assay types "
-                      "(shown for transparency — these may reflect a different phenotype or tissue context; "
-                      "review before treating as confirmatory):")
-        lines.append("| study | assay/feature type | phenotype | tissue | direction | effect |")
-        lines.append("|---|---|---|---|---|---|")
+        lines.append("")
+        lines.append("Evidence for this same standardized feature from other molecular layers, under any "
+                      "phenotype. Only rows marked **yes** in the last column count toward convergence; the "
+                      "rest are shown so adjacent evidence is not hidden:")
+        lines.append("| study | layer | feature type | phenotype | tissue | direction | effect | adj. p | same phenotype | significant | counts |")
+        lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
         for o in other_omics:
             lines.append(
-                f"| {o['study_id']} | {o['feature_type']} | {o['phenotype']} | {o['tissue']} | "
-                f"{o['molecular_direction']} | {o['effect_size']:.3f} |"
+                f"| {o['study_id']} | {o['layer']} | {o['feature_type']} | {o['phenotype']} | {o['tissue']} | "
+                f"{o['molecular_direction']} | {o['effect_size']:.3f} | {_fmt(o['adjusted_p_value'])} | "
+                f"{'yes' if o['same_phenotype'] else 'no'} | {'yes' if o['significant'] else 'no'} | "
+                f"{'**yes**' if o['counts_as_convergent_support'] else 'no'} |"
             )
     else:
-        lines.append("No evidence from other assay/feature types for this standardized feature yet.")
+        lines.append("")
+        lines.append("No evidence from other molecular layers for this standardized feature yet.")
     lines.append("")
     lines.append("## Limitations")
     lines.append(f"- Quality flags present across contributing evidence: {candidate['quality_flags_union'] or 'none recorded'}")

@@ -122,7 +122,7 @@ computed from fields already in the evidence/candidate tables:
 | `direction_consistency_score` | agreement in direction of effect across studies | fraction of records matching majority direction |
 | `phenotype_relevance_score` | resilience vs. stress-response vs. exposure-only weighting | `phenotype` → ontology `resilience_relevance` |
 | `context_breadth_score` | spread across tissues/life stages | distinct `tissue` × `life_stage` combinations |
-| `assay_diversity_score` | number of distinct molecular layers (multi-omics convergence) | distinct `feature_type`/assay origin |
+| `assay_diversity_score` | molecular layers with significant same-phenotype support for the feature | `feature_type` → `molecular_layer` (feature_types vocabulary), `adjusted_p_value` |
 | `mapping_confidence_score` | how trustworthy the identifier harmonization is | `mapping_confidence` |
 | `quality_score` | study/data quality flags | `quality_flags` |
 | `heterogeneity_penalty` | subtracted; large cross-study inconsistency (I²) reduces score | meta-analysis `I2` |
@@ -139,11 +139,14 @@ audit or tune the score. The function is pure (same inputs → same score) so
    acceptable quality flags, and a pooled effect that survives
    Benjamini–Hochberg control within its phenotype/feature-type family
    (adjusted p ≤ 0.05).
-2. **Multi-omics convergence candidates** — evidence from ≥2 distinct molecular
-   layers mapped to the same standardized feature/orthogroup, with the mapping
-   path shown explicitly in the evidence card (this is why
+2. **Multi-omics convergence candidates** — ≥2 distinct molecular layers
+   (as declared per feature type in the `feature_types` vocabulary) each with
+   a significant record for the same standardized feature/orthogroup under the
+   same phenotype, the candidate's own layer among them, with the mapping path
+   shown explicitly in the evidence card (this is why
    `feature_id_standardized` and `mapping_confidence` are mandatory, not
-   optional, fields).
+   optional, fields). Cross-phenotype overlap is shown on the card but not
+   credited.
 3. **Emerging candidates** — single-study support, but biologically plausible
    or a strong effect; always explicitly labeled "requires replication" and
    excluded from the two tiers above regardless of score.

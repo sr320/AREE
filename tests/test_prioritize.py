@@ -113,7 +113,7 @@ def test_assay_diversity_never_crosses_origin_or_species_partitions():
     ])
 
     candidate = build_candidates(meta_df, evidence_df).iloc[0]
-    assert candidate["n_distinct_assays"] == 1
+    assert candidate["n_supporting_layers"] == 1
     assert candidate["mapping_confidences"] == "exact"
     assert candidate["quality_flags_union"] == ""
 
@@ -184,3 +184,103 @@ def test_ranking_matches_candidates_to_numeric_gene_ids():
     evidence = _two_study_evidence().assign(feature_id_standardized="105317636")
     candidate = build_candidates(meta, evidence).iloc[0]
     assert candidate["mapping_confidences"] == "exact"
+
+
+# --------------------------------------------------------------------------- #
+# Multi-omics convergence: same phenotype, significant in each layer
+# --------------------------------------------------------------------------- #
+
+
+def _gene_candidate(**overrides) -> pd.DataFrame:
+    row = _two_study_meta_row(
+        feature_id_standardized="GENE_X", phenotype="thermal_tolerance", k_studies=1,
+        studies="RNA", n_evidence_records=1, contributing_evidence_ids="rna",
+        p_value=1e-6, adjusted_p_value=1e-4, pooled_effect=1.8,
+    )
+    row.update(overrides)
+    return pd.DataFrame([row])
+
+
+def _record(evidence_id, study_id, feature_type, phenotype, adjusted_p, feature="GENE_X") -> dict:
+    return {
+        "evidence_id": evidence_id, "study_id": study_id, "feature_id_standardized": feature,
+        "phenotype": phenotype, "feature_type": feature_type, "simulated": False,
+        "species_taxid": 29159, "mapping_confidence": "exact", "quality_flags": [],
+        "adjusted_p_value": adjusted_p,
+    }
+
+
+def test_multi_omics_requires_a_second_layer_significant_under_the_same_phenotype():
+    evidence = pd.DataFrame([
+        _record("rna", "RNA", "gene", "thermal_tolerance", 1e-4),
+        _record("meth", "METH", "methylation_region", "thermal_tolerance", 0.01),
+    ])
+    candidate = build_candidates(_gene_candidate(), evidence).iloc[0]
+    assert candidate["tier"] == "multi_omics_convergence"
+    assert candidate["n_supporting_layers"] == 2
+    assert candidate["supporting_layers"] == "dna_methylation|transcriptomics"
+
+
+def test_other_layer_evidence_under_a_different_phenotype_is_not_convergence():
+    """A gene expressed under heat and methylated under pathogen challenge is
+    two observations about two questions."""
+    evidence = pd.DataFrame([
+        _record("rna", "RNA", "gene", "thermal_tolerance", 1e-4),
+        _record("meth", "METH", "methylation_region", "disease_susceptibility", 0.001),
+    ])
+    candidate = build_candidates(_gene_candidate(), evidence).iloc[0]
+    assert candidate["tier"] == "emerging"
+    assert candidate["n_supporting_layers"] == 1
+
+
+def test_other_layer_evidence_must_itself_be_significant():
+    evidence = pd.DataFrame([
+        _record("rna", "RNA", "gene", "thermal_tolerance", 1e-4),
+        _record("meth", "METH", "methylation_region", "thermal_tolerance", 0.4),
+    ])
+    candidate = build_candidates(_gene_candidate(), evidence).iloc[0]
+    assert candidate["tier"] == "emerging"
+
+
+def test_two_views_of_one_layer_do_not_count_as_two_layers():
+    """A DMR and a single-CpG DML for the same gene are one methylation layer."""
+    meta = _gene_candidate(feature_type="methylation_region", contributing_evidence_ids="dmr")
+    evidence = pd.DataFrame([
+        _record("dmr", "METH", "methylation_region", "thermal_tolerance", 1e-4),
+        _record("dml", "METH", "methylation_locus", "thermal_tolerance", 1e-3),
+    ])
+    candidate = build_candidates(meta, evidence).iloc[0]
+    assert candidate["n_supporting_layers"] == 1
+    assert candidate["tier"] == "emerging"
+
+
+def test_convergence_requires_the_candidate_itself_to_be_significant():
+    """Two other layers converging on a gene this candidate shows no signal for
+    is not evidence for this candidate."""
+    meta = _gene_candidate(p_value=0.6, adjusted_p_value=0.9)
+    evidence = pd.DataFrame([
+        _record("rna", "RNA", "gene", "thermal_tolerance", 0.9),
+        _record("meth", "METH", "methylation_region", "thermal_tolerance", 0.01),
+        _record("prot", "PROT", "protein", "thermal_tolerance", 0.01),
+    ])
+    candidate = build_candidates(meta, evidence).iloc[0]
+    assert candidate["n_supporting_layers"] == 2
+    assert candidate["tier"] == "emerging"
+
+
+def test_every_feature_type_declares_a_molecular_layer():
+    from common import load_vocab
+
+    for term_id, term in load_vocab("feature_types").items():
+        assert term.get("molecular_layer"), f"{term_id} has no molecular_layer"
+
+
+def test_demo_cross_layer_overlaps_are_all_cross_phenotype(isolated_reports):
+    """The simulated studies share genes across RNA-seq, methylation and
+    proteomics, but never under one phenotype, so none qualifies as
+    convergence. The card must still show the adjacent evidence."""
+    harmonize_all_demo_studies()
+    meta_df = run_meta_analysis(feature_type="gene")
+    candidates = build_candidates(meta_df, load_evidence_table())
+    assert (candidates["tier"] != "multi_omics_convergence").all()
+    assert (candidates["n_supporting_layers"] <= 1).all()

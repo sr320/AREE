@@ -114,10 +114,13 @@ supported by at least two independent studies, has a phenotype relevance
 above the exposure-only floor, has a direction consistency of at least 0.7,
 and clears a minimum data-quality threshold. A candidate lacking sufficient
 independent-study support but showing convergent evidence across at least
-two distinct molecular assay types (for example, transcriptomic and
-methylation evidence for the same standardized feature) is assigned to a
-multi-omics convergence tier, with the specific cross-assay linkage shown
-explicitly. All remaining candidates — including those with a strong effect
+two distinct molecular layers (for example, transcriptomic and methylation
+evidence for the same standardized feature), each significant after
+adjustment and each measured under the same phenotype, is assigned to a
+multi-omics convergence tier, with the specific cross-layer linkage shown
+explicitly; the link is shared gene identity, not a measured regulatory
+relationship, and evidence for the same feature under a different phenotype
+is displayed but not credited. All remaining candidates — including those with a strong effect
 in a single study — are assigned to an emerging tier and explicitly labeled
 as requiring independent replication. This gating structure is the
 mechanism by which the framework prevents a single study's statistical

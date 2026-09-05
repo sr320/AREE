@@ -1,16 +1,29 @@
-version: "0.1.0"
+# Feature types carried by evidence records.
+#
+# `molecular_layer` groups feature types into the omics layer they measure.
+# The multi-omics convergence tier counts *layers*, not feature types: a DMR
+# and a single-CpG DML for the same gene are two views of one methylation
+# layer, not two lines of convergent evidence.
+version: "0.2.0"
 terms:
   - id: gene
     label: Gene
+    molecular_layer: transcriptomics
   - id: transcript
     label: Transcript
+    molecular_layer: transcriptomics
   - id: protein
     label: Protein
+    molecular_layer: proteomics
   - id: methylation_region
     label: Methylation region (DMR)
+    molecular_layer: dna_methylation
   - id: methylation_locus
     label: Methylation locus (single CpG/DML)
+    molecular_layer: dna_methylation
   - id: metabolite_feature
     label: Metabolite feature
+    molecular_layer: metabolomics
   - id: genomic_region
     label: Genomic region (non-methylation, e.g. QTL/locus)
+    molecular_layer: genomic

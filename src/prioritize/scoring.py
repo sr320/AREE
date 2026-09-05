@@ -27,7 +27,7 @@ WEIGHTS = {
     "direction_consistency_score": 20,  # agreement in direction across studies matters as much as study count
     "phenotype_relevance_score": 10, # resilience > disease > stress_response > exposure_only
     "context_breadth_score": 5,      # spread across tissues/life stages
-    "assay_diversity_score": 10,     # multi-omics convergence
+    "assay_diversity_score": 10,     # molecular layers with significant same-phenotype support
     "mapping_confidence_score": 3,   # trust in the identifier harmonization itself
     "quality_score": 2,              # study/data quality flags
 }
@@ -87,7 +87,8 @@ def compute_components(meta_row: dict, mapping_confidences: list, quality_flags:
     meta_row is expected to have the columns produced by
     meta_analysis.run.run_meta_analysis (k_studies, total_sample_size,
     pooled_effect, p_value, adjusted_p_value, direction_consistency,
-    distinct_tissues, distinct_life_stages, i_squared, phenotype).
+    distinct_tissues, distinct_life_stages, i_squared, phenotype) plus
+    n_supporting_layers, which prioritize.rank adds.
     """
     relevance = _phenotype_relevance().get(meta_row["phenotype"], "exposure_only")
 
@@ -107,7 +108,7 @@ def compute_components(meta_row: dict, mapping_confidences: list, quality_flags:
         "context_breadth_score": _clip01(
             (meta_row["distinct_tissues"] * meta_row["distinct_life_stages"]) / 3.0
         ),
-        "assay_diversity_score": _clip01(meta_row.get("n_distinct_assays", 1) / 3.0),
+        "assay_diversity_score": _clip01(meta_row.get("n_supporting_layers", 1) / 3.0),
         "mapping_confidence_score": worst_mapping,
         "quality_score": _clip01(1 - len(quality_flags) / 5.0),
         "heterogeneity_penalty": _clip01(meta_row.get("i_squared", 0.0) / 100.0),

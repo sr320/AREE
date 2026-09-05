@@ -26,7 +26,7 @@ positive components:
 | `effect_magnitude_score` | 10 | typical absolute pooled effect (`|pooled_effect| / 2`, capped) | pooled `effect_size` |
 | `significance_score` | 10 | adjusted-significance strength (`-log10(p) / 5`, capped) | pooled `p_value` |
 | `phenotype_relevance_score` | 10 | resilience (1.0) > disease (0.8) > stress_response (0.4) > exposure_only (0.1) | phenotype's `resilience_relevance` |
-| `assay_diversity_score` | 10 | number of distinct molecular layers/feature types (`n_distinct_assays / 3`, capped) | distinct `feature_type` |
+| `assay_diversity_score` | 10 | molecular layers with a significant record for this feature under this phenotype (`n_supporting_layers / 3`, capped) | `feature_type` → `molecular_layer`, `adjusted_p_value` |
 | `context_breadth_score` | 5 | spread across tissues × life stages (`/3`, capped) | distinct `tissue` × `life_stage` |
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
@@ -63,7 +63,7 @@ is_high_priority = (
     and quality_score >= 0.4
     and adjusted_p_value <= 0.05
 )
-is_multi_omics = n_distinct_assays >= 2
+is_multi_omics = own_layer in supporting_layers and n_supporting_layers >= 2
 ```
 
 Tier assignment, in order:
@@ -80,9 +80,25 @@ Tier assignment, in order:
      Without this gate, two genome-wide studies promote every gene whose
      effects happen to share a sign: on the first real OsHV-1 pool that was
      12,658 of 23,094 genes, 8,533 of them with pooled `p > 0.05`.
-2. **`multi_omics_convergence`** — evidence from `>= 2` distinct
-   `feature_type`s mapped to the same standardized feature (checked only if
-   the candidate did not already qualify for `high_priority_cross_study`).
+2. **`multi_omics_convergence`** — at least two **molecular layers**
+   (`transcriptomics`, `dna_methylation`, `proteomics`, `metabolomics`, as
+   declared per feature type in
+   `registry/controlled_vocabularies/feature_types.yaml`) each carry a
+   significant record (study-level adjusted p ≤ 0.05) for the same
+   standardized feature under the **same phenotype**, and the candidate's own
+   layer is one of them. Checked only if the candidate did not already
+   qualify for `high_priority_cross_study`.
+
+   Three things this deliberately does *not* count: a DMR and a single-CpG
+   DML for one gene (two views of one methylation layer); a gene expressed
+   under heat and methylated under pathogen challenge (two questions, not
+   convergent evidence for either); and two other layers converging on a gene
+   the candidate itself shows no signal for. Before 2026-09-05 the gate was
+   "≥ 2 distinct feature types anywhere for this gene", which promoted 27 of
+   the 48 simulated demo candidates; under the current gate none of them
+   qualifies, because every cross-layer overlap in the demo is
+   cross-phenotype. The card still lists that adjacent evidence and marks
+   each row with whether it counts.
 3. **`emerging`** — everything else: single-study support, or support that
    fails one or more of the high-priority gates. Always labeled as requiring
    replication.

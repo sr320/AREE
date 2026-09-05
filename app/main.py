@@ -126,7 +126,7 @@ with tab_candidates:
             show_cols = [
                 "feature_id_standardized", "phenotype", "feature_type", "simulated",
                 "species_taxid", "tier", "score",
-                "k_studies", "n_distinct_assays", "direction_consistency", "i_squared", "pooled_effect",
+                "k_studies", "n_supporting_layers", "direction_consistency", "i_squared", "pooled_effect",
                 "adjusted_p_value",
             ]
             st.dataframe(view[show_cols], use_container_width=True, hide_index=True)
@@ -137,7 +137,9 @@ with tab_candidates:
             st.markdown(
                 "- **high_priority_cross_study** — ≥2 independent studies, interpretable phenotype, "
                 "direction consistency ≥ 0.7, acceptable quality, and BH-adjusted pooled p ≤ 0.05.\n"
-                "- **multi_omics_convergence** — same standardized feature supported by ≥2 molecular layers.\n"
+                "- **multi_omics_convergence** — ≥2 molecular layers (e.g. transcriptomics + DNA methylation) "
+                "each with a significant record for the same standardized feature under the **same phenotype**, "
+                "including the candidate's own layer.\n"
                 "- **emerging** — single-study or otherwise unconfirmed; **requires replication**."
             )
 

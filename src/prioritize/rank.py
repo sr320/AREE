@@ -12,8 +12,11 @@ the whole table per candidate, which is what makes a genome-wide pool of
 from __future__ import annotations
 
 import ast
+from functools import lru_cache
 
 import pandas as pd
+
+from common import load_vocab
 
 from .scoring import candidate_score, compute_components, significance_p_value
 
@@ -24,7 +27,13 @@ HIGH_PRIORITY_MIN_QUALITY_SCORE = 0.4
 # study count and direction consistency alone cannot define the top tier. The
 # pooled effect must also survive family-wise false-discovery control.
 HIGH_PRIORITY_MAX_ADJUSTED_P = 0.05
-MULTI_OMICS_MIN_ASSAYS = 2
+# Multi-omics convergence counts molecular *layers* (transcriptomics, DNA
+# methylation, proteomics, ...) that each carry a significant record for the
+# same feature under the SAME phenotype. A gene differentially expressed under
+# heat and differentially methylated under pathogen challenge is two
+# observations about two questions, not convergent evidence for either.
+MULTI_OMICS_MIN_LAYERS = 2
+LAYER_SUPPORT_MAX_ADJUSTED_P = 0.05
 
 # Order in which tiers are presented: strongest evidence first.
 TIER_ORDER = ["high_priority_cross_study", "multi_omics_convergence", "emerging"]
@@ -63,6 +72,19 @@ def add_partition_columns(evidence_df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+@lru_cache(maxsize=1)
+def molecular_layers() -> dict:
+    """feature_type -> molecular_layer, from the feature_types vocabulary."""
+    return {
+        term_id: term.get("molecular_layer", term_id)
+        for term_id, term in load_vocab("feature_types").items()
+    }
+
+
+def layer_of(feature_type: str) -> str:
+    return molecular_layers().get(feature_type, str(feature_type))
+
+
 def candidate_key(meta_row: dict) -> tuple:
     return (
         str(meta_row["feature_id_standardized"]),
@@ -80,11 +102,21 @@ class EvidenceIndex:
         evidence = add_partition_columns(evidence_df)
         mapped = evidence[evidence["feature_id_standardized"].notna()].copy()
         mapped["feature_id_standardized"] = mapped["feature_id_standardized"].astype(str)
+        mapped["_layer"] = mapped["feature_type"].map(layer_of)
+        adjusted = (
+            pd.to_numeric(mapped["adjusted_p_value"], errors="coerce")
+            if "adjusted_p_value" in mapped.columns
+            else pd.Series(float("nan"), index=mapped.index)
+        )
+        mapped["_significant"] = adjusted.notna() & (adjusted <= LAYER_SUPPORT_MAX_ADJUSTED_P)
         self.evidence = mapped
         self._by_candidate = mapped.groupby(CANDIDATE_GROUP_COLUMNS, sort=False).indices
         self._by_feature = mapped.groupby(FEATURE_GROUP_COLUMNS, sort=False).indices
-        self.assay_diversity = (
-            mapped.groupby(FEATURE_GROUP_COLUMNS)["feature_type"].nunique().to_dict()
+        # Layers with at least one significant record, per feature + phenotype + partition.
+        significant = mapped[mapped["_significant"]]
+        self._supported_layers = (
+            significant.groupby(["feature_id_standardized", "phenotype", *PARTITION_COLUMNS])["_layer"]
+            .agg(set).to_dict()
         )
 
     def _slice(self, index, key) -> pd.DataFrame:
@@ -106,15 +138,24 @@ class EvidenceIndex:
         wanted = set(str(ids).split("|"))
         return subset[subset["evidence_id"].astype(str).isin(wanted)]
 
-    def other_feature_types(self, meta_row: dict) -> pd.DataFrame:
-        """Records for the same feature and partition from OTHER feature types."""
+    def other_layers(self, meta_row: dict) -> pd.DataFrame:
+        """Records for the same feature and partition from OTHER molecular layers,
+        under any phenotype. Callers use `phenotype` and `_significant` on the
+        result to separate convergent support from merely adjacent evidence."""
         key = candidate_key(meta_row)
         same_feature = self._slice(self._by_feature, (key[0], key[3], key[4]))
-        return same_feature[same_feature["feature_type"] != meta_row["feature_type"]]
+        return same_feature[same_feature["_layer"] != layer_of(meta_row["feature_type"])]
 
-    def n_distinct_assays(self, meta_row: dict) -> int:
+    def supporting_layers(self, meta_row: dict) -> set:
+        """Molecular layers with a significant record for this feature under
+        this candidate's own phenotype and partition. The candidate's own layer
+        also counts when its pooled estimate is significant, even if no single
+        contributing record is."""
         key = candidate_key(meta_row)
-        return int(self.assay_diversity.get((key[0], key[3], key[4]), 1))
+        layers = set(self._supported_layers.get((key[0], key[1], key[3], key[4]), set()))
+        if significance_p_value(meta_row) <= LAYER_SUPPORT_MAX_ADJUSTED_P:
+            layers.add(layer_of(meta_row["feature_type"]))
+        return layers
 
 
 def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.DataFrame:
@@ -128,9 +169,11 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         subset = index.contributing(meta_dict)
         mapping_confidences = sorted(subset["mapping_confidence"].unique())
         quality_flags = sorted({f for flags in subset["quality_flags"] for f in _parse_flags(flags)})
-        n_distinct_assays = index.n_distinct_assays(meta_dict)
+        own_layer = layer_of(meta_dict["feature_type"])
+        supporting = index.supporting_layers(meta_dict)
+        n_supporting_layers = len(supporting)
 
-        meta_dict["n_distinct_assays"] = n_distinct_assays
+        meta_dict["n_supporting_layers"] = n_supporting_layers
         components = compute_components(meta_dict, mapping_confidences, quality_flags)
         score = candidate_score(components)
 
@@ -141,7 +184,10 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             and components["quality_score"] >= HIGH_PRIORITY_MIN_QUALITY_SCORE
             and significance_p_value(meta_dict) <= HIGH_PRIORITY_MAX_ADJUSTED_P
         )
-        is_multi_omics = n_distinct_assays >= MULTI_OMICS_MIN_ASSAYS
+        # The candidate's own layer must be among the supporters: two other
+        # layers converging on a gene this candidate itself shows no signal for
+        # is not evidence for this candidate.
+        is_multi_omics = own_layer in supporting and n_supporting_layers >= MULTI_OMICS_MIN_LAYERS
 
         if is_high_priority:
             tier = "high_priority_cross_study"
@@ -156,7 +202,9 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             "tier": tier,
             "is_high_priority": is_high_priority,
             "is_multi_omics_convergence": is_multi_omics,
-            "n_distinct_assays": n_distinct_assays,
+            "molecular_layer": own_layer,
+            "n_supporting_layers": n_supporting_layers,
+            "supporting_layers": "|".join(sorted(supporting)),
             "mapping_confidences": "|".join(mapping_confidences),
             "quality_flags_union": "|".join(quality_flags),
             **{f"component_{k}": v for k, v in components.items()},

@@ -151,3 +151,15 @@ def test_card_reports_the_adjusted_pooled_p_and_family_size(isolated_reports):
     content = Path(hsp70["card_file"]).read_text()
     assert "BH-adjusted across the" in content
     assert "| adj. p |" in content
+
+
+def test_card_shows_other_layer_evidence_and_says_it_does_not_count(isolated_reports):
+    harmonize_all_demo_studies()
+    index = build_evidence_cards(phenotype="thermal_tolerance", feature_type="gene")
+    hsp70 = next(e for e in index if e["feature_id_standardized"] == "LOC105333935")
+    content = Path(hsp70["card_file"]).read_text()
+    assert "own layer is `transcriptomics`" in content
+    # methylation evidence for hsp70 exists, but under disease_susceptibility
+    assert "dna_methylation" in content
+    assert "| no | yes | no |" in content or "| no |" in content
+    assert "**How the layers were linked:**" not in content
