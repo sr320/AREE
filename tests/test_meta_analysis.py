@@ -202,4 +202,6 @@ def test_numeric_gene_ids_survive_as_text(isolated_reports):
 
     result = run_meta_analysis(feature_type=row["feature_type"])
     assert result["feature_id_standardized"].tolist() == ["105317636"]
-    assert result["feature_id_standardized"].dtype == object
+    # pandas 2 keeps text as object dtype, pandas 3 as StringDtype; the contract
+    # is that the value is text, not which dtype holds it.
+    assert isinstance(result["feature_id_standardized"].iloc[0], str)
