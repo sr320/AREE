@@ -21,6 +21,11 @@ from intake.schema_validate import validate_study_file
 from meta_analysis.run import write_meta_analysis
 from prioritize.rank import TIER_ORDER
 from reporting.evidence_cards import DEFAULT_MAX_ADJUSTED_P, build_evidence_cards_report
+from reporting.top_candidates import (
+    DEFAULT_CANDIDATES_PATH,
+    DEFAULT_OUT_PATH,
+    build_top_candidates_summary,
+)
 
 
 def _today() -> str:
@@ -253,6 +258,24 @@ def build_evidence_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards)
     for tier in TIER_ORDER:
         if tier in tiers:
             click.echo(f"  {tier}: {tiers[tier]}")
+
+
+@main.command("top-candidates")
+@click.option("--n", "n", default=10, show_default=True, type=int,
+              help="Number of top-ranked candidates to show per phenotype.")
+@click.option("--candidates", "candidates_path", default=DEFAULT_CANDIDATES_PATH, show_default=True,
+              type=click.Path(exists=True, path_type=Path),
+              help="Path to a ranked candidates.tsv (from `aree build-evidence-cards`).")
+@click.option("--out", "out_path", default=DEFAULT_OUT_PATH, show_default=True, type=click.Path(path_type=Path),
+              help="Where to write the Markdown summary.")
+def top_candidates_cmd(n, candidates_path, out_path):
+    """Summarize the top-N ranked candidates per phenotype from an existing candidates.tsv."""
+    try:
+        out = build_top_candidates_summary(n=n, candidates_path=candidates_path, out_path=out_path)
+    except FileNotFoundError as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    click.echo(click.style(f"Wrote top-{n}-per-phenotype summary to {out}", fg="green"))
 
 
 @main.command("build-crosswalk")
