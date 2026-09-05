@@ -16,10 +16,11 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 
 from common import EVIDENCE_TABLE_PATH, REPORTS_DIR
 
-from .effect_sizes import effective_standard_error
+from .effect_sizes import MIN_P
 from .pooling import benjamini_hochberg, dersimonian_laird
 
 META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
@@ -71,51 +72,77 @@ RESULT_COLUMNS = [
 ]
 
 
-def _poolable_group(group: pd.DataFrame) -> pd.DataFrame:
-    """Return only records that can actually enter inverse-variance pooling."""
-    poolable = group.copy()
-    poolable["_effective_se"] = [
-        effective_standard_error(row.effect_size, row.standard_error, row.p_value)
-        for row in group.itertuples()
-    ]
-    return poolable[
-        poolable["_effective_se"].notna() & (poolable["_effective_se"] > 0)
-    ].copy()
+def effective_standard_errors(evidence: pd.DataFrame) -> np.ndarray:
+    """Vectorized twin of `effect_sizes.effective_standard_error`, for the whole table.
+
+    Use a reported standard error when it is present and positive; otherwise back
+    one out of the effect size and unadjusted p-value under the normal
+    approximation (se = |effect| / Phi^-1(1 - p/2)). NaN where neither is
+    possible. Computing this once for 50k rows is what removed the largest
+    per-group cost from the meta-analysis.
+    """
+    effect = pd.to_numeric(evidence["effect_size"], errors="coerce").to_numpy(dtype=float)
+    reported = pd.to_numeric(evidence["standard_error"], errors="coerce").to_numpy(dtype=float)
+    p = pd.to_numeric(evidence["p_value"], errors="coerce").to_numpy(dtype=float)
+
+    out = np.full(len(evidence), np.nan)
+    use_reported = np.isfinite(reported) & (reported > 0)
+    out[use_reported] = reported[use_reported]
+
+    need = ~use_reported & np.isfinite(effect) & np.isfinite(p) & (effect != 0)
+    if need.any():
+        p_clipped = np.clip(p[need], MIN_P, 1.0 - 1e-16)
+        z = norm.ppf(1 - p_clipped / 2)
+        approx = np.where(z > 0, np.abs(effect[need]) / z, np.nan)
+        out[need] = approx
+    return out
 
 
-def _deduplicate_identifier_collisions(group: pd.DataFrame, keys: tuple) -> tuple[pd.DataFrame, int]:
+def _describe_group(keys: tuple) -> str:
+    feature_id, phenotype, feature_type, simulated, species_taxid = keys
+    return (
+        f"Group feature={feature_id!r}, phenotype={phenotype!r}, "
+        f"feature_type={feature_type!r}, simulated={simulated!r}, "
+        f"species_taxid={species_taxid!r}"
+    )
+
+
+def _deduplicate_identifier_collisions(
+    study: np.ndarray, comparison: np.ndarray, rank: np.ndarray, original: np.ndarray, keys: tuple
+) -> tuple[np.ndarray, int]:
     """Keep a uniquely best mapping when source IDs collapse within a comparison.
 
     A lower-confidence alias must not become a second biological effect. Equal-
-    confidence collisions remain ambiguous and fail closed.
+    confidence collisions remain ambiguous and fail closed. Returns the positions
+    (into the group arrays) to keep and how many rows were dropped.
     """
-    selected = []
-    excluded_count = 0
-    for (study_id, comparison_id), comparison_group in group.groupby(
-        ["study_id", "comparison_id"], sort=False
-    ):
-        if len(comparison_group) == 1:
-            selected.append(comparison_group.index[0])
+    if len(study) == 1:
+        return np.array([0]), 0
+    keep = []
+    excluded = 0
+    seen: dict = {}
+    for pos in range(len(study)):
+        seen.setdefault((study[pos], comparison[pos]), []).append(pos)
+    for (study_id, comparison_id), positions in seen.items():
+        if len(positions) == 1:
+            keep.append(positions[0])
             continue
-        ranks = comparison_group["mapping_confidence"].map(MAPPING_CONFIDENCE_RANK).fillna(-1)
-        best = comparison_group[ranks == ranks.max()]
+        ranks = rank[positions]
+        best = [positions[i] for i in range(len(positions)) if ranks[i] == ranks.max()]
         if len(best) != 1:
-            feature_id, phenotype, feature_type, simulated, species_taxid = keys
-            originals = ", ".join(sorted(comparison_group["feature_id_original"].astype(str)))
+            originals = ", ".join(sorted(str(original[i]) for i in positions))
             raise ValueError(
                 "Multiple source identifiers with equal mapping confidence resolve to the same "
-                f"meta-analysis feature. Group feature={feature_id!r}, phenotype={phenotype!r}, "
-                f"feature_type={feature_type!r}, simulated={simulated!r}, "
-                f"species_taxid={species_taxid!r}; study={study_id!r}, "
+                f"meta-analysis feature. {_describe_group(keys)}; study={study_id!r}, "
                 f"comparison={comparison_id!r}; source identifiers: {originals}. Resolve the "
                 "identifier collision explicitly before pooling."
             )
-        selected.append(best.index[0])
-        excluded_count += len(comparison_group) - 1
-    return group.loc[selected].copy(), excluded_count
+        keep.append(best[0])
+        excluded += len(positions) - 1
+    return np.array(sorted(keep)), excluded
 
 
-def _reject_correlated_within_study_effects(group: pd.DataFrame, keys: tuple) -> None:
+def _reject_correlated_within_study_effects(study: np.ndarray, comparison: np.ndarray, keys: tuple) -> None:
     """Fail closed when one study contributes multiple effects to one pool.
 
     AREE does not yet carry the covariance needed to combine contrasts that
@@ -123,34 +150,36 @@ def _reject_correlated_within_study_effects(group: pd.DataFrame, keys: tuple) ->
     uncertainty, so require curation/modeling rather than choosing a contrast
     or correlation silently.
     """
-    duplicated = group[group.duplicated("study_id", keep=False)]
-    if duplicated.empty:
+    if len(set(study)) == len(study):
         return
+    by_study: dict = {}
+    for study_id, comparison_id in zip(study, comparison):
+        by_study.setdefault(study_id, set()).add(str(comparison_id))
     details = "; ".join(
-        f"{study_id}: {', '.join(sorted(study_group['comparison_id'].astype(str).unique()))}"
-        for study_id, study_group in duplicated.groupby("study_id")
+        f"{study_id}: {', '.join(sorted(comparisons))}"
+        for study_id, comparisons in sorted(by_study.items()) if len(comparisons) > 1
     )
-    feature_id, phenotype, feature_type, simulated, species_taxid = keys
     raise ValueError(
         "Meta-analysis cannot treat multiple comparisons from one study as independent. "
-        f"Group feature={feature_id!r}, phenotype={phenotype!r}, "
-        f"feature_type={feature_type!r}, simulated={simulated!r}, "
-        f"species_taxid={species_taxid!r} contains {details}. Select one prespecified "
+        f"{_describe_group(keys)} contains {details}. Select one prespecified "
         "comparison per study or implement a covariance-aware within-study model."
     )
 
 
-def _direction_consistency(effect_sizes: pd.Series) -> float:
-    signs = effect_sizes.apply(lambda v: 1 if v > 0 else (-1 if v < 0 else 0))
+def _direction_consistency(effects: np.ndarray) -> float:
+    signs = np.sign(effects)
     nonzero = signs[signs != 0]
     if len(nonzero) == 0:
         return 0.0
-    majority_count = max((nonzero == 1).sum(), (nonzero == -1).sum())
-    return float(majority_count / len(nonzero))
+    return float(max((nonzero > 0).sum(), (nonzero < 0).sum()) / len(nonzero))
 
 
 def _load_evidence_for_pooling() -> pd.DataFrame:
     return pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False, dtype=_ID_COLUMNS)
+
+
+def _joined(values) -> str:
+    return "|".join(sorted({str(v) for v in values}))
 
 
 def adjust_within_families(result_df: pd.DataFrame) -> pd.DataFrame:
@@ -188,20 +217,47 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
         df = df[df["phenotype"] == phenotype]
     if feature_type:
         df = df[df["feature_type"] == feature_type]
+    df = df.reset_index(drop=True)
+    if len(df) == 0:
+        return pd.DataFrame()
+
+    # Everything the per-group step needs, as flat arrays. Slicing a numpy array
+    # by a handful of positions costs microseconds; slicing a DataFrame costs
+    # milliseconds, and there are tens of thousands of groups.
+    effect = pd.to_numeric(df["effect_size"], errors="coerce").to_numpy(dtype=float)
+    se = effective_standard_errors(df)
+    poolable_mask = np.isfinite(se) & (se > 0)
+    sample_size = pd.to_numeric(df["sample_size"], errors="coerce").fillna(0).to_numpy()
+    rank = df["mapping_confidence"].map(MAPPING_CONFIDENCE_RANK).fillna(-1).to_numpy()
+    cols = {
+        name: df[name].to_numpy(dtype=object)
+        for name in ("study_id", "comparison_id", "evidence_id", "feature_id_original",
+                     "tissue", "life_stage", "stressor", "mapping_confidence")
+    }
+    flag_cache: dict = {}
+    flags = np.array(
+        [tuple(flag_cache.setdefault(v, _parse_flags(v)) if isinstance(v, str) else _parse_flags(v))
+         for v in df["quality_flags"].tolist()],
+        dtype=object,
+    )
 
     results = []
-    for keys, group in df.groupby(GROUP_KEYS, dropna=False):
-        feature_id, pheno, ftype, simulated, species_taxid = keys
-        poolable_candidates = _poolable_group(group)
-        unpoolable = group.loc[~group.index.isin(poolable_candidates.index)]
-        if poolable_candidates.empty:
+    for keys, positions in df.groupby(GROUP_KEYS, dropna=False, sort=True).indices.items():
+        positions = np.asarray(positions)
+        pool_pos = positions[poolable_mask[positions]]
+        if len(pool_pos) == 0:
             continue
-        poolable, n_duplicate_mappings = _deduplicate_identifier_collisions(poolable_candidates, keys)
-        _reject_correlated_within_study_effects(poolable, keys)
+        unpool_pos = positions[~poolable_mask[positions]]
 
-        yi = poolable["effect_size"].astype(float).tolist()
-        sei = poolable["_effective_se"].astype(float).tolist()
-        pooled = dersimonian_laird(yi, sei)
+        keep, n_duplicate_mappings = _deduplicate_identifier_collisions(
+            cols["study_id"][pool_pos], cols["comparison_id"][pool_pos],
+            rank[pool_pos], cols["feature_id_original"][pool_pos], keys,
+        )
+        pool_pos = pool_pos[keep]
+        _reject_correlated_within_study_effects(cols["study_id"][pool_pos], cols["comparison_id"][pool_pos], keys)
+
+        pooled = dersimonian_laird(effect[pool_pos], se[pool_pos])
+        feature_id, pheno, ftype, simulated, species_taxid = keys
 
         results.append({
             "feature_id_standardized": feature_id,
@@ -209,15 +265,15 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "feature_type": ftype,
             "simulated": simulated,
             "species_taxid": species_taxid,
-            "k_studies": poolable["study_id"].nunique(),
-            "studies": "|".join(sorted(poolable["study_id"].unique())),
-            "n_evidence_records": len(poolable),
-            "n_available_records": len(group),
-            "n_excluded_unpoolable": len(unpoolable),
+            "k_studies": len(set(cols["study_id"][pool_pos])),
+            "studies": _joined(cols["study_id"][pool_pos]),
+            "n_evidence_records": len(pool_pos),
+            "n_available_records": len(positions),
+            "n_excluded_unpoolable": len(unpool_pos),
             "n_excluded_duplicate_mappings": n_duplicate_mappings,
-            "excluded_studies": "|".join(sorted(unpoolable["study_id"].unique())),
-            "contributing_evidence_ids": "|".join(sorted(poolable["evidence_id"].astype(str))),
-            "total_sample_size": int(poolable["sample_size"].sum()),
+            "excluded_studies": _joined(cols["study_id"][unpool_pos]),
+            "contributing_evidence_ids": _joined(cols["evidence_id"][pool_pos]),
+            "total_sample_size": int(sample_size[pool_pos].sum()),
             "pooled_effect": pooled.pooled_effect,
             "pooled_se": pooled.pooled_se,
             "ci_lower": pooled.ci_lower,
@@ -227,12 +283,12 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "q_statistic": pooled.q_statistic,
             "i_squared": pooled.i_squared,
             "tau_squared": pooled.tau_squared,
-            "direction_consistency": _direction_consistency(poolable["effect_size"]),
-            "distinct_tissues": poolable["tissue"].nunique(),
-            "distinct_life_stages": poolable["life_stage"].nunique(),
-            "distinct_stressors": "|".join(sorted(poolable["stressor"].unique())),
-            "mapping_confidences": "|".join(sorted(poolable["mapping_confidence"].unique())),
-            "quality_flags_union": "|".join(sorted({f for flags in poolable["quality_flags"] for f in _parse_flags(flags)})),
+            "direction_consistency": _direction_consistency(effect[pool_pos]),
+            "distinct_tissues": len(set(cols["tissue"][pool_pos])),
+            "distinct_life_stages": len(set(cols["life_stage"][pool_pos])),
+            "distinct_stressors": _joined(cols["stressor"][pool_pos]),
+            "mapping_confidences": _joined(cols["mapping_confidence"][pool_pos]),
+            "quality_flags_union": _joined(f for fl in flags[pool_pos] for f in fl),
         })
 
     result_df = pd.DataFrame(results)

@@ -205,3 +205,27 @@ def test_numeric_gene_ids_survive_as_text(isolated_reports):
     # pandas 2 keeps text as object dtype, pandas 3 as StringDtype; the contract
     # is that the value is text, not which dtype holds it.
     assert isinstance(result["feature_id_standardized"].iloc[0], str)
+
+
+def test_vectorized_standard_errors_match_the_scalar_definition():
+    """`effective_standard_errors` is the whole-table twin of
+    `effective_standard_error`; they must agree on every edge case."""
+    import numpy as np
+
+    from meta_analysis.effect_sizes import effective_standard_error
+    from meta_analysis.run import effective_standard_errors
+
+    rows = pd.DataFrame({
+        "effect_size":    [1.0, 1.0,  -2.0, 0.0,  1.5,  1.5, None, 0.8,  3.0],
+        "standard_error": [0.2, None, None, None, 0.0,  -1., 0.3,  None, None],
+        "p_value":        [0.5, 0.05, 1e-9, 0.01, 0.02, 0.5, 0.01, None, 0.0],
+    })
+    vectorized = effective_standard_errors(rows)
+    for i, row in rows.iterrows():
+        scalar = effective_standard_error(row["effect_size"], row["standard_error"], row["p_value"])
+        # The scalar helper returns None for missing inputs but propagates NaN
+        # when the p-value itself is NaN; both mean "no usable SE".
+        if scalar is None or scalar != scalar:
+            assert np.isnan(vectorized[i]), f"row {i}: scalar missing, vectorized {vectorized[i]}"
+        else:
+            assert np.isclose(vectorized[i], scalar), f"row {i}: {vectorized[i]} vs {scalar}"
