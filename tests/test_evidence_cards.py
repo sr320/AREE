@@ -163,3 +163,18 @@ def test_card_shows_other_layer_evidence_and_says_it_does_not_count(isolated_rep
     assert "dna_methylation" in content
     assert "| no | yes | no |" in content or "| no |" in content
     assert "**How the layers were linked:**" not in content
+
+
+def test_intergenic_methylation_regions_stay_in_the_methylation_layer(isolated_reports):
+    """An intergenic DMR is still a methylation region. `genomic_region` is the
+    vocabulary's non-methylation feature type (QTL/locus); the gene-mapping
+    outcome belongs in mapping_confidence, not the feature type."""
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    methylation = evidence[evidence["study_id"] == "GIGAS_PATH03"]
+    assert set(methylation["feature_type"]) == {"methylation_region"}
+    intergenic = methylation[methylation["feature_id_original"].str.startswith("DMR")]
+    assert len(intergenic) == 2
+    assert set(intergenic["mapping_confidence"]) == {"unresolved"}
+    assert intergenic["feature_id_standardized"].isna().all()
+    assert "genomic_region" not in set(evidence["feature_type"])

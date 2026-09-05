@@ -1,9 +1,13 @@
 """Harmonize a DML/DMR table into evidence records.
 
-Regions annotated to a gene are resolved via the gene identifier crosswalk;
-intergenic regions (no gene_id) are kept as genomic_region features with
-mapping_confidence 'unresolved' rather than dropped, per the no-silent-loss
-provenance requirement.
+Every row is a methylation region (feature_type 'methylation_region'), whether
+or not it is annotated to a gene. Regions with a gene_id are resolved via the
+gene identifier crosswalk; intergenic regions (no gene_id) keep their region_id
+as feature_id_original with mapping_confidence 'unresolved' rather than being
+dropped, per the no-silent-loss provenance requirement. They used to be typed
+'genomic_region', which the feature_types vocabulary defines as a
+non-methylation feature (QTL/locus) — the gene mapping outcome is recorded in
+mapping_confidence, not in the feature type.
 """
 from __future__ import annotations
 
@@ -39,14 +43,13 @@ def harmonize_methylation(
     for _, r in df.iterrows():
         gene_id = r.get("gene_id")
         has_gene = pd.notna(gene_id) and str(gene_id).strip() != ""
+        feature_type = "methylation_region"
         if has_gene:
             resolved = resolve_identifier(gene_id, "ncbi_gene_id")
             feature_id_original = gene_id
-            feature_type = "methylation_region"
         else:
             resolved = ResolvedIdentifier(None, "unresolved", None)
             feature_id_original = r["region_id"]
-            feature_type = "genomic_region"
 
         meth_diff = float(r["meth_diff_percent"]) if pd.notna(r.get("meth_diff_percent")) else None
 

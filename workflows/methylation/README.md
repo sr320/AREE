@@ -117,7 +117,7 @@ what `src/harmonize/methylation.py` expects:
 | `chrom` | chromosome/scaffold |
 | `start` | region start coordinate |
 | `end` | region end coordinate |
-| `gene_id` | **optional/nullable.** Intergenic regions have no `gene_id` and are *kept*, never dropped (see `src/harmonize/methylation.py`, which routes gene-less rows to `feature_type = genomic_region` with `mapping_confidence = unresolved` rather than discarding them) |
+| `gene_id` | **optional/nullable.** Intergenic regions have no `gene_id` and are *kept*, never dropped (see `src/harmonize/methylation.py`, which keeps gene-less rows as `feature_type = methylation_region` with `feature_id_original = region_id` and `mapping_confidence = unresolved` rather than discarding them) |
 | `annotation_context` | `promoter` \| `exon` \| `intron` \| `gene_body` \| `intergenic` |
 | `meth_diff_percent` | signed methylation difference, treatment − control |
 | `qvalue` | multiple-testing-adjusted p-value from methylKit (or as supplied in processed mode) |
