@@ -133,7 +133,7 @@ def test_unknown_exposure_parameters_are_null_not_invented(study):
 
 
 def test_analysis_status_reflects_partial_full_depth_reanalysis(study):
-    """Two full-depth comparisons have been run; the remaining four are still pending."""
+    """Three full-depth comparisons have been run; the remaining three are still pending."""
     assert study["analysis_status"] == "in_progress"
     assert study["qc_status"] == "in_progress"
     completed = {
@@ -145,6 +145,10 @@ def test_analysis_status_reflects_partial_full_depth_reanalysis(study):
         "midori_oshv1_australia_vs_control": (
             "data/studies/CALLA2026_OSHV/"
             "CALLA2026_OSHV_midori_oshv1_australia_vs_control_dge_standardized.tsv"
+        ),
+        "midori_oshv1_france_vs_control": (
+            "data/studies/CALLA2026_OSHV/"
+            "CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv"
         ),
         "miyagi_oshv1_usa_vs_control": (
             "data/studies/CALLA2026_OSHV/"

@@ -7,11 +7,11 @@
 # p-value, so the study can contribute to inverse-variance-weighted pooling —
 # which HESSER2024_VCOR cannot. See docs/candidate_studies.md.
 #
-# NOTHING HAS BEEN HARMONIZED FROM THIS STUDY YET. The sample sheet, FASTQ
-# manifest, and reference context below are complete and verified; the
-# workflow run that produces the result tables has not been executed (226 GB
-# of reads, 42 paired-end NovaSeq libraries). analysis_status reflects that
-# honestly. See docs/first_raw_reanalysis.md.
+# Three of the six comparisons have been run at full depth and harmonized; the
+# other three have not been run (42 paired-end NovaSeq libraries, 226 GB in
+# total). analysis_status is in_progress accordingly. Only the comparison
+# marked meta_analysis_primary enters cross-study pools. See
+# docs/first_raw_reanalysis.md for per-comparison status.
 
 study_id: CALLA2026_OSHV
 simulated: false
@@ -109,7 +109,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 11
     biological_replicates: 5
-    results_file: null
+    results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv"
 
   - comparison_id: "midori_oshv1_usa_vs_control"
     tissue: "whole_animal"
@@ -206,11 +206,12 @@ limitations: >
   the current NCBI reference annotation, which may differ from the authors' own
   transcriptome-assembly-based analysis; results are not expected to reproduce
   the paper's figures exactly and are not a replication of it. (6) The
-  Miyagi USA-vs-control and Midori Australia-vs-control comparisons have been
-  run at full read depth and harmonized; the remaining four registered
-  comparisons are still pending. Because they pair different populations with
-  different isolates, the two completed comparisons do not by themselves give a
-  like-for-like Midori-vs-Miyagi contrast. Only the Miyagi USA-vs-control
+  Miyagi USA-vs-control, Midori Australia-vs-control, and Midori
+  France-vs-control comparisons have been run at full read depth and
+  harmonized; the remaining three registered comparisons are still pending.
+  The completed comparisons pair different populations with different
+  isolates, so they do not by themselves give a like-for-like Midori-vs-Miyagi
+  contrast. Only the Miyagi USA-vs-control
   comparison is marked `meta_analysis_primary`, so it alone enters
   cross-study pools; the other comparisons stay in the evidence table but do
   not count as replication. For the Miyagi USA run, the workflow
