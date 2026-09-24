@@ -4,7 +4,10 @@ Groups evidence records by standardized feature, phenotype, feature type,
 simulation status, and species. Only statistically poolable records contribute
 to the estimate or replication metadata. Records with unresolved identifiers
 remain visible in the evidence table, while repeated within-study contrasts
-fail closed because AREE does not yet model their covariance.
+fail closed because AREE does not yet model their covariance. A study with
+several comparisons can mark one as `meta_analysis_primary` in its registry
+YAML; its other comparisons are then left out of the pool and counted in
+`n_excluded_non_primary`.
 
 Every pooled p-value is then adjusted for multiple testing (Benjamini-Hochberg)
 within its test family — the set of features pooled for one phenotype, feature
@@ -18,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
-from common import EVIDENCE_TABLE_PATH, REPORTS_DIR
+from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, STUDIES_DIR, load_yaml
 
 from .effect_sizes import MIN_P
 from .pooling import benjamini_hochberg, dersimonian_laird
@@ -62,7 +65,8 @@ _ID_COLUMNS = {
 RESULT_COLUMNS = [
     "feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid",
     "k_studies", "studies", "n_evidence_records", "n_available_records",
-    "n_excluded_unpoolable", "n_excluded_duplicate_mappings", "excluded_studies",
+    "n_excluded_unpoolable", "n_excluded_duplicate_mappings", "n_excluded_non_primary",
+    "excluded_studies",
     "contributing_evidence_ids", "total_sample_size",
     "pooled_effect", "pooled_se", "ci_lower", "ci_upper", "z",
     "p_value", "adjusted_p_value", "n_tests_in_family",
@@ -174,6 +178,24 @@ def _direction_consistency(effects: np.ndarray) -> float:
     return float(max((nonzero > 0).sum(), (nonzero < 0).sum()) / len(nonzero))
 
 
+def _non_primary_comparisons() -> set[tuple[str, str]]:
+    """(study_id, comparison_id) pairs a study has prespecified out of pooling.
+
+    A study that flags none of its comparisons `meta_analysis_primary` restricts
+    nothing, so the within-study guard still sees every comparison it contributes.
+    """
+    excluded = set()
+    for path in sorted(STUDIES_DIR.glob("*.yaml")):
+        study = load_yaml(path)
+        comparisons = study.get("comparisons") or []
+        if any(c.get("meta_analysis_primary") for c in comparisons):
+            excluded |= {
+                (study["study_id"], c["comparison_id"])
+                for c in comparisons if not c.get("meta_analysis_primary")
+            }
+    return excluded
+
+
 def _load_evidence_for_pooling() -> pd.DataFrame:
     return pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False, dtype=_ID_COLUMNS)
 
@@ -226,6 +248,10 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     # milliseconds, and there are tens of thousands of groups.
     effect = pd.to_numeric(df["effect_size"], errors="coerce").to_numpy(dtype=float)
     se = effective_standard_errors(df)
+    non_primary = _non_primary_comparisons()
+    primary_mask = np.array(
+        [(s, c) not in non_primary for s, c in zip(df["study_id"], df["comparison_id"])], dtype=bool
+    )
     poolable_mask = np.isfinite(se) & (se > 0)
     sample_size = pd.to_numeric(df["sample_size"], errors="coerce").fillna(0).to_numpy()
     rank = df["mapping_confidence"].map(MAPPING_CONFIDENCE_RANK).fillna(-1).to_numpy()
@@ -244,10 +270,12 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     results = []
     for keys, positions in df.groupby(GROUP_KEYS, dropna=False, sort=True).indices.items():
         positions = np.asarray(positions)
-        pool_pos = positions[poolable_mask[positions]]
+        eligible = positions[primary_mask[positions]]
+        n_non_primary = len(positions) - len(eligible)
+        pool_pos = eligible[poolable_mask[eligible]]
         if len(pool_pos) == 0:
             continue
-        unpool_pos = positions[~poolable_mask[positions]]
+        unpool_pos = eligible[~poolable_mask[eligible]]
 
         keep, n_duplicate_mappings = _deduplicate_identifier_collisions(
             cols["study_id"][pool_pos], cols["comparison_id"][pool_pos],
@@ -271,6 +299,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "n_available_records": len(positions),
             "n_excluded_unpoolable": len(unpool_pos),
             "n_excluded_duplicate_mappings": n_duplicate_mappings,
+            "n_excluded_non_primary": n_non_primary,
             "excluded_studies": _joined(cols["study_id"][unpool_pos]),
             "contributing_evidence_ids": _joined(cols["evidence_id"][pool_pos]),
             "total_sample_size": int(sample_size[pool_pos].sum()),

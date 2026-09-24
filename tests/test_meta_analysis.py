@@ -123,6 +123,50 @@ def test_multiple_comparisons_from_one_study_fail_closed(isolated_reports):
         run_meta_analysis(phenotype="larval_viability", feature_type="gene")
 
 
+def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, monkeypatch):
+    import meta_analysis.run as meta_run
+
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    source = evidence[
+        (evidence["feature_id_standardized"] == "LOC105331241")
+        & (evidence["phenotype"] == "larval_viability")
+    ].iloc[0]
+
+    rows = []
+    for comparison_id, effect in [("contrast_a", 1.0), ("contrast_b", 1.2)]:
+        row = source.copy()
+        row["evidence_id"] = comparison_id
+        row["study_id"] = "SHARED_STUDY"
+        row["comparison_id"] = comparison_id
+        row["effect_size"] = effect
+        row["standard_error"] = 0.2
+        row["p_value"] = 0.01
+        rows.append(row)
+
+    path = isolated_reports["evidence_table_path"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_csv(path, sep="\t", index=False)
+
+    studies_dir = tmp_path / "studies"
+    studies_dir.mkdir()
+    (studies_dir / "SHARED_STUDY.yaml").write_text(
+        "study_id: SHARED_STUDY\n"
+        "comparisons:\n"
+        "  - comparison_id: contrast_a\n"
+        "  - comparison_id: contrast_b\n"
+        "    meta_analysis_primary: true\n"
+    )
+    monkeypatch.setattr(meta_run, "STUDIES_DIR", studies_dir)
+
+    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
+    assert result["k_studies"] == 1
+    assert result["contributing_evidence_ids"] == "contrast_b"
+    assert result["pooled_effect"] == 1.2
+    assert result["n_available_records"] == 2
+    assert result["n_excluded_non_primary"] == 1
+
+
 def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_reports):
     harmonize_all_demo_studies()
     result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")

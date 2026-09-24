@@ -182,6 +182,7 @@ comparisons:
     sample_size: 11
     biological_replicates: 5
     results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_miyagi_oshv1_usa_vs_control_dge_standardized.tsv"
+    meta_analysis_primary: true
 
 quality_flags:
   - single_timepoint
@@ -209,10 +210,10 @@ limitations: >
   run at full read depth and harmonized; the remaining four registered
   comparisons are still pending. Because they pair different populations with
   different isolates, the two completed comparisons do not by themselves give a
-  like-for-like Midori-vs-Miyagi contrast, and they cannot both enter one
-  meta-analysis pool: `aree meta-analyze` refuses multiple comparisons from one
-  study until a single prespecified comparison is chosen or within-study
-  covariance is modeled. For the Miyagi USA run, the workflow
+  like-for-like Midori-vs-Miyagi contrast. Only the Miyagi USA-vs-control
+  comparison is marked `meta_analysis_primary`, so it alone enters
+  cross-study pools; the other comparisons stay in the evidence table but do
+  not count as replication. For the Miyagi USA run, the workflow
   report task hit the known Quarto cleanup issue on the exFAT Zarra work
   directory, so its HTML report was rendered manually from an APFS staging
   directory.
@@ -227,7 +228,12 @@ provenance:
     paywalled. See data/studies/CALLA2026_OSHV/ena_provenance.json for the
     queries and checksums. The publication was located by PubMed search after
     the BioProject was selected; NCBI's BioProject-to-PubMed link was empty at
-    the time of curation.
+    the time of curation. On 2026-09-24 sr320 marked miyagi_oshv1_usa_vs_control
+    as the meta_analysis_primary comparison because it was the first run at full
+    depth and already formed the OsHV-1 pool with DELISLE2020_OSHV_TEMP. The
+    Midori Australia-vs-control effects were not compared against it before the
+    choice was made, but the Miyagi USA results had already been examined, so
+    the choice was not blind to them.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1329250"
     - "https://doi.org/10.1016/j.fsi.2026.111154"

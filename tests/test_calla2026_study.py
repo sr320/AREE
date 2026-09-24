@@ -186,3 +186,10 @@ def test_bioproject_mismatch_is_caught(tmp_path, monkeypatch):
     result = sv.validate_study_file(path)
     assert not result.valid
     assert any("PRJNA9999999" in e for e in result.errors)
+
+
+def test_only_miyagi_usa_is_prespecified_for_pooling(study):
+    """Two comparisons from one study cannot both enter a pool; the prespecified
+    one is Miyagi USA, the comparison already pooled with DELISLE2020_OSHV_TEMP."""
+    primary = [c["comparison_id"] for c in study["comparisons"] if c.get("meta_analysis_primary")]
+    assert primary == ["miyagi_oshv1_usa_vs_control"]

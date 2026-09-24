@@ -24,7 +24,11 @@ source identifiers collapse to the same standardized identifier within one
 comparison, only a uniquely higher-confidence mapping is retained. If one
 study contributes multiple comparisons to the same group, AREE stops with an
 actionable error: without covariance information, those contrasts cannot be
-treated as independent observations.
+treated as independent observations. The curator's way out is to set
+`meta_analysis_primary: true` on one comparison in the study YAML, chosen
+before looking at results. Only flagged comparisons from that study are then
+pooled; the others stay in the evidence table and on evidence cards, and are
+counted in `n_excluded_non_primary`.
 
 ## Multiple testing
 
@@ -55,6 +59,7 @@ pool and a 23,000-gene real pool are corrected against their own sizes.
 | `n_available_records` | all mapped records in the group, including records that lack a usable SE |
 | `n_excluded_unpoolable` / `excluded_studies` | records/studies visible as evidence but absent from the numerical pool |
 | `n_excluded_duplicate_mappings` | lower-confidence aliases removed when multiple source IDs resolve to one feature within a comparison |
+| `n_excluded_non_primary` | records from comparisons their study did not mark `meta_analysis_primary`, left out of the pool |
 | `total_sample_size` | sum of `sample_size` across the poolable study-level effects |
 | `pooled_effect` | random-effects pooled estimate of the effect size |
 | `pooled_se` | standard error of the pooled effect |

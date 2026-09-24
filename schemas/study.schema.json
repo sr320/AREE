@@ -124,6 +124,10 @@
           "results_file": {
             "type": ["string", "null"],
             "description": "Relative path to the processed results file for this comparison, if analysis_mode is processed_results_harmonization."
+          },
+          "meta_analysis_primary": {
+            "type": "boolean",
+            "description": "Prespecified comparison for cross-study pooling. When any comparison in a study sets this to true, meta-analysis pools only the flagged comparisons from that study; the rest stay in the evidence table and on evidence cards. Choose it before examining results, and record the rationale in provenance.curation_notes."
           }
         }
       }
