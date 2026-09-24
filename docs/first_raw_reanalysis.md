@@ -5,12 +5,22 @@ registered in AREE and the first in `raw_reanalysis` mode. This page records
 what was curated, the judgement calls made, and — plainly — what has not been
 run.
 
-**Status: registered, pipeline proven on a pilot, not harmonized.** The design,
-sample sheet, FASTQ manifest, and reference context are complete and verified.
-The RNA-seq workflow has now been executed end to end on a **subsampled** slice
-of this study — see [What the pilot found](#what-the-pilot-found) — but no
-full-depth run has been done, and **nothing from this study appears in the
-evidence table or in any meta-analysis.**
+**Status: three of six comparisons run at full depth, two harmonized, one pools.**
+`qc_status` and `analysis_status` are both `in_progress`.
+
+| Comparison | State | Evidence records | In meta-analysis |
+|---|---|---|---|
+| `miyagi_oshv1_usa_vs_control` | full depth, harmonized | 30,625 | **yes** — the prespecified `meta_analysis_primary` comparison |
+| `midori_oshv1_australia_vs_control` | full depth, harmonized | 30,561 | no — within-study, not primary |
+| `midori_oshv1_france_vs_control` | full-depth run reached a standardized table on 2026-09-04; output not yet committed or harmonized | 0 | no |
+| `midori_oshv1_usa_vs_control` | not run | 0 | no |
+| `miyagi_oshv1_australia_vs_control` | not run | 0 | no |
+| `miyagi_oshv1_france_vs_control` | not run | 0 | no |
+
+The Miyagi USA comparison pools with `DELISLE2020_OSHV_TEMP` (`PRJNA593309`)
+across 23,094 shared genes — see [Full-depth runs](#full-depth-runs). The
+pipeline was first proven on a subsampled slice; that history is kept in
+[What the pilot found](#what-the-pilot-found).
 
 ## Why this study, and why raw data
 
@@ -145,8 +155,16 @@ aree harmonize --study CALLA2026_OSHV \
   --input results/rnaseq/standardized/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv
 ```
 
-Then update `analysis_status` in the study YAML — `aree harmonize` warns if it
-still reads `not_started`.
+Then commit the standardized table, workflow manifest, and report under
+`data/studies/CALLA2026_OSHV/`, set that comparison's `results_file` in the
+study YAML, and keep `analysis_status` current — `aree harmonize` warns if it
+still reads `not_started`. Do **not** set `meta_analysis_primary` on a new
+comparison: this study already has its one prespecified comparison, and a
+second flag brings back the within-study error described below.
+
+Harmonize one comparison at a time with `--comparison`, as above. Plain
+`aree harmonize --study CALLA2026_OSHV` stops at the first comparison whose
+`results_file` is still null, and four are.
 
 ## What the pilot found
 
@@ -231,19 +249,116 @@ defect on this list announces itself.
   `pip install multiqc` is sufficient on Apple Silicon, and avoids x86
   emulation. The container tags in `containers/README.md` remain unverified.
 
+## Full-depth runs
+
+Two comparisons have been run on all reads and committed, 11 libraries each
+(6 control, 5 challenged), with the same `-profile local` toolchain as the
+pilot, against `GCF_963853765.1` / `RS_2024_06`. Each committed workflow
+manifest records the input checksum and parameters. Its `software_versions`
+block lists the versions the workflow declares for its containers, not the
+Homebrew builds that actually ran — until a container run replaces it, treat
+that block as intent rather than record.
+
+| | Miyagi × USA | Midori × Australia |
+|---|---|---|
+| Workflow start | 2026-08-31 | 2026-09-01 |
+| Genes in the standardized table | 30,625 | 30,561 |
+| With `lfcSE` | 30,625 | 30,561 |
+| With an unadjusted p-value | 30,522 | 30,376 |
+| DESeq2 `padj < 0.05` | 4,236 | 5,074 |
+| Identifier mapping | 100% `exact` | 100% `exact` |
+
+The pilot's prediction held at full depth: quantifying against the crosswalk's
+own annotation leaves no identifier unresolved.
+
+**Every full-depth run so far ended with Nextflow status `ERR`**, and in each
+case the only failed task was `RENDER_REPORT`, the known Quarto cleanup failure
+on an exFAT work directory (the work directory was on the external `Zarra`
+volume, against the advice in [Environment notes](#environment-notes)). Every
+task up to and including `STANDARDIZE_OUTPUT` and `EMIT_MANIFEST` completed. The
+committed HTML reports were rendered outside the workflow; for Miyagi USA this
+was done by hand from an APFS staging directory.
+
+A third full-depth run, `midori_oshv1_france_vs_control`, reached the same point
+on 2026-09-04. Its `--outdir` was under `/private/tmp`, which has since been
+cleared, so its standardized table, manifest, and report are not in the
+repository. The task outputs should still be in the Nextflow work directory on
+`Zarra` (`STANDARDIZE_OUTPUT` ran in `work/3a/6814ae…`), but that has not been
+checked. Until the table is recovered or regenerated and committed, this
+comparison contributes no evidence. The earlier subsampled pilot of the same
+comparison is not a substitute. Both manifests leave `qc_metrics` null (`n_samples`, read
+depth, mapping rate): the workflow does not yet carry Salmon and MultiQC figures
+into the manifest, so per-library QC lives only in the MultiQC output, which is
+not committed.
+
+### Why only one comparison pools
+
+Two comparisons from one study cannot enter the same pool as if they were
+independent studies. The Midori and Miyagi arms use different animals and
+different controls, but they come from one lab and one challenge
+experiment. Counting them separately would also let this study, on its own,
+meet the "two independent studies" bar for a `high_priority_cross_study`
+candidate. `aree meta-analyze` therefore refuses a group that holds two
+comparisons from one study.
+
+The way out is for the curator to prespecify one comparison per study with
+`meta_analysis_primary: true`. Here that is `miyagi_oshv1_usa_vs_control`,
+chosen on 2026-09-24 because it was the first run at full depth and already
+formed the OsHV-1 pool. The Midori Australia effects were not compared against
+it before the choice was made, but the Miyagi USA results had already been
+examined, so the choice was not blind to them. The rationale is recorded in the
+study's `curation_notes`. Midori Australia records stay in the evidence table
+and on evidence cards; the meta-analysis counts them in
+`n_excluded_non_primary`.
+
+Note also that the two completed comparisons pair **different populations with
+different isolates**, so they do not give a like-for-like Midori-versus-Miyagi
+contrast. That needs the two populations challenged with the same isolate — for
+example `midori_oshv1_usa_vs_control` next to the Miyagi USA run.
+
+### The pool
+
+With the Miyagi USA comparison and `DELISLE2020_OSHV_TEMP`
+(`oshv1_21c_96h_vs_21c_0h`), `aree meta-analyze --phenotype
+disease_susceptibility --feature-type gene` produces 30,720 real-data features:
+
+* **23,094 pooled across both studies (k = 2)**, of which 2,123 have a
+  Benjamini–Hochberg `adjusted_p_value < 0.05` within the 30,720-test family;
+* 4,387 of the two-study features have I² > 50%, so between-study heterogeneity
+  is common and pooled effects should be read with it;
+* the rest are single-study features, with nothing to replicate them.
+
+Every one of these is `disease_associated` evidence. Neither study measured
+survival, mortality, or viral load per animal, and a pathogen-challenge
+contrast is not a tolerance phenotype. For how these feed candidate ranking, see
+[implementation_status.md](implementation_status.md) and
+[interpreting_candidate_scores.md](interpreting_candidate_scores.md).
+
 ## What this does not yet prove
 
-The pilot proves the pipeline runs and produces poolable statistics. It does
-not prove anything biological about these oysters, and it leaves plenty
-unverified:
+The full-depth runs show the pipeline produces poolable, fully mapped
+statistics from real reads, and that random-effects pooling works on real data.
+They do not establish anything biological about these oysters, and they leave
+plenty unverified:
 
-* **No full-depth run.** One contrast at 1M read pairs per library is 2.7% of
-  the data, for one of six comparisons.
-* **No containers.** The run used native Homebrew tools. Every image tag in
-  `containers/README.md` is still unverified, and reproducibility on another
-  machine has not been demonstrated.
-* **No evidence harmonized.** `CALLA2026_OSHV` still contributes zero records,
-  and its `analysis_status` is still `not_started`.
-* **Random-effects pooling on real data remains unexercised.** That needs a
-  full-depth run here plus at least one more real study — `PRJNA593309` is the
-  intended partner, see [candidate_studies.md](candidate_studies.md).
+* **Four comparisons contribute no evidence.** Midori France has a full-depth
+  run whose output was not kept (see [Full-depth runs](#full-depth-runs)); the
+  other three have not been started.
+* **No clean end-to-end run.** Every full-depth run exited `ERR` at
+  `RENDER_REPORT`, so the workflow has not yet finished on real data without
+  a manual step.
+* **No tolerance phenotype.** Nothing here measures survival or viral load, so
+  no evidence from this study can be `resilience_associated`, whatever the
+  population contrast suggests.
+* **k = 2 is a thin pool.** Two studies give a very imprecise heterogeneity
+  estimate (τ², I²). Candidates supported by this pool alone still need
+  replication.
+* **No like-for-like population contrast yet.** See
+  [Why only one comparison pools](#why-only-one-comparison-pools).
+* **No covariance-aware within-study model.** Using more than one comparison
+  from this study in a single pool needs within-study covariance modelled;
+  `meta_analysis_primary` avoids the question rather than answering it.
+* **No containers.** Both full-depth runs used native Homebrew tools. Every
+  image tag in `containers/README.md` is still unverified, and reproducibility
+  on another machine has not been demonstrated.
+* **QC metrics are not in the manifests.** See [Full-depth runs](#full-depth-runs).
