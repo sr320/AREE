@@ -91,7 +91,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 11
     biological_replicates: 5
-    results_file: null
+    results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_midori_oshv1_australia_vs_control_dge_standardized.tsv"
 
   - comparison_id: "midori_oshv1_france_vs_control"
     tissue: "whole_animal"
@@ -205,11 +205,17 @@ limitations: >
   the current NCBI reference annotation, which may differ from the authors' own
   transcriptome-assembly-based analysis; results are not expected to reproduce
   the paper's figures exactly and are not a replication of it. (6) The
-  Miyagi USA-vs-control comparison has been run at full read depth and
-  harmonized; the remaining five registered comparisons are still pending.
-  The workflow report task hit the known Quarto cleanup issue on the exFAT
-  Zarra work directory, so its HTML report was rendered manually from an APFS
-  staging directory.
+  Miyagi USA-vs-control and Midori Australia-vs-control comparisons have been
+  run at full read depth and harmonized; the remaining four registered
+  comparisons are still pending. Because they pair different populations with
+  different isolates, the two completed comparisons do not by themselves give a
+  like-for-like Midori-vs-Miyagi contrast, and they cannot both enter one
+  meta-analysis pool: `aree meta-analyze` refuses multiple comparisons from one
+  study until a single prespecified comparison is chosen or within-study
+  covariance is modeled. For the Miyagi USA run, the workflow
+  report task hit the known Quarto cleanup issue on the exFAT Zarra work
+  directory, so its HTML report was rendered manually from an APFS staging
+  directory.
 
 provenance:
   registered_by: sr320
