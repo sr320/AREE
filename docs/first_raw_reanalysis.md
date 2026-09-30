@@ -237,21 +237,21 @@ defect on this list announces itself.
 
 The internal disk is too small for raw reads, so the repository reaches
 external storage through two symlinks and one Nextflow profile. Both drives are
-HFS+, which supports the symlinks and permissions Nextflow relies on.
+HFS+ or APFS, which support the symlinks and permissions Nextflow relies on.
 
 | Location | Drive | Purpose |
 |---|---|---|
 | `/Volumes/Samsung T5/aree/work` | Samsung T5, SSD, ~450 MB/s | Nextflow work directory (`-profile workstation`) |
-| `/Volumes/Alanine/aree/raw/<STUDY_ID>/` | Alanine, HDD, 2 TB | Raw FASTQs; `data/raw` is a symlink here |
-| `/Volumes/Alanine/aree/reference/<ASSEMBLY>/` | Alanine | Transcriptome, GTF, tx2gene, Salmon index; `data/reference/<ASSEMBLY>` is a symlink here |
+| `/Volumes/blue-block/aree/raw/<STUDY_ID>/` | blue-block, HDD, 4 TB, ~140 MB/s | Raw FASTQs; `data/raw` is a symlink here |
+| `/Volumes/blue-block/aree/reference/<ASSEMBLY>/` | blue-block | Transcriptome, GTF, tx2gene, Salmon index; `data/reference/<ASSEMBLY>` is a symlink here |
 | `results/` | internal APFS | Published outputs, unchanged, so `aree harmonize` relative paths keep working |
 
 The symlinks are gitignored (`data/raw/`, `data/reference/GCF_*/`). Recreate
 them on a new machine with:
 
 ```bash
-ln -sfn /Volumes/Alanine/aree/raw data/raw
-ln -sfn /Volumes/Alanine/aree/reference/GCF_963853765.1 data/reference/GCF_963853765.1
+ln -sfn /Volumes/blue-block/aree/raw data/raw
+ln -sfn /Volumes/blue-block/aree/reference/GCF_963853765.1 data/reference/GCF_963853765.1
 ```
 
 The `workstation` profile lives in `config/base.config`, so every assay
