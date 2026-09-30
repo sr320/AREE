@@ -330,9 +330,13 @@ def _publish_card(card_file, cards_dir: Path | None) -> str | None:
         # Promote the card's H1 to Quarto front matter so the site does not show it twice.
         title = lines[0][2:].strip().replace('"', "'")
         body = "\n".join(lines[1:]).lstrip("\n")
-        dest.write_text(f'---\ntitle: "{title}"\n---\n\n{body}\n')
     else:
-        dest.write_text("\n".join(lines) + "\n")
+        title = src.stem
+        body = "\n".join(lines)
+    # Cards are reached from the home page, which has no sidebar; match it.
+    dest.write_text(
+        f'---\ntitle: "{title}"\nsidebar: false\nbread-crumbs: false\n---\n\n{body}\n'
+    )
     return f"{cards_dir.name}/{src.stem}.html"
 
 

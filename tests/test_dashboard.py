@@ -96,7 +96,9 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     for page in linked:
         card = out.parent / page.replace(".html", ".md")
         assert card.exists()
-        assert card.read_text().startswith("---\ntitle:")
+        text = card.read_text()
+        assert text.startswith("---\ntitle:")
+        assert "\nsidebar: false\n" in text.split("\n---\n", 1)[0]
 
     # The JSON round-trips (no NaN, no numpy scalars).
     reloaded = json.loads(out.read_text())
