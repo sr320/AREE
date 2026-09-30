@@ -72,8 +72,11 @@ def _bool(value) -> bool:
     return bool(value)
 
 
-def _count(series: pd.Series, mask: pd.Series) -> int:
-    return int(mask.sum()) if len(series) else 0
+def _repo_relative(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:  # outputs redirected elsewhere (tests, --out)
+        return path.name
 
 
 # --------------------------------------------------------------------------- #
@@ -339,9 +342,11 @@ def _pool_summary() -> list[dict]:
     if not META_ANALYSIS_DIR.exists():
         return pools
     seen = set()
-    for path in sorted(META_ANALYSIS_DIR.glob("*_meta_analysis.tsv")):
-        if path.name.startswith("all_phenotypes"):
-            continue
+    # A per-phenotype run and the all-phenotypes run describe the same pools;
+    # read the specific files first so `seen` credits each pool to one of them.
+    paths = sorted(META_ANALYSIS_DIR.glob("*_meta_analysis.tsv"),
+                   key=lambda p: (p.name.startswith("all_phenotypes"), p.name))
+    for path in paths:
         df = pd.read_csv(path, sep="\t", low_memory=False)
         if not len(df):
             continue
@@ -368,7 +373,7 @@ def _pool_summary() -> list[dict]:
                     ((k.loc[idx] >= 2) & (adj.loc[idx] <= SIGNIFICANCE_THRESHOLD)).sum()
                 ),
                 "max_k": int(k.loc[idx].max()),
-                "source_file": str(path.relative_to(REPO_ROOT)),
+                "source_file": _repo_relative(path),
             })
     return pools
 

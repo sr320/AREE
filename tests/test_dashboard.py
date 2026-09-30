@@ -80,6 +80,15 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     assert demo_comparisons and all(c["harmonized"] for c in demo_comparisons)
     assert sum(c["n_evidence_records"] for c in demo_comparisons) == kpis["n_evidence_records_simulated"]
 
+    # The Pages workflow only runs `meta-analyze --feature-type gene`, which
+    # writes the all-phenotypes file, so pools must be read from it too.
+    meta_files = sorted(p.name for p in (reports_dir / "meta_analysis").glob("*_meta_analysis.tsv"))
+    assert meta_files == ["all_phenotypes_gene_meta_analysis.tsv"]
+    assert data["pools"], "no pools summarized from the all-phenotypes meta-analysis file"
+    assert all(p["simulated"] for p in data["pools"])
+    assert {p["phenotype"] for p in data["pools"]} >= {"thermal_tolerance", "larval_viability"}
+    assert kpis["n_real_pools_k2plus"] == 0
+
     # Cards for the top simulated candidates were copied beside the JSON with
     # Quarto front matter, and the JSON links to them by site-relative path.
     linked = [r["card_page"] for r in data["candidates"]["top_simulated"] if r["card_page"]]
