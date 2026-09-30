@@ -44,3 +44,6 @@ results/
 
 # Dashboard data + copied evidence cards (regenerate via `aree build-dashboard` / `make dashboard`)
 docs/dashboard/
+
+# Genome/transcriptome bundles live on external storage; see docs/first_raw_reanalysis.md
+data/reference/GCF_*/

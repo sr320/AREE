@@ -76,6 +76,12 @@ cd workflows/rnaseq
 nextflow run main.nf -profile docker -config ../../config/demo.config
 # or, without demo.config, the built-in convenience profile:
 nextflow run main.nf -profile docker,demo
+
+# On the lab workstation, add the `workstation` profile to keep the Nextflow
+# work directory on the external SSD (see docs/first_raw_reanalysis.md,
+# "Storage layout"):
+nextflow run main.nf -profile local,workstation -c ../../config/CALLA2026_OSHV.config \
+  --comparison_id midori_oshv1_france_vs_control
 ```
 
 In this mode, `EMIT_MANIFEST` always records a warning in the manifest's

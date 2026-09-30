@@ -138,10 +138,10 @@ awk -F'\t' '$3=="transcript"{
   if (tx && g) print tx"\t"g
 }' genomic.gtf | sort -u > tx2gene.tsv
 
-# 3. Run one comparison. Keep -work-dir on APFS: Quarto's cleanup fails on exFAT.
-nextflow run workflows/rnaseq -profile local \
+# 3. Run one comparison. The `workstation` profile puts the work directory on
+#    the T5 SSD (see "Storage layout" below); never put it on exFAT.
+nextflow run workflows/rnaseq -profile local,workstation \
   -c config/CALLA2026_OSHV.config \
-  -work-dir /tmp/aree_nxf \
   --control_level Midori_Control \
   --treatment_level Midori_France \
   --comparison_id midori_oshv1_france_vs_control
@@ -232,6 +232,31 @@ fall back to.
 Defect 5 is the most dangerous kind: a run that exits 0, reports
 `completed=1`, and silently produces no manifest and no report. Every other
 defect on this list announces itself.
+
+### Storage layout
+
+The internal disk is too small for raw reads, so the repository reaches
+external storage through two symlinks and one Nextflow profile. Both drives are
+HFS+, which supports the symlinks and permissions Nextflow relies on.
+
+| Location | Drive | Purpose |
+|---|---|---|
+| `/Volumes/Samsung T5/aree/work` | Samsung T5, SSD, ~450 MB/s | Nextflow work directory (`-profile workstation`) |
+| `/Volumes/Alanine/aree/raw/<STUDY_ID>/` | Alanine, HDD, 2 TB | Raw FASTQs; `data/raw` is a symlink here |
+| `/Volumes/Alanine/aree/reference/<ASSEMBLY>/` | Alanine | Transcriptome, GTF, tx2gene, Salmon index; `data/reference/<ASSEMBLY>` is a symlink here |
+| `results/` | internal APFS | Published outputs, unchanged, so `aree harmonize` relative paths keep working |
+
+The symlinks are gitignored (`data/raw/`, `data/reference/GCF_*/`). Recreate
+them on a new machine with:
+
+```bash
+ln -sfn /Volumes/Alanine/aree/raw data/raw
+ln -sfn /Volumes/Alanine/aree/reference/GCF_963853765.1 data/reference/GCF_963853765.1
+```
+
+The `workstation` profile lives in `config/base.config`, so every assay
+workflow accepts it. Combine it with an executor profile
+(`-profile local,workstation`); it sets only `workDir`.
 
 ### Environment notes
 
