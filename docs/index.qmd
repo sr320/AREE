@@ -37,8 +37,7 @@ evidence-generation system with five connected layers:
 
 ## Where to go next
 
-- Want to see where the effort stands? Open the
-  [progress and findings dashboard](dashboard.qmd).
+- Where the effort stands: [progress and findings](dashboard.qmd).
 - New here? Read [Why this resource matters](why_it_matters.md) and
   [Installation](installation.md).
 - Want to add a dataset? See [Adding a study](adding_a_study.md).

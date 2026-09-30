@@ -11,19 +11,13 @@ website:
     left:
       - text: "Home"
         href: index.qmd
-      - text: "Dashboard"
+      - text: "Progress"
         href: dashboard.qmd
-      - text: "Why it matters"
-        href: why_it_matters.md
-      - text: "Architecture"
-        href: architecture.md
-      - text: "Design"
-        href: design.md
+      - text: "Docs"
+        href: installation.md
     right:
-      - text: "Methods"
-        href: methods.md
-      - text: "Roadmap"
-        href: roadmap.md
+      - icon: github
+        href: https://github.com/sr320/AREE
   sidebar:
     style: docked
     contents:
@@ -31,7 +25,7 @@ website:
         contents:
           - text: "Overview"
             href: index.qmd
-          - text: "Progress & findings dashboard"
+          - text: "Progress and findings"
             href: dashboard.qmd
           - text: "Installation"
             href: installation.md
