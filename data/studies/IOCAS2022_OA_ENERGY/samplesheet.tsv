@@ -1,0 +1,19 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	treatment	replicate	tissue	library_layout	instrument_model	read_count
+O7_1	SRR18766235	SAMN27592231	O7_1	ocean_acidification_7d	ocean acidification 7d	replicate = biological replicate 1	Hepatopancreas	PAIRED	Illumina HiSeq 2500	25146849
+C56_3	SRR18766236	SAMN27592230	C56_3	control_56d	control 56d	replicate = biological replicate 3	Hepatopancreas	PAIRED	Illumina HiSeq 2500	25632370
+C56_2	SRR18766237	SAMN27592229	C56_2	control_56d	control 56d	replicate = biological replicate 2	Hepatopancreas	PAIRED	Illumina HiSeq 2500	22753248
+C56_1	SRR18766238	SAMN27592228	C56_1	control_56d	control 56d	replicate = biological replicate 1	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23283759
+C28_3	SRR18766239	SAMN27592227	C28_3	control_28d	control 28d	replicate = biological replicate 3	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23028564
+C28_2	SRR18766240	SAMN27592226	C28_2	control_28d	control 28d	replicate = biological replicate 2	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23236219
+C28_1	SRR18766241	SAMN27592225	C28_1	control_28d	control 28d	replicate = biological replicate 1	Hepatopancreas	PAIRED	Illumina HiSeq 2500	25160662
+C7_3	SRR18766242	SAMN27592224	C7_3	control_7d	control 7d	replicate = biological replicate 3	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23810117
+O56_3	SRR18766243	SAMN27592239	O56_3	ocean_acidification_56d	ocean acidification 56d	replicate = biological replicate 3	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23336296
+O56_2	SRR18766244	SAMN27592238	O56_2	ocean_acidification_56d	ocean acidification 56d	replicate = biological replicate 2	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23728609
+O56_1	SRR18766245	SAMN27592237	O56_1	ocean_acidification_56d	ocean acidification 56d	replicate = biological replicate 1	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23121950
+O28_3	SRR18766246	SAMN27592236	O28_3	ocean_acidification_28d	ocean acidification 28d	replicate = biological replicate 3	Hepatopancreas	PAIRED	Illumina HiSeq 2500	26455637
+O28_2	SRR18766247	SAMN27592235	O28_2	ocean_acidification_28d	ocean acidification 28d	replicate = biological replicate 2	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23447762
+O28_1	SRR18766248	SAMN27592234	O28_1	ocean_acidification_28d	ocean acidification 28d	replicate = biological replicate 1	Hepatopancreas	PAIRED	Illumina HiSeq 2500	22605008
+O7_3	SRR18766249	SAMN27592233	O7_3	ocean_acidification_7d	ocean acidification 7d	replicate = biological replicate 3	Hepatopancreas	PAIRED	Illumina HiSeq 2500	24029294
+O7_2	SRR18766250	SAMN27592232	O7_2	ocean_acidification_7d	ocean acidification 7d	replicate = biological replicate 2	Hepatopancreas	PAIRED	Illumina HiSeq 2500	26233872
+C7_2	SRR18766251	SAMN27592223	C7_2	control_7d	control 7d	replicate = biological replicate 2	Hepatopancreas	PAIRED	Illumina HiSeq 2500	26716289
+C7_1	SRR18766252	SAMN27592222	C7_1	control_7d	control 7d	replicate = biological replicate 1	Hepatopancreas	PAIRED	Illumina HiSeq 2500	23931225

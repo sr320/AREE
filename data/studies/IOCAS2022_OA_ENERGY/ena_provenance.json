@@ -1,0 +1,35 @@
+{
+  "study_id": "IOCAS2022_OA_ENERGY",
+  "bioproject": "PRJNA826964",
+  "date_generated": "2026-09-30",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA826964&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "treatment"
+  ],
+  "n_runs": 18,
+  "n_samples": 18,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "control_28d": 3,
+    "control_56d": 3,
+    "control_7d": 3,
+    "ocean_acidification_28d": 3,
+    "ocean_acidification_56d": 3,
+    "ocean_acidification_7d": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 57074346691,
+  "outputs": {
+    "data/studies/IOCAS2022_OA_ENERGY/samplesheet.tsv": "e830f9e7d66a71a0fea41bc3afd4ef39819092328e45e0826cc46900b1faf482",
+    "data/studies/IOCAS2022_OA_ENERGY/fastq_manifest.tsv": "bcb8b0e06c3f1a880cb3f648e758c36cd0beb61765c16b9a95924c2e828e519d"
+  }
+}

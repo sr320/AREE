@@ -1,0 +1,169 @@
+# FOURTH REAL (non-simulated) STUDY REGISTERED IN AREE, and its first real
+# ocean-acidification study. Every real study before it is a pathogen
+# challenge, so this is the first real evidence outside the `disease` axis.
+#
+# Registered from deposited metadata only. As of 2026-09-30 no publication
+# citing PRJNA826964 could be found (Europe PMC accession search, PubMed title
+# and topic searches). The closest hit — Jiang et al. 2026, Comparative
+# Immunology Reports, doi:10.1016/j.cirep.2026.200308, same laboratory — is
+# NOT this dataset: it samples gonad at 7/14/21/28 d by qPCR and cites only
+# PRJNA146329. Do not attach that DOI here.
+#
+# The study_id names the submitting institute and BioProject registration year
+# because there is no first author to name it after. Rename it only if a
+# publication is found, and update data/studies/<study_id>/ with it.
+#
+# Raw reads are public; no results have been computed yet. results_file is
+# null until the rnaseq workflow is run (see config/IOCAS2022_OA_ENERGY.config).
+
+study_id: IOCAS2022_OA_ENERGY
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: "PRJNA826964"
+  geo: null
+  sra: null
+  ena: "PRJNA826964"
+  proteomexchange: null
+  other: "BioSamples SAMN27592222-SAMN27592239"
+
+citation: "Institute of Oceanology, Chinese Academy of Sciences (2022). The compromised energy management of Pacific oysters (Crassostrea gigas) under ocean acidification conditions [RNA-seq dataset]. NCBI BioProject PRJNA826964, registered 2022-04-14, reads public 2025-01-20. No associated publication identified as of 2026-09-30."
+
+species: "Magallana gigas"
+strain_or_population: null   # BioSample `breed`, `age`, `sex` and `dev_stage` are all 'not collected'
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other two raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end RNA-seq (18 libraries, 22.6-26.7 M read pairs each; 57.1 GB FASTQ reported by ENA)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA826964 (first public 2025-01-20). No count matrix, DE table, or publication is available. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# Comparisons: OA vs the time-matched control at each of the three sampling
+# points. Groups come from the deposited BioSample `treatment` attribute
+# ('control 7d' ... 'ocean acidification 56d'), n=3 each, one individual per
+# library (distinct sample_alias C7_1 ... O56_3). See
+# data/studies/IOCAS2022_OA_ENERGY/ena_provenance.json.
+#
+# ON PHENOTYPE CLASSIFICATION. The project title claims "compromised energy
+# management", but nothing in the deposit measures an organismal outcome — no
+# survival, growth, respiration, or energy-reserve data. These comparisons
+# therefore describe an exposure, not a tolerance phenotype. They are placed on
+# the acidification_tolerance axis (so they sit with other OA evidence) but
+# classified exposure_only, which overrides the ontology default of
+# `resilience`; the validator warns about this override and the warning is
+# expected. Upgrade the classification only if a measured phenotype is found.
+#
+# pH / pCO2, temperature, and whether the OA group was sampled in replicate
+# tanks are not in the deposited metadata, so exposure_intensity is null.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "oa_7d_vs_control_7d"
+    tissue: "digestive_gland"
+    life_stage: "adult"
+    stressor_original: "'ocean acidification 7d' (deposited BioSample treatment attribute); OA exposure for 7 days, pH/pCO2 not stated in deposited metadata"
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: null
+    exposure_duration: "7 d"
+    exposure_timing: "sampled after 7 d of continuous exposure"
+    control_condition: "'control 7d': ambient seawater, sampled at day 7"
+    treatment_condition: "'ocean acidification 7d': acidified seawater, sampled at day 7"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+  - comparison_id: "oa_28d_vs_control_28d"
+    tissue: "digestive_gland"
+    life_stage: "adult"
+    stressor_original: "'ocean acidification 28d' (deposited BioSample treatment attribute); OA exposure for 28 days, pH/pCO2 not stated in deposited metadata"
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: null
+    exposure_duration: "28 d"
+    exposure_timing: "sampled after 28 d of continuous exposure"
+    control_condition: "'control 28d': ambient seawater, sampled at day 28"
+    treatment_condition: "'ocean acidification 28d': acidified seawater, sampled at day 28"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "oa_56d_vs_control_56d"
+    tissue: "digestive_gland"
+    life_stage: "adult"
+    stressor_original: "'ocean acidification 56d' (deposited BioSample treatment attribute); OA exposure for 56 days, pH/pCO2 not stated in deposited metadata"
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: null
+    exposure_duration: "56 d"
+    exposure_timing: "sampled after 56 d of continuous exposure"
+    control_condition: "'control 56d': ambient seawater, sampled at day 56"
+    treatment_condition: "'ocean acidification 56d': acidified seawater, sampled at day 56"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) No publication has been identified, so the exposure protocol (target pH
+  or pCO2, carbonate chemistry, temperature, feeding, tank replication) is
+  unknown and effect sizes cannot yet be treated as dose-comparable with any
+  other OA study. (2) No organismal phenotype was deposited; all three
+  comparisons are exposure_only evidence and cannot support a resilience
+  claim. (3) life_stage is registered as adult by inference: BioSample age and
+  dev_stage are 'not collected', and hepatopancreas dissection implies
+  post-settlement animals, but juveniles cannot be ruled out. (4) Sex was not
+  recorded; with n=3 per group, sex composition may confound digestive-gland
+  expression. (5) The three comparisons share no animals but come from one
+  experiment; only the prespecified 28 d comparison enters cross-study pools,
+  so the study is not counted three times. (6) Until a second real OA study is
+  registered, this study cannot contribute to any k >= 2 pool.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-09-30"
+  curation_notes: >
+    Registered from live ENA metadata for PRJNA826964 with
+    `aree fetch-samplesheet --bioproject PRJNA826964 --study IOCAS2022_OA_ENERGY
+    --condition-attribute treatment --attribute replicate --attribute tissue`.
+    Replication was checked before registration: 18 distinct sample_alias
+    values, n=3 per group, one library per animal (compare the rejected
+    PRJNA623063 in docs/candidate_studies.md). Tissue 'Hepatopancreas' is
+    mapped to digestive_gland. The 28 d comparison is prespecified as
+    meta_analysis_primary before any result was computed: 7 d is the most
+    exposed to acute handling and transfer effects, 56 d is the least likely
+    to have a comparable timepoint in other studies, and ~4 weeks is a common
+    chronic-exposure endpoint in adult bivalve OA experiments, which gives the
+    best chance of a pool partner. Publication search (2026-09-30): Europe PMC
+    for "PRJNA826964" returned nothing; the nearest same-lab paper
+    (doi:10.1016/j.cirep.2026.200308) was read in full and does not use these
+    data.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA826964"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA826964"
