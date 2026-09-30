@@ -101,6 +101,8 @@ evidence-record-level `quality_flags` from study/comparison metadata).
 | Quantification | Salmon (pseudoalignment + `--geneMap`) | n/a |
 | DE model | DESeq2 via tximport | n/a (table assumed already DE-modeled upstream) |
 | Standardized output | `STANDARDIZE_OUTPUT` validates/reshapes DESeq2 output | `STANDARDIZE_OUTPUT` validates/reshapes the provided table |
+| Sample exclusion | `--exclude_samples`, recorded in the manifest | n/a |
+| Viral read QC | optional, `--viral_reference` | n/a |
 
 Both modes converge on the same standardized TSV schema, written to
 `results/rnaseq/standardized/<study_id>_<comparison_id>_dge_standardized.tsv`:
@@ -125,6 +127,35 @@ Other outputs (all under `params.outdir`, default `results/rnaseq/`):
 - (`raw_reanalysis` only) `fastqc/`, `trimmed/`, `salmon/`, `multiqc/`,
   `deseq2/` — intermediate per-step outputs.
 
+## Sample exclusion and viral read QC (`raw_reanalysis` only)
+
+**`--exclude_samples`** takes a comma-separated list of `sample_id`s to drop
+before DESeq2. A name that is not in the sample sheet stops the run rather than
+excluding nothing. The run's manifest records the list under
+`parameters.exclude_samples` and adds a `samples_excluded_by_curation` warning;
+the reason and supporting evidence belong in the study YAML
+(`comparisons[].excluded_samples`), which `aree validate-study` checks against
+the sample sheet. Exclude on an independent measurement — a control carrying
+the pathogen, a sample swap — never because a sample weakens the result.
+
+**`--viral_reference`** (a viral genome FASTA) turns on per-sample viral read
+QC for pathogen-challenge studies. `VIRAL_QUANT` maps every trimmed read pair
+of every library to the viral genome with Salmon; `VIRAL_SUMMARY` joins the
+counts to the sample sheet and writes
+`viral_load/<study_id>_<comparison_id>_viral_load.{tsv,json}`. Excluded samples
+are still counted, and flagged `excluded_from_de`. The manifest carries the
+JSON under `viral_load`, the report shows the table, and two warnings are
+raised against `--viral_detection_per_million` (default 100):
+
+- `viral_reads_in_control` — a control sample at or above the threshold;
+- `no_viral_reads_in_challenged_sample` — a challenged sample below it.
+
+The count is QC, not a titre. It scales with library depth and composition,
+and a reference that differs from the challenge strain lowers counts in
+infected animals; it cannot put reads into an uninfected one. For OsHV-1,
+`config/CALLA2026_OSHV.config` points at RefSeq `NC_005881.2`
+(`data/reference/pathogens/OsHV-1/`, with a provenance sidecar).
+
 ## Feeding output into the AREE CLI
 
 The standardized TSV produced by either mode is the direct input to the
@@ -145,12 +176,16 @@ regenerated from raw data), not the evidence records themselves.
 
 ## What has and has not been run
 
-- **Run**: the full `raw_reanalysis` path against real public FASTQ
-  (PRJNA1329250, 11 libraries, subsampled), and `processed_results_harmonization`
-  against the demo table. Both complete green.
-- **Not run**: any container from `../../containers/README.md`; a full-depth
-  run; any comparison other than `midori_oshv1_france_vs_control`; the
-  `-profile docker` or `-profile apptainer` paths.
+- **Run**: the full `raw_reanalysis` path at full depth with `-profile local`
+  on four real comparisons (three from PRJNA1329250, one from PRJNA593309), and
+  `processed_results_harmonization` against the demo table. The 2026-09-30
+  `midori_oshv1_australia_vs_control` re-run, with `--exclude_samples` and
+  `--viral_reference`, is the first full-depth run to finish `OK`; earlier
+  ones exited `ERR` at `RENDER_REPORT` on an exFAT work directory.
+- **Not run**: any container from `../../containers/README.md`; the
+  `-profile docker` or `-profile apptainer` paths. The non-stub run on the tiny
+  CI fixtures fails in `SALMON_QUANT` under Salmon 2.6 ("failed to fill whole
+  buffer" reading the trimmed fixture FASTQ); CI only stub-runs them.
 - **Real, inspectable**: every `process` block declares a real upstream
   container tag, a real `label` (`process_low|process_medium|process_high`
   per `../../config/base.config`), typed `input:`/`output:` channels, and a

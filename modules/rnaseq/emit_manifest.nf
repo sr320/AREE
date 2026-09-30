@@ -28,6 +28,7 @@ process EMIT_MANIFEST {
     path standardized_tsv
     val workflow_start_iso
     val extra_warnings
+    path viral_summary   // VIRAL_SUMMARY JSON, or assets/NO_VIRAL_QC when viral QC was not run
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
@@ -54,6 +55,22 @@ process EMIT_MANIFEST {
 
     standardized_path = "${standardized_tsv}"
 
+    # Curated sample exclusions, recorded as run parameters; the reasons live in
+    # the study registry (comparisons[].excluded_samples).
+    excluded_samples = [s.strip() for s in "${params.exclude_samples ?: ''}".split(",") if s.strip()]
+
+    viral_path = "${viral_summary}"
+    viral = None
+    warnings = ${extra_warnings}
+    if viral_path != "NO_VIRAL_QC":
+        with open(viral_path) as fh:
+            viral = json.load(fh)
+        warnings = warnings + viral.get("warnings", [])
+    if excluded_samples:
+        warnings.append(
+            "samples_excluded_by_curation: " + ", ".join(excluded_samples)
+            + " (see the study registry for the reason)")
+
     manifest = {
         "workflow_name": "aree-rnaseq",
         "workflow_version": "${workflow.manifest.version ?: '0.1.0-scaffold'}",
@@ -71,6 +88,8 @@ process EMIT_MANIFEST {
             "study_id": "${study_id}",
             "comparison_id": "${comparison_id}",
             "outdir": "${params.outdir}",
+            "exclude_samples": excluded_samples,
+            "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
         "software_versions": {
             # Static, representative versions matching containers/README.md
@@ -102,7 +121,10 @@ process EMIT_MANIFEST {
             "n_samples": None,
             "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run.",
         },
-        "warnings": ${extra_warnings},
+        # Per-sample viral read counts when --viral_reference was given; null
+        # means the check was not run, not that no virus was found.
+        "viral_load": viral,
+        "warnings": warnings,
     }
 
     with open(f"${study_id}_${comparison_id}_manifest.json", "w") as fh:

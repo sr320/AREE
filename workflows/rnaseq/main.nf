@@ -10,7 +10,8 @@
  * Implements CLAUDE.md Layer 2 section A (RNA-seq):
  *   FASTQ QC -> adapter trimming -> pseudoalignment/quant -> sample QC ->
  *   differential expression -> effect-size table -> standardized output ->
- *   manifest + report.
+ *   manifest + report. Optionally (--viral_reference), per-sample viral read
+ *   QC, and curated sample exclusion before DE (--exclude_samples).
  *
  * Two modes (docs/design.md section 7), selected by params.mode:
  *   - raw_reanalysis:                 FASTQ in, full pipeline runs.
@@ -34,6 +35,7 @@ include { DIFFERENTIAL_EXPRESSION_DESEQ2 }      from '../../modules/rnaseq/diffe
 include { STANDARDIZE_OUTPUT }                  from '../../modules/rnaseq/standardize_output.nf'
 include { EMIT_MANIFEST }                       from '../../modules/rnaseq/emit_manifest.nf'
 include { RENDER_REPORT }                       from '../../modules/rnaseq/render_report.nf'
+include { VIRAL_INDEX; VIRAL_QUANT; VIRAL_SUMMARY } from '../../modules/rnaseq/viral_load.nf'
 
 // Nextflow's strict DSL2 syntax (25.10+) forbids bare statements at script
 // level, so this is a function declaration rather than a top-level assignment.
@@ -61,6 +63,7 @@ workflow {
     workflow_start_iso = workflow.start.toString()
 
     report_template = file("${projectDir}/assets/report_template.qmd")
+    no_viral_qc     = file("${projectDir}/assets/NO_VIRAL_QC")
 
     if (params.mode == 'raw_reanalysis') {
 
@@ -128,6 +131,7 @@ workflow {
             comparison_id,
             params.control_level,
             params.treatment_level,
+            params.exclude_samples ?: '',
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)
@@ -135,6 +139,28 @@ workflow {
 
         raw_de_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.results.map { sid, cid, tsv -> tsv }
         workflow_warnings = []
+
+        // Optional viral read QC: did every challenged animal carry the
+        // pathogen, and is every control free of it?
+        if (params.viral_reference) {
+            viral_fasta_ch = Channel.fromPath(params.viral_reference, checkIfExists: true).first()
+            VIRAL_INDEX(viral_fasta_ch)
+            VIRAL_QUANT(TRIM_FASTP.out.trimmed_reads, VIRAL_INDEX.out.index.first())
+            VIRAL_SUMMARY(
+                study_id,
+                comparison_id,
+                params.control_level,
+                params.treatment_level,
+                params.exclude_samples ?: '',
+                params.viral_detection_per_million,
+                viral_fasta_ch,
+                Channel.fromPath(params.sample_sheet, checkIfExists: true).first(),
+                VIRAL_QUANT.out.counts.collect()
+            )
+            viral_summary_ch = VIRAL_SUMMARY.out.json
+        } else {
+            viral_summary_ch = Channel.value(no_viral_qc)
+        }
 
         STANDARDIZE_OUTPUT(study_id, comparison_id, raw_de_ch)
 
@@ -157,6 +183,7 @@ workflow {
         ]
 
         STANDARDIZE_OUTPUT(study_id, comparison_id, processed_ch)
+        viral_summary_ch = Channel.value(no_viral_qc)
     }
 
     // ---- shared tail: manifest + report (both modes) --------------------
@@ -172,7 +199,8 @@ workflow {
         params.mode,
         standardized_ch,
         workflow_start_iso,
-        warnings_json
+        warnings_json,
+        viral_summary_ch
     )
 
     RENDER_REPORT(

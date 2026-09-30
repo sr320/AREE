@@ -11,14 +11,16 @@ run.
 | Comparison | State | Evidence records | In meta-analysis |
 |---|---|---|---|
 | `miyagi_oshv1_usa_vs_control` | full depth, harmonized | 30,625 | **yes** — the prespecified `meta_analysis_primary` comparison |
-| `midori_oshv1_australia_vs_control` | full depth, harmonized | 30,561 | no — within-study, not primary |
-| `midori_oshv1_france_vs_control` | full depth, harmonized (weak signal — see below) | 30,628 | no — within-study, not primary |
-| `midori_oshv1_usa_vs_control` | not run | 0 | no |
+| `midori_oshv1_australia_vs_control` | full depth, harmonized, DO_CT_4 excluded (10 samples) | 30,482 | no — within-study, not primary |
+| `midori_oshv1_france_vs_control` | full depth, harmonized, **still includes DO_CT_4** — re-run pending; only 2 of 5 challenged animals infected | 30,628 | no — within-study, not primary |
+| `midori_oshv1_usa_vs_control` | not run; DO_CT_4 exclusion already registered | 0 | no |
 | `miyagi_oshv1_australia_vs_control` | not run | 0 | no |
 | `miyagi_oshv1_france_vs_control` | not run | 0 | no |
 
 The Miyagi USA comparison pools with `DELISLE2020_OSHV_TEMP` (`PRJNA593309`)
-across 23,094 shared genes — see [Full-depth runs](#full-depth-runs). The
+across 23,094 shared genes — see [Full-depth runs](#full-depth-runs). Per-sample
+viral read QC found an infected control and three uninfected challenged
+animals — see [Viral read QC](#viral-read-qc-and-the-do_ct_4-exclusion). The
 pipeline was first proven on a subsampled slice; that history is kept in
 [What the pilot found](#what-the-pilot-found).
 
@@ -280,9 +282,15 @@ Three comparisons have been run on all reads and committed, 11 libraries each
 (6 control, 5 challenged), with the same `-profile local` toolchain as the
 pilot, against `GCF_963853765.1` / `RS_2024_06`. Each committed workflow
 manifest records the input checksum and parameters. Its `software_versions`
-block lists the versions the workflow declares for its containers, not the
-Homebrew builds that actually ran — until a container run replaces it, treat
-that block as intent rather than record.
+block lists the versions the workflow declares for its containers (Salmon
+1.10.3, DESeq2 1.42.0, tximport 1.30.0), not the Homebrew builds that actually
+ran — Salmon 2.6.0 (per each quant directory's `cmd_info.json`) and, at the
+2026-09-30 re-run, DESeq2 1.50.2 and tximport 1.38.2. Until the manifest
+records observed versions, treat that block as intent rather than record.
+
+The table below is the state before the DO_CT_4 exclusion. Re-run without
+DO_CT_4, Midori × Australia has 30,482 genes, 5,473 at `padj < 0.05`, and a
+median |log2FC| of 0.38; see [Viral read QC](#viral-read-qc-and-the-do_ct_4-exclusion).
 
 | | Miyagi × USA | Midori × Australia | Midori × France |
 |---|---|---|---|
@@ -297,12 +305,9 @@ that block as intent rather than record.
 
 **Midori × France shows almost no response.** With 1,659 genes at unadjusted
 `p < 0.05` out of ~30,500 tested (about 1,500 expected by chance alone) and 54
-after adjustment, this contrast is close to null. The data do not say why: a
-weaker response to the French isolate, a challenge that did not take, or a
-sample problem are all possible, and the deposited metadata record no viral
-load to tell them apart. Treat it as a weak or failed contrast until someone
-checks it against the publication's methods and results, and do not read its
-near-null result as Midori tolerance.
+after adjustment, this contrast is close to null. Viral read QC explains most
+of it: only two of the five challenged animals carry the virus (next section).
+Do not read the near-null result as Midori tolerance.
 
 The pilot's prediction held at full depth: quantifying against the crosswalk's
 own annotation leaves no identifier unresolved.
@@ -326,6 +331,56 @@ from `STANDARDIZE_OUTPUT` (`work/3a/6814ae…`), the manifest from `EMIT_MANIFES
 depth, mapping rate): the workflow does not yet carry Salmon and MultiQC figures
 into the manifest, so per-library QC lives only in the MultiQC output, which is
 not committed.
+
+### Viral read QC and the DO_CT_4 exclusion
+
+The deposited metadata record no viral load, so AREE measures it: the RNA-seq
+workflow's optional `--viral_reference` step maps every read pair of every
+library to the OsHV-1 genome (RefSeq `NC_005881.2`,
+`data/reference/pathogens/OsHV-1/`) and reports viral pairs per million
+([workflows/rnaseq/README.md](../workflows/rnaseq/README.md)). It was first run
+by hand on 2M-pair subsamples (2026-09-24), then on all reads by the workflow
+(2026-09-30).
+
+| Animals | OsHV-1 pairs per million |
+|---|---|
+| Miyagi controls (6), subsample | 0–1.5 |
+| Miyagi × USA (5 of 5), subsample | 8,565–23,533 |
+| Midori controls CT_1, 2, 3, 5, 6, all reads | 0–0.24 |
+| **Midori control DO_CT_4, all reads** | **11,597** |
+| Midori × Australia (5 of 5), all reads | 14,269–80,784 |
+| Midori × France FR_2, FR_3, subsample | 11,137 and 57,897 |
+| Midori × France FR_1, FR_4, FR_5, subsample | 0, 36, 0.5 |
+
+Two findings follow, and they agree with the host transcriptome: the same
+animals separate on the first principal component, and ADAR (`LOC105341503`),
+an OsHV-1 response gene, sits at log2 CPM 7.6–9.5 in exactly the virus-positive
+animals and 2.3–3.4 in the rest.
+
+**DO_CT_4 is not a valid control.** An unchallenged animal carrying the virus at
+infected-animal levels is either infected or mislabeled; the data cannot say
+which. It is shared by every Midori comparison, so it is excluded from all
+three (`excluded_samples` in the study YAML; `--exclude_samples DO_CT_4` at run
+time). The exclusion rests on the viral measurement, not on its effect on the
+result — but the effect is large. Without it, Midori × Australia gains 399
+genes at `padj < 0.05`, and ADAR moves from log2FC 2.05 (padj 0.27, not
+significant) to 5.99 (padj 1.6 × 10⁻⁷²): the infected control was masking the
+strongest antiviral signal while leaving the genome-wide fold changes largely
+unchanged (r = 0.97). **The committed Midori × France result still includes
+DO_CT_4**; it was not re-run because the external drives disconnected mid-run
+on 2026-09-30.
+
+**Midori × France: 2 of 5 challenged animals infected.** All five are kept.
+Dropping uninfected animals after seeing the data would turn "response to
+challenge" into "response to infection" — a different comparison, which could
+be registered separately if wanted. Whether FR_1, FR_4, and FR_5 resisted
+infection or were never effectively exposed cannot be told from reads alone.
+
+The viral count is QC, not a titre: it scales with depth, and the reference is
+the original OsHV-1 genome rather than the microvariants used here, which
+lowers counts in infected animals but cannot put reads into an uninfected one.
+Per-animal viral load is nonetheless the closest thing to a measured phenotype
+this study has.
 
 ### Why only one comparison pools
 
@@ -378,14 +433,15 @@ statistics from real reads, and that random-effects pooling works on real data.
 They do not establish anything biological about these oysters, and they leave
 plenty unverified:
 
-* **Three comparisons are not run**, and one of the three completed ones
-  (Midori France) is close to null for reasons the data cannot settle.
-* **No clean end-to-end run.** Every full-depth run exited `ERR` at
-  `RENDER_REPORT`, so the workflow has not yet finished on real data without
-  a manual step.
-* **No tolerance phenotype.** Nothing here measures survival or viral load, so
+* **Three comparisons are not run**, and Midori France still needs its
+  DO_CT_4 re-run. Only 2 of its 5 challenged animals are infected.
+* **One clean end-to-end run.** The 2026-09-30 Midori Australia re-run is the
+  first full-depth run to finish `OK`, after `RENDER_REPORT` was moved to
+  local scratch. Earlier runs all exited `ERR` at that step.
+* **No tolerance phenotype.** Nothing here measures survival or mortality, so
   no evidence from this study can be `resilience_associated`, whatever the
-  population contrast suggests.
+  population contrast suggests. Viral load is now measured per animal, but
+  from reads, as QC; it is not yet an analysed phenotype.
 * **k = 2 is a thin pool.** Two studies give a very imprecise heterogeneity
   estimate (τ², I²). Candidates supported by this pool alone still need
   replication.
@@ -394,7 +450,7 @@ plenty unverified:
 * **No covariance-aware within-study model.** Using more than one comparison
   from this study in a single pool needs within-study covariance modelled;
   `meta_analysis_primary` avoids the question rather than answering it.
-* **No containers.** Both full-depth runs used native Homebrew tools. Every
+* **No containers.** All full-depth runs used native Homebrew tools. Every
   image tag in `containers/README.md` is still unverified, and reproducibility
   on another machine has not been demonstrated.
 * **QC metrics are not in the manifests.** See [Full-depth runs](#full-depth-runs).

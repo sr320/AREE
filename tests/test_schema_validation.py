@@ -60,3 +60,28 @@ def test_resilience_classification_mismatch_is_a_warning_not_an_error(tmp_path):
     result = validate_study_file(path)
     assert result.valid
     assert result.warnings
+
+
+def test_excluded_sample_missing_from_the_sample_sheet_is_rejected(tmp_path):
+    """A typo in excluded_samples must not pass as an exclusion that never happens."""
+    with open("registry/studies/CALLA2026_OSHV.yaml") as fh:
+        study = yaml.safe_load(fh)
+    study["comparisons"][0]["excluded_samples"][0]["sample_id"] = "DO_CT_44"
+    path = tmp_path / "CALLA2026_OSHV.yaml"
+    with open(path, "w") as fh:
+        yaml.safe_dump(study, fh)
+
+    result = validate_study_file(path)
+    assert not result.valid
+    assert any("DO_CT_44" in e for e in result.errors)
+
+
+def test_excluded_sample_needs_a_reason_and_evidence(tmp_path):
+    with open("registry/studies/CALLA2026_OSHV.yaml") as fh:
+        study = yaml.safe_load(fh)
+    del study["comparisons"][0]["excluded_samples"][0]["evidence"]
+    path = tmp_path / "CALLA2026_OSHV.yaml"
+    with open(path, "w") as fh:
+        yaml.safe_dump(study, fh)
+
+    assert not validate_study_file(path).valid

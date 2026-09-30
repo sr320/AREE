@@ -1,0 +1,12 @@
+{
+  "artifact": "NC_005881.2.fasta",
+  "artifact_sha256": "cdd9a92f3db33d3f09ffdfd759c677b9296f87aff2eb6d3580546a0f910f98d9",
+  "organism": "Ostreid herpesvirus 1 (OsHV-1)",
+  "accession": "NC_005881.2",
+  "description": "Ostreid herpesvirus 1, complete genome (NCBI RefSeq), 207,439 bp",
+  "source_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=NC_005881.2&rettype=fasta&retmode=text",
+  "date_retrieved": "2026-09-24",
+  "date_reverified": "2026-09-30",
+  "used_for": "Per-sample viral read QC in workflows/rnaseq (--viral_reference): counting read pairs that map to the virus in pathogen-challenge RNA-seq.",
+  "caveats": "This is the reference OsHV-1 genome, not the microvariant (uVar) strains used in current challenge studies. Divergence lowers the counts in infected animals; it cannot place reads into an uninfected one. Treat counts as QC, not as a titre."
+}

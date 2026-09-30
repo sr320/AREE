@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -76,8 +77,9 @@ def test_each_comparison_matches_its_group_sizes(study, ena_provenance):
         ]
         treated = groups[f"{population}_{strain}"]
         control = groups[f"{population}_Control"]
+        excluded = len(comp.get("excluded_samples") or [])
         assert comp["biological_replicates"] == treated, comp["comparison_id"]
-        assert comp["sample_size"] == treated + control, comp["comparison_id"]
+        assert comp["sample_size"] == treated + control - excluded, comp["comparison_id"]
 
 
 def test_all_six_comparisons_are_registered(study):
@@ -197,3 +199,58 @@ def test_only_miyagi_usa_is_prespecified_for_pooling(study):
     one is Miyagi USA, the comparison already pooled with DELISLE2020_OSHV_TEMP."""
     primary = [c["comparison_id"] for c in study["comparisons"] if c.get("meta_analysis_primary")]
     assert primary == ["miyagi_oshv1_usa_vs_control"]
+
+
+# The committed Midori France result predates the DO_CT_4 exclusion. Remove it
+# from this set when that comparison is re-run with --exclude_samples DO_CT_4.
+EXCLUSION_PENDING = {"midori_oshv1_france_vs_control"}
+
+
+def test_do_ct_4_is_excluded_from_every_midori_comparison_and_nothing_else(study):
+    """DO_CT_4 is an unchallenged Midori control that carries OsHV-1, so every
+    contrast against the Midori controls must drop it; Miyagi contrasts do not
+    use it and must exclude nothing."""
+    for comp in study["comparisons"]:
+        excluded = [e["sample_id"] for e in comp.get("excluded_samples") or []]
+        if comp["comparison_id"] in EXCLUSION_PENDING:
+            assert excluded == [], comp["comparison_id"]
+        elif comp["comparison_id"].startswith("midori"):
+            assert excluded == ["DO_CT_4"], comp["comparison_id"]
+        else:
+            assert excluded == [], comp["comparison_id"]
+
+
+def test_committed_manifests_agree_with_registered_exclusions(study):
+    """A result file must have been produced with exactly the exclusions the
+    registry declares for it, so the registry cannot claim an exclusion the
+    data do not reflect (or the reverse)."""
+    for comp in study["comparisons"]:
+        if not comp["results_file"]:
+            continue
+        manifest = STUDY_DIR / Path(comp["results_file"]).name.replace(
+            "_dge_standardized.tsv", "_workflow_manifest.json")
+        params = json.loads(manifest.read_text())["parameters"]
+        declared = sorted(e["sample_id"] for e in comp.get("excluded_samples") or [])
+        assert sorted(params.get("exclude_samples", [])) == declared, comp["comparison_id"]
+
+
+def test_do_ct_4_viral_load_is_recorded_with_the_result_it_justifies():
+    """The exclusion's evidence is a committed file, not a claim."""
+    path = STUDY_DIR / "CALLA2026_OSHV_midori_oshv1_australia_vs_control_viral_load.tsv"
+    with open(path) as fh:
+        viral = list(csv.DictReader(fh, delimiter="\t"))
+    by_id = {r["sample_id"]: r for r in viral}
+    assert by_id["DO_CT_4"]["virus_detected"] == "True"
+    assert by_id["DO_CT_4"]["excluded_from_de"] == "True"
+    controls = [r for r in viral if r["condition"] == "Midori_Control" and r["sample_id"] != "DO_CT_4"]
+    assert len(controls) == 5 and all(r["virus_detected"] == "False" for r in controls)
+    challenged = [r for r in viral if r["condition"] == "Midori_Australia"]
+    assert len(challenged) == 5 and all(r["virus_detected"] == "True" for r in challenged)
+
+
+def test_excluded_samples_are_real_midori_controls(study, samplesheet):
+    rows = {r["sample_id"]: r for r in samplesheet}
+    for comp in study["comparisons"]:
+        for entry in comp.get("excluded_samples") or []:
+            assert rows[entry["sample_id"]]["condition"] == "Midori_Control"
+            assert entry["reason"] and entry["evidence"]

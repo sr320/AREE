@@ -64,6 +64,31 @@ If `mode` is `processed_results_harmonization`, note that raw FASTQ QC
 (FastQC/fastp/Salmon mapping rate) could not be independently verified —
 see the `warnings` array above and `docs/design.md` section 7.
 
+## Sample exclusions and viral read QC
+
+```{r viral-load}
+excluded <- manifest$parameters$exclude_samples %||% character(0)
+if (length(excluded) > 0) {
+  cat("Excluded from differential expression by curation:",
+      paste(excluded, collapse = ", "), "\n\n")
+} else {
+  cat("No samples were excluded from differential expression.\n\n")
+}
+viral <- manifest$viral_load
+if (!is.null(viral) && length(viral$samples) > 0) {
+  cat("Viral reference:", viral$reference$header %||% viral$reference$file, "\n")
+  cat("Detection threshold:", viral$threshold_viral_pairs_per_million,
+      "viral read pairs per million\n")
+  vs <- as.data.frame(viral$samples)
+  vs <- vs[order(vs$condition, vs$sample_id), ]
+  knitr::kable(vs[, c("sample_id", "condition", "pairs_processed", "viral_pairs",
+                      "viral_per_million", "virus_detected", "excluded_from_de")],
+               row.names = FALSE, format.args = list(big.mark = ","))
+} else {
+  cat("Viral read QC was not run (no --viral_reference).\n")
+}
+```
+
 ## Differential expression summary
 
 ```{r read-de}

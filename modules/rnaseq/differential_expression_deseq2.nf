@@ -19,6 +19,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     val comparison_id
     val control_level
     val treatment_level
+    val exclude_samples
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
@@ -54,6 +55,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         comparison_id  = "${comparison_id}",
         control_level   = "${control_level}",
         treatment_level = "${treatment_level}",
+        exclude_samples = "${exclude_samples}",
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
         out_rdata      = "${study_id}_${comparison_id}_deseq2.RData"
     )
@@ -78,6 +80,21 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
                 "condition level '%s' is not present in the sample sheet. Levels found: %s",
                 lvl, paste(present, collapse = ", ")))
         }
+    }
+
+    # Samples excluded by curation (e.g. a control that carries the pathogen),
+    # named by sample_id. Each must exist in the sheet, so a typo cannot
+    # silently exclude nothing. The reason is recorded in the study registry.
+    excluded <- trimws(strsplit(args\$exclude_samples, ",")[[1]])
+    excluded <- excluded[nzchar(excluded)]
+    unknown <- setdiff(excluded, samples\$sample_id)
+    if (length(unknown) > 0) {
+        stop("exclude_samples names sample_id(s) not in the sample sheet: ",
+             paste(unknown, collapse = ", "))
+    }
+    if (length(excluded) > 0) {
+        message("Excluding by curation: ", paste(excluded, collapse = ", "))
+        samples <- samples[!(samples\$sample_id %in% excluded), ]
     }
 
     # A sample sheet may describe a whole BioProject; this contrast uses only

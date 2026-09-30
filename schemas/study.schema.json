@@ -119,11 +119,25 @@
             "enum": ["resilience", "stress_response", "disease", "exposure_only"],
             "description": "Must agree with the phenotype ontology's resilience_relevance unless explicitly overridden with a note."
           },
-          "sample_size": {"type": "integer", "minimum": 0},
+          "sample_size": {"type": "integer", "minimum": 0, "description": "Number of samples analyzed in this comparison, after any excluded_samples are removed."},
           "biological_replicates": {"type": "integer", "minimum": 0},
           "results_file": {
             "type": ["string", "null"],
             "description": "Relative path to the processed results file for this comparison, if analysis_mode is processed_results_harmonization."
+          },
+          "excluded_samples": {
+            "type": "array",
+            "description": "Samples deposited for this comparison's groups but left out of its analysis by curation. Each needs a reason and the evidence behind it; exclusions must rest on a measurement independent of the comparison's own result.",
+            "items": {
+              "type": "object",
+              "required": ["sample_id", "reason", "evidence"],
+              "additionalProperties": false,
+              "properties": {
+                "sample_id": {"type": "string", "description": "sample_id as it appears in the study's sample sheet."},
+                "reason": {"type": "string"},
+                "evidence": {"type": "string", "description": "What was measured, and where the measurement is recorded."}
+              }
+            }
           },
           "meta_analysis_primary": {
             "type": "boolean",

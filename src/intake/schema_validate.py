@@ -8,6 +8,7 @@ curator may have deliberately overridden with a documented rationale.
 """
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -164,6 +165,29 @@ def validate_study_file(path) -> ValidationResult:
                     f"data/studies/{study.get('study_id')}/ was generated from "
                     f"{generated!r}. One of them is wrong."
                 )
+
+    # Excluded samples must name real samples, so a typo cannot silently
+    # exclude nothing while the registry claims an exclusion.
+    sheet_path = DATA_DIR / "studies" / str(study.get("study_id")) / "samplesheet.tsv"
+    excluded = [
+        (comp.get("comparison_id"), entry.get("sample_id"))
+        for comp in study.get("comparisons", [])
+        for entry in comp.get("excluded_samples") or []
+    ]
+    if excluded:
+        if not sheet_path.exists():
+            errors.append(
+                "excluded_samples are declared but there is no sample sheet at "
+                f"data/studies/{study.get('study_id')}/samplesheet.tsv to check them against"
+            )
+        else:
+            with open(sheet_path, newline="") as fh:
+                known = {row["sample_id"] for row in csv.DictReader(fh, delimiter="\t")}
+            for cid, sample_id in excluded:
+                if sample_id not in known:
+                    errors.append(
+                        f"comparison {cid!r}: excluded sample {sample_id!r} is not in the sample sheet"
+                    )
 
     valid = len(errors) == 0
     return ValidationResult(str(path), valid, errors=errors, warnings=warnings)
