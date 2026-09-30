@@ -201,9 +201,6 @@ def test_only_miyagi_usa_is_prespecified_for_pooling(study):
     assert primary == ["miyagi_oshv1_usa_vs_control"]
 
 
-# The committed Midori France result predates the DO_CT_4 exclusion. Remove it
-# from this set when that comparison is re-run with --exclude_samples DO_CT_4.
-EXCLUSION_PENDING = {"midori_oshv1_france_vs_control"}
 
 
 def test_do_ct_4_is_excluded_from_every_midori_comparison_and_nothing_else(study):
@@ -212,9 +209,7 @@ def test_do_ct_4_is_excluded_from_every_midori_comparison_and_nothing_else(study
     use it and must exclude nothing."""
     for comp in study["comparisons"]:
         excluded = [e["sample_id"] for e in comp.get("excluded_samples") or []]
-        if comp["comparison_id"] in EXCLUSION_PENDING:
-            assert excluded == [], comp["comparison_id"]
-        elif comp["comparison_id"].startswith("midori"):
+        if comp["comparison_id"].startswith("midori"):
             assert excluded == ["DO_CT_4"], comp["comparison_id"]
         else:
             assert excluded == [], comp["comparison_id"]
@@ -254,3 +249,17 @@ def test_excluded_samples_are_real_midori_controls(study, samplesheet):
         for entry in comp.get("excluded_samples") or []:
             assert rows[entry["sample_id"]]["condition"] == "Midori_Control"
             assert entry["reason"] and entry["evidence"]
+
+
+def test_only_two_midori_france_animals_carry_the_virus():
+    """The near-null France contrast is explained by infection, not by the
+    pipeline: 2 of 5 challenged animals are virus-positive. All five stay in
+    the comparison; see the study limitations."""
+    path = STUDY_DIR / "CALLA2026_OSHV_midori_oshv1_france_vs_control_viral_load.tsv"
+    with open(path) as fh:
+        viral = list(csv.DictReader(fh, delimiter="\t"))
+    challenged = {r["sample_id"]: r for r in viral if r["condition"] == "Midori_France"}
+    infected = sorted(s for s, r in challenged.items() if r["virus_detected"] == "True")
+    assert len(challenged) == 5
+    assert infected == ["DO_FR_2", "DO_FR_3"]
+    assert not any(r["excluded_from_de"] == "True" for r in challenged.values())

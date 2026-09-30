@@ -1,0 +1,12 @@
+sample_id	library_id	condition	pairs_processed	viral_pairs	viral_per_million	virus_detected	excluded_from_de
+DO_CT_5	SRR35422866	Midori_Control	34115396	3	0.09	False	False
+DO_CT_4	SRR35422867	Midori_Control	31310792	363118	11597.22	True	True
+DO_CT_3	SRR35422868	Midori_Control	39295375	2	0.05	False	False
+DO_CT_2	SRR35422869	Midori_Control	33469718	8	0.24	False	False
+DO_CT_1	SRR35422870	Midori_Control	33335168	0	0.0	False	False
+DO_FR_5	SRR35422900	Midori_France	38271754	12	0.31	False	False
+DO_FR_4	SRR35422901	Midori_France	43738295	1690	38.64	False	False
+DO_FR_3	SRR35422902	Midori_France	34449447	1997309	57977.97	True	False
+DO_FR_2	SRR35422903	Midori_France	36731037	407553	11095.6	True	False
+DO_FR_1	SRR35422904	Midori_France	41595571	0	0.0	False	False
+DO_CT_6	SRR35422905	Midori_Control	32875578	4	0.12	False	False

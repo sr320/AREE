@@ -112,11 +112,16 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         warning("a group has fewer than 3 replicates; dispersion estimates will be unreliable")
     }
 
-    # quant_subdir is optional: Salmon output directories are named for the
-    # sample by default, so fall back to sample_id rather than requiring the
-    # curator to duplicate the column.
+    # quant_subdir is optional. Salmon output directories are named for the
+    # read-file key, which is the run accession for archive downloads and the
+    # sample_id for hand-named files, so use whichever directory exists rather
+    # than requiring the curator to add the column.
     if (!"quant_subdir" %in% names(samples)) {
         samples\$quant_subdir <- samples\$sample_id
+        if ("run_accession" %in% names(samples)) {
+            by_run <- file.exists(file.path(args\$quant_dir, samples\$run_accession, "quant.sf"))
+            samples\$quant_subdir[by_run] <- samples\$run_accession[by_run]
+        }
     }
 
     quant_files <- file.path(args\$quant_dir, samples\$quant_subdir, "quant.sf")

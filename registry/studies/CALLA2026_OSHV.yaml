@@ -111,13 +111,13 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
-    sample_size: 11
+    sample_size: 10
     biological_replicates: 5
     results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv"
-    # EXCLUSION PENDING. The committed result was computed with DO_CT_4 still
-    # included (11 samples). DO_CT_4 must be excluded here as in the other Midori
-    # comparisons; add the same excluded_samples entry and set sample_size to 10
-    # when this comparison is re-run with --exclude_samples DO_CT_4.
+    excluded_samples:
+      - sample_id: "DO_CT_4"
+        reason: "Unchallenged Midori control carrying OsHV-1 at infected-animal levels, so not a valid control."
+        evidence: "OsHV-1 (NC_005881.2) read QC on all 31.3M read pairs: 11,597 viral pairs per million, against 0-0.24 in the five other Midori controls and 14,269-80,784 in the five Midori Australia animals (data/studies/CALLA2026_OSHV/CALLA2026_OSHV_midori_oshv1_australia_vs_control_viral_load.tsv, 2026-09-30). A 2M-pair subsample gave 11,662 per million on 2026-09-24. Its ADAR (LOC105341503) expression and PCA position also match the infected animals."
 
   - comparison_id: "midori_oshv1_usa_vs_control"
     tissue: "whole_animal"
@@ -232,8 +232,7 @@ limitations: >
   directory. (7) Per-sample OsHV-1 read QC shows the challenge did not take
   uniformly, and one control is infected. Midori control DO_CT_4 carries the
   virus at infected-animal levels and is excluded from every Midori
-  comparison (see excluded_samples); the Midori France result committed here
-  predates that exclusion and still includes it, pending a re-run. Only 2 of
+  comparison (see excluded_samples). Only 2 of
   the 5 Midori France animals (DO_FR_2, DO_FR_3) carry detectable virus, which
   is why that contrast is close to null. All five are kept: removing
   uninfected animals after seeing the data would change the question from

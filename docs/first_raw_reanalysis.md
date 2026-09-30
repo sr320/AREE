@@ -12,7 +12,7 @@ run.
 |---|---|---|---|
 | `miyagi_oshv1_usa_vs_control` | full depth, harmonized | 30,625 | **yes** — the prespecified `meta_analysis_primary` comparison |
 | `midori_oshv1_australia_vs_control` | full depth, harmonized, DO_CT_4 excluded (10 samples) | 30,482 | no — within-study, not primary |
-| `midori_oshv1_france_vs_control` | full depth, harmonized, **still includes DO_CT_4** — re-run pending; only 2 of 5 challenged animals infected | 30,628 | no — within-study, not primary |
+| `midori_oshv1_france_vs_control` | full depth, harmonized, DO_CT_4 excluded (10 samples); only 2 of 5 challenged animals infected | 30,541 | no — within-study, not primary |
 | `midori_oshv1_usa_vs_control` | not run; DO_CT_4 exclusion already registered | 0 | no |
 | `miyagi_oshv1_australia_vs_control` | not run | 0 | no |
 | `miyagi_oshv1_france_vs_control` | not run | 0 | no |
@@ -289,8 +289,10 @@ ran — Salmon 2.6.0 (per each quant directory's `cmd_info.json`) and, at the
 records observed versions, treat that block as intent rather than record.
 
 The table below is the state before the DO_CT_4 exclusion. Re-run without
-DO_CT_4, Midori × Australia has 30,482 genes, 5,473 at `padj < 0.05`, and a
-median |log2FC| of 0.38; see [Viral read QC](#viral-read-qc-and-the-do_ct_4-exclusion).
+DO_CT_4 on 2026-09-30, Midori × Australia has 30,482 genes, 5,473 at
+`padj < 0.05`, and a median |log2FC| of 0.38; Midori × France has 30,541
+genes, 2,015 at unadjusted `p < 0.05`, 253 at `padj < 0.05`, and a median
+|log2FC| of 0.21. See [Viral read QC](#viral-read-qc-and-the-do_ct_4-exclusion).
 
 | | Miyagi × USA | Midori × Australia | Midori × France |
 |---|---|---|---|
@@ -349,8 +351,8 @@ by hand on 2M-pair subsamples (2026-09-24), then on all reads by the workflow
 | Midori controls CT_1, 2, 3, 5, 6, all reads | 0–0.24 |
 | **Midori control DO_CT_4, all reads** | **11,597** |
 | Midori × Australia (5 of 5), all reads | 14,269–80,784 |
-| Midori × France FR_2, FR_3, subsample | 11,137 and 57,897 |
-| Midori × France FR_1, FR_4, FR_5, subsample | 0, 36, 0.5 |
+| Midori × France FR_2, FR_3, all reads | 11,096 and 57,978 |
+| Midori × France FR_1, FR_4, FR_5, all reads | 0, 38.6, 0.3 |
 
 Two findings follow, and they agree with the host transcriptome: the same
 animals separate on the first principal component, and ADAR (`LOC105341503`),
@@ -366,9 +368,9 @@ result — but the effect is large. Without it, Midori × Australia gains 399
 genes at `padj < 0.05`, and ADAR moves from log2FC 2.05 (padj 0.27, not
 significant) to 5.99 (padj 1.6 × 10⁻⁷²): the infected control was masking the
 strongest antiviral signal while leaving the genome-wide fold changes largely
-unchanged (r = 0.97). **The committed Midori × France result still includes
-DO_CT_4**; it was not re-run because the external drives disconnected mid-run
-on 2026-09-30.
+unchanged (r = 0.97). Midori × France shows the same pattern at smaller
+scale: 54 → 253 genes at `padj < 0.05`, and ADAR from log2FC 1.47 (padj 1.0)
+to 5.42 (padj 0.003).
 
 **Midori × France: 2 of 5 challenged animals infected.** All five are kept.
 Dropping uninfected animals after seeing the data would turn "response to
@@ -433,11 +435,12 @@ statistics from real reads, and that random-effects pooling works on real data.
 They do not establish anything biological about these oysters, and they leave
 plenty unverified:
 
-* **Three comparisons are not run**, and Midori France still needs its
-  DO_CT_4 re-run. Only 2 of its 5 challenged animals are infected.
-* **One clean end-to-end run.** The 2026-09-30 Midori Australia re-run is the
-  first full-depth run to finish `OK`, after `RENDER_REPORT` was moved to
-  local scratch. Earlier runs all exited `ERR` at that step.
+* **Three comparisons are not run.** Of the three that are, Midori France has
+  only 2 infected animals out of 5.
+* **Two clean end-to-end runs.** The 2026-09-30 Midori Australia and Midori
+  France runs are the first at full depth to finish `OK`, after `RENDER_REPORT`
+  was moved to local scratch and the work directory off exFAT. Earlier runs
+  all exited `ERR` at that step.
 * **No tolerance phenotype.** Nothing here measures survival or mortality, so
   no evidence from this study can be `resilience_associated`, whatever the
   population contrast suggests. Viral load is now measured per animal, but

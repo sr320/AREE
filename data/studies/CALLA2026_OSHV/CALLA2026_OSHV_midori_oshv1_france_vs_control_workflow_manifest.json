@@ -7,14 +7,18 @@
   "input_files": [
     {
       "name": "CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv",
-      "sha256": "04b069f2a3909d36e02b2969b75e4c28a15787b388fb3c1c24e8e0e6ee3712b6"
+      "sha256": "22bda22be819f1aad25966d32f6d53c68ed5479d3356d8805fad740159632d67"
     }
   ],
   "parameters": {
     "mode": "raw_reanalysis",
     "study_id": "CALLA2026_OSHV",
     "comparison_id": "midori_oshv1_france_vs_control",
-    "outdir": "/private/tmp/aree-calla-full/results/midori_oshv1_france_vs_control"
+    "outdir": "results/rnaseq/CALLA2026_OSHV/midori_oshv1_france_vs_control",
+    "exclude_samples": [
+      "DO_CT_4"
+    ],
+    "viral_reference": "data/reference/pathogens/OsHV-1/NC_005881.2.fasta"
   },
   "software_versions": {
     "fastqc": "0.12.1",
@@ -32,12 +36,144 @@
     "genome_assembly": "GCF_963853765.1",
     "annotation_version": "GCF_963853765.1-RS_2024_06"
   },
-  "workflow_start": "2026-09-04T08:57:57.891745-07:00",
+  "workflow_start": "2026-09-30T13:31:54.729939-07:00",
   "qc_metrics": {
     "mean_reads_per_sample": null,
     "mean_mapping_rate_percent": null,
     "n_samples": null,
     "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
   },
-  "warnings": []
+  "viral_load": {
+    "reference": {
+      "file": "NC_005881.2.fasta",
+      "sha256": "cdd9a92f3db33d3f09ffdfd759c677b9296f87aff2eb6d3580546a0f910f98d9",
+      "header": "NC_005881.2 Ostreid herpesvirus 1, complete genome"
+    },
+    "threshold_viral_pairs_per_million": 100.0,
+    "samples": [
+      {
+        "sample_id": "DO_CT_5",
+        "library_id": "SRR35422866",
+        "condition": "Midori_Control",
+        "pairs_processed": 34115396,
+        "viral_pairs": 3,
+        "viral_per_million": 0.09,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_CT_4",
+        "library_id": "SRR35422867",
+        "condition": "Midori_Control",
+        "pairs_processed": 31310792,
+        "viral_pairs": 363118,
+        "viral_per_million": 11597.22,
+        "virus_detected": true,
+        "excluded_from_de": true
+      },
+      {
+        "sample_id": "DO_CT_3",
+        "library_id": "SRR35422868",
+        "condition": "Midori_Control",
+        "pairs_processed": 39295375,
+        "viral_pairs": 2,
+        "viral_per_million": 0.05,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_CT_2",
+        "library_id": "SRR35422869",
+        "condition": "Midori_Control",
+        "pairs_processed": 33469718,
+        "viral_pairs": 8,
+        "viral_per_million": 0.24,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_CT_1",
+        "library_id": "SRR35422870",
+        "condition": "Midori_Control",
+        "pairs_processed": 33335168,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_FR_5",
+        "library_id": "SRR35422900",
+        "condition": "Midori_France",
+        "pairs_processed": 38271754,
+        "viral_pairs": 12,
+        "viral_per_million": 0.31,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_FR_4",
+        "library_id": "SRR35422901",
+        "condition": "Midori_France",
+        "pairs_processed": 43738295,
+        "viral_pairs": 1690,
+        "viral_per_million": 38.64,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_FR_3",
+        "library_id": "SRR35422902",
+        "condition": "Midori_France",
+        "pairs_processed": 34449447,
+        "viral_pairs": 1997309,
+        "viral_per_million": 57977.97,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_FR_2",
+        "library_id": "SRR35422903",
+        "condition": "Midori_France",
+        "pairs_processed": 36731037,
+        "viral_pairs": 407553,
+        "viral_per_million": 11095.6,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_FR_1",
+        "library_id": "SRR35422904",
+        "condition": "Midori_France",
+        "pairs_processed": 41595571,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "DO_CT_6",
+        "library_id": "SRR35422905",
+        "condition": "Midori_Control",
+        "pairs_processed": 32875578,
+        "viral_pairs": 4,
+        "viral_per_million": 0.12,
+        "virus_detected": false,
+        "excluded_from_de": false
+      }
+    ],
+    "warnings": [
+      "viral_reads_in_control: DO_CT_4 (Midori_Control) has 11,597.2 viral pairs per million, at or above the 100 threshold (excluded from DE)",
+      "no_viral_reads_in_challenged_sample: DO_FR_5 (Midori_France) has 0.3 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: DO_FR_4 (Midori_France) has 38.6 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: DO_FR_1 (Midori_France) has 0.0 viral pairs per million, below the 100 threshold"
+    ]
+  },
+  "warnings": [
+    "viral_reads_in_control: DO_CT_4 (Midori_Control) has 11,597.2 viral pairs per million, at or above the 100 threshold (excluded from DE)",
+    "no_viral_reads_in_challenged_sample: DO_FR_5 (Midori_France) has 0.3 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: DO_FR_4 (Midori_France) has 38.6 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: DO_FR_1 (Midori_France) has 0.0 viral pairs per million, below the 100 threshold",
+    "samples_excluded_by_curation: DO_CT_4 (see the study registry for the reason)"
+  ]
 }
