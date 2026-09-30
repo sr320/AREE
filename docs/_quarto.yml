@@ -9,10 +9,10 @@ website:
   description: "Aquaculture Resilience Evidence Engine — reproducible resilience biomarker evidence for Crassostrea gigas and other aquaculture species."
   navbar:
     left:
-      - text: "Home"
-        href: index.qmd
       - text: "Progress"
-        href: dashboard.qmd
+        href: index.qmd
+      - text: "About"
+        href: about.qmd
       - text: "Docs"
         href: installation.md
     right:
@@ -23,10 +23,10 @@ website:
     contents:
       - section: "Getting started"
         contents:
-          - text: "Overview"
-            href: index.qmd
           - text: "Progress and findings"
-            href: dashboard.qmd
+            href: index.qmd
+          - text: "About AREE"
+            href: about.qmd
           - text: "Installation"
             href: installation.md
           - text: "Why this resource matters"

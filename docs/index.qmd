@@ -1,50 +1,122 @@
 ---
-title: "Aquaculture Resilience Evidence Engine (AREE)"
+title: "AREE: progress and findings"
+toc: false
+execute:
+  echo: false
 ---
 
-AREE is an open, reproducible research resource that converts fragmented public
-omics datasets into **harmonized, comparable resilience-biomarker evidence** for
-Pacific oyster (*Crassostrea gigas*) and, by design, other shellfish and
-aquaculture organisms.
+```{=html}
+<style>
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 1rem 0 1.5rem; }
+.kpi { border: 1px solid #e3e3e0; border-radius: 8px; padding: 12px 14px; background: #fcfcfb; }
+.kpi-label { font-size: 0.78rem; color: #52514e; text-transform: uppercase; letter-spacing: .04em; }
+.kpi-value { font-size: 1.7rem; font-weight: 600; line-height: 1.2; color: #0b0b0b; }
+.kpi-note { font-size: 0.8rem; color: #52514e; margin-top: 4px; }
+.dash-meta { font-size: 0.85rem; color: #52514e; }
+</style>
+```
 
-It is not a static resource list or a generic website. It is a versioned
-evidence-generation system with five connected layers:
+```{ojs}
+data = FileAttachment("dashboard/data.json").json()
+k = data.kpis
+fmt = (n) => (n == null ? "—" : n.toLocaleString("en-US"))
+fmtP = (p) => (p == null ? "—" : p < 1e-3 ? p.toExponential(1) : p.toFixed(3))
+phen = (id) => data.vocab.phenotype_labels[id] ?? id
+stress = (id) => data.vocab.stressor_labels[id] ?? id
+TIER = new Map([["high_priority_cross_study", "High priority"], ["multi_omics_convergence", "Multi-omics"], ["emerging", "Emerging"]])
+missing = Object.entries(data.artifacts_present).filter(([, v]) => !v).map(([n]) => n)
+```
 
-1. **Study registry & intake** — machine-readable registration of public
-   datasets with controlled vocabularies for phenotypes and stressors.
-2. **Standardized reanalysis workflows** — Nextflow workflows for RNA-seq,
-   methylation, proteomics, and metabolomics (raw-reanalysis or
-   processed-results modes).
-3. **Cross-study harmonization** — a shared evidence schema plus identifier
-   mapping with explicit confidence levels.
-4. **Meta-analysis & candidate prioritization** — random-effects pooling,
-   heterogeneity statistics, and a transparent (non-black-box) candidate score
-   with hard tier gates.
-5. **User-facing outputs** — this documentation site plus a Streamlit interface
-   and downloadable evidence cards.
+```{ojs}
+html`<p class="dash-meta">Generated ${data.commit.date} from commit
+  <a href="${data.repo_url}/commit/${data.commit.sha}"><code>${data.commit.short}</code></a>.
+  AREE turns public oyster omics datasets into comparable resilience-biomarker evidence
+  (<a href="about.html">about the resource</a>). Every number is computed from the repository and the pipeline's outputs.
+  Simulated demo studies are excluded from the numbers and tables below unless marked.</p>
+${missing.length ? html`<p><strong>Pipeline outputs missing from this build:</strong> ${missing.join(", ")}. Counts that depend on them read as zero.</p>` : ""}`
+```
 
-## Core principles
+```{ojs}
+html`<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-label">Real studies</div>
+    <div class="kpi-value">${k.n_studies_real}</div>
+    <div class="kpi-note">${k.n_studies_simulated} simulated demo studies kept separate</div></div>
+  <div class="kpi"><div class="kpi-label">Comparisons harmonized</div>
+    <div class="kpi-value">${k.n_comparisons_real_harmonized} / ${k.n_comparisons_real}</div>
+    <div class="kpi-note">registered contrasts with evidence in the table</div></div>
+  <div class="kpi"><div class="kpi-label">Evidence records</div>
+    <div class="kpi-value">${fmt(k.n_evidence_records_real)}</div>
+    <div class="kpi-note">one row per gene × comparison</div></div>
+  <div class="kpi"><div class="kpi-label">High-priority candidates</div>
+    <div class="kpi-value">${fmt(k.n_candidates_real_high_priority)}</div>
+    <div class="kpi-note">from ${k.n_real_pools_k2plus} cross-study pool${k.n_real_pools_k2plus === 1 ? "" : "s"}</div></div>
+</div>`
+```
 
-- **Association, not proof.** AREE surfaces evidence convergence, never confirmed
-  mechanistic causation. A statistically significant hit in one study is never
-  presented as a validated biomarker.
-- **Provenance always.** Every result traces back to a source file, checksum,
-  parameter set, and workflow version.
-- **Missingness is explicit.** Missing metadata is recorded and reportable,
-  never silently dropped or imputed.
-- **Contradictions are surfaced.** Conflicting cross-study findings appear in
-  meta-analysis summaries and evidence cards rather than being averaged away.
+## What the evidence says so far
 
-## Where to go next
+```{ojs}
+{
+  const pools = data.pools.filter(p => !p.simulated);
+  const classes = data.candidates.by_evidence_class.filter(d => !d.simulated);
+  const poolText = pools.length
+    ? pools.map(p => `${p.studies.join(" and ")} pool on <em>${phen(p.phenotype)}</em>: ${fmt(p.n_features_k2plus)} genes measured in both, ${fmt(p.n_features_k2plus_significant)} significant after multiple-testing correction`).join("; ")
+    : "no cross-study pool has formed yet";
+  const classText = classes.map(d => `${fmt(d.n)} ${d.evidence_class.replace(/_/g, " ")}`).join(", ");
+  const gap = k.n_real_comparisons_with_resilience_phenotype === 0
+    ? "No real comparison measures a resilience outcome yet."
+    : `${k.n_real_comparisons_with_resilience_phenotype} of ${k.n_comparisons_real} real comparisons measure a resilience outcome.`;
+  return html`<p>${poolText}. Ranked candidates by evidence class: ${classText}.</p>
+  <p>${gap} All real studies so far are RNA-seq pathogen challenges, so the ranked list reflects transcriptional
+  response to infection, not resistance. A candidate here is an association across the available evidence, not a
+  validated biomarker. The next curation step is a second stressor class and a study with a measured survival or
+  pathogen-load phenotype (<a href="candidate_studies.html">candidate studies</a>).</p>`;
+}
+```
 
-- Where the effort stands: [progress and findings](dashboard.qmd).
-- New here? Read [Why this resource matters](why_it_matters.md) and
-  [Installation](installation.md).
-- Want to add a dataset? See [Adding a study](adding_a_study.md).
-- Curious how it works? See the [Technical architecture](architecture.md) and
-  the [Design document](design.md).
+### Top candidates
 
-> **Note on demo data.** Every demo dataset is labeled **simulated** and is
-> partitioned from real evidence during pooling, ranking, and reporting. The
-> repository also includes registered real public studies; do not cite a demo
-> result as real biological evidence.
+Ranked by tier, then score. Click a gene to open its evidence card.
+
+```{ojs}
+Inputs.table(data.candidates.top_real, {
+  columns: ["feature_id_standardized", "gene_description", "phenotype_label", "tier", "k_studies",
+            "pooled_effect", "adjusted_p_value"],
+  header: {feature_id_standardized: "Gene", gene_description: "Description", phenotype_label: "Phenotype",
+           tier: "Tier", k_studies: "Studies", pooled_effect: "Pooled log2FC", adjusted_p_value: "Adj. p"},
+  format: {
+    feature_id_standardized: (v, i, rows) => rows[i].card_page ? htl.html`<a href="${rows[i].card_page}">${v}</a>` : v,
+    tier: v => TIER.get(v) ?? v,
+    pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
+    adjusted_p_value: fmtP
+  },
+  rows: 15, layout: "auto"
+})
+```
+
+## Studies
+
+```{ojs}
+Inputs.table(data.studies.filter(s => !s.simulated), {
+  columns: ["study_id", "citation", "stressors", "phenotypes", "n_comparisons_harmonized", "n_evidence_records", "analysis_status"],
+  header: {study_id: "Study", citation: "Citation", stressors: "Stressor", phenotypes: "Phenotype",
+           n_comparisons_harmonized: "Harmonized", n_evidence_records: "Records", analysis_status: "Status"},
+  format: {
+    study_id: (v, i, rows) => htl.html`<a href="${data.repo_url}/blob/main/${rows[i].registry_file}">${v}</a>`,
+    citation: (v, i, rows) => rows[i].doi ? htl.html`<a href="https://doi.org/${rows[i].doi}">${v}</a>` : v,
+    stressors: v => v.map(stress).join(", "),
+    phenotypes: v => v.map(phen).join(", "),
+    n_comparisons_harmonized: (v, i, rows) => `${v} / ${rows[i].n_comparisons}`,
+    n_evidence_records: fmt,
+    analysis_status: v => v.replace(/_/g, " ")
+  },
+  rows: 10, layout: "auto"
+})
+```
+
+```{ojs}
+html`<p class="dash-meta">${data.tests.n_tests} automated tests, ${data.activity.n_commits} commits since ${data.activity.first_commit_date}.
+  Details: <a href="implementation_status.html">implementation status</a> ·
+  <a href="${data.repo_url}">source repository</a>.
+  Built by <code>aree build-dashboard</code> and <code>quarto render docs</code> on every push to <code>main</code>.</p>`
+```

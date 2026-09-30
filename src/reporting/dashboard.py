@@ -4,7 +4,7 @@
 actually produced — registry YAMLs, the evidence table, meta-analysis tables,
 ranked candidates, manifests, the test suite, the git log, and the candid
 implementation-status page — and writes one JSON document that
-`docs/dashboard.qmd` renders.
+`docs/index.qmd` (the site home page) renders.
 
 Everything is derived; nothing is typed in by hand. Missing pipeline outputs are
 reported as missing (`artifacts_present`), not silently zeroed, so a dashboard

@@ -197,5 +197,5 @@ jobs:
       - uses: quarto-dev/quarto-actions/setup@v2
       - name: Render docs site
         run: quarto render docs
-      - name: Dashboard page rendered
-        run: test -f docs/_site/dashboard.html
+      - name: Dashboard home page rendered
+        run: test -f docs/_site/index.html && test -f docs/_site/about.html

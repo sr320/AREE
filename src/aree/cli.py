@@ -288,7 +288,7 @@ def build_dashboard_cmd(out_path):
 
     Reads whatever the pipeline has produced so far; missing outputs are reported
     as missing on the page rather than hidden. `quarto render docs` then renders
-    docs/dashboard.qmd from it.
+    docs/index.qmd (the site home page) from it.
     """
     data = build_dashboard_data(out_path)
     present = data["artifacts_present"]

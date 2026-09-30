@@ -21,7 +21,7 @@ in a single study as a validated biomarker.
 > only harmonized real-study outputs may be interpreted as real evidence (see
 > [docs/adding_a_study.md](docs/adding_a_study.md)).
 
-**Progress and findings dashboard:** <https://sr320.github.io/AREE/dashboard.html>
+**Progress and findings dashboard:** <https://sr320.github.io/AREE/>
 — what has been registered, harmonized, pooled, and ranked so far, regenerated
 from the pipeline's own outputs on every push to `main`
 ([how it is built](#progress-dashboard)).
@@ -203,7 +203,7 @@ discontinued with no replacement stay `unresolved` by design.
 
 ## Documentation
 
-Start with [docs/index.qmd](docs/index.qmd) or render the site with
+Start with [docs/about.qmd](docs/about.qmd) or render the site with
 `quarto render docs`. Key pages:
 
 - [Why this resource matters](docs/why_it_matters.md)
@@ -215,20 +215,18 @@ Start with [docs/index.qmd](docs/index.qmd) or render the site with
 
 ## Progress dashboard
 
-The documentation site is published to GitHub Pages at
-<https://sr320.github.io/AREE/>, and its
-[dashboard page](https://sr320.github.io/AREE/dashboard.html) shows the state
-of the effort: registered studies and their pipeline status per comparison,
-evidence records by study and mapping confidence, the cross-study pools that
-have formed, ranked candidates by tier with links to their evidence cards, test
-and commit activity, and the implementation-status counts. Real and simulated
-evidence are separated throughout.
+The site's home page, <https://sr320.github.io/AREE/>, is a one-screen
+dashboard of where the effort stands: how many real studies, comparisons,
+evidence records, and high-priority candidates exist, what the pooled evidence
+currently says and what it does not, the top-ranked candidates with links to
+their evidence cards, and the status of each real study. Simulated demo
+evidence is excluded from its numbers.
 
 Nothing on the page is typed in. `.github/workflows/pages.yml` registers every
 study, harmonizes the demo studies against the demo crosswalk and the real
 studies against the real crosswalk, pools and ranks, then runs
 `aree build-dashboard`, which writes `docs/dashboard/data.json` from those
-outputs, and `quarto render docs` renders `docs/dashboard.qmd` from it. To build
+outputs, and `quarto render docs` renders `docs/index.qmd` from it. To build
 the same page locally:
 
 ```bash
