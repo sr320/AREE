@@ -55,12 +55,21 @@ jobs:
             aree harmonize --study "$sid"
           done
 
+      # CALLA2026_OSHV is a raw_reanalysis study with comparisons still pending,
+      # so it is harmonized one committed comparison at a time (--input/--comparison),
+      # as docs/first_raw_reanalysis.md describes; a whole-study harmonize stops
+      # at the first comparison with no results_file.
       - name: Harmonize real studies (real crosswalk)
         env:
           AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
         run: |
-          for sid in HESSER2024_VCOR DELISLE2020_OSHV_TEMP CALLA2026_OSHV; do
+          for sid in HESSER2024_VCOR DELISLE2020_OSHV_TEMP; do
             aree harmonize --study "$sid"
+          done
+          sid=CALLA2026_OSHV
+          for f in data/studies/$sid/${sid}_*_dge_standardized.tsv; do
+            cid=$(basename "$f" _dge_standardized.tsv); cid=${cid#"${sid}_"}
+            aree harmonize --study "$sid" --comparison "$cid" --input "$f"
           done
 
       - name: Meta-analyze, rank, and summarize

@@ -73,13 +73,22 @@ real-study: intake-check
 
 # Everything the Pages workflow does to populate the dashboard: the real
 # studies whose standardized result tables are committed under data/studies/.
-REAL_STUDIES := HESSER2024_VCOR DELISLE2020_OSHV_TEMP CALLA2026_OSHV
+# CALLA2026_OSHV (raw_reanalysis, comparisons still pending) is harmonized one
+# committed comparison at a time, as docs/first_raw_reanalysis.md describes.
+REAL_STUDIES := HESSER2024_VCOR DELISLE2020_OSHV_TEMP
+RAW_STUDY := CALLA2026_OSHV
 
 real-pool:
 	@test -f $(REAL_CROSSWALK) || (echo "Real crosswalk missing. Run: make crosswalk" && exit 1)
-	@for sid in $(REAL_STUDIES); do \
+	@for sid in $(REAL_STUDIES) $(RAW_STUDY); do \
 		AREE_CROSSWALK=$(REAL_CROSSWALK) aree register-study registry/studies/$$sid.yaml --update; \
+	done
+	@for sid in $(REAL_STUDIES); do \
 		AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study $$sid; \
+	done
+	@for f in data/studies/$(RAW_STUDY)/$(RAW_STUDY)_*_dge_standardized.tsv; do \
+		cid=$$(basename $$f _dge_standardized.tsv); cid=$${cid#$(RAW_STUDY)_}; \
+		AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study $(RAW_STUDY) --comparison $$cid --input $$f; \
 	done
 
 dashboard:
