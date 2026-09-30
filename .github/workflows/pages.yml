@@ -1,0 +1,93 @@
+name: Deploy dashboard to GitHub Pages
+
+# Builds the documentation site with the progress-and-findings dashboard and
+# publishes it at https://sr320.github.io/AREE/.
+#
+# The dashboard is generated from the pipeline's real outputs, so this workflow
+# runs the same steps a curator runs locally: register every study, harmonize
+# the simulated studies against the demo crosswalk and the real studies against
+# the real crosswalk, pool, rank, then `aree build-dashboard`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build site + dashboard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the dashboard's activity chart reads the full git log
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[intake]"
+
+      - name: Register every study
+        run: |
+          for f in registry/studies/*.yaml; do
+            case "$(basename "$f")" in _*) continue ;; esac
+            aree register-study "$f" --update
+          done
+          aree list-studies
+
+      - name: Harmonize simulated demo studies (demo crosswalk)
+        run: |
+          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+            aree harmonize --study "$sid"
+          done
+
+      - name: Harmonize real studies (real crosswalk)
+        env:
+          AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+        run: |
+          for sid in HESSER2024_VCOR DELISLE2020_OSHV_TEMP CALLA2026_OSHV; do
+            aree harmonize --study "$sid"
+          done
+
+      - name: Meta-analyze, rank, and summarize
+        run: |
+          aree meta-analyze --feature-type gene
+          aree build-evidence-cards
+          aree top-candidates
+
+      - name: Build dashboard data
+        run: aree build-dashboard
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render site
+        run: quarto render docs
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

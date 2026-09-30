@@ -41,3 +41,6 @@ data/reference/crosswalk/_sources/
 # Sample sheets and checksummed FASTQ manifests ARE committed; reads are not.
 data/raw/
 results/
+
+# Dashboard data + copied evidence cards (regenerate via `aree build-dashboard` / `make dashboard`)
+docs/dashboard/

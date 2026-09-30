@@ -21,6 +21,11 @@ in a single study as a validated biomarker.
 > only harmonized real-study outputs may be interpreted as real evidence (see
 > [docs/adding_a_study.md](docs/adding_a_study.md)).
 
+**Progress and findings dashboard:** <https://sr320.github.io/AREE/dashboard.html>
+— what has been registered, harmonized, pooled, and ranked so far, regenerated
+from the pipeline's own outputs on every push to `main`
+([how it is built](#progress-dashboard)).
+
 ## The five layers
 
 1. **Study registry & intake** (`registry/`, `src/intake/`) — machine-readable
@@ -78,7 +83,8 @@ aree meta-analyze --feature-type gene
 aree build-evidence-cards --phenotype thermal_tolerance
 aree top-candidates --n 10
 
-# 6. Build the docs site / launch the interface
+# 6. Build the docs site (with the progress dashboard) / launch the interface
+aree build-dashboard
 quarto render docs
 streamlit run app/main.py
 ```
@@ -140,6 +146,7 @@ AREE/
 | `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>] [--max-adjusted-p <q>] [--all-cards]` | Rank every candidate into `reports/evidence_cards/candidates.tsv` and write an evidence card for each one with a BH-adjusted p ≤ `q` (default 0.05, pooled or in any contributing study) |
 | `aree top-candidates [--n <N>] [--candidates <path>] [--out <path>]` | Regroup an existing `candidates.tsv` by phenotype and write the top `N` (default 10) per phenotype, ranked by tier then score, to `reports/top_candidates_summary.md` |
 | `aree build-crosswalk [--taxid <n>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB |
+| `aree build-dashboard [--out <path>]` | Summarize registry, pipeline, and findings state into `docs/dashboard/data.json` (plus the top candidates' evidence cards) for the Quarto dashboard page |
 
 ## Working with real data
 
@@ -205,6 +212,37 @@ Start with [docs/index.qmd](docs/index.qmd) or render the site with
 - [Interpreting meta-analysis](docs/interpreting_meta_analysis.md) ·
   [Interpreting candidate scores](docs/interpreting_candidate_scores.md)
 - [Governance & provenance](docs/governance_and_provenance.md) · [Roadmap](docs/roadmap.md)
+
+## Progress dashboard
+
+The documentation site is published to GitHub Pages at
+<https://sr320.github.io/AREE/>, and its
+[dashboard page](https://sr320.github.io/AREE/dashboard.html) shows the state
+of the effort: registered studies and their pipeline status per comparison,
+evidence records by study and mapping confidence, the cross-study pools that
+have formed, ranked candidates by tier with links to their evidence cards, test
+and commit activity, and the implementation-status counts. Real and simulated
+evidence are separated throughout.
+
+Nothing on the page is typed in. `.github/workflows/pages.yml` registers every
+study, harmonizes the demo studies against the demo crosswalk and the real
+studies against the real crosswalk, pools and ranks, then runs
+`aree build-dashboard`, which writes `docs/dashboard/data.json` from those
+outputs, and `quarto render docs` renders `docs/dashboard.qmd` from it. To build
+the same page locally:
+
+```bash
+make demo        # simulated studies
+make real-pool   # the three real studies, against the real crosswalk
+make dashboard   # aree build-dashboard + quarto render docs
+```
+
+The site is served from `docs/_site/`. For the first deployment, set the
+repository's Pages source to **GitHub Actions** (Settings → Pages), or run:
+
+```bash
+gh api -X POST repos/sr320/AREE/pages -f build_type=workflow
+```
 
 ## Implementation status
 

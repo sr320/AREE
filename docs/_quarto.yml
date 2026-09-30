@@ -4,11 +4,15 @@ project:
 
 website:
   title: "AREE"
+  site-url: "https://sr320.github.io/AREE/"
+  repo-url: "https://github.com/sr320/AREE"
   description: "Aquaculture Resilience Evidence Engine — reproducible resilience biomarker evidence for Crassostrea gigas and other aquaculture species."
   navbar:
     left:
       - text: "Home"
         href: index.qmd
+      - text: "Dashboard"
+        href: dashboard.qmd
       - text: "Why it matters"
         href: why_it_matters.md
       - text: "Architecture"
@@ -27,6 +31,8 @@ website:
         contents:
           - text: "Overview"
             href: index.qmd
+          - text: "Progress & findings dashboard"
+            href: dashboard.qmd
           - text: "Installation"
             href: installation.md
           - text: "Why this resource matters"
@@ -65,6 +71,8 @@ website:
             href: contributing_code_and_data.md
       - section: "Reference"
         contents:
+          - text: "Implementation status"
+            href: implementation_status.md
           - text: "Design document"
             href: design.md
           - text: "Technical architecture"

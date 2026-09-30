@@ -20,6 +20,8 @@ from intake.run_intake import IntakeError, run_intake
 from intake.schema_validate import validate_study_file
 from meta_analysis.run import write_meta_analysis
 from prioritize.rank import TIER_ORDER
+from reporting.dashboard import DEFAULT_OUT_PATH as DEFAULT_DASHBOARD_PATH
+from reporting.dashboard import build_dashboard_data
 from reporting.evidence_cards import DEFAULT_MAX_ADJUSTED_P, build_evidence_cards_report
 from reporting.top_candidates import (
     DEFAULT_CANDIDATES_PATH,
@@ -276,6 +278,31 @@ def top_candidates_cmd(n, candidates_path, out_path):
         click.echo(click.style(str(exc), fg="red"))
         sys.exit(1)
     click.echo(click.style(f"Wrote top-{n}-per-phenotype summary to {out}", fg="green"))
+
+
+@main.command("build-dashboard")
+@click.option("--out", "out_path", default=DEFAULT_DASHBOARD_PATH, show_default=True,
+              type=click.Path(path_type=Path), help="Where to write the dashboard JSON.")
+def build_dashboard_cmd(out_path):
+    """Summarize registry, pipeline, and findings state into docs/dashboard/data.json.
+
+    Reads whatever the pipeline has produced so far; missing outputs are reported
+    as missing on the page rather than hidden. `quarto render docs` then renders
+    docs/dashboard.qmd from it.
+    """
+    data = build_dashboard_data(out_path)
+    present = data["artifacts_present"]
+    missing = [k for k, v in present.items() if not v]
+    k = data["kpis"]
+    click.echo(
+        f"{k['n_studies_real']} real + {k['n_studies_simulated']} simulated studies, "
+        f"{k['n_evidence_records_real']} real evidence records, "
+        f"{k['n_candidates_real_high_priority']} real high-priority candidates"
+    )
+    if missing:
+        click.echo(click.style(f"Pipeline outputs not found: {', '.join(missing)} "
+                               "(run `make demo` to populate them)", fg="yellow"))
+    click.echo(click.style(f"Wrote dashboard data to {out_path}", fg="green"))
 
 
 @main.command("build-crosswalk")

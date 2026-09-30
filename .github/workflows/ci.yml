@@ -182,6 +182,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      # The dashboard page reads docs/dashboard/data.json. Here it is built from
+      # the registry alone (no pipeline outputs), which the builder must handle
+      # by reporting them missing; the Pages workflow builds the populated one.
+      - name: Build dashboard data from the registry
+        run: aree build-dashboard
       - uses: quarto-dev/quarto-actions/setup@v2
       - name: Render docs site
         run: quarto render docs
+      - name: Dashboard page rendered
+        run: test -f docs/_site/dashboard.html
