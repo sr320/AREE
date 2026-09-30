@@ -1,6 +1,9 @@
 ---
 title: "AREE: progress and findings"
 toc: false
+sidebar: false
+bread-crumbs: false
+code-copy: false
 execute:
   echo: false
 ---
