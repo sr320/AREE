@@ -1,0 +1,7 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+control_28d	3	C28_1,C28_2,C28_3	5927	0.00023	False
+control_56d	3	C56_1,C56_2,C56_3	5971	0.00016	False
+control_7d	3	C7_1,C7_2,C7_3	5845	0.00024	False
+ocean_acidification_28d	3	O28_1,O28_2,O28_3	6171	0.00022	False
+ocean_acidification_56d	3	O56_1,O56_2,O56_3	6016	0.00155	False
+ocean_acidification_7d	3	O7_1,O7_2,O7_3	5814	0.0005	False

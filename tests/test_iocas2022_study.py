@@ -1,9 +1,10 @@
 """Curation tests for IOCAS2022_OA_ENERGY.
 
-AREE's first real ocean-acidification study, registered from deposited
-metadata before any reanalysis. These tests pin the design read from ENA and
-the curation decisions that are easy to erode later: exposure_only
-classification, one prespecified pooled comparison, and no borrowed DOI.
+AREE's first real ocean-acidification study. It was reanalyzed at full depth
+and FAILED QC: its replicates are technical, not biological (effective n=1 per
+group). These tests pin the design read from ENA and the decisions that are
+easy to erode later: exposure_only classification, no borrowed DOI, and above
+all that nothing from this study is harmonized or pooled.
 """
 from __future__ import annotations
 
@@ -70,13 +71,37 @@ def test_no_measured_phenotype_means_exposure_only(study):
         assert comp["phenotype_direction"] == "not_applicable"
         assert comp["tissue"] == "digestive_gland"
         assert comp["sample_size"] == 6
-        assert comp["results_file"] is None
     assert "ambiguous_phenotype_definition" in study["quality_flags"]
 
 
-def test_exactly_one_prespecified_pooled_comparison(study):
-    primary = [c["comparison_id"] for c in study["comparisons"] if c.get("meta_analysis_primary")]
-    assert primary == ["oa_28d_vs_control_28d"]
+def test_failed_qc_keeps_the_study_out_of_every_pool(study):
+    """Pseudo-replicated (effective n=1): nothing may be harmonized or pooled."""
+    assert study["qc_status"] == "failed"
+    assert "low_replication" in study["quality_flags"]
+    assert not any(c.get("meta_analysis_primary") for c in study["comparisons"])
+    assert all(c["results_file"] is None for c in study["comparisons"])
+
+
+def test_archived_dispersion_qc_records_the_failure():
+    """Every group's replicates vary like technical replicates (~Poisson).
+
+    Real M. gigas biological replicates sit at ~0.03-0.05 (CALLA2026_OSHV);
+    this study's groups are one to two orders of magnitude lower.
+    """
+    with open(STUDY_DIR / "replicate_dispersion_qc.tsv") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    assert len(rows) == 6
+    assert all(float(r["median_dispersion"]) < 0.005 for r in rows)
+    assert all(r["passes"] == "False" for r in rows)
+
+
+def test_every_run_is_archived_but_none_is_harmonized():
+    for t in TIMEPOINTS:
+        cid = f"oa_{t}_vs_control_{t}"
+        manifest = STUDY_DIR / f"IOCAS2022_OA_ENERGY_{cid}_workflow_manifest.json"
+        assert json.loads(manifest.read_text())["comparison_id"] == cid
+        assert (STUDY_DIR / f"IOCAS2022_OA_ENERGY_{cid}_rnaseq_report.html").exists()
+        assert not (STUDY_DIR / f"IOCAS2022_OA_ENERGY_{cid}_dge_standardized.tsv").exists()
 
 
 def test_same_lab_gonad_paper_is_not_attached_as_the_source(study):

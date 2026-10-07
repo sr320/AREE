@@ -13,8 +13,19 @@
 # because there is no first author to name it after. Rename it only if a
 # publication is found, and update data/studies/<study_id>/ with it.
 #
-# Raw reads are public; no results have been computed yet. results_file is
-# null until the rnaseq workflow is run (see config/IOCAS2022_OA_ENERGY.config).
+# QC FAILED, 2026-10-07: PSEUDO-REPLICATION. All three comparisons were run
+# at full depth (2026-10-01) and none is harmonized. Within every group the
+# three "biological replicates" vary about as little as read sampling alone
+# would make them: median dispersion 0.0002-0.0016, against 0.03-0.05 for
+# CALLA2026_OSHV's real biological replicates (see
+# data/studies/IOCAS2022_OA_ENERGY/replicate_dispersion_qc.tsv, produced by
+# scripts/check_replicate_dispersion.py). Each group is most likely a single
+# RNA sample sequenced three times. The effective n is therefore 1 per group:
+# p-values are invalid, and lfcSE is so small that inverse-variance pooling
+# would let this study swamp every real one. results_file stays null and no
+# comparison is meta_analysis_primary, so nothing from this study reaches the
+# evidence table or a pool. The run manifests and reports are archived in
+# data/studies/IOCAS2022_OA_ENERGY/ as provenance for the decision.
 
 study_id: IOCAS2022_OA_ENERGY
 simulated: false
@@ -48,14 +59,17 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA826964 (first public 2025-01-20). No count matrix, DE table, or publication is available. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+# analysis_status is in_progress because the workflow ran; it is halted at QC,
+# not awaiting harmonization. See the header.
+qc_status: "failed"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # Comparisons: OA vs the time-matched control at each of the three sampling
 # points. Groups come from the deposited BioSample `treatment` attribute
-# ('control 7d' ... 'ocean acidification 56d'), n=3 each, one individual per
-# library (distinct sample_alias C7_1 ... O56_3). See
+# ('control 7d' ... 'ocean acidification 56d'), nominally n=3 each with
+# distinct sample_alias C7_1 ... O56_3 -- but see the QC FAILED note above:
+# the replicates are not independent animals. See
 # data/studies/IOCAS2022_OA_ENERGY/ena_provenance.json.
 #
 # ON PHENOTYPE CLASSIFICATION. The project title claims "compromised energy
@@ -106,7 +120,6 @@ comparisons:
     sample_size: 6
     biological_replicates: 3
     results_file: null
-    meta_analysis_primary: true
 
   - comparison_id: "oa_56d_vs_control_56d"
     tissue: "digestive_gland"
@@ -129,6 +142,7 @@ comparisons:
 quality_flags:
   - raw_data_available
   - ambiguous_phenotype_definition
+  - low_replication   # nominal n=3 per group, effective n=1: replicates are technical, not biological
 
 limitations: >
   (1) No publication has been identified, so the exposure protocol (target pH
@@ -141,9 +155,18 @@ limitations: >
   post-settlement animals, but juveniles cannot be ruled out. (4) Sex was not
   recorded; with n=3 per group, sex composition may confound digestive-gland
   expression. (5) The three comparisons share no animals but come from one
-  experiment; only the prespecified 28 d comparison enters cross-study pools,
-  so the study is not counted three times. (6) Until a second real OA study is
-  registered, this study cannot contribute to any k >= 2 pool.
+  experiment; the 28 d comparison was prespecified as the only one to enter
+  cross-study pools, before QC failed and that flag was removed. (6) QC
+  FAILED: the replicates are not independent animals (see header and
+  replicate_dispersion_qc.tsv), so no differential-expression result from
+  this study is valid. With effective n=1 per group, DESeq2 reports 43-48% of
+  genes DE at every timepoint. The nine controls agree closely (group-mean
+  r = 0.98-0.996), but each OA group is its own isolated cluster, and fold
+  changes barely agree between timepoints (r = 0.17-0.27 across all genes;
+  59-73% same direction among shared DE genes, against 50% by chance). There
+  is no reproducible OA signal to recover. The study is retained, not
+  deleted, so that the reason is on record and the accession is not curated
+  again.
 
 provenance:
   registered_by: sr320
@@ -153,10 +176,14 @@ provenance:
     `aree fetch-samplesheet --bioproject PRJNA826964 --study IOCAS2022_OA_ENERGY
     --condition-attribute treatment --attribute replicate --attribute tissue`.
     Replication was checked before registration: 18 distinct sample_alias
-    values, n=3 per group, one library per animal (compare the rejected
-    PRJNA623063 in docs/candidate_studies.md). Tissue 'Hepatopancreas' is
-    mapped to digestive_gland. The 28 d comparison is prespecified as
-    meta_analysis_primary before any result was computed: 7 d is the most
+    values, n=3 per group, apparently one library per animal (compare the
+    rejected PRJNA623063 in docs/candidate_studies.md). That check was
+    necessary but not sufficient: distinct sample_alias values did not mean
+    distinct animals, which only the post-quantification dispersion check
+    revealed. Tissue 'Hepatopancreas' is
+    mapped to digestive_gland. The 28 d comparison was prespecified as
+    meta_analysis_primary before any result was computed (flag removed
+    2026-10-07 when the study failed QC): 7 d is the most
     exposed to acute handling and transfer effects, 56 d is the least likely
     to have a comparable timepoint in other studies, and ~4 weeks is a common
     chronic-exposure endpoint in adult bivalve OA experiments, which gives the
@@ -164,6 +191,11 @@ provenance:
     for "PRJNA826964" returned nothing; the nearest same-lab paper
     (doi:10.1016/j.cirep.2026.200308) was read in full and does not use these
     data.
+    Runs (2026-10-01, Nextflow sessions 7779be29-e661-469a-b2e8-4c0c759839a8
+    for 28 d, c4d36d50-f92f-4a12-9f68-bc5a2c8a15d9 for 7 d,
+    5e9e54fb-082b-471f-b442-66530c730f9c for 56 d): 23/23 tasks each, Salmon
+    mapping 82.4-85.0% for all 18 libraries. QC decision (2026-10-07, sr320):
+    keep the registration, mark qc_status failed, do not harmonize or pool.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA826964"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA826964"
