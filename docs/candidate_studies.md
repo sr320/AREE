@@ -124,6 +124,91 @@ pooling would run on anything but simulated data.
   the corresponding author are better first moves than cold outreach. Tracked in
   [issue #6](https://github.com/sr320/AREE/issues/6).
 
+  **Update 2026-09-30:** CIBNOR's WGBS project `PRJNA690951` covers the same
+  RR/SS design (see M1 below), so the design has public raw data now. The
+  RNA-seq reads for this paper are still not located.
+
+## DNA methylation and proteomics candidates
+
+Screened **2026-09-30**. Sources: ENA read-run search for every
+`Bisulfite-Seq`/`MeDIP-Seq`/`MBD-Seq` run under taxon 29159 (20 BioProjects);
+PRIDE Archive search for *C. gigas* / *M. gigas* (19 projects); PubMed title/abstract
+search (37 methylation papers, 66 proteomics papers). Group sizes come from
+run labels or BioSample attributes, not from paper text. A publication is
+"confirmed" only where Europe PMC finds the accession in the paper's full
+text, or PRIDE records it as the dataset reference. Otherwise the link is
+inferred from the title and design, and must be checked at intake.
+
+Neither assay can go straight into the processed-table converter. That
+converter handles DE tables only (see
+[implementation_status.md](implementation_status.md)). So methylation studies
+need the raw Bismark/methylKit path, which has never been run on real data,
+and proteomics studies need a per-study abundance-table script. Coordinate
+evidence from methylation is also exposed to the assembly change in
+[handling_genome_versions.md](handling_genome_versions.md).
+
+### Methylation: Tier 1
+
+> **M1 is registered** as `CIBNOR2021_HEAT_RRSS` (2026-09-30) — AREE's first
+> real methylation study. All 12 libraries share one BioSample, so the design
+> was parsed from `experiment_title` with the new `--label-field` /
+> `--label-pattern` options of `aree fetch-samplesheet`. Reanalysis is **blocked**
+> until the methylKit step models family: with 2 families per class, running it
+> as-is would treat 6 vs 6 libraries as independent.
+
+| # | Accession | Runs | Design (from deposited metadata) | Context | Why |
+|---|---|---|---|---|---|
+| M1 ✅ | `PRJNA690951` | 12 WGBS | 2 thermal-**resistant** (RR52, RR59) + 2 **susceptible** (SS05, SS35) families × n=3, gill, day 30 of 26–34 °C oscillation (CIBNOR) | Thermal tolerance, **measured phenotype** | Same breeding program and challenge as Arredondo-Espinoza et al. 2023, the RR/SS study in [issue #6](https://github.com/sr320/AREE/issues/6). This is the first public raw data from that design. No methylation paper cites it yet. It is the **methylation** arm: the RNA-seq reads are still not located. Effective replication is 2 vs 2 families, not 6 vs 6 oysters. |
+| M2 | `PRJEB81880` | 40 EM-seq | 5 resistant vs 5 susceptible families, gill + mantle, before (T0) and after (T1) POMS, one oyster per family × tissue × time | Disease **resistance** (POMS) | A measured R/S phenotype with a before/after design, in AREE's best-populated stressor class (OsHV-1/POMS: `CALLA2026_OSHV`, `DELISLE2020_OSHV_TEMP`). Inferred to be Valdivieso et al. 2025, *Sci Total Environ* ([10.1016/j.scitotenv.2025.178385](https://doi.org/10.1016/j.scitotenv.2025.178385)). |
+| M3 | `PRJNA562805` | 12 WGBS | intertidal vs subtidal origin × control/heat, n=3, gill | Thermal response by habitat origin | **Confirmed**: Wang et al. 2021, *Heredity* ([10.1038/s41437-020-0351-7](https://doi.org/10.1038/s41437-020-0351-7)). Pairs with M1 to give thermal methylation k=2. |
+| M4 | `PRJNA682817` | 24 WGBS | diploid/triploid × pH 8.2/7.7, n=6 per cell, adult ctenidia (UW) | Ocean acidification (exposure) | Best-replicated OA methylation design found, and it pairs with `IOCAS2022_OA_ENERGY`. Lab-internal, so metadata recovery is easy. No publication located. Sister project of `PRJNA678408` (Tier 2 #4 above). |
+| M5 | `PRJNA806944` | 8 WGBS | female gonad, ambient vs low pH | Ocean acidification (exposure) | **Confirmed**: Venkataraman et al. 2022, *BMC Genomics* ([10.1186/s12864-022-08781-5](https://doi.org/10.1186/s12864-022-08781-5)). Group labels are not in the run metadata, so recover the split from the paper. |
+
+### Methylation: Tier 2
+
+| Accession | Runs | Design | Caveat |
+|---|---|---|---|
+| `PRJEB105019` | 60 WGBS | 2 families (F14R, H2D) × 3 age cohorts at T0, plus post-challenge **R vs S** individuals, n=6 (Ifremer DECICOMP) | Best design on this list: individual-level resistance outcome, n=6. Released 2025-12 with no publication yet, so treat as unpublished and check the embargo/reuse terms. |
+| `PRJNA609264` | 47 WGBS | early microbial exposure vs control, F1/F2, 2 families, n=3 at most timepoints | **Confirmed**: Fallet et al. 2022, *Microbiome*. Transgenerational disease protection is directly relevant to breeding. However, the design is a sprawling time course with pools and mixed assays, so intake needs a curated subset. |
+| `PRJNA807732` | 24 WGBS | intertidal F0/F1/F2 and subtidal F0, control vs heat, n=3 | Probably Wang et al. 2023, *Sci Total Environ* (transgenerational intertidal). Not confirmed. |
+| `PRJNA1113357` | 9 WGBS | *V. alginolyticus*, gill, 0/6/48 h, n=3 | Probably Li et al. 2024, *Fish Shellfish Immunol*. Small and exposure-only, but pairs with `HESSER2024_VCOR` on *Vibrio*. |
+| `PRJEB58545` | 48 WGBS | pesticide mixture, F0 × F1 exposure (E/T), gastrula and metamorphosis, n=4 | Probably Sol Dourdin et al. 2024, *Environ Sci Technol*. Opens `pollutant_exposure`, but no resilience phenotype. |
+| `PRJEB60400` | 246 WGBS | POMS-adapted vs naive populations | **Confirmed**: Gawra et al. 2023, *Sci Adv*. This is population-epigenetic differentiation, not a treatment contrast, so it needs the same new evidence type as the WGS salinity project above. |
+
+Skipped: `PRJNA684407` and `PRJNA833956` (triploid infertility and growth,
+with no stressor). Also skipped are `PRJNA324546` (developmental MeDIP) and the
+2013–2016 reference methylomes (no contrast).
+
+### Proteomics
+
+The raw-data pool is thin. PRIDE holds 19 *C. gigas* projects, and most
+Chinese-lab proteomics papers on the stressor list have no PRIDE deposit. They
+may be in iProX, which was not searched. Harvesting processed tables from the
+papers is the realistic route. The Roberts-lab projects make that easiest.
+
+| # | Accession | Design | Context | Notes |
+|---|---|---|---|---|
+| P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | Harney et al. 2016, *J Proteomics* (PRIDE reference). Complete submission. |
+| P2 | `PXD015434` | early juveniles, temperature | Thermal | **Confirmed**: Crandall et al. 2022, *PeerJ*. |
+| P3 | `PXD013262` | seed, time × temperature | Thermal | **Confirmed**: Wanamaker et al. 2020, *BMC Genomics*. Together, P2 and P3 give thermal proteomics k=2, and both pair with M1/M3 for multi-omics convergence. |
+| P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. Third OA layer alongside `IOCAS2022_OA_ENERGY` and M4/M5. |
+| P5 | `PXD011365` | gill mitochondria, hypoxia–reoxygenation | **Hypoxia tolerance** | Sokolov et al. 2019, *J Proteomics* (PRIDE reference). This is the only public omics dataset found for `hypoxia_tolerance`, which the RNA-seq screen flagged as empty. |
+| P6 | `PXD065668` / `PXD065706` | gill proteome + phosphoproteome, ERK inhibition | Thermotolerance divergence | **Confirmed**: Wang et al. 2026, *Commun Biol*. This is a pharmacological perturbation, so it is mechanism support, not population evidence. |
+| P7 | `PXD064651` | mucus, *Vibrio* infection, iTRAQ | Pathogen challenge | No publication. Partial submission. |
+| P8 | `PXD000905` | low vs high OsHV-1 load, 2-DE | Pathogen | Corporeau et al. 2014, *J Proteomics* (PRIDE reference). This is 2-DE spot data, so feature mapping will be weak. |
+
+No PRIDE deposit was found for these papers, so they are processed-table only.
+Leprêtre et al. 2020, *Front Immunol* (OsHV-1 proteomics in two families with
+**contrasting susceptibility**) is the strongest proteomic resilience phenotype
+found. Kim et al. 2025, *CBP-D* covers hypoxia + heat in hemocytes, with
+transcriptomics and proteomics together. Chen et al. 2023, *Fish Shellfish
+Immunol* covers salinity tolerance with multi-omics.
+
+**Rejected:** `PXD008057` (two populations × 0/6/24 h heat). Its sample
+protocol pools 10 oysters per timepoint per population, which leaves six
+pooled samples and no replicates. This is the proteomic version of
+`PRJNA623063` below.
+
 ## Rejected, and why it matters
 
 `PRJNA623063` — *"Transcriptome of the Pacific Oyster, Crassostrea gigas Larvae

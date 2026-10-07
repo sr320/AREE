@@ -1,0 +1,56 @@
+{
+  "study_id": "CIBNOR2021_HEAT_RRSS",
+  "bioproject": "PRJNA690951",
+  "date_generated": "2026-09-30",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA690951&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,experiment_title",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "phenotype_class"
+  ],
+  "n_runs": 12,
+  "n_samples": 1,
+  "library_strategies": [
+    "Bisulfite-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "RR": 6,
+    "SS": 6
+  },
+  "min_group_size": 6,
+  "total_fastq_bytes": 129074802928,
+  "outputs": {
+    "data/studies/CIBNOR2021_HEAT_RRSS/samplesheet.tsv": "902ea6435a68151ac833f1a29d417a51834df22b84736258cf28fb3084339de7",
+    "data/studies/CIBNOR2021_HEAT_RRSS/fastq_manifest.tsv": "a28dccb8c4887338200e2e4f0c43de56a8da9b0e2bafbf1cb8af6031025c5bba",
+    "data/studies/CIBNOR2021_HEAT_RRSS/methylkit_samplesheet.csv": "2673a0643bf338b7a00730776c14a126bd79667c2e3f93a5ef483e81c7950dd7"
+  },
+  "run_labels": {
+    "field": "experiment_title",
+    "pattern": "(?P<phenotype_class>RR|SS)(?P<family>\\d+)-R(?P<replicate>\\d+)$",
+    "labels": {
+      "SRR13482027": "SS35-R2",
+      "SRR13482028": "SS35-R1",
+      "SRR13482029": "SS05-R3",
+      "SRR13482030": "RR59-R3",
+      "SRR13482031": "RR59-R2",
+      "SRR13482032": "SS05-R2",
+      "SRR13482033": "RR59-R1",
+      "SRR13482034": "RR52-R3",
+      "SRR13482035": "RR52-R2",
+      "SRR13482036": "RR52-R1",
+      "SRR13482037": "SS35-R3",
+      "SRR13482038": "SS05-R1"
+    }
+  },
+  "methylkit_samplesheet": {
+    "control_level": "SS",
+    "treatment_level": "RR",
+    "n_control": 6,
+    "n_treatment": 6
+  }
+}
