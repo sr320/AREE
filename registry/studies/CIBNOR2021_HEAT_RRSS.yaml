@@ -1,0 +1,175 @@
+# FIFTH REAL (non-simulated) STUDY REGISTERED IN AREE, its first real DNA
+# methylation study, and its first real study whose contrast is a thermal
+# resilience phenotype (heat-resistant vs heat-susceptible families) rather
+# than an exposure.
+#
+# Registered from deposited metadata only. PRJNA690951 is the WGBS arm of the
+# CIBNOR breeding-program thermal challenge whose transcriptome is published as
+# Arredondo-Espinoza et al. 2023, Comp Biochem Physiol Part D 47:101089
+# (doi:10.1016/j.cbd.2023.101089, PMID 37269757; sr320 is a co-author). That
+# paper is the source of the RR/SS phenotype definition and the challenge
+# protocol, but it is an RNA-seq paper: it does not analyze these data and, as
+# far as can be seen from the abstract, does not cite PRJNA690951. As of
+# 2026-09-30 Europe PMC finds no publication citing the accession. The DOI is
+# therefore recorded as context in `citation`, not as `accessions.doi`.
+#
+# The study_id names the submitting institute and BioProject registration year
+# (2021-01-09), following IOCAS2022_OA_ENERGY. Rename it only if a methylation
+# publication is found.
+#
+# Raw reads are public; no results have been computed yet. results_file is
+# null until the methylation workflow is run (see
+# config/CIBNOR2021_HEAT_RRSS.config), and that run should not happen until the
+# DMR step models family (see limitations).
+
+study_id: CIBNOR2021_HEAT_RRSS
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: "PRJNA690951"
+  geo: null
+  sra: "SRR13482027-SRR13482038"
+  ena: "PRJNA690951"
+  proteomexchange: null
+  other: "BioSample SAMN17269691 (single BioSample for all 12 libraries)"
+
+citation: "Centro de Investigaciones Biológicas del Noroeste (CIBNOR) (2021). Whole-genome bisulfite sequencing of gill from thermal-resistant and thermal-susceptible Crassostrea gigas families after 30 days of oscillatory thermal challenge [WGBS dataset]. NCBI BioProject PRJNA690951, registered 2021-01-09, reads public 2022-02-09. No methylation publication identified as of 2026-09-30. Phenotype definition and challenge protocol: Arredondo-Espinoza R, Ibarra AM, Roberts SB, Sicard-González MT, Escobedo-Fregoso C (2023) Transcriptome profile in heat resilient Pacific oyster Crassostrea gigas families under thermal challenge. Comp Biochem Physiol Part D 47:101089, doi:10.1016/j.cbd.2023.101089 (RNA-seq; does not analyze these data)."
+
+species: "Magallana gigas"
+strain_or_population: "CIBNOR C. gigas breeding program, Baja California Sur, Mexico: thermal-resistant families RR52, RR59 and thermal-susceptible families SS05, SS35 (BioSample isolation source: San Ignacio Lagoon)"
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies. Region coordinates are
+# assembly-specific: see docs/handling_genome_versions.md.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["methylation"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2000, paired-end whole-genome bisulfite sequencing (12 libraries, 54.2-72.9 M read pairs each, 300 bp per spot; 129.1 GB FASTQ reported by ENA)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 12 runs are public in ENA/SRA under PRJNA690951 (first public 2022-02-09). No methylation calls, DMR table, or methylation publication is available. Sample sheet, methylKit sample sheet, and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. ENA library_selection is RANDOM and the sample alias is 'RAC-Cg-Methyl-Seq'; the bisulfite library kit is not stated."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# One comparison: RR vs SS families, both after 30 d of the same challenge.
+#
+# DESIGN AS DEPOSITED. All 12 libraries point to one BioSample, so the design
+# is not in per-sample attributes. It is recorded three ways that agree with
+# each other: experiment_title ('... sequencing: RR52-R1'), library_name
+# ('5201_R1' = family 52, replicate 01), and the shared BioSample's tag list
+# ('Thermal-resistant 52 R1' = 'RR52-1'). The sample sheet parses
+# experiment_title with a declared regex; see ena_provenance.json.
+#
+# ON PHENOTYPE CLASSIFICATION. RR and SS are family classes from the CIBNOR
+# breeding program (RR: both parents resistant; SS: both parents susceptible),
+# per Arredondo-Espinoza et al. 2023. The phenotype is thermal tolerance
+# assigned by pedigree and family performance, not a survival or CTmax value
+# measured on these 12 animals, and nothing organismal is deposited. It is
+# still a tolerance contrast, not an exposure, so it is classified
+# `resilience` on thermal_tolerance, with direction `increase` for RR relative
+# to the SS reference. `ambiguous_phenotype_definition` is set because the
+# family-level phenotyping is not documented in the deposit.
+#
+# THERE IS NO AMBIENT-TEMPERATURE CONTROL. Every animal received the challenge,
+# so this comparison measures methylation differences between tolerant and
+# susceptible genotypes under heat. It is not a heat-response estimate and
+# must not be pooled with treated-vs-control temperature comparisons as if
+# the effect sizes meant the same thing.
+#
+# REPLICATION. 6 libraries per class, but only 2 families per class, and
+# tolerance is a family property. biological_replicates is recorded as 2 (the
+# number of families per class) and sample_size as 12 (libraries analyzed).
+# The shared BioSample also means the deposit does not by itself establish
+# that R1-R3 are distinct animals rather than technical or pooled libraries;
+# the per-library read counts and distinct library names suggest individuals,
+# but that needs confirming from the submitter.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "rr_vs_ss_day30_oscillating_heat"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Laboratory-simulated daily oscillatory thermal challenge, 26 to 34 C, for 30 days (BioProject description; BioSample attribute temp = \"26-34'C\"). Protocol per Arredondo-Espinoza et al. 2023."
+    stressor_standardized: "temperature"
+    exposure_intensity: "daily oscillation 26-34 C"
+    exposure_duration: "30 d"
+    exposure_timing: "sampled at the end of the 30 d challenge (day 30 only; no day-0 methylation libraries deposited)"
+    control_condition: "Thermal-susceptible (SS) families SS05 and SS35 under the same 30 d challenge. Reference group; not an unexposed control."
+    treatment_condition: "Thermal-resistant (RR) families RR52 and RR59 under the same 30 d challenge"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "resilience"
+    sample_size: 12
+    biological_replicates: 2
+    results_file: null
+    meta_analysis_primary: true
+
+quality_flags:
+  - raw_data_available
+  - family_level_replication
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) Pseudo-replication risk: thermal tolerance is a family property and each
+  class has only two families, so the effective sample size is 2 vs 2. The
+  current DMR_METHYLKIT step fits RR vs SS with no family term and would treat
+  6 vs 6 libraries as independent, overstating precision. Family must be
+  modeled, or libraries aggregated to family, before any result is pooled.
+  Family genetic background is fully confounded with phenotype class, so
+  family-specific methylation (including cytosine variation from SNPs, which
+  bisulfite data cannot separate from C-to-T methylation calls without
+  genotype-aware filtering) can look like a phenotype effect. (2) All 12
+  libraries share one BioSample; the deposit does not establish that
+  replicates are distinct animals. (3) There is no ambient-temperature control,
+  so the comparison is tolerant vs susceptible genotype under heat, not heat
+  response. (4) The phenotype is assigned by pedigree and breeding-program
+  performance; no organismal outcome for these animals is deposited, and the
+  phenotyping method must be confirmed from the RNA-seq paper or the authors.
+  (5) Day 30 only: the day-0 contrast in the RNA-seq paper has no methylation
+  counterpart here, so constitutive and challenge-induced differences cannot
+  be separated. (6) life_stage is registered as adult by inference (breeding
+  program families; BioSample age and dev_stage absent); juveniles cannot be
+  ruled out. Sex is not recorded. (7) Coordinate-based region evidence is tied
+  to GCF_963853765.1 and must be lifted over, not relabeled, if the reference
+  changes. (8) Until a second real thermal methylation study is registered
+  (candidate: PRJNA562805), this study cannot contribute to any k >= 2 pool.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-09-30"
+  curation_notes: >
+    Registered from live ENA metadata for PRJNA690951 with
+    `aree fetch-samplesheet --bioproject PRJNA690951 --study
+    CIBNOR2021_HEAT_RRSS --label-field experiment_title --label-pattern
+    '(?P<phenotype_class>RR|SS)(?P<family>\d+)-R(?P<replicate>\d+)$'
+    --condition-attribute phenotype_class --attribute family --attribute
+    replicate --attribute tissue --attribute temp --methylkit-levels SS RR`.
+    The --label-field/--label-pattern options were added for this study
+    because the project deposits all libraries under one BioSample
+    (SAMN17269691). The parsed labels were cross-checked against library_name
+    and the BioSample tag list; all three agree for all 12 runs. Group sizes:
+    RR n=6 (RR52 x3, RR59 x3), SS n=6 (SS05 x3, SS35 x3). Tissue 'gills' is
+    mapped to gill. The single comparison is flagged meta_analysis_primary
+    before any result was computed. SS is coded as the methylKit reference
+    (0), so positive methylation differences mean higher methylation in the
+    thermal-resistant families. Publication search (2026-09-30): Europe PMC
+    for "PRJNA690951" returned nothing; the linked RNA-seq paper was
+    identified from the matching design, submitter, and challenge protocol.
+    Because sr320 is a co-author on that paper, the replicate identity and
+    phenotyping questions in the limitations can be put directly to the
+    corresponding author (C. Escobedo-Fregoso, CIBNOR); see issue #6.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA690951"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA690951"
+    - "https://www.ncbi.nlm.nih.gov/biosample/SAMN17269691"
+    - "https://doi.org/10.1016/j.cbd.2023.101089"
