@@ -5,6 +5,7 @@ See README.md for the full command reference.
 from __future__ import annotations
 
 import datetime
+import subprocess
 import sys
 from pathlib import Path
 
@@ -15,9 +16,10 @@ from aree import __version__
 from common import REPO_ROOT
 from harmonize.core import harmonize_processed_table, harmonize_study
 from intake.ena_samplesheet import ENAError, build_samplesheet
-from intake.registry import DuplicateStudyError, list_studies, register_study
+from intake.registry import DuplicateStudyError, list_studies, rebuild_registry, register_study
 from intake.run_intake import IntakeError, run_intake
 from intake.schema_validate import validate_study_file
+from intake.study_claims import ClaimError, registered_on, start_study
 from meta_analysis.run import write_meta_analysis
 from prioritize.rank import TIER_ORDER
 from reporting.dashboard import DEFAULT_OUT_PATH as DEFAULT_DASHBOARD_PATH
@@ -28,6 +30,7 @@ from reporting.top_candidates import (
     DEFAULT_OUT_PATH,
     build_top_candidates_summary,
 )
+from validation.study_scope import check_study_scope
 
 
 def _today() -> str:
@@ -62,7 +65,7 @@ def validate_study_cmd(path):
 @click.argument("path", type=click.Path(exists=True))
 @click.option("--update", "allow_update", is_flag=True, help="Overwrite an existing registry entry for this study_id.")
 def register_study_cmd(path, allow_update):
-    """Validate and add a study to registry/study_registry.csv."""
+    """Validate and add a study to registry/study_registry.csv (a generated, gitignored index)."""
     try:
         row = register_study(path, allow_update=allow_update)
     except DuplicateStudyError as exc:
@@ -79,12 +82,104 @@ def list_studies_cmd():
     """List all studies currently in the registry."""
     rows = list_studies()
     if not rows:
-        click.echo("No studies registered yet. Run `aree register-study` first.")
+        click.echo("No studies in the index yet. Run `aree build-registry` to build it from registry/studies/.")
         return
     click.echo(tabulate(
         [[r["study_id"], r["assay_type"], r["analysis_mode"], r["qc_status"], r["analysis_status"]] for r in rows],
         headers=["study_id", "assay_type", "analysis_mode", "qc_status", "analysis_status"],
     ))
+
+
+@main.command("build-registry")
+@click.option("--strict", is_flag=True, help="Exit non-zero if any study YAML fails validation.")
+def build_registry_cmd(strict):
+    """Rebuild registry/study_registry.csv from every study YAML.
+
+    The CSV is a generated index and is not committed, so study branches
+    developed on different machines never conflict on it.
+    """
+    rows, invalid = rebuild_registry()
+    click.echo(click.style(f"Indexed {len(rows)} studies.", fg="green"))
+    for path, errors in invalid.items():
+        click.echo(click.style(f"INVALID, left out: {path}", fg="red"))
+        for e in errors:
+            click.echo(f"  - {e}")
+    if invalid and strict:
+        sys.exit(1)
+
+
+@main.command("start-study")
+@click.option("--accession", required=True,
+              help="Data accession this job covers (e.g. PRJNA690951, GSE12345, PXD002316). Names the branch.")
+@click.option("--study-id", "study_id", required=True, help="AREE study_id to register it under.")
+@click.option("--dir", "worktree_dir", default=None, type=click.Path(),
+              help="Where to create the study's git worktree (default: ../AREE-<STUDY_ID>).")
+@click.option("--registered-by", default=None, help="Curator name for the YAML (default: git user.name).")
+@click.option("--machine", default=None, help="Machine name recorded in the PR (default: this host's short name).")
+@click.option("--no-push", is_flag=True, help="Create the branch and stubs locally only; nothing is claimed.")
+@click.option("--no-pr", is_flag=True, help="Push the claim but do not open a draft PR.")
+def start_study_cmd(accession, study_id, worktree_dir, registered_by, machine, no_push, no_pr):
+    """Claim one study for this machine: branch study/<ACCESSION>/<STUDY_ID>, stub YAML + config, draft PR.
+
+    Refuses an accession or study_id already registered on main or already
+    claimed by another study/ branch. Pushing the branch is the claim; if
+    another machine pushed it first, the push is rejected and nothing is
+    downloaded. See docs/parallel_study_runs.md.
+    """
+    if registered_by is None:
+        registered_by = subprocess.run(["git", "config", "user.name"], capture_output=True,
+                                       text=True, cwd=REPO_ROOT).stdout.strip() or "unknown"
+    try:
+        res = start_study(accession, study_id, repo=REPO_ROOT, worktree_dir=worktree_dir,
+                          registered_by=registered_by, machine=machine,
+                          push=not no_push, open_pr=not no_pr)
+    except ClaimError as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    click.echo(click.style(f"Branch   : {res['branch']}", fg="green"))
+    click.echo(f"Worktree : {res['worktree']}")
+    for f in res["files"]:
+        click.echo(f"  stub   : {f}")
+    for f in res["linked"]:
+        click.echo(f"  linked : {f} (same drive as this checkout)")
+    if not res["linked"]:
+        click.echo(click.style("  No data/raw or data/reference/GCF_* symlinks found to copy; link this "
+                               "machine's drives into the worktree before running.", fg="yellow"))
+    if res["pushed"]:
+        click.echo(click.style("Claimed  : branch pushed", fg="green"))
+    else:
+        click.echo(click.style("NOT claimed: --no-push given; other machines cannot see this study yet.",
+                               fg="yellow"))
+    if res["pr_url"]:
+        click.echo(f"Draft PR : {res['pr_url']}")
+    click.echo(f"\nNext: cd {res['worktree']} and follow docs/adding_a_study.md.")
+
+
+@main.command("check-study-scope")
+@click.option("--branch", required=True, help="Head branch name, study/<ACCESSION>/<STUDY_ID>.")
+@click.option("--base", default="origin/main", show_default=True, help="Ref the PR merges into.")
+def check_study_scope_cmd(branch, base):
+    """Fail if a study PR changes files its study does not own (run by CI on study/ branches)."""
+    from common import STUDIES_DIR, load_yaml
+    from intake.study_claims import parse_branch
+
+    diff = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True,
+                          text=True, cwd=REPO_ROOT)
+    if diff.returncode != 0:
+        click.echo(click.style(diff.stderr.strip(), fg="red"))
+        sys.exit(1)
+    changed = [p for p in diff.stdout.splitlines() if p]
+    parsed = parse_branch(branch)
+    yaml_path = STUDIES_DIR / f"{parsed[1]}.yaml" if parsed else None
+    study = load_yaml(yaml_path) if yaml_path and yaml_path.exists() else None
+    errors, warnings = check_study_scope(branch, changed, study, registered_on(base, REPO_ROOT))
+    for w in warnings:
+        click.echo(click.style(f"WARNING: {w}", fg="yellow"))
+    for e in errors:
+        click.echo(click.style(f"ERROR: {e}", fg="red"))
+    if errors:
+        sys.exit(1)
+    click.echo(click.style(f"{branch}: {len(changed)} changed files, all owned by the study.", fg="green"))
 
 
 @main.command("fetch-samplesheet")

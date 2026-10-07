@@ -27,12 +27,15 @@ Layer 5: User-facing Outputs
 `_TEMPLATE.yaml` and `_batch_template.csv`), `registry/controlled_vocabularies/`
 (phenotype, stressor, assay-type, tissue, life-stage, mapping-confidence, and
 quality-flag ontologies), `registry/study_registry.csv` (flat index of
-registered studies), `schemas/study.schema.json` (validation contract),
+registered studies, generated and not committed), `schemas/study.schema.json` (validation contract),
 `src/intake/` (`schema_validate.py`, `registry.py`).
 
 A study is registered by validating a YAML file against the JSON Schema and
 controlled vocabularies (`aree validate-study`), then appending it to
-`registry/study_registry.csv` (`aree register-study`). This layer records
+`registry/study_registry.csv` (`aree register-study`, or `aree build-registry`
+for all studies at once). The YAMLs are the source of truth; the CSV is a
+gitignored index, so study branches developed in parallel never conflict on
+it (see [parallel_study_runs.md](parallel_study_runs.md)). This layer records
 facts about what was done — species, genome assembly, assay type, treatment
 vs. control, sample sizes, data availability — never derived results. See
 [adding_a_study.md](adding_a_study.md).

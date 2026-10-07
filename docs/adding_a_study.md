@@ -1,5 +1,9 @@
 # Adding a study
 
+> Working through several studies on different machines? Start each one with
+> `aree start-study`, which claims it on its own branch. See
+> [parallel_study_runs.md](parallel_study_runs.md).
+
 This walks through registering a new public (or demo) dataset in AREE. A
 "study" is registration-time metadata describing what was done, not what was
 found — see [design.md](design.md#2-data-model-overview) for why studies,
@@ -107,7 +111,9 @@ aree register-study registry/studies/YOUR_STUDY_ID.yaml
 ```
 
 This re-validates and appends (or, with `--update`, overwrites) a row in
-`registry/study_registry.csv`. Registering a `study_id` that already exists
+`registry/study_registry.csv`. That index is generated and gitignored, so it
+never appears in a PR; `aree build-registry` rebuilds it from every YAML.
+Registering a `study_id` that already exists
 without `--update` fails with a duplicate-study error rather than silently
 overwriting.
 

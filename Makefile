@@ -1,11 +1,12 @@
 # AREE task runner. Run `make help` for the list.
-.PHONY: help install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard docs app clean
+.PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard docs app clean
 
 DEMO_STUDIES := GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06
 
 help:
 	@echo "AREE make targets:"
 	@echo "  install      pip install the package with dev+app extras"
+	@echo "  registry     rebuild the (uncommitted) registry index from every study YAML"
 	@echo "  test         run the pytest suite"
 	@echo "  lint         run ruff over src and tests"
 	@echo "  demo         run the full demo pipeline (register -> harmonize -> meta -> cards)"
@@ -19,6 +20,9 @@ help:
 	@echo "  docs         render the Quarto documentation site"
 	@echo "  app          launch the Streamlit interface"
 	@echo "  clean        remove generated reports/ and caches"
+
+registry:
+	aree build-registry
 
 install:
 	pip install -e ".[dev,app,intake]"

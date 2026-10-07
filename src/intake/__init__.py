@@ -1,4 +1,4 @@
-from .registry import DuplicateStudyError, list_studies, register_study
+from .registry import DuplicateStudyError, list_studies, rebuild_registry, register_study
 from .schema_validate import ValidationResult, validate_study_file
 
 __all__ = [
@@ -6,5 +6,6 @@ __all__ = [
     "ValidationResult",
     "register_study",
     "list_studies",
+    "rebuild_registry",
     "DuplicateStudyError",
 ]

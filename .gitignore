@@ -37,13 +37,20 @@ workflows/*/dag.dot
 # The built crosswalk + provenance sidecar ARE committed; these raw inputs are not.
 data/reference/crosswalk/_sources/
 
-# Staged sequence data for raw_reanalysis studies (hundreds of GB).
+# Staged sequence data for raw_reanalysis studies (hundreds of GB). Usually a
+# symlink to a data drive, so the pattern has no trailing slash.
 # Sample sheets and checksummed FASTQ manifests ARE committed; reads are not.
-data/raw/
+data/raw
 results/
 
 # Dashboard data + copied evidence cards (regenerate via `aree build-dashboard` / `make dashboard`)
 docs/dashboard/
 
-# Genome/transcriptome bundles live on external storage; see docs/first_raw_reanalysis.md
-data/reference/GCF_*/
+# Genome/transcriptome bundles live on external storage; see docs/first_raw_reanalysis.md.
+# No trailing slash: on most machines these are symlinks to a drive, and a
+# pattern ending in / does not match a symlink.
+data/reference/GCF_*
+
+# Flat study index, generated from registry/studies/*.yaml by `aree build-registry`.
+# Not committed: study branches built in parallel would all conflict on it.
+registry/study_registry.csv
