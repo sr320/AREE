@@ -200,7 +200,24 @@ prepare those tables by a documented script of your own for now.
 
 ## 7. Next steps
 
-Once a study is registered, harmonize its results into the shared evidence
+For a `raw_reanalysis` study, check after the workflow runs and **before
+harmonizing** that its replicates are independent animals:
+
+```bash
+python scripts/check_replicate_dispersion.py \
+    --samplesheet data/studies/STUDY_ID/samplesheet.tsv \
+    --salmon-dir RESULTS_DIR/COMPARISON_ID/rnaseq/salmon
+```
+
+It exits non-zero if any group's median gene dispersion falls below 0.005.
+Real *M. gigas* biological replicates sit around 0.03–0.05. A group far below
+that is behaving like technical replicates, and its DESeq2 standard errors
+are too small to pool. `IOCAS2022_OA_ENERGY` failed this check despite
+deposited metadata labelling every library a biological replicate; see
+[candidate_studies.md](candidate_studies.md). If a study fails, set
+`qc_status: failed`, record the evidence, and do not harmonize it.
+
+Once a study is registered and has passed QC, harmonize its results into the shared evidence
 table — see [raw_vs_processed.md](raw_vs_processed.md) for which mode applies
 and the command to run. From there it becomes eligible for
 [meta-analysis](interpreting_meta_analysis.md) and

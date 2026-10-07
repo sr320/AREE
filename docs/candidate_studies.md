@@ -31,8 +31,11 @@ what the authors chose to publish. It also finally exercises the
 So the screen applied here, in priority order:
 
 1. **Raw reads deposited and public** (SRA/ENA), not just a supplementary table.
-2. **Replicated design**, n ≥ 3 per group. See the rejected candidate below —
-   this is not a formality.
+2. **Replicated design**, n ≥ 3 per group. See the rejected candidates below —
+   this is not a formality, and it is checked twice: distinct `sample_alias`
+   values before download, then replicate dispersion after quantification
+   (`scripts/check_replicate_dispersion.py`). Distinct sample names do not
+   prove distinct animals.
 3. **Resilience-relevant contrast.** Prefer a tolerance/resistance phenotype
    (resistant vs susceptible lineages) over pure exposure (treated vs control),
    per [resilience_vs_exposure.md](resilience_vs_exposure.md). Judge this on
@@ -50,12 +53,10 @@ So the screen applied here, in priority order:
 > FASTQ manifest generated, reanalysis not yet run. See
 > [first_raw_reanalysis.md](first_raw_reanalysis.md).
 >
-> **#3 is registered** as `IOCAS2022_OA_ENERGY` (2026-09-30) — design verified
-> (18 animals, n=3 per group, time-matched controls), tissue is hepatopancreas
-> (digestive gland), and reanalysis has not been run. No publication cites
-> the BioProject, so the OA dose is unknown and all three comparisons are
-> `exposure_only`. The same-lab PGC-1α paper (doi:10.1016/j.cirep.2026.200308)
-> uses gonad and qPCR, not these data.
+> **#3 failed QC** as `IOCAS2022_OA_ENERGY` (registered 2026-09-30, reanalyzed
+> 2026-10-01, QC decision 2026-10-07). Its replicates are technical, not
+> biological — see *Rejected, and why it matters* below. AREE still has no
+> usable real ocean-acidification study.
 >
 > **Correction from the first draft of this page.** #1 was listed here as a
 > study whose "contrast *is* a resilience phenotype, not an exposure", on the
@@ -72,7 +73,7 @@ So the screen applied here, in priority order:
 |---|---|---|---|---|---|
 | 1 ✅ | `PRJNA1329250` | 42 RNA-seq | 2 populations × 4 viral-strain levels (Control/Australia/France/USA), n=5 challenged / n=6 control | OsHV-1 challenge in two hatchery populations | Well replicated across all eight groups, and the same stressor class as the study already registered, so the two can eventually pool. Calla et al. 2026 ([10.1016/j.fsi.2026.111154](https://doi.org/10.1016/j.fsi.2026.111154)). |
 | 2 | `PRJNA593309` | 43 RNA-seq | OsHV-1 × temperature (21/26/29 °C) × timepoint, n=3 | Disease resistance under thermal modulation | Multi-stressor, well replicated, and **published open access** — Delisle et al. 2020, *J Exp Biol* ([10.1242/jeb.226233](https://doi.org/10.1242/jeb.226233)). Pairs with #1 on pathogen challenge. |
-| 3 ✅ | `PRJNA826964` | 18 RNA-seq | control vs OA × 3 timepoints (7/28/56 d), n=3 | Ocean acidification, energy metabolism | Clean 2×3 factorial, small enough to reanalyze quickly, and opens a second stressor class. |
+| 3 ❌ | `PRJNA826964` | 18 RNA-seq | control vs OA × 3 timepoints (7/28/56 d), n=3 | Ocean acidification, energy metabolism | Clean 2×3 factorial, small enough to reanalyze quickly, and opens a second stressor class. |
 
 Doing #1 and #2 together is the point: they give the pathogen-challenge group
 **k ≥ 2 with real standard errors**, which is the first time random-effects
@@ -137,6 +138,27 @@ course**, so no valid differential-expression contrast can be computed from it.
 Recording this because the failure is invisible from the abstract, and because
 a curator working from titles would have spent real effort before finding out.
 Check `sample_alias` before downloading anything.
+
+`PRJNA826964` — *"The compromised energy management of Pacific oysters
+(Crassostrea gigas) under ocean acidification conditions"*, 18 RNA-seq runs.
+Registered as `IOCAS2022_OA_ENERGY` and kept in the registry with
+`qc_status: failed`, so the reason stays on record.
+
+This one passed the `sample_alias` check: 18 distinct aliases, labelled
+"biological replicate 1–3" in every group. It failed only after full-depth
+reanalysis. Within each group, replicates vary about as little as read
+sampling alone would make them — median dispersion 0.0002–0.0016, against
+0.03–0.05 for `CALLA2026_OSHV`'s real biological replicates. Each group is
+most likely one RNA sample sequenced three times. The symptoms, in the order
+they appeared: 43–48% of genes "DE" at every timepoint; PC1 = 96.5% of
+variance within a 3 vs 3 contrast; three OA groups that agree with the
+controls as well as with each other; and fold changes that barely replicate
+between timepoints.
+
+The danger is not wasted compute. Harmonized, such a study carries an `lfcSE`
+far too small, so inverse-variance pooling would let it outweigh every real
+study it joins. Run `scripts/check_replicate_dispersion.py` on every
+`raw_reanalysis` study before harmonizing it.
 
 ## Sourcing notes
 
