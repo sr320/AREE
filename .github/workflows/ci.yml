@@ -34,6 +34,11 @@ jobs:
             aree validate-study "$f"
           done
 
+      # The registry CSV is generated, not committed. Every study YAML on the
+      # branch, demo and real, must still validate into it.
+      - name: Rebuild the registry index from every study YAML
+        run: aree build-registry --strict
+
       - name: Run full demo pipeline end-to-end
         run: |
           for f in registry/studies/GIGAS_*.yaml; do
@@ -48,6 +53,28 @@ jobs:
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
           test -f reports/top_candidates_summary.md
+
+  study-pr-scope:
+    name: Study PR stays inside its own files
+    # Only study branches (study/<ACCESSION>/<STUDY_ID>, from `aree start-study`).
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'study/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Check changed paths, study_id and accession
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: aree check-study-scope --branch "$HEAD_REF" --base "origin/$BASE_REF"
 
   real-study:
     name: Real-study path (intake -> harmonize)

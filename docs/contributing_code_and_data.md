@@ -16,7 +16,10 @@ code contribution to warrant its own explanation.
 ## Contributing a curated dataset
 
 Adding a real public study to the registry is the main way AREE grows beyond
-its demo data. A dataset contribution PR typically includes:
+its demo data. Each study is its own branch (`study/<ACCESSION>/<STUDY_ID>`)
+and PR, started with `aree start-study`, so several can be in progress on
+different machines at once; see [parallel_study_runs.md](parallel_study_runs.md).
+A dataset contribution PR typically includes:
 
 1. **A study registration YAML** at `registry/studies/STUDY_ID.yaml`, filled
    in per [adding_a_study.md](adding_a_study.md). Do **not** set
@@ -75,8 +78,9 @@ its demo data. A dataset contribution PR typically includes:
 ## Proposing vocabulary or schema changes
 
 If a dataset does not fit the existing phenotype/stressor/tissue/life-stage
-vocabularies, propose a new controlled-vocabulary term as part of the same PR
-rather than working around the mismatch — see
+vocabularies, propose a new controlled-vocabulary term in its own small PR, merged before
+the study PR (a study PR may only change the study's own files, so that study
+PRs never conflict with each other), rather than working around the mismatch — see
 [defining_a_phenotype.md](defining_a_phenotype.md) for the process. Schema
 changes (`schemas/*.json`) are a higher bar and should be raised as an issue
 first, since they affect every existing registered study.
@@ -84,6 +88,7 @@ first, since they affect every existing registered study.
 ## Related documentation
 
 - [adding_a_study.md](adding_a_study.md)
+- [parallel_study_runs.md](parallel_study_runs.md)
 - [resilience_vs_exposure.md](resilience_vs_exposure.md)
 - [governance_and_provenance.md](governance_and_provenance.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — code contribution guide

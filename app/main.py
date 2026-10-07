@@ -3,7 +3,7 @@
 Launch with:  streamlit run app/main.py
 
 This is a read-only browser over artifacts produced by the `aree` CLI:
-- registry/study_registry.csv         (aree register-study)
+- registry/study_registry.csv         (aree build-registry)
 - reports/evidence/evidence_table.tsv (aree harmonize)
 - candidate synthesis                 (computed live from the evidence table)
 

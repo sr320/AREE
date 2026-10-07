@@ -1,9 +1,14 @@
-"""Register validated studies into the flat registry/study_registry.csv index."""
+"""Register validated studies into the flat registry/study_registry.csv index.
+
+The CSV is a generated index, not a source of truth: the study YAMLs are.
+It is gitignored so that study branches developed in parallel never conflict
+on it; `rebuild_registry` regenerates it from every YAML in one pass.
+"""
 from __future__ import annotations
 
 import csv
 
-from common import STUDY_REGISTRY_CSV, load_yaml
+from common import STUDIES_DIR, STUDY_REGISTRY_CSV, load_yaml
 
 from .schema_validate import validate_study_file
 
@@ -89,6 +94,28 @@ def register_study(path, allow_update: bool = False) -> dict:
 
     _write_registry(rows)
     return row
+
+
+def rebuild_registry(studies_dir=None) -> tuple[list[dict], dict[str, list[str]]]:
+    """Regenerate the registry CSV from every study YAML, replacing what is there.
+
+    Files starting with `_` (templates) are skipped. A study that fails
+    validation is left out of the index and reported in the returned
+    {path: errors} map rather than aborting the rebuild; the caller decides
+    whether that is fatal.
+    """
+    studies_dir = studies_dir or STUDIES_DIR
+    rows, invalid = [], {}
+    for path in sorted(studies_dir.glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        result = validate_study_file(path)
+        if not result.valid:
+            invalid[str(path)] = result.errors
+            continue
+        rows.append(_study_to_row(load_yaml(path)))
+    _write_registry(rows)
+    return rows, invalid
 
 
 def list_studies() -> list[dict]:

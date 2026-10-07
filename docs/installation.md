@@ -49,12 +49,12 @@ aree --help
 aree list-studies
 ```
 
-`list-studies` reads `registry/study_registry.csv`. On a freshly cloned repo
-this is header-only, so `list-studies` shows no studies until you register the
-demo studies once:
+`list-studies` reads `registry/study_registry.csv`, a generated index that is
+not committed. On a freshly cloned repo it does not exist yet, so build it from
+the study YAMLs once:
 
 ```bash
-for f in registry/studies/GIGAS_*.yaml; do aree register-study "$f"; done
+aree build-registry
 ```
 
 (Re-running plain `register-study` on an already-registered study fails by

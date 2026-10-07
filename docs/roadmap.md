@@ -23,7 +23,8 @@ for the assumptions this roadmap is consistent with.
   processed-results-only study (`GIGAS_GROW06`), one imperfect-identifier
   example (`GIGAS_LARV05`, legacy symbol-only annotation), and one
   conflicting-direction example (`sod1`/`LOC105331241` across `GIGAS_OA02`
-  and `GIGAS_LARV05`). `registry/study_registry.csv` is the resulting index.
+  and `GIGAS_LARV05`). `registry/study_registry.csv` is the resulting index, rebuilt by
+  `aree build-registry` rather than committed.
   `aree validate-study` and `aree register-study` both work end to end
   against these files.
 - **Harmonization for all four assay types.** `src/harmonize` converts
