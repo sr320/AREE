@@ -92,12 +92,22 @@ def list_studies_cmd():
 @click.option("--study", "study_id", required=True, help="AREE study_id this project will be registered under.")
 @click.option("--condition-attribute", "condition_attributes", multiple=True, required=True,
               help="Sample attribute defining an experimental group. Repeatable; "
-                   "values are combined in order to form the `condition` column.")
+                   "values are combined in order to form the `condition` column. "
+                   "May also name a group from --label-pattern.")
 @click.option("--attribute", "extra_attributes", multiple=True,
               help="Additional sample attribute to carry into the sheet (repeatable).")
+@click.option("--label-field", default=None,
+              help="ENA run-report field holding per-library design labels (e.g. experiment_title), "
+                   "for projects that deposit all libraries under one BioSample.")
+@click.option("--label-pattern", default=None,
+              help="Regex with named groups applied to --label-field; each group becomes an attribute "
+                   "and the matched text becomes sample_id. Every run must match.")
+@click.option("--methylkit-levels", nargs=2, default=None, metavar="CONTROL TREATMENT",
+              help="Also write methylkit_samplesheet.csv coding these two condition levels as 0 and 1.")
 @click.option("--out", "out_dir", default=None, type=click.Path(),
               help="Output directory (default: data/studies/<study_id>/).")
-def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attributes, out_dir):
+def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attributes,
+                          label_field, label_pattern, methylkit_levels, out_dir):
     """Build a sample sheet + FASTQ manifest from a BioProject's deposited metadata.
 
     Downloads no sequence data. Reads ENA's run report and sample attributes and
@@ -111,6 +121,9 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             out_dir=out_dir,
             condition_attributes=list(condition_attributes),
             extra_attributes=list(extra_attributes),
+            label_field=label_field,
+            label_pattern=label_pattern,
+            methylkit_levels=tuple(methylkit_levels) if methylkit_levels else None,
         )
     except ENAError as exc:
         click.echo(click.style(str(exc), fg="red"))
@@ -131,6 +144,17 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             "at least 3 biological replicates per group; this design may not support it.",
             fg="yellow",
         ))
+    if report["n_samples"] < report["n_runs"]:
+        click.echo(click.style(
+            f"\nWARNING: {report['n_runs']} runs share {report['n_samples']} BioSample(s). The "
+            "deposit does not establish that libraries are distinct animals; confirm "
+            "from the paper or the submitter before treating them as biological replicates.",
+            fg="yellow",
+        ))
+    if report.get("methylkit_samplesheet"):
+        mk = report["methylkit_samplesheet"]
+        click.echo(f"  methylKit  : {mk['control_level']}=0 (n={mk['n_control']}), "
+                   f"{mk['treatment_level']}=1 (n={mk['n_treatment']})")
     click.echo(click.style(f"\nWrote samplesheet, FASTQ manifest, and provenance to {out_dir}", fg="green"))
 
 

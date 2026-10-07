@@ -16,3 +16,5 @@ terms:
     label: Single timepoint only (no recovery/kinetics data)
   - id: identifier_mapping_uncertain
     label: Feature identifier mapping uncertain
+  - id: family_level_replication
+    label: Phenotype assigned per family; replicate animals nested within few families (effective n = number of families)
