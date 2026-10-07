@@ -1,62 +1,205 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# SIXTH REAL (non-simulated) STUDY REGISTERED IN AREE, and the second real
+# ocean-acidification study. The first, IOCAS2022_OA_ENERGY, failed QC on
+# pseudo-replication, so this is the only OA study that can still reach a pool.
+#
+# Registered from deposited metadata and the publication. The publication is
+# CONFIRMED: the preprint of Lutier et al. 2022 (HAL hal-03759707, CC BY 4.0)
+# gives "BioProject accession number PRJNA735889" in its data availability
+# statement. Its methods (one tank per pH, 5 oysters per tank, 23 d, juvenile
+# soft tissue sequenced individually, n = 75) match the deposit run for run.
+# Europe PMC finds no paper citing the accession because the published version
+# is not in its full-text corpus.
+#
+# Raw reads are public; no results have been computed yet. results_file is null.
+# REANALYSIS IS BLOCKED until the DESeq2 step can (a) pool several sample-sheet
+# condition levels into one arm and (b) treat tank, not oyster, as the unit of
+# replication (see limitations). Run as-is, the module accepts one condition
+# level per arm. A single-tank-vs-single-tank contrast confounds pH with tank
+# and would report oyster-level standard errors for a design with one
+# replicate per arm.
 
 study_id: LUTIER2022_OA_TIPPING
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1111/gcb.16101"
   bioproject: "PRJNA735889"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRP323902 (SRR14803108-SRR14803183)"
+  ena: "PRJNA735889"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN19689635-SAMN19689710 (one per library); parent umbrella project PRJNA70529"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Lutier M, Di Poi C, Gazeau F, Appolis A, Le Luyer J, Pernet F (2022). Revisiting tolerance to ocean acidification: Insights from a new framework combining physiological and molecular tipping points of Pacific oyster. Global Change Biology 28(10):3333-3348. https://doi.org/10.1111/gcb.16101 (PMID 35092108). Open-access preprint: https://hal.science/hal-03759707."
+
+species: "Magallana gigas"
+strain_or_population: "Ifremer standardized juveniles (NSI; BioSample breed 'NSI'), produced at the Ifremer Argenton hatchery in August 2018 from 139 female and 40 male broodstock from six wild cohorts collected off Fouras (Ile d'Aix, France), 2011-2016"
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies. The authors used
+# GCF_902806645.1 (Penaloza et al. 2021) with GSNAP + HTSeq; that pipeline is
+# not reproduced.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000 S4, 2x150 bp paired-end TruSeq RNA libraries, all 76 multiplexed on one lane (BHFKLKDSXY L004); 8.5-61.5 M read pairs per library; 347.0 GB FASTQ reported by ENA"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 76 runs are public in ENA/SRA under PRJNA735889 (first public 2021-06-17). 31 of the 76 runs are deposited as library_strategy AMPLICON / library_source METAGENOMIC; they are RNA-seq mislabelled at deposit (see curation_notes), so filtering on library_strategy would silently drop 6 of the 15 tanks. No count matrix or per-gene statistics are deposited; the paper reports WGCNA clusters fitted to pH, not a differential-expression table. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED AND PUBLISHED. 15 tanks, each at one constant nominal
+# pHT from 7.8 (ambient, unregulated) down to 6.4 in 0.1 steps, 5 juvenile
+# oysters sequenced individually per tank, sampled after 23 d. "n = 15, no pH
+# replication" in the authors' words. Tank is parsed from sample_alias
+# (<tank><oyster A-E>), and the sample-sheet condition is pHT_<pH>_<tank>, so
+# every condition level is one tank. Two tanks report mean pHT 6.5: tank 9
+# ('pHT 6.5') and tank 15 ('pHT 6.5 bis'). They are nominal 6.4 (measured
+# 6.5 +/- 0.3) and nominal 6.5 (6.5 +/- 0.2) per Supplementary Table 2. Which
+# tank is which is not stated anywhere, so they are kept as separate levels.
+#
+# ONE COMPARISON, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-07).
+# The gradient is collapsed to two ends that sit cleanly on either side of
+# the paper's tipping points. Tanks in the 7.5-6.8 transition zone are not
+# used:
+#   control   = pHT >= 7.6: tanks 3 (7.8), 5 (7.7), 8 (7.6). Above every
+#               tipping point reported (physiology 7.1-6.9, transcriptome
+#               7.3-6.9) and above the 7.3 level where the authors find no
+#               change in growth, respiration or expression in prior studies.
+#   treatment = pHT <= 6.7: tanks 7 (6.7), 16 (6.6), 9 (6.5), 15 (6.5 bis).
+#               Below every physiological tipping point, at or below the
+#               critical points for growth (6.6) and respiration arrest (6.7).
+# The 7.6 cut keeps three tanks in the control arm; moving it to 7.7 would
+# leave two. The cut points are taken from the authors' tipping points, which
+# were estimated from these same animals, so the contrast is not independent
+# of the paper's own analysis. That is acceptable for an exposure contrast but
+# would not be for a tipping-point claim.
+#
+# ON PHENOTYPE CLASSIFICATION. The paper did measure organismal outcomes
+# (growth, calcification, ingestion, respiration, shell thickness; no
+# mortality occurred), but at the tank level, on all animals of that tank,
+# and as the response to pH. Both arms are the same population. The contrast
+# is an exposure, not a comparison of tolerant vs sensitive animals, so it is
+# classified exposure_only on the acidification_tolerance axis, matching
+# IOCAS2022_OA_ENERGY. This overrides the ontology default of `resilience`;
+# the validator warning is expected. Do not upgrade it on the strength of the
+# tank-level physiology: no oyster in this experiment was scored for its own
+# tolerance.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
-    life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+  - comparison_id: "ph_le6_7_vs_ph_ge7_6_23d"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "Constant seawater pH set by pure-CO2 bubbling in a flow-through header-tank system, one of 15 nominal pHT levels from 7.8 (ambient, unregulated) to 6.4, for 23 d at 21.7 C and salinity 35.7 after a 3 d hold and a ramp of 0.2 pH unit per day (Lutier et al. 2022; BioSample treatment 'pHT 6.5' ... 'pHT 7.8', growth_protocol '23d of exposure at mean pHT of ...')."
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "treatment arm mean pHT 6.7, 6.6, 6.5, 6.5 (pCO2 ~11,200-23,100 uatm, Omega-aragonite 0.1-0.2); control arm mean pHT 7.8, 7.7, 7.6 (pCO2 ~700-1,600 uatm, Omega-aragonite 1.0-2.0). Supplementary Table 2."
+    exposure_duration: "23 d at target pH"
+    exposure_timing: "all oysters sampled on day 23 at target pH (5 months old at the start); single timepoint"
+    control_condition: "Tanks 3, 5, 8 at mean pHT 7.8, 7.7, 7.6 (sample-sheet levels pHT_7_8_3, pHT_7_7_5, pHT_7_6_8); 5 oysters each. pHT 7.8 is unregulated ambient seawater; 7.7 and 7.6 are mildly acidified, but above every tipping point in the paper."
+    treatment_condition: "Tanks 7, 16, 9, 15 at mean pHT 6.7, 6.6, 6.5, 6.5 (sample-sheet levels pHT_6_7_7, pHT_6_6_16, pHT_6_5_9, pHT_6_5_bis_15); 5 oysters each."
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    resilience_classification: "exposure_only"
+    sample_size: 35
+    biological_replicates: 3
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - unbalanced_design
+  - single_timepoint
+
+limitations: >
+  (1) The unit of replication is the tank, and pH is not replicated: each pH
+  level is a single 45 L tank. Within an arm, the 5 oysters of a tank share
+  that tank's water, food supply and handling, so they are not independent
+  replicates of pH. The prespecified contrast has 3 control tanks vs 4
+  treatment tanks (15 vs 20 oysters). biological_replicates records 3, the
+  smaller tank count, not 15. The current DESeq2 step fits ~condition on
+  individual libraries with one condition level per arm. It would either
+  contrast one tank with another, fully confounding pH with tank, or, if
+  levels were merged, treat 35 oysters as independent and understate lfcSE.
+  Tank must be the unit, for example by summing counts to tank before
+  DESeq2 or by fitting tank as a random effect, before any result is pooled.
+  AREE has no quality-flag term for tank-level replication yet;
+  family_level_replication is the nearest analogue and is not applied
+  because the cause differs. (2) Arms are unbalanced (3 vs 4 tanks), and the
+  control arm is not a pure ambient control: 7.7 and 7.6 are acidified
+  relative to the 7.8 ambient tank. (3) The arm boundaries come from tipping
+  points that the authors estimated from these same animals. (4) The
+  extremes are far outside realistic ocean projections; the authors call
+  their lowest levels "probably unrealistic". Effect sizes from pH 6.5-6.7
+  should not be pooled with near-future OA scenarios (pH ~7.7-7.8) as if they
+  meant the same thing. (5) Tissue is whole soft tissue, so expression
+  differences can reflect changes in tissue composition (for example
+  shell-forming mantle edge as a fraction of body mass) as well as
+  regulation within cells. (6) Exposure only: no oyster was scored for its
+  own tolerance, and no mortality occurred. The tank-level physiology
+  describes how the population responded, not which animals tolerated it.
+  (7) Single timepoint (23 d), single cohort, one hatchery population; sex
+  not recorded. (8) Library depth is uneven: 8.5-61.5 M read pairs, with
+  four libraries below 13.1 M. Three of them are in the control arm (5A
+  8.5 M, 5E 9.2 M, 8C 13.1 M), and two of those are in tank 5, so depth is
+  partly confounded with arm. (9) The
+  deposit's library_strategy is wrong for 31 runs. A pipeline that trusts it
+  would lose tanks 11 and 13-17, including two of the four treatment tanks.
+  (10) Until another OA RNA-seq study passes QC, this study cannot contribute
+  to any k >= 2 pool.
 
 provenance:
-  registered_by: "sr320"
+  registered_by: sr320
   date_registered: "2026-10-07"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Registered from live ENA metadata for PRJNA735889 with
+    `aree fetch-samplesheet --bioproject PRJNA735889 --study
+    LUTIER2022_OA_TIPPING --label-field sample_alias --label-pattern
+    '^(?P<tank>\d+)(?P<oyster>[A-E])(?P<library_suffix>bis)?$'
+    --condition-attribute treatment --condition-attribute tank --attribute
+    oyster --attribute library_suffix --attribute replicate --attribute
+    "dev stage" --attribute tissue --attribute growth_protocol`. Tank is
+    parsed from sample_alias because no BioSample attribute carries it, and
+    the treatment attribute alone would merge the two pHT 6.5 tanks.
+    LIBRARY-STRATEGY CORRECTION: 31 runs (tanks 11, 13, 14, 15, 16, 17 plus
+    13Ebis) are deposited as AMPLICON / METAGENOMIC / PCR, and 45 (tanks 1,
+    3-10) as RNA-Seq / METATRANSCRIPTOMIC. All 76 share one flow-cell lane
+    and the same library-name format, read length and depth range. Their
+    experiment titles read "RNA-seq of Crassostrea gigas", and together they
+    make the paper's 15 tanks x 5 oysters. The first 4,000 reads of 11A
+    (AMPLICON) and 3A (RNA-Seq) have 3,636 and 3,625 distinct 20-mer
+    prefixes respectively, with no dominant primer-anchored sequence, so 11A
+    is not an amplicon library. All 76 runs are treated as RNA-seq. This
+    corrects docs/candidate_studies.md, which described the AMPLICON runs as
+    a separate microbiome experiment to exclude (to be fixed in a PR on main).
+    REPLICATION CHECK: 76 distinct sample_alias values and 76 distinct
+    BioSamples. The paper states each oyster was ground and sequenced
+    individually (n = 75). 13Ebis is a 76th library from tank 13 (pHT 7.4)
+    with its own BioSample ('Oyster Ebis'); whether it is a re-extraction of
+    13E or a sixth animal is not stated. Tank 13 is outside the prespecified
+    comparison, so this does not affect it. Distinct names do not prove
+    distinct animals: run scripts/check_replicate_dispersion.py after
+    quantification, as for every raw_reanalysis study. Dev stage
+    'juveniles' maps to juvenile; tissue 'whole organism' (soft tissues,
+    shell removed, per the paper) maps to whole_animal. PUBLICATION: PubMed
+    author search for Lutier M returned four C. gigas OA papers; the GCB
+    2022 paper's preprint (HAL, read in full on 2026-10-07) cites
+    PRJNA735889. Lutier et al. 2025 J Exp Biol (doi:10.1242/jeb.249458)
+    reuses these C. gigas data for a species comparison and is not a
+    separate dataset. Caillon et al. 2023 J Exp Biol (doi:10.1242/jeb.246432,
+    48 d, pH 7.7-6.4, C. gigas and O. edulis) is a different experiment from
+    the same group. It is a candidate pool partner if its reads are public;
+    not checked.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA735889"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA735889"
+    - "https://doi.org/10.1111/gcb.16101"
+    - "https://hal.science/hal-03759707"
