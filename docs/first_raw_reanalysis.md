@@ -166,11 +166,19 @@ second flag brings back the within-study error described below.
 
 Either arm may name several `condition` levels, comma-separated, and DESeq2
 then contrasts the pooled arms (`--control_level pHT_7_6,pHT_7_7,pHT_7_8`).
-Use this when each level is a single tank, as in a pH gradient with one tank
-per level: pooling three tanks per arm means tank-to-tank variation enters
-the residual variance, so no single tank decides the result. It does not
-make tanks independent replicates of the treatment, so record the design in
-the study YAML. A level named in both arms is an error.
+A level named in both arms is an error.
+
+When treatment is applied per tank (or pen, or family) rather than per
+animal, the animals in one unit are not independent replicates of it. Name
+the sample-sheet column that identifies the unit with `--replicate_unit`
+(e.g. `--replicate_unit tank`). DESeq2 then works on pseudo-bulk libraries:
+each unit's length-scaled counts are summed, so dispersion and `lfcSE` come
+from unit-to-unit variation, the right error for the treatment. Each unit
+must lie wholly inside one arm, and each arm needs at least two units. A pH
+gradient with one tank per level is the case this exists for: pool several
+tanks per arm and set `--replicate_unit tank`. Without it, the animals are
+treated as independent and `lfcSE` is too small. Record the design with the
+`tank_level_replication` quality flag.
 
 Harmonize one comparison at a time with `--comparison`, as above. Plain
 `aree harmonize --study CALLA2026_OSHV` stops at the first comparison whose
