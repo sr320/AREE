@@ -10,13 +10,16 @@
 # Europe PMC finds no paper citing the accession because the published version
 # is not in its full-text corpus.
 #
-# Raw reads are public; no results have been computed yet. results_file is null.
-# REANALYSIS IS BLOCKED until the DESeq2 step can (a) pool several sample-sheet
-# condition levels into one arm and (b) treat tank, not oyster, as the unit of
-# replication (see limitations). Run as-is, the module accepts one condition
-# level per arm. A single-tank-vs-single-tank contrast confounds pH with tank
-# and would report oyster-level standard errors for a design with one
-# replicate per arm.
+# REANALYZED 2026-10-09 at full depth, tank as the unit of replication. The
+# prespecified comparison pools 3 control tanks and 4 treatment tanks and
+# fits DESeq2 on pseudo-bulk tank libraries (--replicate_unit tank: each
+# tank's 5 length-scaled libraries summed), so dispersion and lfcSE come from
+# tank-to-tank variation. 1,343 of 29,263 genes have padj < 0.05. The same
+# contrast fitted on the 35 oysters as independent reports 4,922, so 3,729 of
+# those would have been tank-level pseudo-replication. QC passes: within every
+# tank, oysters vary as real biological replicates do (median dispersion
+# 0.028-0.052, data/studies/LUTIER2022_OA_TIPPING/replicate_dispersion_qc.tsv).
+# See limitations (11) for a tank that sits with the controls.
 
 study_id: LUTIER2022_OA_TIPPING
 simulated: false
@@ -52,8 +55,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 76 runs are public in ENA/SRA under PRJNA735889 (first public 2021-06-17). 31 of the 76 runs are deposited as library_strategy AMPLICON / library_source METAGENOMIC; they are RNA-seq mislabelled at deposit (see curation_notes), so filtering on library_strategy would silently drop 6 of the 15 tanks. No count matrix or per-gene statistics are deposited; the paper reports WGCNA clusters fitted to pH, not a differential-expression table. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED AND PUBLISHED. 15 tanks, each at one constant nominal
@@ -111,13 +114,14 @@ comparisons:
     resilience_classification: "exposure_only"
     sample_size: 35
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/LUTIER2022_OA_TIPPING/LUTIER2022_OA_TIPPING_ph_le6_7_vs_ph_ge7_6_23d_dge_standardized.tsv"
     meta_analysis_primary: true
 
 quality_flags:
   - raw_data_available
   - unbalanced_design
   - single_timepoint
+  - tank_level_replication
 
 limitations: >
   (1) The unit of replication is the tank, and pH is not replicated: each pH
@@ -125,15 +129,12 @@ limitations: >
   that tank's water, food supply and handling, so they are not independent
   replicates of pH. The prespecified contrast has 3 control tanks vs 4
   treatment tanks (15 vs 20 oysters). biological_replicates records 3, the
-  smaller tank count, not 15. The current DESeq2 step fits ~condition on
-  individual libraries with one condition level per arm. It would either
-  contrast one tank with another, fully confounding pH with tank, or, if
-  levels were merged, treat 35 oysters as independent and understate lfcSE.
-  Tank must be the unit, for example by summing counts to tank before
-  DESeq2 or by fitting tank as a random effect, before any result is pooled.
-  AREE has no quality-flag term for tank-level replication yet;
-  family_level_replication is the nearest analogue and is not applied
-  because the cause differs. (2) Arms are unbalanced (3 vs 4 tanks), and the
+  smaller tank count, not 15. The analysis therefore sums each tank's
+  libraries and fits DESeq2 on 7 tanks (--replicate_unit tank), and the
+  study carries tank_level_replication. Seven tanks is little: lfcSE rests
+  on 2 and 3 residual degrees of freedom per arm, and pH is still not
+  replicated, so a tank effect that happened to align with pH cannot be
+  ruled out. (2) Arms are unbalanced (3 vs 4 tanks), and the
   control arm is not a pure ambient control: 7.7 and 7.6 are acidified
   relative to the 7.8 ambient tank. (3) The arm boundaries come from tipping
   points that the authors estimated from these same animals. (4) The
@@ -154,7 +155,17 @@ limitations: >
   deposit's library_strategy is wrong for 31 runs. A pipeline that trusts it
   would lose tanks 11 and 13-17, including two of the four treatment tanks.
   (10) Until another OA RNA-seq study passes QC, this study cannot contribute
-  to any k >= 2 pool.
+  to any k >= 2 pool. (11) Tank 7 (pHT 6.7), in the treatment arm, sits with
+  the control tanks. On a PCA of the 7 pseudo-bulk tanks (top 2,000
+  variable genes), PC1 (50% of variance) separates tanks 15, 9 and 16
+  (pHT 6.5-6.6) from tanks 3, 5 and 8, and tank 7 falls among the controls.
+  This matches the paper's critical point for growth (pHT 6.6), but not the
+  arm boundary of 6.7, which was prespecified from the physiological tipping
+  points before any data were run. The treatment arm is therefore a mix of
+  three tanks past the transcriptomic shift and one that is not, which
+  dilutes the contrast. It is kept as registered. A contrast of pHT <= 6.6
+  against the same controls would be a sensitivity analysis chosen after
+  seeing the data, and must not replace the primary comparison.
 
 provenance:
   registered_by: sr320
@@ -198,6 +209,20 @@ provenance:
     48 d, pH 7.7-6.4, C. gigas and O. edulis) is a different experiment from
     the same group. It is a candidate pool partner if its reads are public;
     not checked.
+    REANALYSIS (picked up on Chlo, 2026-10-08/09): the 35 libraries of the
+    two arms (163.6 GB) were downloaded from ENA and all 70 FASTQ files
+    matched ENA's MD5s. One file (SRR14803163_2, tank 15) reached full size
+    with a wrong MD5 after a dropped transfer was resumed; it was discarded
+    and fetched again. Nextflow session 14f9eeb7-188f-4ffe-9465-db8162c18c42,
+    run in three stages as the download progressed. Finished Salmon tasks
+    were reused from the cache; the last run completed 29 tasks with 81
+    cached. The code was PR #11's branch plus PR #12 (pooled arms,
+    --replicate_unit) merged locally, before #12 reached main. Salmon mapped
+    76.0-86.4% of read pairs (median 81.8%; tank 15 lowest at 78.9%),
+    stranded ISR. The workflow manifest records control_levels,
+    treatment_levels and replicate_unit tank. Dispersion of the summed tank
+    libraries is 0.009 (control arm) and 0.022 (treatment arm), so tank
+    effects are modest, larger in the low-pH arm.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA735889"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA735889"

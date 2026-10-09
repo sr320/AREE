@@ -1,11 +1,11 @@
 """Curation tests for LUTIER2022_OA_TIPPING.
 
-A 15-tank pH gradient (one tank per pH, 5 juvenile oysters per tank), not yet
-reanalyzed. These tests pin the design read from ENA and the decisions that
-are easy to erode later: every run is kept even though 31 are mislabelled
-AMPLICON, tank is a condition level so the two pHT 6.5 tanks stay apart, the
-prespecified arms, exposure_only classification, and that nothing is pooled
-until tank is modelled as the unit of replication.
+A 15-tank pH gradient (one tank per pH, 5 juvenile oysters per tank),
+reanalyzed with tank as the unit of replication. These tests pin the design
+read from ENA and the decisions that are easy to erode later: every run is
+kept even though 31 are mislabelled AMPLICON, tank is a condition level so the
+two pHT 6.5 tanks stay apart, the prespecified arms, exposure_only
+classification, and that the result was fitted on tanks, not oysters.
 """
 from __future__ import annotations
 
@@ -106,8 +106,44 @@ def test_publication_is_the_confirmed_one(study):
     assert "10.1242/jeb.249458" not in study["citation"]
 
 
-def test_nothing_runs_or_pools_until_tank_is_the_unit(study):
-    assert study["qc_status"] == "not_started"
-    assert study["analysis_status"] == "not_started"
-    assert all(c["results_file"] is None for c in study["comparisons"])
-    assert "tank" in study["limitations"].lower()
+def test_config_runs_the_prespecified_arms_on_tanks():
+    from common import REPO_ROOT
+
+    config = (REPO_ROOT / "config" / "LUTIER2022_OA_TIPPING.config").read_text()
+    levels = dict(re.findall(r"^\s*(control_level|treatment_level|replicate_unit)\s*=\s*'([^']*)'", config, re.M))
+    assert set(levels["control_level"].split(",")) == CONTROL_LEVELS
+    assert set(levels["treatment_level"].split(",")) == TREATMENT_LEVELS
+    assert levels["replicate_unit"] == "tank"
+
+
+def test_result_was_fitted_on_tanks_not_oysters(study):
+    """The manifest must say the lfcSE came from 7 tanks, not 35 oysters."""
+    comp = study["comparisons"][0]
+    assert "tank_level_replication" in study["quality_flags"]
+    stem = STUDY_DIR / "LUTIER2022_OA_TIPPING_ph_le6_7_vs_ph_ge7_6_23d"
+    params = json.loads(stem.with_name(stem.name + "_workflow_manifest.json").read_text())["parameters"]
+    assert params["replicate_unit"] == "tank"
+    assert set(params["control_levels"]) == CONTROL_LEVELS
+    assert set(params["treatment_levels"]) == TREATMENT_LEVELS
+    assert comp["results_file"].endswith(stem.name + "_dge_standardized.tsv")
+
+
+def test_oysters_within_each_tank_are_biological_replicates():
+    """Unlike IOCAS2022_OA_ENERGY, every tank's oysters vary like real animals."""
+    with open(STUDY_DIR / "replicate_dispersion_qc.tsv") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    assert {r["condition"] for r in rows} == CONTROL_LEVELS | TREATMENT_LEVELS
+    assert all(r["passes"] == "True" for r in rows)
+    assert all(0.02 < float(r["median_dispersion"]) < 0.1 for r in rows)
+
+
+def test_standardized_result_has_tank_level_standard_errors(study):
+    import pandas as pd
+
+    from common import REPO_ROOT
+
+    df = pd.read_csv(REPO_ROOT / study["comparisons"][0]["results_file"], sep="\t")
+    assert {"gene_id", "log2FoldChange", "lfcSE", "pvalue", "padj"} <= set(df.columns)
+    # 1,343 genes at padj < 0.05 on tanks; fitting the 35 oysters gave 4,922.
+    assert (df["padj"] < 0.05).sum() == 1343
+    assert study["qc_status"] == "passed_with_warnings"

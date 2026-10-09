@@ -1,0 +1,8 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+pHT_6_5_9	5	9A,9B,9C,9D,9E	8978	0.03344	True
+pHT_6_5_bis_15	5	15A,15B,15C,15D,15E	9008	0.02787	True
+pHT_6_6_16	5	16A,16B,16C,16D,16E	9100	0.03786	True
+pHT_6_7_7	5	7A,7B,7C,7D,7E	8912	0.052	True
+pHT_7_6_8	5	8A,8B,8C,8D,8E	9069	0.0364	True
+pHT_7_7_5	5	5A,5B,5C,5D,5E	8958	0.02748	True
+pHT_7_8_3	5	3A,3B,3C,3D,3E	8823	0.02993	True
