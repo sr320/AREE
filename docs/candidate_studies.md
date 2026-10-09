@@ -55,8 +55,17 @@ So the screen applied here, in priority order:
 >
 > **#3 failed QC** as `IOCAS2022_OA_ENERGY` (registered 2026-09-30, reanalyzed
 > 2026-10-01, QC decision 2026-10-07). Its replicates are technical, not
-> biological — see *Rejected, and why it matters* below. AREE still has no
-> usable real ocean-acidification study.
+> biological — see *Rejected, and why it matters* below.
+>
+> **#7 is registered and harmonized** as `LUTIER2022_OA_TIPPING` (PR #11,
+> merged 2026-10-09), AREE's first usable real ocean-acidification study.
+> Two things on this page were wrong about it. First, the 31 "AMPLICON" runs
+> are RNA-seq, mislabelled at deposit: all 76 runs make the paper's 15 tanks
+> × 5 oysters. Second, the design is one tank per pH, so tank, not oyster, is
+> the unit of replication. The prespecified contrast (pHT ≤ 6.7 vs ≥ 7.6,
+> 4 vs 3 tanks) is fitted on pseudo-bulk tanks (`--replicate_unit tank`). It
+> is classified `exposure_only`: the physiology was measured per tank, and no
+> oyster was scored for tolerance.
 >
 > **Correction from the first draft of this page.** #1 was listed here as a
 > study whose "contrast *is* a resilience phenotype, not an exposure", on the
@@ -86,7 +95,7 @@ pooling would run on anything but simulated data.
 | 4 | `PRJNA678408` | 10 WGBS | 5 diploid + 5 triploid | Desiccation + acute heat | Would be AREE's **first real methylation study**. But the intake converter does not handle region tables yet, and coordinate-based evidence is exposed to the assembly change described in [handling_genome_versions.md](handling_genome_versions.md). |
 | 5 | `PRJNA762441` | 18 RNA-seq | diploid/triploid × 3 timepoints, n=3 | Thermal stress, ploidy contrast | Clean design; ploidy is a useful resilience covariate. No linked publication confirmed. |
 | 6 | `PRJNA913164` | 72 | diploid/triploid, marine heatwave | Thermal tolerance | **Tag-seq (3′ counts), not standard RNA-seq** — quantification differs from the salmon-based workflow. Largest n on the list. No publication found; treat as unpublished data. |
-| 7 | `PRJNA735889` | 76 (RNA-seq + amplicon) | individually labelled, ~n=5/group | OA "tipping point" | Mixed assay project; the amplicon runs are a separate microbiome experiment and must be excluded at intake. |
+| 7 ✅ | `PRJNA735889` | 76 RNA-seq (31 mislabelled AMPLICON) | 15 tanks, one per pH, × 5 oysters | OA "tipping point" | Registered as `LUTIER2022_OA_TIPPING`. **Do not filter on ENA library_strategy**: the AMPLICON runs are RNA-seq. One tank per pH, so fit on tanks, not oysters. |
 | 8 | `PRJNA1196326` | 6 RNA-seq | 2 groups × n=3 | Transgenerational OA | Very small, but transgenerational designs are directly relevant to breeding and rare in the public record. |
 | 9 | `PRJNA877226` | 6 RNA-seq | run labels blank in ENA | Vibrio × high temperature | Multi-stressor and cheap, but the deposited metadata does not describe groups — the design must be recovered from the paper before it is worth registering. |
 
@@ -161,7 +170,7 @@ evidence from methylation is also exposed to the assembly change in
 | M1 ✅ | `PRJNA690951` | 12 WGBS | 2 thermal-**resistant** (RR52, RR59) + 2 **susceptible** (SS05, SS35) families × n=3, gill, day 30 of 26–34 °C oscillation (CIBNOR) | Thermal tolerance, **measured phenotype** | Same breeding program and challenge as Arredondo-Espinoza et al. 2023, the RR/SS study in [issue #6](https://github.com/sr320/AREE/issues/6). This is the first public raw data from that design. No methylation paper cites it yet. It is the **methylation** arm: the RNA-seq reads are still not located. Effective replication is 2 vs 2 families, not 6 vs 6 oysters. |
 | M2 | `PRJEB81880` | 40 EM-seq | 5 resistant vs 5 susceptible families, gill + mantle, before (T0) and after (T1) POMS, one oyster per family × tissue × time | Disease **resistance** (POMS) | A measured R/S phenotype with a before/after design, in AREE's best-populated stressor class (OsHV-1/POMS: `CALLA2026_OSHV`, `DELISLE2020_OSHV_TEMP`). Inferred to be Valdivieso et al. 2025, *Sci Total Environ* ([10.1016/j.scitotenv.2025.178385](https://doi.org/10.1016/j.scitotenv.2025.178385)). |
 | M3 | `PRJNA562805` | 12 WGBS | intertidal vs subtidal origin × control/heat, n=3, gill | Thermal response by habitat origin | **Confirmed**: Wang et al. 2021, *Heredity* ([10.1038/s41437-020-0351-7](https://doi.org/10.1038/s41437-020-0351-7)). Pairs with M1 to give thermal methylation k=2. |
-| M4 | `PRJNA682817` | 24 WGBS | diploid/triploid × pH 8.2/7.7, n=6 per cell, adult ctenidia (UW) | Ocean acidification (exposure) | Best-replicated OA methylation design found, and it pairs with `IOCAS2022_OA_ENERGY`. Lab-internal, so metadata recovery is easy. No publication located. Sister project of `PRJNA678408` (Tier 2 #4 above). |
+| M4 | `PRJNA682817` | 24 WGBS | diploid/triploid × pH 8.2/7.7, n=6 per cell, adult ctenidia (UW) | Ocean acidification (exposure) | Best-replicated OA methylation design found. Its natural RNA-seq partner, `IOCAS2022_OA_ENERGY`, failed QC; `LUTIER2022_OA_TIPPING` is OA but juvenile whole tissue at far lower pH, so not a like-for-like pairing. Lab-internal, so metadata recovery is easy. No publication located. Sister project of `PRJNA678408` (Tier 2 #4 above). |
 | M5 | `PRJNA806944` | 8 WGBS | female gonad, ambient vs low pH | Ocean acidification (exposure) | **Confirmed**: Venkataraman et al. 2022, *BMC Genomics* ([10.1186/s12864-022-08781-5](https://doi.org/10.1186/s12864-022-08781-5)). Group labels are not in the run metadata, so recover the split from the paper. |
 
 ### Methylation: Tier 2
@@ -191,7 +200,7 @@ papers is the realistic route. The Roberts-lab projects make that easiest.
 | P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | Harney et al. 2016, *J Proteomics* (PRIDE reference). Complete submission. |
 | P2 | `PXD015434` | early juveniles, temperature | Thermal | **Confirmed**: Crandall et al. 2022, *PeerJ*. |
 | P3 | `PXD013262` | seed, time × temperature | Thermal | **Confirmed**: Wanamaker et al. 2020, *BMC Genomics*. Together, P2 and P3 give thermal proteomics k=2, and both pair with M1/M3 for multi-omics convergence. |
-| P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. Third OA layer alongside `IOCAS2022_OA_ENERGY` and M4/M5. |
+| P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. An OA protein layer alongside `LUTIER2022_OA_TIPPING` (RNA-seq) and M4/M5. |
 | P5 | `PXD011365` | gill mitochondria, hypoxia–reoxygenation | **Hypoxia tolerance** | Sokolov et al. 2019, *J Proteomics* (PRIDE reference). This is the only public omics dataset found for `hypoxia_tolerance`, which the RNA-seq screen flagged as empty. |
 | P6 | `PXD065668` / `PXD065706` | gill proteome + phosphoproteome, ERK inhibition | Thermotolerance divergence | **Confirmed**: Wang et al. 2026, *Commun Biol*. This is a pharmacological perturbation, so it is mechanism support, not population evidence. |
 | P7 | `PXD064651` | mucus, *Vibrio* infection, iTRAQ | Pathogen challenge | No publication. Partial submission. |

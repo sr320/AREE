@@ -364,3 +364,67 @@ def test_context_replication_separates_study_count_from_context_breadth():
         pd.DataFrame([_two_study_meta_row(k_studies=1)]), evidence
     ).iloc[0]
     assert single["context_replication"] == "single_study"
+
+
+def _classified_evidence(*classes) -> pd.DataFrame:
+    """Two significant same-direction records on a phenotype whose ontology
+    default is `resilience`, each carrying its comparison's classification."""
+    return pd.DataFrame([
+        {"evidence_id": eid, "study_id": sid, "feature_id_standardized": "GENE_NULL",
+         "phenotype": "acidification_tolerance", "feature_type": "gene", "simulated": False,
+         "species_taxid": 29159, "mapping_confidence": "exact", "quality_flags": [],
+         "adjusted_p_value": 0.001, "resilience_classification": cls}
+        for (eid, sid), cls in zip([("a", "A"), ("b", "B")], classes)
+    ])
+
+
+def _strong_row() -> dict:
+    return _two_study_meta_row(phenotype="acidification_tolerance", p_value=1e-8,
+                               adjusted_p_value=1e-6, pooled_effect=1.4)
+
+
+def test_exposure_only_override_beats_the_phenotype_default():
+    """acidification_tolerance defaults to resilience, but these contrasts were
+    curated exposure_only: the candidate must not be labelled or scored as
+    resilience evidence, and the exposure_only cap keeps it out of high priority."""
+    candidate = build_candidates(pd.DataFrame([_strong_row()]),
+                                 _classified_evidence("exposure_only", "exposure_only")).iloc[0]
+    assert candidate["evidence_class"] == "exposure_only"
+    assert candidate["component_phenotype_relevance_score"] == 0.1
+    assert candidate["tier"] != "high_priority_cross_study"
+
+
+def test_mixed_classes_take_the_most_conservative():
+    candidate = build_candidates(pd.DataFrame([_strong_row()]),
+                                 _classified_evidence("resilience", "stress_response")).iloc[0]
+    assert candidate["evidence_class"] == "stress_response"
+    assert candidate["component_phenotype_relevance_score"] == 0.4
+
+
+def test_matching_classification_keeps_resilience():
+    candidate = build_candidates(pd.DataFrame([_strong_row()]),
+                                 _classified_evidence("resilience", "resilience")).iloc[0]
+    assert candidate["evidence_class"] == "resilience_associated"
+    assert candidate["component_phenotype_relevance_score"] == 1.0
+    assert candidate["tier"] == "high_priority_cross_study"
+
+
+def test_missing_classification_falls_back_to_the_phenotype_default():
+    from prioritize.scoring import conservative_relevance
+
+    assert conservative_relevance("acidification_tolerance", []) == "resilience"
+    assert conservative_relevance("acidification_tolerance", [None, float("nan")]) == "resilience"
+    assert conservative_relevance("acidification_tolerance", [None, "exposure_only"]) == "exposure_only"
+
+
+def test_harmonized_evidence_carries_each_comparisons_classification(isolated_reports):
+    """The evidence table must keep the curator's classification, not only the
+    phenotype, or ranking cannot honour an override."""
+    from common import STUDIES_DIR, load_yaml
+
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    for (study_id, comparison_id), records in evidence.groupby(["study_id", "comparison_id"]):
+        study = load_yaml(STUDIES_DIR / f"{study_id}.yaml")
+        (comparison,) = [c for c in study["comparisons"] if c["comparison_id"] == comparison_id]
+        assert set(records["resilience_classification"]) == {comparison["resilience_classification"]}

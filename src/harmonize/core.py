@@ -263,7 +263,8 @@ def _upsert_evidence_table(new_rows: pd.DataFrame) -> None:
             combined = existing
         else:
             combined = new_rows
-    combined = combined[EVIDENCE_COLUMNS]
+    # reindex, not [], so a table written before a column was added still loads.
+    combined = combined.reindex(columns=EVIDENCE_COLUMNS)
     combined.to_csv(EVIDENCE_TABLE_PATH, sep="\t", index=False)
 
 

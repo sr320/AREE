@@ -24,7 +24,11 @@ EVIDENCE_COLUMNS = [
     "annotation_context", "molecular_direction", "effect_size", "effect_size_type",
     "standard_error", "ci_lower", "ci_upper", "p_value", "adjusted_p_value",
     "sample_size", "tissue", "life_stage", "stressor", "phenotype",
-    "phenotype_direction", "analysis_method", "mapping_confidence",
+    # The comparison's own resilience_classification, which can override the
+    # phenotype's ontology default (an exposure-only contrast on the
+    # acidification_tolerance axis). Ranking reads it; without it every
+    # override was silently replaced by the phenotype default.
+    "phenotype_direction", "resilience_classification", "analysis_method", "mapping_confidence",
     "quality_flags", "source_file", "workflow_version", "date_generated", "generated_by",
 ]
 

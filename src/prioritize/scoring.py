@@ -109,16 +109,36 @@ def significance_p_value(meta_row: dict) -> float:
     return max(float(p), 1e-300)
 
 
-def compute_components(meta_row: dict, mapping_confidences: list, quality_flags: list) -> dict:
+def conservative_relevance(phenotype: str, classifications) -> str:
+    """The weakest evidence class among a candidate's contributing records.
+
+    Each record carries its comparison's resilience_classification, which a
+    curator may set below the phenotype's ontology default (an exposure
+    contrast on the acidification_tolerance axis is exposure_only, not
+    resilience). A record without one falls back to the phenotype default.
+    Taking the weakest class means one exposure-only study can never be read
+    as resilience evidence, whatever else it is pooled with.
+    """
+    default = phenotype_relevance(phenotype)
+    classes = {c if isinstance(c, str) and c in PHENOTYPE_RELEVANCE_SCORE else default
+               for c in classifications} or {default}
+    return min(classes, key=PHENOTYPE_RELEVANCE_SCORE.__getitem__)
+
+
+def compute_components(
+    meta_row: dict, mapping_confidences: list, quality_flags: list, relevance: str | None = None
+) -> dict:
     """Compute the 0-1 component scores for one candidate (one meta-analysis row).
 
     meta_row is expected to have the columns produced by
     meta_analysis.run.run_meta_analysis (k_studies, total_sample_size,
     pooled_effect, p_value, adjusted_p_value, direction_consistency,
     distinct_tissues, distinct_life_stages, i_squared, phenotype) plus
-    n_supporting_layers, which prioritize.rank adds.
+    n_supporting_layers, which prioritize.rank adds. `relevance` is the
+    candidate's evidence class from its contributing records (see
+    conservative_relevance); it defaults to the phenotype's ontology class.
     """
-    relevance = phenotype_relevance(meta_row["phenotype"])
+    relevance = relevance or phenotype_relevance(meta_row["phenotype"])
 
     # -log10(q) is itself unbounded, so saturate on that scale: q=1e-5 -> 0.5.
     significance_score = _saturating(-math.log10(significance_p_value(meta_row)), 5.0)

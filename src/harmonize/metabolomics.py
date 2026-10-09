@@ -76,6 +76,7 @@ def harmonize_metabolomics(
             "stressor": comparison["stressor_standardized"],
             "phenotype": comparison["phenotype"],
             "phenotype_direction": comparison["phenotype_direction"],
+            "resilience_classification": comparison.get("resilience_classification"),
             "analysis_method": analysis_method,
             "mapping_confidence": confidence,
             "quality_flags": quality_flags,
