@@ -28,6 +28,8 @@ process DMR_METHYLKIT {
     val dmr_mode              // "tile" or "base"
     val tile_size
     val tile_step
+    val replicate_unit        // design-sheet column naming the unit of replication, or ''
+    path design_sheet         // TSV mapping run_accession/sample_id -> unit (placeholder when unused)
 
     output:
     path "${study_id}_${comparison_id}_dmr_raw.tsv", emit: dmr_table
@@ -54,6 +56,8 @@ process DMR_METHYLKIT {
     dmr_mode    <- "${dmr_mode}"
     tile_size   <- as.integer(${tile_size})
     tile_step   <- as.integer(${tile_step})
+    unit_col    <- trimws("${replicate_unit}")
+    design_path <- "${design_sheet}"
 
     stopifnot(length(sample_ids) == length(treatments))
     stopifnot(length(sample_ids) == length(cx_files))
@@ -90,7 +94,66 @@ process DMR_METHYLKIT {
         united <- methylKit::unite(normalized, destrand = FALSE)
     }
 
-    diff <- calculateDiffMeth(united, mc.cores = ${task.cpus})
+    # Unit-level replication. When the phenotype or treatment is assigned to a
+    # group of libraries (a family, a tank), the libraries are not independent
+    # replicates of it. Sum each unit's methylated / unmethylated counts per
+    # region into one pseudo-library, then test with the McCullagh-Nelder
+    # overdispersion correction and an F test, so that the error comes from
+    # unit-to-unit variation. Without it, summed read counts would make the
+    # logistic test treat every read as independent.
+    n_units <- length(sample_ids)
+    overdispersion <- "none"
+    test_used <- "Chisq"
+    if (nzchar(unit_col)) {
+        design <- read.delim(design_path, colClasses = "character", check.names = FALSE)
+        if (!unit_col %in% names(design)) {
+            stop("replicate_unit column '", unit_col, "' is not in the design sheet")
+        }
+        key <- if ("run_accession" %in% names(design)) "run_accession" else "sample_id"
+        units <- design[[unit_col]][match(sample_ids, design[[key]])]
+        if (any(is.na(units) | !nzchar(units))) {
+            stop("no '", unit_col, "' for: ", paste(sample_ids[is.na(units) | !nzchar(units)], collapse = ", "))
+        }
+        arms_per_unit <- tapply(treatments, units, function(x) length(unique(x)))
+        if (any(arms_per_unit > 1)) {
+            stop("replicate_unit(s) spanning both arms: ",
+                 paste(names(arms_per_unit)[arms_per_unit > 1], collapse = ", "))
+        }
+        unit_levels <- sort(unique(units))
+        unit_trt <- as.integer(tapply(treatments, units, function(x) x[1])[unit_levels])
+        if (any(table(factor(unit_trt, levels = c(0, 1))) < 2)) {
+            stop("each arm needs at least 2 replicate units; got ",
+                 paste(sprintf("%s=%d", unit_levels, unit_trt), collapse = ", "))
+        }
+        d <- getData(united)
+        agg <- d[, c("chr", "start", "end", "strand")]
+        for (i in seq_along(unit_levels)) {
+            cols <- which(units == unit_levels[i])
+            agg[[paste0("coverage", i)]] <- rowSums(d[, united@coverage.index[cols], drop = FALSE])
+            agg[[paste0("numCs", i)]]    <- rowSums(d[, united@numCs.index[cols], drop = FALSE])
+            agg[[paste0("numTs", i)]]    <- rowSums(d[, united@numTs.index[cols], drop = FALSE])
+        }
+        message("Pooled by '", unit_col, "': ", length(unit_levels), " units from ",
+                length(sample_ids), " libraries (",
+                paste(sprintf("%s:%d=%d", unit_levels, unit_trt, as.integer(table(units)[unit_levels])),
+                      collapse = ", "), ")")
+        united <- new("methylBase", agg,
+                      sample.ids     = as.character(unit_levels),
+                      assembly       = united@assembly,
+                      context        = united@context,
+                      treatment      = unit_trt,
+                      coverage.index = 5 + 3 * (seq_along(unit_levels) - 1),
+                      numCs.index    = 6 + 3 * (seq_along(unit_levels) - 1),
+                      numTs.index    = 7 + 3 * (seq_along(unit_levels) - 1),
+                      destranded     = united@destranded,
+                      resolution     = united@resolution)
+        n_units <- length(unit_levels)
+        overdispersion <- "MN"
+        test_used <- "F"
+        diff <- calculateDiffMeth(united, overdispersion = "MN", test = "F", mc.cores = ${task.cpus})
+    } else {
+        diff <- calculateDiffMeth(united, mc.cores = ${task.cpus})
+    }
 
     # getMethylDiff with difference/qvalue thresholds applied explicitly and
     # recorded in the manifest (see emit_manifest.nf) rather than left as
@@ -110,6 +173,7 @@ process DMR_METHYLKIT {
         meth_diff_percent  = round(dmr_all\$meth.diff, 3),
         qvalue             = signif(dmr_all\$qvalue, 4),
         n_samples          = length(sample_ids),
+        n_replicate_units  = n_units,
         passes_significance_filter = (dmr_all\$qvalue <= qvalue_cut) & (abs(dmr_all\$meth.diff) >= meth_diff_cut),
         stringsAsFactors = FALSE
     )
@@ -127,7 +191,11 @@ process DMR_METHYLKIT {
         tile_size           = ifelse(dmr_mode == "tile", tile_size, NA),
         min_coverage        = min_cov,
         qvalue_cutoff       = qvalue_cut,
-        meth_diff_cutoff    = meth_diff_cut
+        meth_diff_cutoff    = meth_diff_cut,
+        replicate_unit      = ifelse(nzchar(unit_col), unit_col, NA),
+        n_replicate_units   = n_units,
+        overdispersion      = overdispersion,
+        test                = test_used
     )
     write.table(qc, file = "${study_id}_${comparison_id}_methylkit_qc.tsv",
                 sep = "\\t", quote = FALSE, row.names = FALSE)
