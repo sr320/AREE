@@ -59,6 +59,15 @@ process EMIT_MANIFEST {
     # the study registry (comparisons[].excluded_samples).
     excluded_samples = [s.strip() for s in "${params.exclude_samples ?: ''}".split(",") if s.strip()]
 
+    # The contrast as run: each arm may pool several condition levels, and
+    # replicate_unit says whether DESeq2 was fitted on animals or on units
+    # (e.g. tanks). Without these a reader cannot tell what an lfcSE means.
+    def _levels(value):
+        return [s.strip() for s in value.split(",") if s.strip()]
+    control_levels = _levels("${params.control_level ?: ''}")
+    treatment_levels = _levels("${params.treatment_level ?: ''}")
+    replicate_unit = "${params.replicate_unit ?: ''}".strip() or None
+
     viral_path = "${viral_summary}"
     viral = None
     warnings = ${extra_warnings}
@@ -89,6 +98,9 @@ process EMIT_MANIFEST {
             "comparison_id": "${comparison_id}",
             "outdir": "${params.outdir}",
             "exclude_samples": excluded_samples,
+            "control_levels": control_levels,
+            "treatment_levels": treatment_levels,
+            "replicate_unit": replicate_unit,
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
         "software_versions": {

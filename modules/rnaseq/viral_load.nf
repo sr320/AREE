@@ -116,7 +116,9 @@ process VIRAL_SUMMARY {
     import hashlib
     import json
 
-    control, treatment = "${control_level}", "${treatment_level}"
+    # Each arm may name several comma-separated `condition` levels.
+    control = {s.strip() for s in "${control_level}".split(",") if s.strip()}
+    treatment = {s.strip() for s in "${treatment_level}".split(",") if s.strip()}
     threshold = float("${threshold_per_million}")
     excluded = {s.strip() for s in "${exclude_samples}".split(",") if s.strip()}
 
@@ -147,11 +149,11 @@ process VIRAL_SUMMARY {
             "excluded_from_de": sample_id in excluded,
         })
         note = " (excluded from DE)" if sample_id in excluded else ""
-        if condition == control and detected:
+        if condition in control and detected:
             warnings.append(
                 f"viral_reads_in_control: {sample_id} ({condition}) has {per_million:,.1f} "
                 f"viral pairs per million, at or above the {threshold:g} threshold{note}")
-        if condition == treatment and not detected:
+        if condition in treatment and not detected:
             warnings.append(
                 f"no_viral_reads_in_challenged_sample: {sample_id} ({condition}) has "
                 f"{per_million:,.1f} viral pairs per million, below the {threshold:g} threshold{note}")

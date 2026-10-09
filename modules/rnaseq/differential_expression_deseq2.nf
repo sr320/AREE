@@ -20,6 +20,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     val control_level
     val treatment_level
     val exclude_samples
+    val replicate_unit
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
@@ -56,6 +57,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         control_level   = "${control_level}",
         treatment_level = "${treatment_level}",
         exclude_samples = "${exclude_samples}",
+        replicate_unit  = "${replicate_unit}",
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
         out_rdata      = "${study_id}_${comparison_id}_deseq2.RData"
     )
@@ -73,8 +75,30 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     if (!"condition" %in% names(samples)) {
         stop("sample sheet has no 'condition' column: ", args\$sample_sheet)
     }
+    # Each arm is one `condition` level or several, comma-separated. Several
+    # levels pool into one arm, e.g. three single-tank pH levels on each side
+    # of a tipping point, so that no single tank decides the contrast.
+    split_levels <- function(x) {
+        lv <- trimws(strsplit(x, ",")[[1]])
+        lv[nzchar(lv)]
+    }
+    control_levels   <- split_levels(args\$control_level)
+    treatment_levels <- split_levels(args\$treatment_level)
+    if (length(control_levels) == 0 || length(treatment_levels) == 0) {
+        stop("control_level and treatment_level must each name at least one condition level")
+    }
+    shared <- intersect(control_levels, treatment_levels)
+    if (length(shared) > 0) {
+        stop("condition level(s) in both arms: ", paste(shared, collapse = ", "))
+    }
+    # A one-level arm keeps its own name, so single-level runs are unchanged.
+    # A pooled arm gets a syntactic name joining its levels.
+    arm_label <- function(lv) if (length(lv) == 1) lv else paste(lv, collapse = "_or_")
+    control_arm   <- arm_label(control_levels)
+    treatment_arm <- arm_label(treatment_levels)
+
     present <- unique(samples\$condition)
-    for (lvl in c(args\$control_level, args\$treatment_level)) {
+    for (lvl in c(control_levels, treatment_levels)) {
         if (!(lvl %in% present)) {
             stop(sprintf(
                 "condition level '%s' is not present in the sample sheet. Levels found: %s",
@@ -99,11 +123,45 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
 
     # A sample sheet may describe a whole BioProject; this contrast uses only
     # the two groups named for it.
-    samples <- samples[samples\$condition %in% c(args\$control_level, args\$treatment_level), ]
-    samples\$condition <- factor(samples\$condition,
-                                levels = c(args\$control_level, args\$treatment_level))
+    samples <- samples[samples\$condition %in% c(control_levels, treatment_levels), ]
+    samples\$source_condition <- samples\$condition
+    samples\$condition <- factor(
+        ifelse(samples\$condition %in% control_levels, control_arm, treatment_arm),
+        levels = c(control_arm, treatment_arm))
+    if (length(control_levels) > 1 || length(treatment_levels) > 1) {
+        per_level <- table(samples\$source_condition)
+        message("Pooled arms: ", control_arm, " vs ", treatment_arm, " (",
+                paste(sprintf("%s=%d", names(per_level), per_level), collapse = ", "), ")")
+    }
 
-    n_per_group <- table(samples\$condition)
+    # Pseudo-bulk. When treatment is applied per tank (or family, pen...),
+    # animals within a unit are not independent replicates of it. Naming that
+    # column sums each unit's counts into one library, so DESeq2 estimates
+    # dispersion and lfcSE from unit-to-unit variation, which is the right
+    # error for the treatment. Each unit must sit wholly inside one arm.
+    unit_col <- trimws(args\$replicate_unit)
+    pseudo_bulk <- nzchar(unit_col)
+    if (pseudo_bulk) {
+        if (!unit_col %in% names(samples)) {
+            stop("replicate_unit column '", unit_col, "' is not in the sample sheet")
+        }
+        units <- as.character(samples[[unit_col]])
+        if (any(is.na(units) | !nzchar(units))) {
+            stop("replicate_unit column '", unit_col, "' is empty for some samples")
+        }
+        arms_per_unit <- tapply(as.character(samples\$condition), units, function(x) length(unique(x)))
+        if (any(arms_per_unit > 1)) {
+            stop("replicate_unit(s) spanning both arms: ",
+                 paste(names(arms_per_unit)[arms_per_unit > 1], collapse = ", "))
+        }
+        samples\$replicate_unit <- units
+    }
+
+    n_per_group <- if (pseudo_bulk) {
+        table(unique(samples[, c("replicate_unit", "condition")])\$condition)
+    } else {
+        table(samples\$condition)
+    }
     if (any(n_per_group < 2)) {
         stop("each group needs at least 2 replicates; got ",
              paste(sprintf("%s=%d", names(n_per_group), n_per_group), collapse = ", "))
@@ -147,13 +205,34 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     tx2gene\$transcript_id <- sub("\\\\..*", "", tx2gene\$transcript_id)
     tx2gene <- unique(tx2gene)
 
-    txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
+    if (pseudo_bulk) {
+        # Length-scaled counts can be summed across animals; tximport's
+        # per-sample length offsets cannot, so they are folded in here.
+        txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE,
+                        countsFromAbundance = "lengthScaledTPM")
+        unit_counts <- t(rowsum(t(txi\$counts), group = samples\$replicate_unit))
+        unit_info <- unique(samples[, c("replicate_unit", "condition")])
+        unit_info\$n_libraries <- as.integer(table(samples\$replicate_unit)[unit_info\$replicate_unit])
+        rownames(unit_info) <- unit_info\$replicate_unit
+        unit_info <- unit_info[colnames(unit_counts), ]
+        message("Pseudo-bulk by '", unit_col, "': ", ncol(unit_counts), " units from ",
+                nrow(samples), " libraries (",
+                paste(sprintf("%s:%s=%d", unit_info\$condition, unit_info\$replicate_unit,
+                              unit_info\$n_libraries), collapse = ", "), ")")
+        dds <- DESeqDataSetFromMatrix(
+            countData = round(unit_counts),
+            colData   = unit_info,
+            design    = ~condition
+        )
+    } else {
+        txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
 
-    dds <- DESeqDataSetFromTximport(
-        txi,
-        colData = samples,
-        design  = ~condition
-    )
+        dds <- DESeqDataSetFromTximport(
+            txi,
+            colData = samples,
+            design  = ~condition
+        )
+    }
 
     # Minimal prefiltering: drop genes with essentially no signal anywhere.
     dds <- dds[rowSums(counts(dds)) >= 10, ]
@@ -162,7 +241,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
 
     res <- results(
         dds,
-        contrast = c("condition", args\$treatment_level, args\$control_level),
+        contrast = c("condition", treatment_arm, control_arm),
         alpha    = 0.05
     )
 
