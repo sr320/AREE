@@ -132,6 +132,7 @@ workflow {
             params.control_level,
             params.treatment_level,
             params.exclude_samples ?: '',
+            params.replicate_unit ?: '',
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)
