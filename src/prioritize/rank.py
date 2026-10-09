@@ -21,6 +21,7 @@ from common import load_vocab
 from .scoring import (
     candidate_score,
     compute_components,
+    conservative_relevance,
     phenotype_relevance,
     significance_p_value,
 )
@@ -105,10 +106,11 @@ def layer_of(feature_type: str) -> str:
     return molecular_layers().get(feature_type, str(feature_type))
 
 
-def evidence_class(meta_row: dict) -> str:
-    """What kind of evidence this candidate rests on, from its phenotype."""
+def evidence_class(meta_row: dict, relevance: str | None = None) -> str:
+    """What kind of evidence this candidate rests on: the weakest class among
+    its contributing records (`relevance`), else its phenotype's default."""
     return EVIDENCE_CLASS_BY_RELEVANCE.get(
-        phenotype_relevance(meta_row["phenotype"]), DEFAULT_EVIDENCE_CLASS
+        relevance or phenotype_relevance(meta_row["phenotype"]), DEFAULT_EVIDENCE_CLASS
     )
 
 
@@ -227,8 +229,12 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         supporting = index.supporting_layers(meta_dict)
         n_supporting_layers = len(supporting)
 
+        classifications = (subset["resilience_classification"]
+                           if "resilience_classification" in subset.columns else [])
+        relevance = conservative_relevance(meta_dict["phenotype"], classifications)
+
         meta_dict["n_supporting_layers"] = n_supporting_layers
-        components = compute_components(meta_dict, mapping_confidences, quality_flags)
+        components = compute_components(meta_dict, mapping_confidences, quality_flags, relevance)
         score = candidate_score(components)
 
         is_high_priority = (
@@ -254,7 +260,7 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             **meta_dict,
             "score": score,
             "tier": tier,
-            "evidence_class": evidence_class(meta_dict),
+            "evidence_class": evidence_class(meta_dict, relevance),
             "context_replication": context_replication(meta_dict),
             "pooled_stressors": "|".join(pooled_stressors(meta_dict)),
             "is_high_priority": is_high_priority,

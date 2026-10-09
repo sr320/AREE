@@ -65,6 +65,7 @@ def harmonize_proteomics(
             "stressor": comparison["stressor_standardized"],
             "phenotype": comparison["phenotype"],
             "phenotype_direction": comparison["phenotype_direction"],
+            "resilience_classification": comparison.get("resilience_classification"),
             "analysis_method": analysis_method,
             "mapping_confidence": resolved.mapping_confidence,
             "quality_flags": quality_flags,

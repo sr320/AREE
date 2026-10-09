@@ -201,6 +201,20 @@
         "not_applicable"
       ]
     },
+    "resilience_classification": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "resilience",
+        "stress_response",
+        "disease",
+        "exposure_only",
+        null
+      ],
+      "description": "The comparison's resilience_classification from the study registry (which may override the phenotype ontology default). Candidate ranking takes the most conservative class among contributing records."
+    },
     "analysis_method": {
       "type": "string",
       "description": "e.g. DESeq2, limma, methylKit, MSstats."
