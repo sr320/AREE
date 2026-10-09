@@ -1,0 +1,58 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "LUTIER2022_OA_TIPPING",
+  "comparison_id": "ph_le6_7_vs_ph_ge7_6_23d",
+  "input_files": [
+    {
+      "name": "LUTIER2022_OA_TIPPING_ph_le6_7_vs_ph_ge7_6_23d_dge_standardized.tsv",
+      "sha256": "425295a3b1c5c3efd24d8cf72f38be6ff0111f498b0062cae62633e0ac5587fd"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "LUTIER2022_OA_TIPPING",
+    "comparison_id": "ph_le6_7_vs_ph_ge7_6_23d",
+    "outdir": "/Volumes/Samsung T5/aree/results/rnaseq/LUTIER2022_OA_TIPPING/ph_le6_7_vs_ph_ge7_6_23d",
+    "exclude_samples": [],
+    "control_levels": [
+      "pHT_7_8_3",
+      "pHT_7_7_5",
+      "pHT_7_6_8"
+    ],
+    "treatment_levels": [
+      "pHT_6_7_7",
+      "pHT_6_6_16",
+      "pHT_6_5_9",
+      "pHT_6_5_bis_15"
+    ],
+    "replicate_unit": "tank",
+    "viral_reference": null
+  },
+  "software_versions": {
+    "fastqc": "0.12.1",
+    "fastp": "0.23.4",
+    "salmon": "1.10.3",
+    "star": "2.7.11b",
+    "multiqc": "1.21",
+    "bioconductor_docker": "RELEASE_3_18",
+    "deseq2": "1.42.0",
+    "tximport": "1.30.0",
+    "quarto": "1.5.57",
+    "python": "3.11"
+  },
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-09T02:12:22.712364-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

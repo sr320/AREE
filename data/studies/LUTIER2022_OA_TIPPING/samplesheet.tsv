@@ -1,0 +1,77 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	treatment	tank	oyster	library_suffix	replicate	dev_stage	tissue	growth_protocol	library_layout	instrument_model	read_count
+3E	SRR14803108	SAMN19689644	3E	pHT_7_8_3	pHT 7.8	3	E		pHT 7.8 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.8	PAIRED	Illumina NovaSeq 6000	40280090
+3D	SRR14803109	SAMN19689643	3D	pHT_7_8_3	pHT 7.8	3	D		pHT 7.8 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.8	PAIRED	Illumina NovaSeq 6000	29674884
+17E	SRR14803110	SAMN19689710	17E	pHT_7_5_17	pHT 7.5	17	E		pHT 7.5 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.5	PAIRED	Illumina NovaSeq 6000	41764779
+17D	SRR14803111	SAMN19689709	17D	pHT_7_5_17	pHT 7.5	17	D		pHT 7.5 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.5	PAIRED	Illumina NovaSeq 6000	47418889
+17C	SRR14803112	SAMN19689708	17C	pHT_7_5_17	pHT 7.5	17	C		pHT 7.5 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.5	PAIRED	Illumina NovaSeq 6000	38500294
+17B	SRR14803113	SAMN19689707	17B	pHT_7_5_17	pHT 7.5	17	B		pHT 7.5 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.5	PAIRED	Illumina NovaSeq 6000	12931875
+17A	SRR14803114	SAMN19689706	17A	pHT_7_5_17	pHT 7.5	17	A		pHT 7.5 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.5	PAIRED	Illumina NovaSeq 6000	24691687
+16E	SRR14803115	SAMN19689705	16E	pHT_6_6_16	pHT 6.6	16	E		pHT 6.6 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 6.6	PAIRED	Illumina NovaSeq 6000	29361254
+3C	SRR14803116	SAMN19689642	3C	pHT_7_8_3	pHT 7.8	3	C		pHT 7.8 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.8	PAIRED	Illumina NovaSeq 6000	40235814
+16D	SRR14803117	SAMN19689704	16D	pHT_6_6_16	pHT 6.6	16	D		pHT 6.6 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 6.6	PAIRED	Illumina NovaSeq 6000	35056309
+16C	SRR14803118	SAMN19689703	16C	pHT_6_6_16	pHT 6.6	16	C		pHT 6.6 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 6.6	PAIRED	Illumina NovaSeq 6000	29924832
+16B	SRR14803119	SAMN19689702	16B	pHT_6_6_16	pHT 6.6	16	B		pHT 6.6 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 6.6	PAIRED	Illumina NovaSeq 6000	38936339
+16A	SRR14803120	SAMN19689701	16A	pHT_6_6_16	pHT 6.6	16	A		pHT 6.6 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 6.6	PAIRED	Illumina NovaSeq 6000	33339288
+15E	SRR14803121	SAMN19689700	15E	pHT_6_5_bis_15	pHT 6.5 bis	15	E		pHT 6.5 bis _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	43359785
+15D	SRR14803122	SAMN19689699	15D	pHT_6_5_bis_15	pHT 6.5 bis	15	D		pHT 6.5 bis _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	27305173
+15C	SRR14803123	SAMN19689698	15C	pHT_6_5_bis_15	pHT 6.5 bis	15	C		pHT 6.5 bis _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	37417128
+15B	SRR14803124	SAMN19689697	15B	pHT_6_5_bis_15	pHT 6.5 bis	15	B		pHT 6.5 bis _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	34068226
+15A	SRR14803125	SAMN19689696	15A	pHT_6_5_bis_15	pHT 6.5 bis	15	A		pHT 6.5 bis _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	33725927
+14E	SRR14803126	SAMN19689695	14E	pHT_6_8_14	pHT 6.8	14	E		pHT 6.8 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 6.8	PAIRED	Illumina NovaSeq 6000	37886871
+3B	SRR14803127	SAMN19689641	3B	pHT_7_8_3	pHT 7.8	3	B		pHT 7.8 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.8	PAIRED	Illumina NovaSeq 6000	39094216
+14D	SRR14803128	SAMN19689694	14D	pHT_6_8_14	pHT 6.8	14	D		pHT 6.8 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 6.8	PAIRED	Illumina NovaSeq 6000	41824726
+14C	SRR14803129	SAMN19689693	14C	pHT_6_8_14	pHT 6.8	14	C		pHT 6.8 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 6.8	PAIRED	Illumina NovaSeq 6000	32846082
+14B	SRR14803130	SAMN19689692	14B	pHT_6_8_14	pHT 6.8	14	B		pHT 6.8 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 6.8	PAIRED	Illumina NovaSeq 6000	35688598
+14A	SRR14803131	SAMN19689691	14A	pHT_6_8_14	pHT 6.8	14	A		pHT 6.8 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 6.8	PAIRED	Illumina NovaSeq 6000	40683612
+13Ebis	SRR14803132	SAMN19689690	13Ebis	pHT_7_4_13	pHT 7.4	13	E	bis	pHT 7.4 _ Oyster Ebis	juveniles	whole organism	23d of exposure at mean pHT of 7.4	PAIRED	Illumina NovaSeq 6000	18925475
+13E	SRR14803133	SAMN19689689	13E	pHT_7_4_13	pHT 7.4	13	E		pHT 7.4 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.4	PAIRED	Illumina NovaSeq 6000	35256218
+13D	SRR14803134	SAMN19689688	13D	pHT_7_4_13	pHT 7.4	13	D		pHT 7.4 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.4	PAIRED	Illumina NovaSeq 6000	20033819
+13C	SRR14803135	SAMN19689687	13C	pHT_7_4_13	pHT 7.4	13	C		pHT 7.4 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.4	PAIRED	Illumina NovaSeq 6000	34997714
+13B	SRR14803136	SAMN19689686	13B	pHT_7_4_13	pHT 7.4	13	B		pHT 7.4 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.4	PAIRED	Illumina NovaSeq 6000	33409974
+13A	SRR14803137	SAMN19689685	13A	pHT_7_4_13	pHT 7.4	13	A		pHT 7.4 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.4	PAIRED	Illumina NovaSeq 6000	47885311
+3A	SRR14803138	SAMN19689640	3A	pHT_7_8_3	pHT 7.8	3	A		pHT 7.8 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.8	PAIRED	Illumina NovaSeq 6000	31069571
+11E	SRR14803139	SAMN19689684	11E	pHT_7_0_11	pHT 7.0	11	E		pHT 7.0 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.0	PAIRED	Illumina NovaSeq 6000	25984959
+11D	SRR14803140	SAMN19689683	11D	pHT_7_0_11	pHT 7.0	11	D		pHT 7.0 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.0	PAIRED	Illumina NovaSeq 6000	26085044
+11C	SRR14803141	SAMN19689682	11C	pHT_7_0_11	pHT 7.0	11	C		pHT 7.0 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.0	PAIRED	Illumina NovaSeq 6000	36384402
+11B	SRR14803142	SAMN19689681	11B	pHT_7_0_11	pHT 7.0	11	B		pHT 7.0 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.0	PAIRED	Illumina NovaSeq 6000	45139103
+11A	SRR14803143	SAMN19689680	11A	pHT_7_0_11	pHT 7.0	11	A		pHT 7.0 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.0	PAIRED	Illumina NovaSeq 6000	35192100
+10E	SRR14803144	SAMN19689679	10E	pHT_6_9_10	pHT 6.9	10	E		pHT 6.9 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 6.9	PAIRED	Illumina NovaSeq 6000	34377516
+10D	SRR14803145	SAMN19689678	10D	pHT_6_9_10	pHT 6.9	10	D		pHT 6.9 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 6.9	PAIRED	Illumina NovaSeq 6000	15830730
+10C	SRR14803146	SAMN19689677	10C	pHT_6_9_10	pHT 6.9	10	C		pHT 6.9 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 6.9	PAIRED	Illumina NovaSeq 6000	16867761
+10B	SRR14803147	SAMN19689676	10B	pHT_6_9_10	pHT 6.9	10	B		pHT 6.9 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 6.9	PAIRED	Illumina NovaSeq 6000	32153151
+10A	SRR14803148	SAMN19689675	10A	pHT_6_9_10	pHT 6.9	10	A		pHT 6.9 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 6.9	PAIRED	Illumina NovaSeq 6000	45306113
+1E	SRR14803149	SAMN19689639	1E	pHT_7_3_1	pHT 7.3	1	E		pHT 7.3 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.3	PAIRED	Illumina NovaSeq 6000	29961970
+9E	SRR14803150	SAMN19689674	9E	pHT_6_5_9	pHT 6.5	9	E		pHT 6.5 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	18268811
+9D	SRR14803151	SAMN19689673	9D	pHT_6_5_9	pHT 6.5	9	D		pHT 6.5 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	43530880
+9C	SRR14803152	SAMN19689672	9C	pHT_6_5_9	pHT 6.5	9	C		pHT 6.5 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	34224002
+9B	SRR14803153	SAMN19689671	9B	pHT_6_5_9	pHT 6.5	9	B		pHT 6.5 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	34538082
+9A	SRR14803154	SAMN19689670	9A	pHT_6_5_9	pHT 6.5	9	A		pHT 6.5 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 6.5	PAIRED	Illumina NovaSeq 6000	33843219
+8E	SRR14803155	SAMN19689669	8E	pHT_7_6_8	pHT 7.6	8	E		pHT 7.6 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.6	PAIRED	Illumina NovaSeq 6000	47407641
+8D	SRR14803156	SAMN19689668	8D	pHT_7_6_8	pHT 7.6	8	D		pHT 7.6 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.6	PAIRED	Illumina NovaSeq 6000	45081688
+8C	SRR14803157	SAMN19689667	8C	pHT_7_6_8	pHT 7.6	8	C		pHT 7.6 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.6	PAIRED	Illumina NovaSeq 6000	13052568
+8B	SRR14803158	SAMN19689666	8B	pHT_7_6_8	pHT 7.6	8	B		pHT 7.6 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.6	PAIRED	Illumina NovaSeq 6000	31675062
+8A	SRR14803159	SAMN19689665	8A	pHT_7_6_8	pHT 7.6	8	A		pHT 7.6 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.6	PAIRED	Illumina NovaSeq 6000	33246707
+1D	SRR14803160	SAMN19689638	1D	pHT_7_3_1	pHT 7.3	1	D		pHT 7.3 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.3	PAIRED	Illumina NovaSeq 6000	33413399
+7E	SRR14803161	SAMN19689664	7E	pHT_6_7_7	pHT 6.7	7	E		pHT 6.7 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 6.7	PAIRED	Illumina NovaSeq 6000	35242097
+7D	SRR14803162	SAMN19689663	7D	pHT_6_7_7	pHT 6.7	7	D		pHT 6.7 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 6.7	PAIRED	Illumina NovaSeq 6000	34864579
+7C	SRR14803163	SAMN19689662	7C	pHT_6_7_7	pHT 6.7	7	C		pHT 6.7 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 6.7	PAIRED	Illumina NovaSeq 6000	33986651
+7B	SRR14803164	SAMN19689661	7B	pHT_6_7_7	pHT 6.7	7	B		pHT 6.7 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 6.7	PAIRED	Illumina NovaSeq 6000	61470216
+7A	SRR14803165	SAMN19689660	7A	pHT_6_7_7	pHT 6.7	7	A		pHT 6.7 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 6.7	PAIRED	Illumina NovaSeq 6000	37263547
+6E	SRR14803166	SAMN19689659	6E	pHT_7_2_6	pHT 7.2	6	E		pHT 7.2 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.2	PAIRED	Illumina NovaSeq 6000	47635372
+6D	SRR14803167	SAMN19689658	6D	pHT_7_2_6	pHT 7.2	6	D		pHT 7.2 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.2	PAIRED	Illumina NovaSeq 6000	20449654
+6C	SRR14803168	SAMN19689657	6C	pHT_7_2_6	pHT 7.2	6	C		pHT 7.2 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.2	PAIRED	Illumina NovaSeq 6000	37995042
+6B	SRR14803169	SAMN19689656	6B	pHT_7_2_6	pHT 7.2	6	B		pHT 7.2 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.2	PAIRED	Illumina NovaSeq 6000	34225377
+6A	SRR14803170	SAMN19689655	6A	pHT_7_2_6	pHT 7.2	6	A		pHT 7.2 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.2	PAIRED	Illumina NovaSeq 6000	47102564
+1C	SRR14803171	SAMN19689637	1C	pHT_7_3_1	pHT 7.3	1	C		pHT 7.3 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.3	PAIRED	Illumina NovaSeq 6000	31948822
+5E	SRR14803172	SAMN19689654	5E	pHT_7_7_5	pHT 7.7	5	E		pHT 7.7 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.7	PAIRED	Illumina NovaSeq 6000	9247385
+5D	SRR14803173	SAMN19689653	5D	pHT_7_7_5	pHT 7.7	5	D		pHT 7.7 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.7	PAIRED	Illumina NovaSeq 6000	41530886
+5C	SRR14803174	SAMN19689652	5C	pHT_7_7_5	pHT 7.7	5	C		pHT 7.7 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.7	PAIRED	Illumina NovaSeq 6000	34949404
+5B	SRR14803175	SAMN19689651	5B	pHT_7_7_5	pHT 7.7	5	B		pHT 7.7 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.7	PAIRED	Illumina NovaSeq 6000	36708161
+5A	SRR14803176	SAMN19689650	5A	pHT_7_7_5	pHT 7.7	5	A		pHT 7.7 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.7	PAIRED	Illumina NovaSeq 6000	8489753
+4E	SRR14803177	SAMN19689649	4E	pHT_7_1_4	pHT 7.1	4	E		pHT 7.1 _ Oyster E	juveniles	whole organism	23d of exposure at mean pHT of 7.1	PAIRED	Illumina NovaSeq 6000	14843242
+4D	SRR14803178	SAMN19689648	4D	pHT_7_1_4	pHT 7.1	4	D		pHT 7.1 _ Oyster D	juveniles	whole organism	23d of exposure at mean pHT of 7.1	PAIRED	Illumina NovaSeq 6000	16223889
+4C	SRR14803179	SAMN19689647	4C	pHT_7_1_4	pHT 7.1	4	C		pHT 7.1 _ Oyster C	juveniles	whole organism	23d of exposure at mean pHT of 7.1	PAIRED	Illumina NovaSeq 6000	36861468
+4B	SRR14803180	SAMN19689646	4B	pHT_7_1_4	pHT 7.1	4	B		pHT 7.1 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.1	PAIRED	Illumina NovaSeq 6000	37231915
+4A	SRR14803181	SAMN19689645	4A	pHT_7_1_4	pHT 7.1	4	A		pHT 7.1 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.1	PAIRED	Illumina NovaSeq 6000	28316806
+1B	SRR14803182	SAMN19689636	1B	pHT_7_3_1	pHT 7.3	1	B		pHT 7.3 _ Oyster B	juveniles	whole organism	23d of exposure at mean pHT of 7.3	PAIRED	Illumina NovaSeq 6000	25175864
+1A	SRR14803183	SAMN19689635	1A	pHT_7_3_1	pHT 7.3	1	A		pHT 7.3 _ Oyster A	juveniles	whole organism	23d of exposure at mean pHT of 7.3	PAIRED	Illumina NovaSeq 6000	36634800
