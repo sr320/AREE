@@ -235,7 +235,7 @@ the same page locally:
 
 ```bash
 make demo        # simulated studies
-make real-pool   # the three real studies, against the real crosswalk
+make real-pool   # every committed result of every real study that passed QC, against the real crosswalk
 make dashboard   # aree build-dashboard + quarto render docs
 ```
 

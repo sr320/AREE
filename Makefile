@@ -15,7 +15,7 @@ help:
 	@echo "  intake       regenerate the real study's result tables from the published source"
 	@echo "  intake-check verify the committed result tables still reproduce (no writes)"
 	@echo "  real-study   register + harmonize the real study (HESSER2024_VCOR) against the real crosswalk"
-	@echo "  real-pool    register + harmonize all three real studies against the real crosswalk"
+	@echo "  real-pool    harmonize every committed result of every real study that passed QC"
 	@echo "  dashboard    build docs/dashboard/data.json from current outputs, then render the site"
 	@echo "  docs         render the Quarto documentation site"
 	@echo "  app          launch the Streamlit interface"
@@ -75,25 +75,14 @@ real-study: intake-check
 	AREE_CROSSWALK=$(REAL_CROSSWALK) aree register-study registry/studies/HESSER2024_VCOR.yaml --update
 	AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study HESSER2024_VCOR
 
-# Everything the Pages workflow does to populate the dashboard: the real
-# studies whose standardized result tables are committed under data/studies/.
-# CALLA2026_OSHV (raw_reanalysis, comparisons still pending) is harmonized one
-# committed comparison at a time, as docs/first_raw_reanalysis.md describes.
-REAL_STUDIES := HESSER2024_VCOR DELISLE2020_OSHV_TEMP
-RAW_STUDY := CALLA2026_OSHV
-
+# Everything the Pages workflow does to populate the dashboard: every committed
+# results_file of every real study that has not failed QC, read from the
+# registry (scripts/harmonize_committed_results.py), so a newly merged study
+# needs no edit here.
 real-pool:
 	@test -f $(REAL_CROSSWALK) || (echo "Real crosswalk missing. Run: make crosswalk" && exit 1)
-	@for sid in $(REAL_STUDIES) $(RAW_STUDY); do \
-		AREE_CROSSWALK=$(REAL_CROSSWALK) aree register-study registry/studies/$$sid.yaml --update; \
-	done
-	@for sid in $(REAL_STUDIES); do \
-		AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study $$sid; \
-	done
-	@for f in data/studies/$(RAW_STUDY)/$(RAW_STUDY)_*_dge_standardized.tsv; do \
-		cid=$$(basename $$f _dge_standardized.tsv); cid=$${cid#$(RAW_STUDY)_}; \
-		AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study $(RAW_STUDY) --comparison $$cid --input $$f; \
-	done
+	aree build-registry
+	AREE_CROSSWALK=$(REAL_CROSSWALK) python scripts/harmonize_committed_results.py
 
 dashboard:
 	aree build-dashboard
