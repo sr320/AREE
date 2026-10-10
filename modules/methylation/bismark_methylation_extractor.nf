@@ -18,22 +18,22 @@ process BISMARK_METHYLATION_EXTRACTOR {
     path genome_dir
 
     output:
-    tuple val(sample_id), path("*.CX_report.txt.gz"), emit: cx_report
+    tuple val(sample_id), path("*.CpG_report.txt.gz"), emit: cx_report
     tuple val(sample_id), path("*splitting_report.txt"), emit: splitting_report
     tuple val(sample_id), path("*.bedGraph.gz"), emit: bedgraph
     path "versions.yml", emit: versions
 
     script:
-    // Real methylation extraction with genome-wide cytosine report
-    // (--CX reports CpG/CHG/CHH contexts; relevant for non-CpG methylation
-    // signal sometimes reported in invertebrate WGBS studies). Not executed
-    // here.
+    // Genome-wide CpG cytosine report. --CX (CpG + CHG + CHH) was dropped
+    // before the first real run (CIBNOR2021_HEAT_RRSS): for M. gigas it is
+    // ~193 M rows per library against ~24 M CpGs, the DMR step uses CpG only,
+    // and methylKit reads the whole report into memory before filtering by
+    // context. Non-CpG methylation would need its own path.
     """
     bismark_methylation_extractor \\
         --comprehensive \\
         --paired-end \\
         --cytosine_report \\
-        --CX \\
         --genome_folder ${genome_dir} \\
         --bedGraph \\
         --gzip \\
