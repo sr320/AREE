@@ -42,6 +42,26 @@ table — `aree`, `common`, `intake`, `harmonize`, `meta_analysis`, `prioritize`
 The `aree` console script is registered via `[project.scripts]` and becomes
 available on your `PATH` once the package is installed.
 
+### Alternative: one conda environment for everything
+
+To run the workflows natively, not just the Python package, use
+`environment.yml`. It adds git, Nextflow 26.04, Salmon, fastp, FastQC,
+MultiQC, R with DESeq2/tximport/limma and Quarto, at the versions CI uses. It
+needs no system compilers or Homebrew, so it also works on a Mac without the
+Xcode Command Line Tools:
+
+```bash
+# Miniforge: https://github.com/conda-forge/miniforge
+conda env create -f environment.yml
+conda activate aree
+pip install -e ".[dev,app,intake]"
+```
+
+Activate the environment before running Nextflow or Quarto, since it sets
+`JAVA_HOME`. methylKit has no Apple Silicon build on bioconda. Install it from
+R with `BiocManager::install("methylKit")`, or run the methylation raw path on
+Linux.
+
 ## Verify the install
 
 ```bash

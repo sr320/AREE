@@ -1,0 +1,51 @@
+# AREE development environment (conda-forge + bioconda).
+#
+# One environment for everything the repo runs locally: the `aree` CLI and its
+# tests, the Nextflow RNA-seq raw-reanalysis path run with `-profile local`,
+# the R steps those workflows call, and the Quarto docs. It mirrors the tool
+# versions CI uses (.github/workflows/ci.yml): Python 3.11, Nextflow 26.04.
+#
+#   conda env create -f environment.yml
+#   conda activate aree
+#   pip install -e ".[dev,app,intake]"
+#
+# This is a convenience for native runs. The workflows still declare their own
+# containers, and a manifest from a native run records the declared container
+# versions, not the ones in this environment (see docs/implementation_status.md).
+name: aree
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pip
+  - git
+  - gh
+  - make
+  - curl
+  # Workflows
+  - nextflow=26.04
+  - openjdk=21
+  - salmon
+  - fastp
+  - fastqc
+  - multiqc
+  - samtools
+  # R steps (DESeq2 / tximport / limma / methylKit) and reports
+  - r-base
+  - bioconductor-deseq2
+  - bioconductor-tximport
+  - bioconductor-limma
+  # bioconductor-methylkit has no osx-arm64 build on bioconda; on Apple
+  # Silicon install it from R with BiocManager::install("methylKit") (needs
+  # compilers from this env), or run the methylation raw path on Linux.
+  - bioconductor-rtracklayer
+  - bioconductor-genomicranges
+  - r-dplyr
+  - r-tidyr
+  - r-ggplot2
+  - r-jsonlite
+  - r-knitr
+  - r-rmarkdown
+  # Docs site
+  - quarto
