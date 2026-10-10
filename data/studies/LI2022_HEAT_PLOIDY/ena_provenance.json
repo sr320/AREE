@@ -1,0 +1,60 @@
+{
+  "study_id": "LI2022_HEAT_PLOIDY",
+  "bioproject": "PRJNA762441",
+  "date_generated": "2026-10-10",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA762441&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "ploidy",
+    "timepoint"
+  ],
+  "n_runs": 18,
+  "n_samples": 18,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "d_0": 3,
+    "d_12": 3,
+    "d_f": 3,
+    "t_0": 3,
+    "t_12": 3,
+    "t_f": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 54738679678,
+  "outputs": {
+    "data/studies/LI2022_HEAT_PLOIDY/samplesheet.tsv": "09f0854173bd896b8cf918db62e0c2310a82a0e8de634ec0075cc511ae307c1e",
+    "data/studies/LI2022_HEAT_PLOIDY/fastq_manifest.tsv": "69b8104a51b079c3b7fb1d2fd6258921eb5338a87830c82de3dc90bcc8b12db1"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^A(?P<timepoint>0|12|f)(?P<ploidy>d|t)_(?P<replicate>[1-3])$",
+    "labels": {
+      "SRR15851229": "A12t_1",
+      "SRR15851230": "A12d_3",
+      "SRR15851231": "A12d_2",
+      "SRR15851232": "A12d_1",
+      "SRR15851233": "A0t_3",
+      "SRR15851234": "A0t_2",
+      "SRR15851235": "A0t_1",
+      "SRR15851236": "A0d_3",
+      "SRR15851237": "Aft_3",
+      "SRR15851238": "Aft_2",
+      "SRR15851239": "Aft_1",
+      "SRR15851240": "Afd_3",
+      "SRR15851241": "Afd_2",
+      "SRR15851242": "Afd_1",
+      "SRR15851243": "A12t_3",
+      "SRR15851244": "A12t_2",
+      "SRR15851245": "A0d_2",
+      "SRR15851246": "A0d_1"
+    }
+  }
+}
