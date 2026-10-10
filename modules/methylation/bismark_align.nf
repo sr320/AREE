@@ -25,7 +25,13 @@ process BISMARK_GENOME_PREPARATION {
     // aligner backend. Not executed here.
     """
     mkdir -p bismark_genome
-    cp ${genome_fasta} bismark_genome/
+    # Bismark only recognises .fa / .fasta (optionally .gz). NCBI genomes are
+    # .fna, which it silently skips ("does not contain any sequence files"),
+    # so copy under a name it accepts.
+    case "${genome_fasta}" in
+        *.gz) cp ${genome_fasta} bismark_genome/genome.fa.gz ;;
+        *)    cp ${genome_fasta} bismark_genome/genome.fa ;;
+    esac
     bismark_genome_preparation --bowtie2 bismark_genome
 
     cat <<-END_VERSIONS > versions.yml
