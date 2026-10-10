@@ -36,7 +36,8 @@ process COVERAGE_FILTER {
     // counts are written to a small per-sample QC table consumed later by
     // emit_manifest.nf / render_report.nf.
     """
-    zcat ${cx_report} | awk -v min_cov=${min_coverage} '
+    # gzip -dc, not zcat: macOS zcat only reads .Z files.
+    gzip -dc ${cx_report} | awk -v min_cov=${min_coverage} '
         BEGIN { OFS="\\t"; total=0; pass=0; cov_sum=0 }
         {
             cov = \$4 + \$5
