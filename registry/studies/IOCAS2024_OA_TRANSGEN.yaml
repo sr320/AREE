@@ -169,9 +169,12 @@ provenance:
     re-download after multi-connection corruption); 22/22 tasks plus 2 cached;
     Salmon mapping 72.7-83.3%, library type ISR for all 6. The run used
     Homebrew tools, not containers: Salmon 2.3.4, fastp 1.3.6, MultiQC 1.9.
-    The workflow manifest's software_versions block reports the container
-    pins (e.g. salmon 1.10.3) and is wrong for this run; the versions each
-    process actually reported are archived in process_versions.yml.
+    The committed workflow manifest was regenerated on 2026-10-11 by resuming
+    that session with the code from sr320/AREE#19 (22 tasks cached; only
+    EMIT_MANIFEST and RENDER_REPORT re-ran), so its software_versions holds
+    the versions each process reported, not the container pins. Its
+    workflow_start is the resumed session's start; the compute tasks ran on
+    2026-10-10.
     SALMON_INDEX/QUANT memory was lowered to 12 GB in the study config to fit
     the machine. QC decision (2026-10-11, sr320): keep the registration, mark
     qc_status failed, do not harmonize or pool. The standardized DE table is
