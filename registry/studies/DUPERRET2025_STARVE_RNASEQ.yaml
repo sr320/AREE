@@ -1,62 +1,215 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# RNA-seq arm of Duperret et al. 2025 (iScience 29:114333): 16 days of
+# starvation vs ad libitum feeding, then OsHV-1 µVar cohabitation challenge.
+# Starvation lowered POMS mortality, and that survival was measured in the same
+# tanks the libraries came from.
+#
+# ONE STUDY, TWO ENA PROJECTS. The authors deposited the reads split by diet:
+# PRJEB86618 (starved) and PRJEB86525 (fed). They are one experiment with
+# shared tanks, families, timing and sequencing, so they are registered as
+# one study. The branch is named for PRJEB86618; both are listed under
+# `accessions`. The sample sheet is two `aree fetch-samplesheet` runs (one per
+# project, identical options) concatenated unchanged; see ena_provenance.json.
+#
+# The metabolomics from the same experiment is DUPERRET2025_POMS_STARVE
+# (MetaboLights MTBLS13313), registered separately because it is a different
+# assay and repository. Its starved_vs_fed_0hpc comparison matches this
+# study's primary comparison, so the two can support multi-omics convergence.
+# They are the same tanks and must not be counted as independent studies.
+#
+# NOT YET RUNNABLE. The libraries are single-end 75 bp (NextSeq 550), and
+# AREE's RNA-seq workflow is paired-end only (fromFilePairs, salmon -1/-2,
+# fastp -i/-I). Single-end support has to land in workflows/rnaseq and
+# modules/rnaseq in its own PR before this study can be reanalyzed.
 
 study_id: DUPERRET2025_STARVE_RNASEQ
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1016/j.isci.2025.114333"
   bioproject: "PRJEB86618"
   geo: null
   sra: null
-  ena: null
+  ena: "PRJEB86618; PRJEB86525"
   proteomexchange: null
   other: null
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Duperret L, Valdivieso A, Petton B, Morga B, Faury N, de Lorgeril J, Corporeau C, Degremont L, Allienne JF, Henry S, Turtoi A, Pouzadoux J, Romatif O, Courtay G, Monaco CJ, Toulza E, Lagorce A, Pernet F, Vidal-Dupiol J, Mitta G (2025) Food deprivation enhances disease resistance: Underlying mechanisms in oysters confronted with Pacific oyster mortality syndrome. iScience 29(1):114333. https://doi.org/10.1016/j.isci.2025.114333 (PMID 41541659). RNA-seq: ENA PRJEB86618 (starved) and PRJEB86525 (fed), under the Ifremer DECICOMP umbrella BioProject PRJEB86647. Same experiment's metabolomics: MetaboLights MTBLS13313 (AREE study DUPERRET2025_POMS_STARVE)."
+
+species: "Magallana gigas"
+strain_or_population: "Ifremer first-generation full-sib families F11N and F14R (produced 11 May 2020 from G0 families F11 and F14, whose parents were wild Dellec oysters; both G0 families highly POMS-susceptible). Pathogen-free recipients, 3 months old at the start of the diet treatment (9 Aug 2020)."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis RNA-seq studies. The authors mapped
+# to an earlier C. gigas genome with their own functional annotation.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NextSeq 550, single-end 75 bp; NEBNext Ultra library prep (per the paper). 83 runs, 22.7-36.0 M reads each (median about 27 M), 104.3 GB FASTQ reported by ENA."
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ for 83 runs are public in ENA: PRJEB86618 (starved, 41 runs, public 2025-10-23) and PRJEB86525 (fed, 42 runs, public 2025-08-01). The paper reports 84 libraries; the missing one is an F14R starved 6 hpc replicate, which is not deposited. Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The authors' DEG tables are in the paper's supplementary material and were not harmonized here: AREE reanalyzes raw reads so that every comparison has a standard error."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. 2 families (F11N, F14R) x 2 diets (fed, code 3;
+# starved, code 5) x 7 times (0, 3, 6, 12, 24, 48, 72 hpc) x 3 = 84 planned,
+# 83 deposited. Design is parsed from experiment_title, e.g. 'NextSeq 550
+# sequencing: P_F14R_5_3_1' = family F14R, starved, 3 hpc, replicate 1. The
+# parse agrees with the BioSample sample_description and experimental factor
+# for both projects. Sample-sheet `condition` is '<diet_code>_<hpc>'.
+#
+# THE SAMPLE UNIT IS A POOL FROM ONE TANK. Per the paper and the BioSample
+# descriptions ('pooled from ten 3-month-old oysters'), each library is a pool
+# of 10 oysters from one tank x family. Each diet had three 400-L tanks holding
+# both families, and replicates 1-3 are the tanks (inferred: the deposit does
+# not name tanks). Diet is applied per tank, so the effective n for diet
+# contrasts is 3 tanks. Family is a within-tank factor and belongs in the
+# model as a covariate (~ family + condition), not as a replicate. The DESeq2
+# module currently fits ~condition only, so until it accepts a covariate
+# column, run each family separately, as the paper did. Libraries are already
+# one per unit, so no pseudo-bulking (--replicate_unit) is needed.
+#
+# LIBRARY PREP IS NOT SPLIT BY DIET, as far as the deposit shows. Library
+# numbers in library_name interleave fed and starved samples (for example
+# 7-9 fed, 13-15 starved, 22-24 fed, 28-30 starved), and the sample-index
+# ranges overlap. This contrasts with the metabolomics, where diet is fully
+# confounded with MS batch. The sequencing-run layout itself is not deposited.
+#
+# COMPARISONS follow the paper's two analyses: diet at baseline (starved vs
+# fed at 0 hpc), and infection response (each time vs 0 hpc within a diet).
+# Of the six infection times, only 24 hpc is registered: the first time at
+# which viral transcriptional activity had risen under both diets (after
+# 12 hpc fed, after 24 hpc starved). The other times are in the sample sheet.
+# The paper analyzed families separately. The intended AREE model has family
+# as a covariate, with the per-family split as a sensitivity analysis, because
+# the diet effect on survival is large in F14R and marginal in F11N.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
-    life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
-    phenotype_unit: null
+  - comparison_id: "starved_vs_fed_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Food deprivation: food supply stopped for 16 days at 23 C before OsHV-1 µVar cohabitation challenge, versus ad libitum feeding (1,500 µm3/µL Tisochrysis lutea + Skeletonema costatum, 50/50)."
+    stressor_standardized: "nutritional_limitation"
+    exposure_intensity: "complete food deprivation (food supply stopped)"
+    exposure_duration: "16 d before challenge"
+    exposure_timing: "sampled at 0 hpc: end of the 16 d diet treatment, start of cohabitation, before infection"
+    control_condition: "Fed ad libitum (diet code 3), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries)"
+    treatment_condition: "Starved 16 d (diet code 5), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries)"
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_post_challenge (final mortality per family x diet: F14R 34.8% starved vs 75.5% fed; F11N 93.3% vs 100%)"
     resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 12
+    biological_replicates: 3
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+  - comparison_id: "fed_oshv1_24hpc_vs_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, flow stopped for the first 125 hpc), in ad libitum-fed recipients; 24 hpc compared with 0 hpc."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio (donor inoculum 2.2 x 10^5 genome copies/µL, 100 µL)"
+    exposure_duration: "24 h post-cohabitation"
+    exposure_timing: "24 hpc"
+    control_condition: "Fed ad libitum, 0 hpc, before infection (6 libraries: 3 tanks x 2 families)"
+    treatment_condition: "Fed ad libitum, 24 hpc (6 libraries: 3 tanks x 2 families)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "final mortality per family (F14R 75.5%, F11N 100%); OsHV-1 DNA load and transcription reported in the paper"
+    resilience_classification: "disease"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: false
+
+  - comparison_id: "starved_oshv1_24hpc_vs_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, flow stopped for the first 125 hpc), in recipients starved for the preceding 16 days; 24 hpc compared with 0 hpc."
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio, after complete food deprivation"
+    exposure_duration: "24 h post-cohabitation (after 16 d starvation)"
+    exposure_timing: "24 hpc"
+    control_condition: "Starved, 0 hpc, before infection (6 libraries: 3 tanks x 2 families)"
+    treatment_condition: "Starved, 24 hpc (6 libraries: 3 tanks x 2 families)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "final mortality per family (F14R 34.8%, F11N 93.3%); OsHV-1 DNA load and transcription reported in the paper"
+    resilience_classification: "disease"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: false
+
+quality_flags:
+  - raw_data_available
+  - tank_level_replication
+  - low_replication
+
+limitations: >
+  (1) Not yet runnable: the libraries are single-end, and AREE's RNA-seq
+  workflow is paired-end only. (2) Replication is 3 tanks per diet. Each
+  library is a pool of 10 oysters, so between-oyster variance is averaged
+  away and the replicate unit is the tank (replicate = tank is inferred).
+  Families share tanks, so family must be a model covariate. The DESeq2
+  module fits ~condition only, so that needs a workflow change; until then,
+  run per family. (3) Starvation is
+  a strong physiological manipulation. Most 0 hpc differences will reflect
+  fasting itself (growth fell from about 90% to 15-19% weight gain, and lipid
+  reserves fell), not resistance mechanisms that would generalize to fed
+  animals. The comparison associates expression with a treatment that raised
+  survival; it does not identify heritable resistance markers. (4) The
+  survival benefit is family-dependent: large in F14R (34.8% vs 75.5%
+  mortality) and marginal in F11N (93.3% vs 100%). Pooling families dilutes
+  it, so run the per-family split as a sensitivity analysis. (5) In the
+  infection comparisons, 0 hpc samples were taken at the start of
+  cohabitation, so time since tank set-up is confounded with infection
+  time. The 24 hpc infection comparisons are a disease-response contrast
+  (`disease`), not resilience evidence. (6) Same tanks and animals' cohort
+  as DUPERRET2025_POMS_STARVE (metabolomics): convergent evidence, not
+  independent replication. Family F14R and the 2020 Ifremer production are
+  also shared with DECICOMP2025_POMS_AGE. (7) One planned library (F14R
+  starved 6 hpc) is not deposited. The authors excluded one deposited
+  library (F11N fed 48 hpc rep 2, 21% mapping). Neither affects the
+  registered comparisons.
 
 provenance:
-  registered_by: "Steven Roberts"
+  registered_by: sr320
   date_registered: "2026-10-11"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB86618 --study-id
+    DUPERRET2025_STARVE_RNASEQ`. The fed-diet project PRJEB86525 was added to
+    `accessions` as part of the same study. Sample sheet and FASTQ manifest
+    were generated by running `aree fetch-samplesheet --bioproject <P> --study
+    DUPERRET2025_STARVE_RNASEQ --label-field experiment_title --label-pattern
+    'P_(?P<family>F1[14][NR])_(?P<diet_code>[35])_(?P<hpc>\d+)_(?P<replicate>\d)'
+    --condition-attribute diet_code --condition-attribute hpc --attribute
+    family --attribute replicate --attribute isolate --attribute age
+    --attribute tissue_type --attribute 'experimental factor'` once for each
+    project, then concatenating the outputs unchanged (ena_provenance.json
+    records both per-project provenance blocks and the merged checksums). The
+    parsed diet code matches the BioSample 'experimental factor' (starvation
+    vs control) for all 83 runs. Design, pooling, tank numbers, survival,
+    sequencing details, the 84th library, the excluded outlier
+    (ERR14687881, P_F11N_3_48_2) and the authors' contrasts come from the
+    open-access full text (PMC12803857), read 2026-10-11. The outlier is
+    outside every registered comparison, so no excluded_samples entry is
+    needed. If a 48 hpc comparison is added, exclude it with the paper's
+    mapping-rate evidence or AREE's own. Comparisons were chosen before any
+    result was computed; starved_vs_fed_0hpc is meta_analysis_primary. DESeq2
+    reference levels: fed (3_0) for the diet contrast, and 0 hpc within diet
+    for the infection contrasts.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86618"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86647"
+    - "https://doi.org/10.1016/j.isci.2025.114333"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC12803857/"

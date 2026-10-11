@@ -1,0 +1,257 @@
+{
+  "study_id": "DUPERRET2025_STARVE_RNASEQ",
+  "bioproject": "PRJEB86618",
+  "bioproject_note": "Primary (claimed) project, matching accessions.bioproject. This sample sheet merges every project in `bioprojects`; schema_validate checks this single key.",
+  "bioprojects": [
+    "PRJEB86618",
+    "PRJEB86525"
+  ],
+  "date_generated": "2026-10-11",
+  "generated_by": "src/intake/ena_samplesheet.py (aree fetch-samplesheet), run once per BioProject with identical options, then concatenated unchanged",
+  "fetch_samplesheet_options": {
+    "label_field": "experiment_title",
+    "label_pattern": "P_(?P<family>F1[14][NR])_(?P<diet_code>[35])_(?P<hpc>\\d+)_(?P<replicate>\\d)",
+    "condition_attributes": [
+      "diet_code",
+      "hpc"
+    ],
+    "attributes": [
+      "family",
+      "replicate",
+      "isolate",
+      "age",
+      "tissue_type",
+      "experimental factor"
+    ]
+  },
+  "condition_codes": {
+    "diet_code": {
+      "3": "fed ad libitum",
+      "5": "starved"
+    },
+    "condition": "<diet_code>_<hpc>"
+  },
+  "n_runs": 83,
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "3_0": 6,
+    "3_3": 6,
+    "3_6": 6,
+    "3_12": 6,
+    "3_24": 6,
+    "3_48": 6,
+    "3_72": 6,
+    "5_0": 6,
+    "5_3": 6,
+    "5_6": 5,
+    "5_12": 6,
+    "5_24": 6,
+    "5_48": 6,
+    "5_72": 6
+  },
+  "group_sizes_by_family": {
+    "F11N_3_0": 3,
+    "F11N_3_12": 3,
+    "F11N_3_24": 3,
+    "F11N_3_3": 3,
+    "F11N_3_48": 3,
+    "F11N_3_6": 3,
+    "F11N_3_72": 3,
+    "F11N_5_0": 3,
+    "F11N_5_12": 3,
+    "F11N_5_24": 3,
+    "F11N_5_3": 3,
+    "F11N_5_48": 3,
+    "F11N_5_6": 3,
+    "F11N_5_72": 3,
+    "F14R_3_0": 3,
+    "F14R_3_12": 3,
+    "F14R_3_24": 3,
+    "F14R_3_3": 3,
+    "F14R_3_48": 3,
+    "F14R_3_6": 3,
+    "F14R_3_72": 3,
+    "F14R_5_0": 3,
+    "F14R_5_12": 3,
+    "F14R_5_24": 3,
+    "F14R_5_3": 3,
+    "F14R_5_48": 3,
+    "F14R_5_6": 2,
+    "F14R_5_72": 3
+  },
+  "not_deposited": "F14R starved 6 hpc has 2 runs (paper reports 84 libraries; ENA holds 83)",
+  "author_excluded": {
+    "run_accession": "ERR14687881",
+    "sample_id": "P_F11N_3_48_2",
+    "reason": "outlier, 21% mapping rate (Duperret et al. 2025, Results)"
+  },
+  "per_project_provenance": {
+    "PRJEB86618": {
+      "study_id": "DUPERRET2025_STARVE_RNASEQ",
+      "bioproject": "PRJEB86618",
+      "date_generated": "2026-10-11",
+      "generated_by": "src/intake/ena_samplesheet.py",
+      "queries": {
+        "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB86618&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,experiment_title",
+        "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+      },
+      "condition_attributes": [
+        "diet_code",
+        "hpc"
+      ],
+      "n_runs": 41,
+      "n_samples": 41,
+      "library_strategies": [
+        "RNA-Seq"
+      ],
+      "library_layouts": [
+        "SINGLE"
+      ],
+      "group_sizes": {
+        "5_0": 6,
+        "5_12": 6,
+        "5_24": 6,
+        "5_3": 6,
+        "5_48": 6,
+        "5_6": 5,
+        "5_72": 6
+      },
+      "min_group_size": 5,
+      "total_fastq_bytes": 51594579766,
+      "run_labels": {
+        "field": "experiment_title",
+        "pattern": "P_(?P<family>F1[14][NR])_(?P<diet_code>[35])_(?P<hpc>\\d+)_(?P<replicate>\\d)",
+        "labels": {
+          "ERR14693746": "P_F14R_5_0_1",
+          "ERR14693747": "P_F14R_5_0_2",
+          "ERR14693748": "P_F14R_5_0_3",
+          "ERR14693749": "P_F14R_5_3_1",
+          "ERR14693750": "P_F14R_5_3_2",
+          "ERR14693751": "P_F14R_5_3_3",
+          "ERR14693752": "P_F14R_5_6_1",
+          "ERR14693753": "P_F14R_5_6_2",
+          "ERR14693755": "P_F14R_5_12_1",
+          "ERR14693756": "P_F14R_5_12_2",
+          "ERR14693757": "P_F14R_5_12_3",
+          "ERR14693758": "P_F14R_5_24_1",
+          "ERR14693759": "P_F14R_5_24_2",
+          "ERR14693760": "P_F14R_5_24_3",
+          "ERR14693761": "P_F14R_5_48_1",
+          "ERR14693762": "P_F14R_5_48_2",
+          "ERR14693763": "P_F14R_5_48_3",
+          "ERR14693764": "P_F14R_5_72_1",
+          "ERR14693765": "P_F14R_5_72_3",
+          "ERR14693766": "P_F11N_5_0_1",
+          "ERR14693767": "P_F11N_5_0_2",
+          "ERR14693768": "P_F11N_5_0_3",
+          "ERR14693769": "P_F11N_5_3_1",
+          "ERR14693770": "P_F11N_5_3_2",
+          "ERR14693771": "P_F11N_5_3_3",
+          "ERR14693772": "P_F11N_5_6_1",
+          "ERR14693773": "P_F11N_5_6_2",
+          "ERR14693774": "P_F11N_5_6_3",
+          "ERR14693775": "P_F11N_5_12_1",
+          "ERR14693776": "P_F11N_5_12_2",
+          "ERR14693777": "P_F11N_5_12_3",
+          "ERR14693778": "P_F11N_5_24_1",
+          "ERR14693779": "P_F11N_5_24_2",
+          "ERR14693780": "P_F11N_5_24_3",
+          "ERR14693781": "P_F11N_5_48_1",
+          "ERR14693782": "P_F11N_5_48_2",
+          "ERR14693783": "P_F11N_5_48_3",
+          "ERR14693784": "P_F11N_5_72_1",
+          "ERR14693785": "P_F11N_5_72_2",
+          "ERR14693786": "P_F11N_5_72_3",
+          "ERR14693787": "P_F14R_5_72_2"
+        }
+      }
+    },
+    "PRJEB86525": {
+      "study_id": "DUPERRET2025_STARVE_RNASEQ",
+      "bioproject": "PRJEB86525",
+      "date_generated": "2026-10-11",
+      "generated_by": "src/intake/ena_samplesheet.py",
+      "queries": {
+        "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB86525&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,experiment_title",
+        "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+      },
+      "condition_attributes": [
+        "diet_code",
+        "hpc"
+      ],
+      "n_runs": 42,
+      "n_samples": 42,
+      "library_strategies": [
+        "RNA-Seq"
+      ],
+      "library_layouts": [
+        "SINGLE"
+      ],
+      "group_sizes": {
+        "3_0": 6,
+        "3_12": 6,
+        "3_24": 6,
+        "3_3": 6,
+        "3_48": 6,
+        "3_6": 6,
+        "3_72": 6
+      },
+      "min_group_size": 6,
+      "total_fastq_bytes": 52662666553,
+      "run_labels": {
+        "field": "experiment_title",
+        "pattern": "P_(?P<family>F1[14][NR])_(?P<diet_code>[35])_(?P<hpc>\\d+)_(?P<replicate>\\d)",
+        "labels": {
+          "ERR14687865": "P_F11N_3_0_1",
+          "ERR14687866": "P_F11N_3_0_2",
+          "ERR14687867": "P_F11N_3_0_3",
+          "ERR14687868": "P_F11N_3_3_1",
+          "ERR14687869": "P_F11N_3_3_2",
+          "ERR14687870": "P_F11N_3_3_3",
+          "ERR14687871": "P_F11N_3_6_1",
+          "ERR14687872": "P_F11N_3_6_2",
+          "ERR14687873": "P_F11N_3_6_3",
+          "ERR14687874": "P_F11N_3_12_1",
+          "ERR14687875": "P_F11N_3_12_2",
+          "ERR14687876": "P_F11N_3_12_3",
+          "ERR14687877": "P_F11N_3_24_1",
+          "ERR14687878": "P_F11N_3_24_2",
+          "ERR14687879": "P_F11N_3_24_3",
+          "ERR14687880": "P_F11N_3_48_1",
+          "ERR14687881": "P_F11N_3_48_2",
+          "ERR14687882": "P_F11N_3_48_3",
+          "ERR14687883": "P_F11N_3_72_1",
+          "ERR14687884": "P_F11N_3_72_2",
+          "ERR14687885": "P_F11N_3_72_3",
+          "ERR14687886": "P_F14R_3_3_1",
+          "ERR14687887": "P_F14R_3_3_2",
+          "ERR14687888": "P_F14R_3_3_3",
+          "ERR14687889": "P_F14R_3_6_1",
+          "ERR14687890": "P_F14R_3_6_2",
+          "ERR14687891": "P_F14R_3_6_3",
+          "ERR14687892": "P_F14R_3_12_1",
+          "ERR14687893": "P_F14R_3_12_2",
+          "ERR14687894": "P_F14R_3_12_3",
+          "ERR14687895": "P_F14R_3_24_1",
+          "ERR14687896": "P_F14R_3_24_2",
+          "ERR14687897": "P_F14R_3_24_3",
+          "ERR14687898": "P_F14R_3_0_1",
+          "ERR14687899": "P_F14R_3_48_1",
+          "ERR14687900": "P_F14R_3_48_2",
+          "ERR14687901": "P_F14R_3_48_3",
+          "ERR14687902": "P_F14R_3_0_2",
+          "ERR14687903": "P_F14R_3_0_3",
+          "ERR14687904": "P_F14R_3_72_1",
+          "ERR14687905": "P_F14R_3_72_2",
+          "ERR14687906": "P_F14R_3_72_3"
+        }
+      }
+    }
+  },
+  "outputs": {
+    "data/studies/DUPERRET2025_STARVE_RNASEQ/samplesheet.tsv": "00d454413d7deb9ce6e936ae33dceeb3239fb45b4619837268de83aeaf297f97",
+    "data/studies/DUPERRET2025_STARVE_RNASEQ/fastq_manifest.tsv": "34cc886630b22bade31487bf4bff47d1e7504c3df2d04494ad07825e22778b1b"
+  }
+}
