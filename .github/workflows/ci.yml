@@ -182,6 +182,23 @@ jobs:
             --outdir /tmp/aree-smoke/rnaseq-raw \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw
 
+      - name: Exercise the RNA-seq raw DAG single-end, as 3' Tag-seq
+        run: |
+          nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
+            --mode raw_reanalysis \
+            --study_id CI_TAGSEQ \
+            --comparison_id treatment_vs_control \
+            --single_end --tag_seq \
+            --reads 'tests/fixtures/rnaseq_raw/*_R1.fastq' \
+            --transcript_fasta tests/fixtures/rnaseq_raw/reference.fa \
+            --gtf tests/fixtures/rnaseq_raw/annotation.gtf \
+            --tx2gene tests/fixtures/rnaseq_raw/tx2gene.tsv \
+            --sample_sheet tests/fixtures/rnaseq_raw/samples.tsv \
+            --control_level control \
+            --treatment_level treatment \
+            --outdir /tmp/aree-smoke/rnaseq-tagseq \
+            -work-dir /tmp/aree-smoke/work-rnaseq-tagseq
+
       - name: Assert workflow artifacts exist
         run: |
           test -f /tmp/aree-smoke/rnaseq/rnaseq/standardized/GIGAS_HEAT01_acute_heat_vs_control_dge_standardized.tsv
@@ -190,6 +207,7 @@ jobs:
           test -f /tmp/aree-smoke/metabolomics/metabolomics/standardized/GIGAS_GROW06_hypoxia_vs_control_metabolite_features_standardized.tsv
           test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/standardized/CI_RNASEQ_treatment_vs_control_dge_standardized.tsv
           test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/viral_load/CI_RNASEQ_treatment_vs_control_viral_load.tsv
+          test -f /tmp/aree-smoke/rnaseq-tagseq/rnaseq/standardized/CI_TAGSEQ_treatment_vs_control_dge_standardized.tsv
 
   schema-validation:
     name: JSON schema sanity

@@ -59,17 +59,23 @@ process SALMON_QUANT {
     path "versions.yml", emit: versions
 
     script:
-    // Real paired-end Salmon quant invocation with GTF-based gene-level
-    // summarization via --geneMap. Not executed here.
+    // Salmon quant with GTF-based gene-level summarization via --geneMap.
+    // Paired-end by default; --single_end passes one FASTQ with -r.
+    // --tag_seq is for 3' tag libraries (e.g. QuantSeq), which yield about one
+    // read per transcript regardless of its length: effective-length
+    // correction is switched off, and so is --gcBias, which models GC content
+    // along whole fragments.
+    def reads_opt = params.single_end ? "-r ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
+    def bias_opt  = params.tag_seq ? '--noLengthCorrection' : '--gcBias'
     """
     salmon quant \\
         -i ${salmon_index} \\
         -l A \\
-        -1 ${reads[0]} -2 ${reads[1]} \\
+        ${reads_opt} \\
         -p ${task.cpus} \\
         --geneMap ${gtf} \\
         --validateMappings \\
-        --gcBias \\
+        ${bias_opt} \\
         -o ${sample_id}
 
     cat <<-END_VERSIONS > versions.yml

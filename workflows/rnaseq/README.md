@@ -96,7 +96,7 @@ evidence-record-level `quality_flags` from study/comparison metadata).
 
 | | raw_reanalysis | processed_results_harmonization |
 |---|---|---|
-| Input | paired FASTQ + genome/transcriptome + GTF + sample sheet | one DE-like TSV |
+| Input | paired (or, with `--single_end`, single) FASTQ + genome/transcriptome + GTF + sample sheet | one DE-like TSV |
 | QC | FastQC, fastp, MultiQC (real) | not run; flagged in manifest |
 | Quantification | Salmon (pseudoalignment + `--geneMap`) | n/a |
 | DE model | DESeq2 via tximport | n/a (table assumed already DE-modeled upstream) |
@@ -126,6 +126,26 @@ Other outputs (all under `params.outdir`, default `results/rnaseq/`):
   `assets/report_template.qmd`.
 - (`raw_reanalysis` only) `fastqc/`, `trimmed/`, `salmon/`, `multiqc/`,
   `deseq2/` — intermediate per-step outputs.
+
+## Single-end and 3' Tag-seq libraries (`raw_reanalysis` only)
+
+`--single_end` takes one FASTQ per sample. `--reads` then names single files
+(e.g. `'data/raw/STUDY/SRR*.fastq.gz'`), and the sample id is the part the
+wildcard matched. fastp, Salmon (`-r`) and the optional viral QC switch to
+their single-end forms.
+
+`--tag_seq` is for 3' tag libraries such as Lexogen QuantSeq, which give
+about one read per transcript whatever its length. It changes three things:
+
+| Step | Standard RNA-seq | `--tag_seq` |
+|---|---|---|
+| fastp | adapter trimming | also `--trim_poly_x` (poly-A tails) |
+| Salmon | `--gcBias` | `--noLengthCorrection`, no `--gcBias` |
+| DESeq2 | `DESeqDataSetFromTximport` (per-sample length offsets) | `DESeqDataSetFromMatrix` on the counts, no length offset; pseudo-bulk sums raw counts |
+
+Applying length correction to 3' tags makes long genes look less expressed than
+they are. The two flags are independent (QuantSeq also comes paired-end), and
+both are recorded in the workflow manifest's `parameters`.
 
 ## Sample exclusion and viral read QC (`raw_reanalysis` only)
 
@@ -194,7 +214,7 @@ regenerated from raw data), not the evidence records themselves.
   DAG in `main.nf` uses real `Channel.fromFilePairs`/`Channel.fromPath`
   factories and real `if (params.mode == ...)` branching — it is not a
   linear echo-only stub chain.
-- **CI coverage**: tiny paired FASTQ, reference, annotation, tx2gene, and sample
+- **CI coverage**: tiny paired FASTQ (also run single-end with `--tag_seq`), reference, annotation, tx2gene, and sample
   fixtures live under `../../tests/fixtures/rnaseq_raw`. Every RNA-seq process
   has an explicit `stub:` output contract, so current Nextflow can exercise the
   complete raw DAG without a bioinformatics toolchain. This verifies channels,

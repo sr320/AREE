@@ -101,6 +101,9 @@ process EMIT_MANIFEST {
             "control_levels": control_levels,
             "treatment_levels": treatment_levels,
             "replicate_unit": replicate_unit,
+            # Library layout and type change what counts and lfcSE mean.
+            "single_end": ${params.single_end ? 'True' : 'False'},
+            "tag_seq": ${params.tag_seq ? 'True' : 'False'},
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
         "software_versions": {
