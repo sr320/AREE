@@ -71,11 +71,21 @@ workflow {
         // ---- raw_reanalysis branch --------------------------------------
         // Expect params.reads as a glob resolving paired-end FASTQ, e.g.:
         //   params.reads = "data/raw/GIGAS_HEAT01/*_R{1,2}.fastq.gz"
+        // or, with --single_end, one FASTQ per library, e.g.:
+        //   params.reads = "data/raw/DUPERRET2025_STARVE_RNASEQ/ERR*.fastq.gz"
+        // Single-end sample ids are the file name without .fastq/.fq(.gz), so
+        // ENA downloads are keyed by run accession, which the DESeq2 step
+        // matches against the sample sheet's run_accession column.
         if (!params.reads) {
-            error "raw_reanalysis mode requires --reads (glob for fromFilePairs), e.g. 'reads/*_R{1,2}.fastq.gz'"
+            error "raw_reanalysis mode requires --reads (glob for fromFilePairs, or one file per library with --single_end), e.g. 'reads/*_R{1,2}.fastq.gz'"
         }
 
-        read_pairs_ch = Channel.fromFilePairs(params.reads, checkIfExists: true)
+        if (params.single_end) {
+            read_pairs_ch = Channel.fromPath(params.reads, checkIfExists: true)
+                .map { f -> [ f.name.replaceFirst(/\.(fastq|fq)(\.gz)?$/, ''), [ f ] ] }
+        } else {
+            read_pairs_ch = Channel.fromFilePairs(params.reads, checkIfExists: true)
+        }
 
         FASTQC(read_pairs_ch)
         TRIM_FASTP(read_pairs_ch)

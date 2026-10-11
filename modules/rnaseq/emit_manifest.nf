@@ -120,6 +120,8 @@ process EMIT_MANIFEST {
             "control_levels": control_levels,
             "treatment_levels": treatment_levels,
             "replicate_unit": replicate_unit,
+            "single_end": ${params.single_end ? 'True' : 'False'},
+            "se_adapter": "${params.se_adapter}" if ${params.single_end ? 'True' : 'False'} else None,
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
         # Tools as reported by each process that ran, keyed by process name.

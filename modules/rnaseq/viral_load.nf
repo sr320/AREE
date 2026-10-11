@@ -60,10 +60,13 @@ process VIRAL_QUANT {
 
     script:
     // Every read pair is used (no subsampling), so the fraction is not biased
-    // by the flowcell position of the first reads in the file.
+    // by the flowcell position of the first reads in the file. For single-end
+    // libraries each read is one fragment, so the *_pairs columns count reads.
+    def fq = reads instanceof Collection ? reads as List : [ reads ]
+    def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]}"
     """
     salmon quant -i ${viral_index} -l A \\
-        -1 ${reads[0]} -2 ${reads[1]} \\
+        ${input} \\
         -p ${task.cpus} -o viral_quant
 
     processed=\$(sed -n 's/.*"num_processed": *\\([0-9]*\\).*/\\1/p' viral_quant/aux_info/meta_info.json)
