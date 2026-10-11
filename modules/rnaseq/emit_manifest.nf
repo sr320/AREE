@@ -29,22 +29,33 @@ process EMIT_MANIFEST {
     val workflow_start_iso
     val extra_warnings
     path viral_summary   // VIRAL_SUMMARY JSON, or assets/NO_VIRAL_QC when viral QC was not run
+    // Every upstream process's versions.yml (mixed + collected in main.nf),
+    // renamed on staging because they all share one file name.
+    path process_versions, stageAs: 'process_versions/versions_*.yml'
+    path collect_versions_py  // modules/shared/collect_versions.py
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
     path "versions.yml", emit: versions
 
     script:
+    // software_versions is built from the versions.yml each upstream process
+    // wrote, i.e. from the tools that actually ran, native or containerized.
+    // It used to be a hard-coded copy of the container tags, which misreported
+    // every native (-profile local) run.
+    //
     // extra_warnings is a Groovy list already rendered to a JSON array string
     // by the calling workflow (see main.nf), so it can be dropped straight
     // into the Python literal below without re-escaping.
     """
+    python3 ${collect_versions_py} software_versions.json process_versions/*.yml
+
     cat <<-'EOF' > emit_manifest.py
     #!/usr/bin/env python3
-    # Build the AREE RNA-seq workflow provenance manifest. Real hashlib-based
-    # sha256 checksum + real JSON emission. Not executed in this build.
+    # Build the AREE RNA-seq workflow provenance manifest.
     import hashlib
     import json
+    import platform
 
     def sha256_of(path):
         h = hashlib.sha256()
@@ -75,6 +86,14 @@ process EMIT_MANIFEST {
         with open(viral_path) as fh:
             viral = json.load(fh)
         warnings = warnings + viral.get("warnings", [])
+
+    with open("software_versions.json") as fh:
+        collected = json.load(fh)
+    software_versions = collected["software_versions"]
+    # This process's own interpreter; its versions.yml is written after the
+    # manifest, so it cannot be among the collected files.
+    software_versions["EMIT_MANIFEST"] = {"python": platform.python_version()}
+    warnings = warnings + collected["warnings"]
     if excluded_samples:
         warnings.append(
             "samples_excluded_by_curation: " + ", ".join(excluded_samples)
@@ -103,22 +122,15 @@ process EMIT_MANIFEST {
             "replicate_unit": replicate_unit,
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
-        "software_versions": {
-            # Static, representative versions matching containers/README.md
-            # image tags. These are NOT introspected from a running
-            # container in this build (no container runtime invoked here) --
-            # they are declared to match the pinned image tags.
-            "fastqc": "0.12.1",
-            "fastp": "0.23.4",
-            "salmon": "1.10.3",
-            "star": "2.7.11b",
-            "multiqc": "1.21",
-            "bioconductor_docker": "RELEASE_3_18",
-            "deseq2": "1.42.0",
-            "tximport": "1.30.0",
-            "quarto": "1.5.57",
-            "python": "3.11",
+        # Tools as reported by each process that ran, keyed by process name.
+        "software_versions": software_versions,
+        "software_versions_not_captured": {
+            "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/",
         },
+        # Null for a native run (-profile local). The images a container
+        # profile would pull are declared on each process in modules/rnaseq/;
+        # inside a container, software_versions reports that image's tools.
+        "container_engine": "${workflow.containerEngine ?: ''}" or None,
         "reference": {
             "genome_assembly": "${params.rnaseq?.genome_assembly ?: 'not_specified'}",
             "annotation_version": "${params.rnaseq?.annotation_version ?: 'not_specified'}",
@@ -154,9 +166,11 @@ process EMIT_MANIFEST {
     """
 
     stub:
+    // The stub still merges the collected versions.yml files so a -stub-run
+    // checks that every process's versions channel reaches the manifest.
     """
-    printf '{"study_id":"%s","comparison_id":"%s","mode":"%s","stub":true}\n' \
-        '${study_id}' '${comparison_id}' '${mode}' > ${study_id}_${comparison_id}_manifest.json
+    python3 ${collect_versions_py} software_versions.json process_versions/*.yml
+    python3 -c 'import json; v = json.load(open("software_versions.json")); json.dump({"study_id": "${study_id}", "comparison_id": "${comparison_id}", "mode": "${mode}", "stub": True, "software_versions": dict(v["software_versions"], EMIT_MANIFEST={}), "software_versions_not_captured": {"RENDER_REPORT": "runs after the manifest"}, "warnings": v["warnings"]}, open("${study_id}_${comparison_id}_manifest.json", "w"), indent=2)'
     echo '${task.process}:' > versions.yml
     """
 }

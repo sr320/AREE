@@ -29,18 +29,43 @@ process EMIT_MANIFEST {
     path missingness_summary_json_optional
     val workflow_version
     val start_time_iso
+    // Every upstream process's versions.yml (mixed + collected in main.nf),
+    // renamed on staging because they all share one file name.
+    path process_versions, stageAs: 'process_versions/versions_*.yml'
+    path collect_versions_py  // modules/shared/collect_versions.py
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
     path "versions.yml", emit: versions
 
     script:
+    // software_versions is built from the versions.yml each upstream process
+    // wrote, i.e. from the tools that actually ran, native or containerized.
+    // It used to be a hard-coded copy of the container tags.
     """
     #!/usr/bin/env python3
+    import glob
     import hashlib
     import json
+    import platform
+    import subprocess
     import sys
     import pandas as pd
+
+    subprocess.run(
+        [sys.executable, "${collect_versions_py}", "software_versions.json"]
+        + sorted(glob.glob("process_versions/*.yml")),
+        check=True,
+    )
+    with open("software_versions.json") as fh:
+        collected = json.load(fh)
+    software_versions = collected["software_versions"]
+    # This process's own interpreter; its versions.yml is written after the
+    # manifest, so it cannot be among the collected files.
+    software_versions["EMIT_MANIFEST"] = {
+        "python": platform.python_version(),
+        "pandas": pd.__version__,
+    }
 
     study_id = "${study_id}"
     comparison_id = "${comparison_id}"
@@ -70,7 +95,7 @@ process EMIT_MANIFEST {
         "mean_missingness_percent": mean_missingness,
     }
 
-    warnings = []
+    warnings = list(collected["warnings"])
     if mean_missingness is None:
         warnings.append(
             "missingness_percent unavailable or entirely null for this comparison; "
@@ -115,11 +140,14 @@ process EMIT_MANIFEST {
         "parameters": {
             "mode": mode,
         },
-        "software_versions": {
-            "python": "3.11 (python:3.11-slim container)",
-            "pandas": pd.__version__,
-            "limma": "bioconductor RELEASE_3_18 (see containers/README.md; exact limma version pinned at container build time, not independently re-verified in this scaffold)",
+        # Tools as reported by each process that ran, keyed by process name.
+        "software_versions": software_versions,
+        "software_versions_not_captured": {
+            "RENDER_REPORT": "renders this manifest, so it runs afterwards",
         },
+        # Null for a native run (-profile local); the images a container
+        # profile would pull are declared on each process in modules/proteomics/.
+        "container_engine": "${workflow.containerEngine ?: ''}" or None,
         "qc_metrics": qc_metrics,
         "missingness_summary": missingness_summary,
         "warnings": warnings,
