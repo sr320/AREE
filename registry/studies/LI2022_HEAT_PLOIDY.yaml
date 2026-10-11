@@ -16,8 +16,13 @@
 # Confirm the accession against the paper's data availability statement
 # before any result is harmonized.
 #
-# Registered 2026-10-10. Not yet reanalyzed: sample sheet and FASTQ manifest
-# only (18 libraries, 54.7 GB FASTQ).
+# Registered 2026-10-10. REANALYZED 2026-10-10 at full depth for the primary
+# comparison only (diploid prolonged heat vs baseline, 3 vs 3): 849 of 25,823
+# genes have padj < 0.05 (431 up, 418 down), every one with a real lfcSE.
+# The paper reports 418 DEGs for this contrast from its own pipeline.
+# Replicates pass the dispersion check (median 0.014 in both groups,
+# data/studies/LI2022_HEAT_PLOIDY/replicate_dispersion_qc.tsv). The other
+# three comparisons have not been run, so analysis_status is in_progress.
 
 study_id: LI2022_HEAT_PLOIDY
 simulated: false
@@ -51,8 +56,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA762441 (first public 2021-11-05). No count matrix or differential-expression table is deposited, and the paper is closed access, so its supplementary tables were not checked. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. Each BioSample carries one sample_alias,
@@ -108,7 +113,7 @@ comparisons:
     resilience_classification: "exposure_only"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_diploid_prolonged_heat_vs_baseline_dge_standardized.tsv"
     meta_analysis_primary: true
 
   - comparison_id: "diploid_acute_heat_12h_vs_baseline"
@@ -230,6 +235,31 @@ provenance:
     acclimation temperature, oyster age/size and triploid production; confirm
     the data availability statement names PRJNA762441; update
     exposure_intensity, exposure_duration and life_stage.
+    REANALYSIS (Pori, 2026-10-10): the 12 libraries of the primary
+    comparison were downloaded from ENA over HTTPS and all 24 FASTQ files
+    matched ENA's MD5s. Three files reached full size with a wrong MD5 after
+    connections dropped mid-transfer and were resumed; they were discarded
+    and fetched again. ENA throttled 10 parallel connections (HTTP 403, then
+    refused connections) and the download was finished with 2-4 parallel connections. Run with
+    -profile local,workstation, native tools from environment.yml, no
+    container, plus a machine-local resource override for 8 GB RAM (task
+    cpus/memory only, which does not change results). The reads glob was
+    pointed at a folder holding only the comparison's 6 libraries. Nextflow
+    26.04.7: 23 tasks completed, 1 cached, status OK, 28 min. Versions that
+    actually ran: FastQC 0.12.1, fastp 1.4.0, Salmon 2.8.0, MultiQC 1.35,
+    R 4.5.3, DESeq2 1.50.2, tximport 1.38.2, Quarto 1.9.38. The workflow
+    manifest's software_versions lists the declared container versions
+    instead (docs/implementation_status.md). Salmon index built in-workflow
+    (k=31, transcriptome only) from GCF_963853765.1 rna.fna. Salmon mapped
+    82.2-85.5% of read pairs (21.4-25.5 M pairs per library); library type
+    IU, i.e. unstranded. REPLICATE DISPERSION: median 0.0138 (d_0) and
+    0.0143 (d_f) over 5,446-5,536 well-expressed genes. That passes the
+    0.005 threshold and is ten times IOCAS2022_OA_ENERGY's
+    technical-replicate values, but lower than the 0.03-0.05 seen in
+    CALLA2026_OSHV and LUTIER2022_OA_TIPPING. Gill from one cultured
+    cohort may simply vary less than whole spat or juveniles; it is noted,
+    not treated as a failure. Harmonized locally against the committed
+    crosswalk: 25,823 evidence records, all mapping_confidence exact.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA762441"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA762441"
