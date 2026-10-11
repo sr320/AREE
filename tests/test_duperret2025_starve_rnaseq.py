@@ -117,6 +117,35 @@ def test_comparisons_are_tank_replicated_and_classified(study):
     assert "tank_level_replication" in study["quality_flags"]
 
 
+def test_every_comparison_fits_three_tank_units_per_arm(samplesheet):
+    # Both families share each tank, so each comparison is fitted on tank
+    # units (families summed): 3 vs 3, never 6 vs 6 libraries.
+    contrasts = {
+        "starved_vs_fed_0hpc": (("3_0", "5_0"), "tank"),
+        "fed_oshv1_24hpc_vs_0hpc": (("3_0", "3_24"), "tank_hpc"),
+        "starved_oshv1_24hpc_vs_0hpc": (("5_0", "5_24"), "tank_hpc"),
+    }
+    for (control, treatment), unit in contrasts.values():
+        rows = [r for r in samplesheet if r["condition"] in (control, treatment)]
+        units = {}
+        for r in rows:
+            units.setdefault(r[unit], set()).add(r["condition"])
+            assert r["tank"] == f"{r['diet']}_t{r['replicate']}"
+            assert r["tank_hpc"] == f"{r['tank']}_{r['hpc']}hpc"
+        # A unit never spans both arms (the workflow would refuse it).
+        assert all(len(arms) == 1 for arms in units.values())
+        per_arm = Counter(next(iter(arms)) for arms in units.values())
+        assert per_arm == {control: 3, treatment: 3}
+        families = Counter(r[unit] for r in rows)
+        assert set(families.values()) == {2}
+
+
+def test_config_fits_primary_on_tanks_not_family_covariate():
+    config = (REPO_ROOT / "config" / f"{STUDY_ID}.config").read_text()
+    assert "replicate_unit  = 'tank'" in config
+    assert "covariates" not in config.split("params {", 1)[1]
+
+
 def test_outputs_match_provenance_checksums(provenance):
     for rel, digest in provenance["outputs"].items():
         assert hashlib.sha256((REPO_ROOT / rel).read_bytes()).hexdigest() == digest

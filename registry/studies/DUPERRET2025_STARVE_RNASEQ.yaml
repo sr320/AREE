@@ -17,9 +17,9 @@
 # They are the same tanks and must not be counted as independent studies.
 #
 # NOT YET RUNNABLE. The libraries are single-end 75 bp (NextSeq 550), and
-# AREE's RNA-seq workflow is paired-end only (fromFilePairs, salmon -1/-2,
-# fastp -i/-I). Single-end support has to land in workflows/rnaseq and
-# modules/rnaseq in its own PR before this study can be reanalyzed.
+# AREE's RNA-seq workflow is paired-end only on main (fromFilePairs, salmon
+# -1/-2, fastp -i/-I). Single-end support is PR #25; this study needs it
+# merged, then a rebase, then `single_end = true` in its config.
 
 study_id: DUPERRET2025_STARVE_RNASEQ
 simulated: false
@@ -70,11 +70,25 @@ analysis_status: "not_started"
 # of 10 oysters from one tank x family. Each diet had three 400-L tanks holding
 # both families, and replicates 1-3 are the tanks (inferred: the deposit does
 # not name tanks). Diet is applied per tank, so the effective n for diet
-# contrasts is 3 tanks. Family is a within-tank factor and belongs in the
-# model as a covariate (~ family + condition), not as a replicate. The DESeq2
-# module currently fits ~condition only, so until it accepts a covariate
-# column, run each family separately, as the paper did. Libraries are already
-# one per unit, so no pseudo-bulking (--replicate_unit) is needed.
+# contrasts is 3 tanks.
+#
+# FIT ON TANKS, NOT LIBRARIES. Each tank yields two libraries (one per family)
+# at each time, so the libraries are not independent replicates of the tank's
+# treatment. Fitting ~ family + condition would count 6 libraries per diet when
+# 3 tanks were treated, and DESeq2 cannot take tank as a term because tank is
+# nested in diet. So every comparison is fitted on pseudo-bulk tank units
+# (--replicate_unit): each unit's two family libraries are summed, giving 3 vs
+# 3 units with dispersion and lfcSE from tank-to-tank variation. The sample
+# sheet carries two derived columns for this (see ena_provenance.json):
+#   tank      = <diet>_t<replicate>        diet contrast at 0 hpc
+#   tank_hpc  = <tank>_<hpc>hpc            within-diet time contrasts
+# The time contrasts use tank_hpc because the same tank is sampled at 0 and
+# 24 hpc, so a `tank` unit would sit in both arms (the workflow refuses that).
+# They are not paired on tank: that would need replicate n to be the same
+# tank at every time point, which the deposit does not establish. Summing
+# families weights them by library depth. Family-specific effects are lost
+# from the pooled fit; per-family runs (3 vs 3 libraries, as the paper did)
+# are the sensitivity analysis.
 #
 # LIBRARY PREP IS NOT SPLIT BY DIET, as far as the deposit shows. Library
 # numbers in library_name interleave fed and starved samples (for example
@@ -87,9 +101,9 @@ analysis_status: "not_started"
 # Of the six infection times, only 24 hpc is registered: the first time at
 # which viral transcriptional activity had risen under both diets (after
 # 12 hpc fed, after 24 hpc starved). The other times are in the sample sheet.
-# The paper analyzed families separately. The intended AREE model has family
-# as a covariate, with the per-family split as a sensitivity analysis, because
-# the diet effect on survival is large in F14R and marginal in F11N.
+# The paper analyzed families separately. Here the primary fit sums families
+# within tank, and per-family runs are the sensitivity analysis, because the
+# diet effect on survival is large in F14R and marginal in F11N.
 # ---------------------------------------------------------------------------
 comparisons:
   - comparison_id: "starved_vs_fed_0hpc"
@@ -100,8 +114,8 @@ comparisons:
     exposure_intensity: "complete food deprivation (food supply stopped)"
     exposure_duration: "16 d before challenge"
     exposure_timing: "sampled at 0 hpc: end of the 16 d diet treatment, start of cohabitation, before infection"
-    control_condition: "Fed ad libitum (diet code 3), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries)"
-    treatment_condition: "Starved 16 d (diet code 5), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries)"
+    control_condition: "Fed ad libitum (diet code 3), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries, summed to 3 tank units; --replicate_unit tank)"
+    treatment_condition: "Starved 16 d (diet code 5), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries, summed to 3 tank units; --replicate_unit tank)"
     phenotype: "disease_resistance"
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_post_challenge (final mortality per family x diet: F14R 34.8% starved vs 75.5% fed; F11N 93.3% vs 100%)"
@@ -119,8 +133,8 @@ comparisons:
     exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio (donor inoculum 2.2 x 10^5 genome copies/µL, 100 µL)"
     exposure_duration: "24 h post-cohabitation"
     exposure_timing: "24 hpc"
-    control_condition: "Fed ad libitum, 0 hpc, before infection (6 libraries: 3 tanks x 2 families)"
-    treatment_condition: "Fed ad libitum, 24 hpc (6 libraries: 3 tanks x 2 families)"
+    control_condition: "Fed ad libitum, 0 hpc, before infection (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    treatment_condition: "Fed ad libitum, 24 hpc (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
     phenotype: "disease_susceptibility"
     phenotype_direction: "increase"
     phenotype_unit: "final mortality per family (F14R 75.5%, F11N 100%); OsHV-1 DNA load and transcription reported in the paper"
@@ -138,8 +152,8 @@ comparisons:
     exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio, after complete food deprivation"
     exposure_duration: "24 h post-cohabitation (after 16 d starvation)"
     exposure_timing: "24 hpc"
-    control_condition: "Starved, 0 hpc, before infection (6 libraries: 3 tanks x 2 families)"
-    treatment_condition: "Starved, 24 hpc (6 libraries: 3 tanks x 2 families)"
+    control_condition: "Starved, 0 hpc, before infection (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    treatment_condition: "Starved, 24 hpc (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
     phenotype: "disease_susceptibility"
     phenotype_direction: "increase"
     phenotype_unit: "final mortality per family (F14R 34.8%, F11N 93.3%); OsHV-1 DNA load and transcription reported in the paper"
@@ -156,20 +170,20 @@ quality_flags:
 
 limitations: >
   (1) Not yet runnable: the libraries are single-end, and AREE's RNA-seq
-  workflow is paired-end only. (2) Replication is 3 tanks per diet. Each
-  library is a pool of 10 oysters, so between-oyster variance is averaged
-  away and the replicate unit is the tank (replicate = tank is inferred).
-  Families share tanks, so family must be a model covariate. The DESeq2
-  module fits ~condition only, so that needs a workflow change; until then,
-  run per family. (3) Starvation is
-  a strong physiological manipulation. Most 0 hpc differences will reflect
+  workflow is paired-end only until PR #25 merges. (2) Replication is 3
+  tanks per diet. Each library is a pool of 10 oysters, so between-oyster
+  variance is averaged away. Both families share each tank, so every
+  comparison is fitted on pseudo-bulk tank units (families summed), 3 vs 3.
+  Replicate = tank is inferred, and the time contrasts are not paired on
+  tank. (3) Starvation is a strong physiological manipulation. Most 0 hpc differences will reflect
   fasting itself (growth fell from about 90% to 15-19% weight gain, and lipid
   reserves fell), not resistance mechanisms that would generalize to fed
   animals. The comparison associates expression with a treatment that raised
   survival; it does not identify heritable resistance markers. (4) The
   survival benefit is family-dependent: large in F14R (34.8% vs 75.5%
-  mortality) and marginal in F11N (93.3% vs 100%). Pooling families dilutes
-  it, so run the per-family split as a sensitivity analysis. (5) In the
+  mortality) and marginal in F11N (93.3% vs 100%). Summing families within
+  tank dilutes it, so run each family separately (3 vs 3 libraries) as a
+  sensitivity analysis. (5) In the
   infection comparisons, 0 hpc samples were taken at the start of
   cohabitation, so time since tank set-up is confounded with infection
   time. The 24 hpc infection comparisons are a disease-response contrast
@@ -206,7 +220,12 @@ provenance:
     mapping-rate evidence or AREE's own. Comparisons were chosen before any
     result was computed; starved_vs_fed_0hpc is meta_analysis_primary. DESeq2
     reference levels: fed (3_0) for the diet contrast, and 0 hpc within diet
-    for the infection contrasts.
+    for the infection contrasts. Replication decision (2026-10-11): fit on
+    pseudo-bulk tank units (`--replicate_unit tank` for the diet contrast,
+    `tank_hpc` for the time contrasts), not `~ family + condition`, because
+    the two family libraries from each tank are not independent replicates
+    of its treatment. The tank and tank_hpc columns are derived in the merge
+    step and documented in ena_provenance.json.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86618"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"

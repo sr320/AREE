@@ -31,6 +31,11 @@
     },
     "condition": "<diet_code>_<hpc>"
   },
+  "derived_columns": {
+    "diet": "diet_code mapped: 3 = fed, 5 = starved",
+    "tank": "<diet>_t<replicate>. Replicate n is inferred to be tank n of that diet (paper: 3 tanks per diet, each holding both families; the deposit does not name tanks). Used as --replicate_unit for the 0 hpc diet contrast.",
+    "tank_hpc": "<tank>_<hpc>hpc. Used as --replicate_unit for within-diet time contrasts, where the same tank appears in both arms; not paired on tank because tank identity across time points is not confirmed."
+  },
   "n_runs": 83,
   "library_layouts": [
     "SINGLE"
@@ -251,7 +256,7 @@
     }
   },
   "outputs": {
-    "data/studies/DUPERRET2025_STARVE_RNASEQ/samplesheet.tsv": "00d454413d7deb9ce6e936ae33dceeb3239fb45b4619837268de83aeaf297f97",
+    "data/studies/DUPERRET2025_STARVE_RNASEQ/samplesheet.tsv": "03646ca7c8e6f6efc6b1a3c44ce9f39078873bd1c1634ae69224045bc8db743e",
     "data/studies/DUPERRET2025_STARVE_RNASEQ/fastq_manifest.tsv": "34cc886630b22bade31487bf4bff47d1e7504c3df2d04494ad07825e22778b1b"
   }
 }

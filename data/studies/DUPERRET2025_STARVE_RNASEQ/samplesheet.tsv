@@ -1,84 +1,84 @@
-sample_id	run_accession	sample_accession	sample_alias	condition	diet_code	hpc	family	replicate	isolate	age	tissue_type	experimental_factor	library_layout	instrument_model	read_count
-P_F11N_3_0_1	ERR14687865	SAMEA117790970	sam_P_F11N_3_0_1_ctrl-rnaseq	3_0	3	0	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28916100
-P_F11N_3_0_2	ERR14687866	SAMEA117790971	sam_P_F11N_3_0_2_ctrl-rnaseq	3_0	3	0	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	22791480
-P_F11N_3_0_3	ERR14687867	SAMEA117790972	sam_P_F11N_3_0_3_ctrl-rnaseq	3_0	3	0	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25475714
-P_F11N_3_3_1	ERR14687868	SAMEA117790973	sam_P_F11N_3_3_1_ctrl-rnaseq	3_3	3	3	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27712506
-P_F11N_3_3_2	ERR14687869	SAMEA117790974	sam_P_F11N_3_3_2_ctrl-rnaseq	3_3	3	3	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	29253886
-P_F11N_3_3_3	ERR14687870	SAMEA117790975	sam_P_F11N_3_3_3_ctrl-rnaseq	3_3	3	3	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28779372
-P_F11N_3_6_1	ERR14687871	SAMEA117790976	sam_P_F11N_3_6_1_ctrl-rnaseq	3_6	3	6	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	23243989
-P_F11N_3_6_2	ERR14687872	SAMEA117790977	sam_P_F11N_3_6_2_ctrl-rnaseq	3_6	3	6	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24489260
-P_F11N_3_6_3	ERR14687873	SAMEA117790978	sam_P_F11N_3_6_3_ctrl-rnaseq	3_6	3	6	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24992904
-P_F11N_3_12_1	ERR14687874	SAMEA117790979	sam_P_F11N_3_12_1_ctrl-rnaseq	3_12	3	12	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	29274612
-P_F11N_3_12_2	ERR14687875	SAMEA117790980	sam_P_F11N_3_12_2_ctrl-rnaseq	3_12	3	12	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	29199936
-P_F11N_3_12_3	ERR14687876	SAMEA117790981	sam_P_F11N_3_12_3_ctrl-rnaseq	3_12	3	12	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	34833755
-P_F11N_3_24_1	ERR14687877	SAMEA117790982	sam_P_F11N_3_24_1_ctrl-rnaseq	3_24	3	24	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27163370
-P_F11N_3_24_2	ERR14687878	SAMEA117790983	sam_P_F11N_3_24_2_ctrl-rnaseq	3_24	3	24	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27950659
-P_F11N_3_24_3	ERR14687879	SAMEA117790984	sam_P_F11N_3_24_3_ctrl-rnaseq	3_24	3	24	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	31309888
-P_F11N_3_48_1	ERR14687880	SAMEA117790985	sam_P_F11N_3_48_1_ctrl-rnaseq	3_48	3	48	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27653227
-P_F11N_3_48_2	ERR14687881	SAMEA117790986	sam_P_F11N_3_48_2_ctrl-rnaseq	3_48	3	48	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25753672
-P_F11N_3_48_3	ERR14687882	SAMEA117790987	sam_P_F11N_3_48_3_ctrl-rnaseq	3_48	3	48	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28206023
-P_F11N_3_72_1	ERR14687883	SAMEA117790988	sam_P_F11N_3_72_1_ctrl-rnaseq	3_72	3	72	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26429784
-P_F11N_3_72_2	ERR14687884	SAMEA117790989	sam_P_F11N_3_72_2_ctrl-rnaseq	3_72	3	72	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28865566
-P_F11N_3_72_3	ERR14687885	SAMEA117790990	sam_P_F11N_3_72_3_ctrl-rnaseq	3_72	3	72	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	32750130
-P_F11N_5_0_1	ERR14693766	SAMEA117792184	sam_P_F11N_5_0_1_nut-rnaseq	5_0	5	0	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27533914
-P_F11N_5_0_2	ERR14693767	SAMEA117792185	sam_P_F11N_5_0_2_nut-rnaseq	5_0	5	0	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26210757
-P_F11N_5_0_3	ERR14693768	SAMEA117792186	sam_P_F11N_5_0_3_nut-rnaseq	5_0	5	0	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26956692
-P_F11N_5_3_1	ERR14693769	SAMEA117792187	sam_P_F11N_5_3_1_nut-rnaseq	5_3	5	3	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25615137
-P_F11N_5_3_2	ERR14693770	SAMEA117792188	sam_P_F11N_5_3_2_nut-rnaseq	5_3	5	3	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28074797
-P_F11N_5_3_3	ERR14693771	SAMEA117792189	sam_P_F11N_5_3_3_nut-rnaseq	5_3	5	3	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26582672
-P_F11N_5_6_1	ERR14693772	SAMEA117792190	sam_P_F11N_5_6_1_nut-rnaseq	5_6	5	6	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28709535
-P_F11N_5_6_2	ERR14693773	SAMEA117792191	sam_P_F11N_5_6_2_nut-rnaseq	5_6	5	6	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28452261
-P_F11N_5_6_3	ERR14693774	SAMEA117792192	sam_P_F11N_5_6_3_nut-rnaseq	5_6	5	6	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23397170
-P_F11N_5_12_1	ERR14693775	SAMEA117792193	sam_P_F11N_5_12_1_nut-rnaseq	5_12	5	12	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27926583
-P_F11N_5_12_2	ERR14693776	SAMEA117792194	sam_P_F11N_5_12_2_nut-rnaseq	5_12	5	12	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26831266
-P_F11N_5_12_3	ERR14693777	SAMEA117792195	sam_P_F11N_5_12_3_nut-rnaseq	5_12	5	12	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27622369
-P_F11N_5_24_1	ERR14693778	SAMEA117792196	sam_P_F11N_5_24_1_nut-rnaseq	5_24	5	24	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26542437
-P_F11N_5_24_2	ERR14693779	SAMEA117792197	sam_P_F11N_5_24_2_nut-rnaseq	5_24	5	24	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	32214824
-P_F11N_5_24_3	ERR14693780	SAMEA117792198	sam_P_F11N_5_24_3_nut-rnaseq	5_24	5	24	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	36036056
-P_F11N_5_48_1	ERR14693781	SAMEA117792199	sam_P_F11N_5_48_1_nut-rnaseq	5_48	5	48	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25206546
-P_F11N_5_48_2	ERR14693782	SAMEA117792200	sam_P_F11N_5_48_2_nut-rnaseq	5_48	5	48	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25873585
-P_F11N_5_48_3	ERR14693783	SAMEA117792201	sam_P_F11N_5_48_3_nut-rnaseq	5_48	5	48	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26206559
-P_F11N_5_72_1	ERR14693784	SAMEA117792202	sam_P_F11N_5_72_1_nut-rnaseq	5_72	5	72	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25023125
-P_F11N_5_72_2	ERR14693785	SAMEA117792203	sam_P_F11N_5_72_2_nut-rnaseq	5_72	5	72	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	30158564
-P_F11N_5_72_3	ERR14693786	SAMEA117792204	sam_P_F11N_5_72_3_nut-rnaseq	5_72	5	72	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	32185730
-P_F14R_3_0_1	ERR14687898	SAMEA117791003	sam_P_F14R_3_0_1_ctrl-rnaseq	3_0	3	0	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27523287
-P_F14R_3_0_2	ERR14687902	SAMEA117791007	sam_P_F14R_3_0_2_ctrl-rnaseq	3_0	3	0	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28169408
-P_F14R_3_0_3	ERR14687903	SAMEA117791008	sam_P_F14R_3_0_3_ctrl-rnaseq	3_0	3	0	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27193553
-P_F14R_3_3_1	ERR14687886	SAMEA117790991	sam_P_F14R_3_3_1_ctrl-rnaseq	3_3	3	3	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	22690643
-P_F14R_3_3_2	ERR14687887	SAMEA117790992	sam_P_F14R_3_3_2_ctrl-rnaseq	3_3	3	3	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25586541
-P_F14R_3_3_3	ERR14687888	SAMEA117790993	sam_P_F14R_3_3_3_ctrl-rnaseq	3_3	3	3	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24258355
-P_F14R_3_6_1	ERR14687889	SAMEA117790994	sam_P_F14R_3_6_1_ctrl-rnaseq	3_6	3	6	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28347575
-P_F14R_3_6_2	ERR14687890	SAMEA117790995	sam_P_F14R_3_6_2_ctrl-rnaseq	3_6	3	6	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27341894
-P_F14R_3_6_3	ERR14687891	SAMEA117790996	sam_P_F14R_3_6_3_ctrl-rnaseq	3_6	3	6	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	22786869
-P_F14R_3_12_1	ERR14687892	SAMEA117790997	sam_P_F14R_3_12_1_ctrl-rnaseq	3_12	3	12	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27574339
-P_F14R_3_12_2	ERR14687893	SAMEA117790998	sam_P_F14R_3_12_2_ctrl-rnaseq	3_12	3	12	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28424012
-P_F14R_3_12_3	ERR14687894	SAMEA117790999	sam_P_F14R_3_12_3_ctrl-rnaseq	3_12	3	12	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26490618
-P_F14R_3_24_1	ERR14687895	SAMEA117791000	sam_P_F14R_3_24_1_ctrl-rnaseq	3_24	3	24	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26830087
-P_F14R_3_24_2	ERR14687896	SAMEA117791001	sam_P_F14R_3_24_2_ctrl-rnaseq	3_24	3	24	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27547896
-P_F14R_3_24_3	ERR14687897	SAMEA117791002	sam_P_F14R_3_24_3_ctrl-rnaseq	3_24	3	24	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	32234171
-P_F14R_3_48_1	ERR14687899	SAMEA117791004	sam_P_F14R_3_48_1_ctrl-rnaseq	3_48	3	48	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26043105
-P_F14R_3_48_2	ERR14687900	SAMEA117791005	sam_P_F14R_3_48_2_ctrl-rnaseq	3_48	3	48	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24265711
-P_F14R_3_48_3	ERR14687901	SAMEA117791006	sam_P_F14R_3_48_3_ctrl-rnaseq	3_48	3	48	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25494263
-P_F14R_3_72_1	ERR14687904	SAMEA117791009	sam_P_F14R_3_72_1_ctrl-rnaseq	3_72	3	72	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28263350
-P_F14R_3_72_2	ERR14687905	SAMEA117791010	sam_P_F14R_3_72_2_ctrl-rnaseq	3_72	3	72	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26536620
-P_F14R_3_72_3	ERR14687906	SAMEA117791011	sam_P_F14R_3_72_3_ctrl-rnaseq	3_72	3	72	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26679202
-P_F14R_5_0_1	ERR14693746	SAMEA117792163	sam_P_F14R_5_0_1_nut-rnaseq	5_0	5	0	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	24477543
-P_F14R_5_0_2	ERR14693747	SAMEA117792164	sam_P_F14R_5_0_2_nut-rnaseq	5_0	5	0	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	29253044
-P_F14R_5_0_3	ERR14693748	SAMEA117792165	sam_P_F14R_5_0_3_nut-rnaseq	5_0	5	0	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23980115
-P_F14R_5_3_1	ERR14693749	SAMEA117792166	sam_P_F14R_5_3_1_nut-rnaseq	5_3	5	3	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27161432
-P_F14R_5_3_2	ERR14693750	SAMEA117792167	sam_P_F14R_5_3_2_nut-rnaseq	5_3	5	3	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28348348
-P_F14R_5_3_3	ERR14693751	SAMEA117792168	sam_P_F14R_5_3_3_nut-rnaseq	5_3	5	3	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27897946
-P_F14R_5_6_1	ERR14693752	SAMEA117792169	sam_P_F14R_5_6_1_nut-rnaseq	5_6	5	6	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23273873
-P_F14R_5_6_2	ERR14693753	SAMEA117792170	sam_P_F14R_5_6_2_nut-rnaseq	5_6	5	6	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	34188541
-P_F14R_5_12_1	ERR14693755	SAMEA117792172	sam_P_F14R_5_12_1_nut-rnaseq	5_12	5	12	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	29669418
-P_F14R_5_12_2	ERR14693756	SAMEA117792173	sam_P_F14R_5_12_2_nut-rnaseq	5_12	5	12	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	29533058
-P_F14R_5_12_3	ERR14693757	SAMEA117792174	sam_P_F14R_5_12_3_nut-rnaseq	5_12	5	12	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27850827
-P_F14R_5_24_1	ERR14693758	SAMEA117792175	sam_P_F14R_5_24_1_nut-rnaseq	5_24	5	24	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27003826
-P_F14R_5_24_2	ERR14693759	SAMEA117792176	sam_P_F14R_5_24_2_nut-rnaseq	5_24	5	24	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25742855
-P_F14R_5_24_3	ERR14693760	SAMEA117792177	sam_P_F14R_5_24_3_nut-rnaseq	5_24	5	24	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25667930
-P_F14R_5_48_1	ERR14693761	SAMEA117792178	sam_P_F14R_5_48_1_nut-rnaseq	5_48	5	48	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23477039
-P_F14R_5_48_2	ERR14693762	SAMEA117792179	sam_P_F14R_5_48_2_nut-rnaseq	5_48	5	48	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23347968
-P_F14R_5_48_3	ERR14693763	SAMEA117792180	sam_P_F14R_5_48_3_nut-rnaseq	5_48	5	48	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	22715766
-P_F14R_5_72_1	ERR14693764	SAMEA117792181	sam_P_F14R_5_72_1_nut-rnaseq	5_72	5	72	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	24381705
-P_F14R_5_72_2	ERR14693787	SAMEA117792182	sam_P_F14R_5_72_2_nut-rnaseq	5_72	5	72	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26561630
-P_F14R_5_72_3	ERR14693765	SAMEA117792183	sam_P_F14R_5_72_3_nut-rnaseq	5_72	5	72	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26892324
+sample_id	run_accession	sample_accession	sample_alias	condition	diet_code	hpc	family	replicate	isolate	age	tissue_type	experimental_factor	library_layout	instrument_model	read_count	diet	tank	tank_hpc
+P_F11N_3_0_1	ERR14687865	SAMEA117790970	sam_P_F11N_3_0_1_ctrl-rnaseq	3_0	3	0	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28916100	fed	fed_t1	fed_t1_0hpc
+P_F11N_3_0_2	ERR14687866	SAMEA117790971	sam_P_F11N_3_0_2_ctrl-rnaseq	3_0	3	0	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	22791480	fed	fed_t2	fed_t2_0hpc
+P_F11N_3_0_3	ERR14687867	SAMEA117790972	sam_P_F11N_3_0_3_ctrl-rnaseq	3_0	3	0	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25475714	fed	fed_t3	fed_t3_0hpc
+P_F11N_3_3_1	ERR14687868	SAMEA117790973	sam_P_F11N_3_3_1_ctrl-rnaseq	3_3	3	3	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27712506	fed	fed_t1	fed_t1_3hpc
+P_F11N_3_3_2	ERR14687869	SAMEA117790974	sam_P_F11N_3_3_2_ctrl-rnaseq	3_3	3	3	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	29253886	fed	fed_t2	fed_t2_3hpc
+P_F11N_3_3_3	ERR14687870	SAMEA117790975	sam_P_F11N_3_3_3_ctrl-rnaseq	3_3	3	3	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28779372	fed	fed_t3	fed_t3_3hpc
+P_F11N_3_6_1	ERR14687871	SAMEA117790976	sam_P_F11N_3_6_1_ctrl-rnaseq	3_6	3	6	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	23243989	fed	fed_t1	fed_t1_6hpc
+P_F11N_3_6_2	ERR14687872	SAMEA117790977	sam_P_F11N_3_6_2_ctrl-rnaseq	3_6	3	6	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24489260	fed	fed_t2	fed_t2_6hpc
+P_F11N_3_6_3	ERR14687873	SAMEA117790978	sam_P_F11N_3_6_3_ctrl-rnaseq	3_6	3	6	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24992904	fed	fed_t3	fed_t3_6hpc
+P_F11N_3_12_1	ERR14687874	SAMEA117790979	sam_P_F11N_3_12_1_ctrl-rnaseq	3_12	3	12	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	29274612	fed	fed_t1	fed_t1_12hpc
+P_F11N_3_12_2	ERR14687875	SAMEA117790980	sam_P_F11N_3_12_2_ctrl-rnaseq	3_12	3	12	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	29199936	fed	fed_t2	fed_t2_12hpc
+P_F11N_3_12_3	ERR14687876	SAMEA117790981	sam_P_F11N_3_12_3_ctrl-rnaseq	3_12	3	12	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	34833755	fed	fed_t3	fed_t3_12hpc
+P_F11N_3_24_1	ERR14687877	SAMEA117790982	sam_P_F11N_3_24_1_ctrl-rnaseq	3_24	3	24	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27163370	fed	fed_t1	fed_t1_24hpc
+P_F11N_3_24_2	ERR14687878	SAMEA117790983	sam_P_F11N_3_24_2_ctrl-rnaseq	3_24	3	24	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27950659	fed	fed_t2	fed_t2_24hpc
+P_F11N_3_24_3	ERR14687879	SAMEA117790984	sam_P_F11N_3_24_3_ctrl-rnaseq	3_24	3	24	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	31309888	fed	fed_t3	fed_t3_24hpc
+P_F11N_3_48_1	ERR14687880	SAMEA117790985	sam_P_F11N_3_48_1_ctrl-rnaseq	3_48	3	48	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27653227	fed	fed_t1	fed_t1_48hpc
+P_F11N_3_48_2	ERR14687881	SAMEA117790986	sam_P_F11N_3_48_2_ctrl-rnaseq	3_48	3	48	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25753672	fed	fed_t2	fed_t2_48hpc
+P_F11N_3_48_3	ERR14687882	SAMEA117790987	sam_P_F11N_3_48_3_ctrl-rnaseq	3_48	3	48	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28206023	fed	fed_t3	fed_t3_48hpc
+P_F11N_3_72_1	ERR14687883	SAMEA117790988	sam_P_F11N_3_72_1_ctrl-rnaseq	3_72	3	72	F11N	1	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26429784	fed	fed_t1	fed_t1_72hpc
+P_F11N_3_72_2	ERR14687884	SAMEA117790989	sam_P_F11N_3_72_2_ctrl-rnaseq	3_72	3	72	F11N	2	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28865566	fed	fed_t2	fed_t2_72hpc
+P_F11N_3_72_3	ERR14687885	SAMEA117790990	sam_P_F11N_3_72_3_ctrl-rnaseq	3_72	3	72	F11N	3	Family F11N	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	32750130	fed	fed_t3	fed_t3_72hpc
+P_F11N_5_0_1	ERR14693766	SAMEA117792184	sam_P_F11N_5_0_1_nut-rnaseq	5_0	5	0	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27533914	starved	starved_t1	starved_t1_0hpc
+P_F11N_5_0_2	ERR14693767	SAMEA117792185	sam_P_F11N_5_0_2_nut-rnaseq	5_0	5	0	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26210757	starved	starved_t2	starved_t2_0hpc
+P_F11N_5_0_3	ERR14693768	SAMEA117792186	sam_P_F11N_5_0_3_nut-rnaseq	5_0	5	0	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26956692	starved	starved_t3	starved_t3_0hpc
+P_F11N_5_3_1	ERR14693769	SAMEA117792187	sam_P_F11N_5_3_1_nut-rnaseq	5_3	5	3	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25615137	starved	starved_t1	starved_t1_3hpc
+P_F11N_5_3_2	ERR14693770	SAMEA117792188	sam_P_F11N_5_3_2_nut-rnaseq	5_3	5	3	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28074797	starved	starved_t2	starved_t2_3hpc
+P_F11N_5_3_3	ERR14693771	SAMEA117792189	sam_P_F11N_5_3_3_nut-rnaseq	5_3	5	3	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26582672	starved	starved_t3	starved_t3_3hpc
+P_F11N_5_6_1	ERR14693772	SAMEA117792190	sam_P_F11N_5_6_1_nut-rnaseq	5_6	5	6	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28709535	starved	starved_t1	starved_t1_6hpc
+P_F11N_5_6_2	ERR14693773	SAMEA117792191	sam_P_F11N_5_6_2_nut-rnaseq	5_6	5	6	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28452261	starved	starved_t2	starved_t2_6hpc
+P_F11N_5_6_3	ERR14693774	SAMEA117792192	sam_P_F11N_5_6_3_nut-rnaseq	5_6	5	6	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23397170	starved	starved_t3	starved_t3_6hpc
+P_F11N_5_12_1	ERR14693775	SAMEA117792193	sam_P_F11N_5_12_1_nut-rnaseq	5_12	5	12	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27926583	starved	starved_t1	starved_t1_12hpc
+P_F11N_5_12_2	ERR14693776	SAMEA117792194	sam_P_F11N_5_12_2_nut-rnaseq	5_12	5	12	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26831266	starved	starved_t2	starved_t2_12hpc
+P_F11N_5_12_3	ERR14693777	SAMEA117792195	sam_P_F11N_5_12_3_nut-rnaseq	5_12	5	12	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27622369	starved	starved_t3	starved_t3_12hpc
+P_F11N_5_24_1	ERR14693778	SAMEA117792196	sam_P_F11N_5_24_1_nut-rnaseq	5_24	5	24	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26542437	starved	starved_t1	starved_t1_24hpc
+P_F11N_5_24_2	ERR14693779	SAMEA117792197	sam_P_F11N_5_24_2_nut-rnaseq	5_24	5	24	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	32214824	starved	starved_t2	starved_t2_24hpc
+P_F11N_5_24_3	ERR14693780	SAMEA117792198	sam_P_F11N_5_24_3_nut-rnaseq	5_24	5	24	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	36036056	starved	starved_t3	starved_t3_24hpc
+P_F11N_5_48_1	ERR14693781	SAMEA117792199	sam_P_F11N_5_48_1_nut-rnaseq	5_48	5	48	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25206546	starved	starved_t1	starved_t1_48hpc
+P_F11N_5_48_2	ERR14693782	SAMEA117792200	sam_P_F11N_5_48_2_nut-rnaseq	5_48	5	48	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25873585	starved	starved_t2	starved_t2_48hpc
+P_F11N_5_48_3	ERR14693783	SAMEA117792201	sam_P_F11N_5_48_3_nut-rnaseq	5_48	5	48	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26206559	starved	starved_t3	starved_t3_48hpc
+P_F11N_5_72_1	ERR14693784	SAMEA117792202	sam_P_F11N_5_72_1_nut-rnaseq	5_72	5	72	F11N	1	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25023125	starved	starved_t1	starved_t1_72hpc
+P_F11N_5_72_2	ERR14693785	SAMEA117792203	sam_P_F11N_5_72_2_nut-rnaseq	5_72	5	72	F11N	2	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	30158564	starved	starved_t2	starved_t2_72hpc
+P_F11N_5_72_3	ERR14693786	SAMEA117792204	sam_P_F11N_5_72_3_nut-rnaseq	5_72	5	72	F11N	3	Family F11N	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	32185730	starved	starved_t3	starved_t3_72hpc
+P_F14R_3_0_1	ERR14687898	SAMEA117791003	sam_P_F14R_3_0_1_ctrl-rnaseq	3_0	3	0	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27523287	fed	fed_t1	fed_t1_0hpc
+P_F14R_3_0_2	ERR14687902	SAMEA117791007	sam_P_F14R_3_0_2_ctrl-rnaseq	3_0	3	0	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28169408	fed	fed_t2	fed_t2_0hpc
+P_F14R_3_0_3	ERR14687903	SAMEA117791008	sam_P_F14R_3_0_3_ctrl-rnaseq	3_0	3	0	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27193553	fed	fed_t3	fed_t3_0hpc
+P_F14R_3_3_1	ERR14687886	SAMEA117790991	sam_P_F14R_3_3_1_ctrl-rnaseq	3_3	3	3	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	22690643	fed	fed_t1	fed_t1_3hpc
+P_F14R_3_3_2	ERR14687887	SAMEA117790992	sam_P_F14R_3_3_2_ctrl-rnaseq	3_3	3	3	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25586541	fed	fed_t2	fed_t2_3hpc
+P_F14R_3_3_3	ERR14687888	SAMEA117790993	sam_P_F14R_3_3_3_ctrl-rnaseq	3_3	3	3	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24258355	fed	fed_t3	fed_t3_3hpc
+P_F14R_3_6_1	ERR14687889	SAMEA117790994	sam_P_F14R_3_6_1_ctrl-rnaseq	3_6	3	6	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28347575	fed	fed_t1	fed_t1_6hpc
+P_F14R_3_6_2	ERR14687890	SAMEA117790995	sam_P_F14R_3_6_2_ctrl-rnaseq	3_6	3	6	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27341894	fed	fed_t2	fed_t2_6hpc
+P_F14R_3_6_3	ERR14687891	SAMEA117790996	sam_P_F14R_3_6_3_ctrl-rnaseq	3_6	3	6	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	22786869	fed	fed_t3	fed_t3_6hpc
+P_F14R_3_12_1	ERR14687892	SAMEA117790997	sam_P_F14R_3_12_1_ctrl-rnaseq	3_12	3	12	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27574339	fed	fed_t1	fed_t1_12hpc
+P_F14R_3_12_2	ERR14687893	SAMEA117790998	sam_P_F14R_3_12_2_ctrl-rnaseq	3_12	3	12	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28424012	fed	fed_t2	fed_t2_12hpc
+P_F14R_3_12_3	ERR14687894	SAMEA117790999	sam_P_F14R_3_12_3_ctrl-rnaseq	3_12	3	12	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26490618	fed	fed_t3	fed_t3_12hpc
+P_F14R_3_24_1	ERR14687895	SAMEA117791000	sam_P_F14R_3_24_1_ctrl-rnaseq	3_24	3	24	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26830087	fed	fed_t1	fed_t1_24hpc
+P_F14R_3_24_2	ERR14687896	SAMEA117791001	sam_P_F14R_3_24_2_ctrl-rnaseq	3_24	3	24	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	27547896	fed	fed_t2	fed_t2_24hpc
+P_F14R_3_24_3	ERR14687897	SAMEA117791002	sam_P_F14R_3_24_3_ctrl-rnaseq	3_24	3	24	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	32234171	fed	fed_t3	fed_t3_24hpc
+P_F14R_3_48_1	ERR14687899	SAMEA117791004	sam_P_F14R_3_48_1_ctrl-rnaseq	3_48	3	48	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26043105	fed	fed_t1	fed_t1_48hpc
+P_F14R_3_48_2	ERR14687900	SAMEA117791005	sam_P_F14R_3_48_2_ctrl-rnaseq	3_48	3	48	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	24265711	fed	fed_t2	fed_t2_48hpc
+P_F14R_3_48_3	ERR14687901	SAMEA117791006	sam_P_F14R_3_48_3_ctrl-rnaseq	3_48	3	48	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	25494263	fed	fed_t3	fed_t3_48hpc
+P_F14R_3_72_1	ERR14687904	SAMEA117791009	sam_P_F14R_3_72_1_ctrl-rnaseq	3_72	3	72	F14R	1	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	28263350	fed	fed_t1	fed_t1_72hpc
+P_F14R_3_72_2	ERR14687905	SAMEA117791010	sam_P_F14R_3_72_2_ctrl-rnaseq	3_72	3	72	F14R	2	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26536620	fed	fed_t2	fed_t2_72hpc
+P_F14R_3_72_3	ERR14687906	SAMEA117791011	sam_P_F14R_3_72_3_ctrl-rnaseq	3_72	3	72	F14R	3	Family F14R	3 months	whole organism	control,time series design	SINGLE	NextSeq 550	26679202	fed	fed_t3	fed_t3_72hpc
+P_F14R_5_0_1	ERR14693746	SAMEA117792163	sam_P_F14R_5_0_1_nut-rnaseq	5_0	5	0	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	24477543	starved	starved_t1	starved_t1_0hpc
+P_F14R_5_0_2	ERR14693747	SAMEA117792164	sam_P_F14R_5_0_2_nut-rnaseq	5_0	5	0	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	29253044	starved	starved_t2	starved_t2_0hpc
+P_F14R_5_0_3	ERR14693748	SAMEA117792165	sam_P_F14R_5_0_3_nut-rnaseq	5_0	5	0	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23980115	starved	starved_t3	starved_t3_0hpc
+P_F14R_5_3_1	ERR14693749	SAMEA117792166	sam_P_F14R_5_3_1_nut-rnaseq	5_3	5	3	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27161432	starved	starved_t1	starved_t1_3hpc
+P_F14R_5_3_2	ERR14693750	SAMEA117792167	sam_P_F14R_5_3_2_nut-rnaseq	5_3	5	3	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	28348348	starved	starved_t2	starved_t2_3hpc
+P_F14R_5_3_3	ERR14693751	SAMEA117792168	sam_P_F14R_5_3_3_nut-rnaseq	5_3	5	3	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27897946	starved	starved_t3	starved_t3_3hpc
+P_F14R_5_6_1	ERR14693752	SAMEA117792169	sam_P_F14R_5_6_1_nut-rnaseq	5_6	5	6	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23273873	starved	starved_t1	starved_t1_6hpc
+P_F14R_5_6_2	ERR14693753	SAMEA117792170	sam_P_F14R_5_6_2_nut-rnaseq	5_6	5	6	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	34188541	starved	starved_t2	starved_t2_6hpc
+P_F14R_5_12_1	ERR14693755	SAMEA117792172	sam_P_F14R_5_12_1_nut-rnaseq	5_12	5	12	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	29669418	starved	starved_t1	starved_t1_12hpc
+P_F14R_5_12_2	ERR14693756	SAMEA117792173	sam_P_F14R_5_12_2_nut-rnaseq	5_12	5	12	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	29533058	starved	starved_t2	starved_t2_12hpc
+P_F14R_5_12_3	ERR14693757	SAMEA117792174	sam_P_F14R_5_12_3_nut-rnaseq	5_12	5	12	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27850827	starved	starved_t3	starved_t3_12hpc
+P_F14R_5_24_1	ERR14693758	SAMEA117792175	sam_P_F14R_5_24_1_nut-rnaseq	5_24	5	24	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	27003826	starved	starved_t1	starved_t1_24hpc
+P_F14R_5_24_2	ERR14693759	SAMEA117792176	sam_P_F14R_5_24_2_nut-rnaseq	5_24	5	24	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25742855	starved	starved_t2	starved_t2_24hpc
+P_F14R_5_24_3	ERR14693760	SAMEA117792177	sam_P_F14R_5_24_3_nut-rnaseq	5_24	5	24	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	25667930	starved	starved_t3	starved_t3_24hpc
+P_F14R_5_48_1	ERR14693761	SAMEA117792178	sam_P_F14R_5_48_1_nut-rnaseq	5_48	5	48	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23477039	starved	starved_t1	starved_t1_48hpc
+P_F14R_5_48_2	ERR14693762	SAMEA117792179	sam_P_F14R_5_48_2_nut-rnaseq	5_48	5	48	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	23347968	starved	starved_t2	starved_t2_48hpc
+P_F14R_5_48_3	ERR14693763	SAMEA117792180	sam_P_F14R_5_48_3_nut-rnaseq	5_48	5	48	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	22715766	starved	starved_t3	starved_t3_48hpc
+P_F14R_5_72_1	ERR14693764	SAMEA117792181	sam_P_F14R_5_72_1_nut-rnaseq	5_72	5	72	F14R	1	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	24381705	starved	starved_t1	starved_t1_72hpc
+P_F14R_5_72_2	ERR14693787	SAMEA117792182	sam_P_F14R_5_72_2_nut-rnaseq	5_72	5	72	F14R	2	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26561630	starved	starved_t2	starved_t2_72hpc
+P_F14R_5_72_3	ERR14693765	SAMEA117792183	sam_P_F14R_5_72_3_nut-rnaseq	5_72	5	72	F14R	3	Family F14R	3 months	whole organism	starvation,time series design	SINGLE	NextSeq 550	26892324	starved	starved_t3	starved_t3_72hpc
