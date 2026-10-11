@@ -68,8 +68,12 @@ process BISMARK_ALIGN {
         -2 ${read2} \\
         --bowtie2 \\
         --multicore ${Math.max((task.cpus / 3) as int, 1)} \\
-        --basename ${sample_id}_bismark_bt2 \\
         -o .
+
+    # Bismark 0.24 refuses --basename together with --multicore, so outputs
+    # are named after read 1; rename them to the names declared above.
+    mv *_bismark_bt2_pe.bam ${sample_id}_bismark_bt2_pe.bam
+    mv *_bismark_bt2_PE_report.txt ${sample_id}_bismark_bt2_PE_report.txt
 
     cat <<-END_VERSIONS > versions.yml
     ${task.process}:
