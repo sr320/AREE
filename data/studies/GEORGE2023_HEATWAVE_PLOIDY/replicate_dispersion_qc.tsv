@@ -1,0 +1,7 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+diploid_control	11	D55,D56,D57,D58,D59,M45,M46,M48,M49,M89,M90	444	0.03181	True
+diploid_multiple_stressor	10	N48,N49,N50,N51,N52,N53,N55,N57,N58,N59	442	0.05232	True
+diploid_single_stressor	11	M41,M42,M44,M47,N41,N42,N43,N44,N45,N46,N47	450	0.0276	True
+triploid_control	11	T55,T56,T57,T58,T59,T60,T61,X45,X46,X47,X48	463	0.03451	True
+triploid_multiple_stressor	11	R51,R52,R54,R55,R56,R57,R58,R59,R60,R61,R62	451	0.04382	True
+triploid_single_stressor	10	R41,R42,R43,R46,R47,R48,R50,R78,X41,X43	477	0.04447	True

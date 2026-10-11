@@ -46,8 +46,24 @@ data_availability:
   status: "available"
   access_notes: "Raw single-end FASTQ for all 72 runs are public in ENA/SRA under PRJNA913164 (first public 2022-12-20). The authors' count tables and DESeq2 outputs are in github.com/mattgeorgephd/NOPP-gigas-ploidy-temp (202107_EXP2/tag-seq), against an older annotation; AREE reanalyzes from raw reads. The BioSamples carry no treatment or ploidy attribute: both come from the authors' NCBI submission sheet, committed here as authors_ncbi_attributes.tsv (pinned to commit 24e7abd) and joined by isolate (design.tsv). Sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+# QC PASSED WITH WARNINGS, 2026-10-11 (full-depth run, all 72 libraries).
+# - Replicates are real: median within-group dispersion 0.028-0.052 in all
+#   six retained groups (data/studies/GEORGE2023_HEATWAVE_PLOIDY/
+#   replicate_dispersion_qc.tsv), the same range as CALLA2026_OSHV and
+#   LUTIER2022_OA_TIPPING, against 0.001 for the two pseudo-replicated IOCAS
+#   studies.
+# - Agrees with the authors: of their published within-ploidy DEG lists
+#   (DEG_lists/*-sig-genes-apeglm-pval-only.csv, padj < 0.05, matched by
+#   GeneID), 88.4% (diploid 30 C), 96.4% (triploid 30 C), 96.9% (diploid
+#   30 C + 44 C) and 97.2% (triploid 30 C + 44 C) change in the same direction
+#   here, and 99.3-99.8% of those also significant here.
+# - Warnings: Salmon mapping to the annotated transcriptome is 20.8-50.1%
+#   (median 38.4%), normal for 3' tags (UTR reads past annotated ends) but low
+#   by full-length standards; and the effect sizes are on a 3' count scale.
+#   Salmon auto-detected one library (X42) as unstranded against SF for the
+#   other 71; X42 is one of the authors' exclusions and enters no comparison.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # Comparisons: each stressor against the ploidy-matched 20 C control, within
@@ -108,7 +124,7 @@ comparisons:
       - sample_id: "M43"
         reason: "Excluded by the authors as an outlier (PCA biplot); AREE follows the authors' prespecified exclusions."
         evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
-    results_file: null
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_diploid_30c_vs_control_20c_dge_standardized.tsv"
 
   - comparison_id: "triploid_30c_vs_control_20c"
     tissue: "gill"
@@ -136,7 +152,7 @@ comparisons:
       - sample_id: "X42"
         reason: "Excluded by the authors as an outlier (PCA biplot); AREE follows the authors' prespecified exclusions."
         evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
-    results_file: null
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_triploid_30c_vs_control_20c_dge_standardized.tsv"
 
   - comparison_id: "diploid_30c_44c_emersion_vs_control_20c"
     tissue: "gill"
@@ -164,7 +180,7 @@ comparisons:
       - sample_id: "N54"
         reason: "Excluded by the authors as an outlier (PCA biplot); AREE follows the authors' prespecified exclusions."
         evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
-    results_file: null
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_diploid_30c_44c_emersion_vs_control_20c_dge_standardized.tsv"
 
   - comparison_id: "triploid_30c_44c_emersion_vs_control_20c"
     tissue: "gill"
@@ -189,11 +205,12 @@ comparisons:
       - sample_id: "R53"
         reason: "Excluded by the authors as an outlier (PCA biplot and heatmap); AREE follows the authors' prespecified exclusions."
         evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
-    results_file: null
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_triploid_30c_44c_emersion_vs_control_20c_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
   - single_timepoint
+  - ambiguous_phenotype_definition   # survival measured per ploidy x treatment group, not per sequenced oyster
 
 limitations: >
   (1) The design (treatment, ploidy) is not in the deposited BioSamples; it
@@ -235,6 +252,24 @@ provenance:
     earlier, independent reanalysis of this BioProject in the sister
     repository sr320/AREE-co (2026-10-03) found within-group dispersion of
     0.03-0.14 on its Salmon quantifications, i.e. real biological replicates.
+    Runs (2026-10-11, Nextflow 26.04.7, native -profile local,workstation on
+    a 16 GB / 8-core Mac, work dir on an HFS+ external drive, with
+    --single_end --tag_seq): all 72 FASTQ verified against ENA MD5s (18 needed
+    re-download); first comparison 222/222 tasks, the other three reuse its
+    Salmon quantifications (-resume). DE at padj < 0.05: diploid 30 C 3,081
+    of 25,329 genes; triploid 30 C 2,254 of 24,898; diploid 30 C + 44 C 1,688
+    of 25,058; triploid 30 C + 44 C 1,614 of 24,956. Fold changes correlate
+    r = 0.24 (30 C) and 0.22 (30 C + 44 C) between ploidies across all genes,
+    the ploidy-specific response the paper reports. Harmonized 2026-10-11:
+    100,241 evidence records, identifier mapping 100% exact (quantified
+    against the crosswalk's own annotation). A first attempt at the three
+    non-primary comparisons was discarded unharmonized: the config then set
+    params.rnaseq.comparison_id, which overrides --comparison_id, so all four
+    runs wrote under the primary's name; the manifest's recorded arms showed
+    it. Fixed by leaving rnaseq.comparison_id null. The workflow manifest's
+    software_versions block reports container pins, not the Homebrew tools
+    this native run used (Salmon 2.3.4, fastp 1.3.6, MultiQC 1.9); see
+    process_versions.yml.
   source_links:
     - "https://doi.org/10.1111/gcb.16880"
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA913164"

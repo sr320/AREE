@@ -132,3 +132,38 @@ def test_fastq_manifest_covers_every_run_single_end(samplesheet):
     assert {r["run_accession"] for r in manifest} == {r["run_accession"] for r in samplesheet}
     assert len(manifest) == 72
     assert all(len(r["md5"]) == 32 for r in manifest)
+
+
+def test_replicates_pass_dispersion_qc():
+    rows = _tsv(STUDY_DIR / "replicate_dispersion_qc.tsv")
+    assert len(rows) == 6
+    assert all(r["passes"] == "True" for r in rows)
+    assert all(0.02 < float(r["median_dispersion"]) < 0.1 for r in rows)
+    # The QC was run on the retained libraries only.
+    assert not AUTHORS_EXCLUDED & {s for r in rows for s in r["samples"].split(",")}
+
+
+def test_each_comparison_was_run_as_registered(study):
+    """The manifest's recorded arms must match the comparison it is filed
+    under: a config once relabelled every override run as the primary."""
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        params = json.loads((STUDY_DIR / f"GEORGE2023_HEATWAVE_PLOIDY_{cid}_workflow_manifest.json").read_text())["parameters"]
+        ploidy = cid.split("_")[0]
+        treatment = "multiple_stressor" if "emersion" in cid else "single_stressor"
+        assert params["comparison_id"] == cid
+        assert params["control_levels"] == [CONTROLS[ploidy]]
+        assert params["treatment_levels"] == [f"{ploidy}_{treatment}"]
+        assert params["single_end"] is True and params["tag_seq"] is True
+        assert set(params["exclude_samples"]) == AUTHORS_EXCLUDED
+        assert (REPO_ROOT / comp["results_file"]).exists()
+        assert (STUDY_DIR / f"GEORGE2023_HEATWAVE_PLOIDY_{cid}_rnaseq_report.html").exists()
+
+
+def test_standardized_tables_carry_standard_errors(study):
+    """Raw reanalysis exists to give poolable evidence: lfcSE and p-values."""
+    for comp in study["comparisons"]:
+        rows = _tsv(REPO_ROOT / comp["results_file"])
+        assert len(rows) > 20000
+        assert all(r["lfcSE"] not in ("", "NA") for r in rows[:1000])
+        assert sum(r["pvalue"] not in ("", "NA") for r in rows) > 0.95 * len(rows)
