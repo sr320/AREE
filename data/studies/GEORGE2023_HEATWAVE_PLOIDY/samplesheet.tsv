@@ -1,0 +1,73 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	ploidy	treatment	isolate	authors_description	tissue	age	collection_date	library_layout	instrument_model	read_count
+M44	SRR22817776	SAMN32287698	M44	diploid_single_stressor	diploid	single_stressor	M44	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4483740
+M43	SRR22817777	SAMN32287697	M43	diploid_single_stressor	diploid	single_stressor	M43	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5817307
+X48	SRR22817778	SAMN32287760	X48	triploid_control	triploid	control	X48	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5122802
+X47	SRR22817779	SAMN32287759	X47	triploid_control	triploid	control	X47	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6890542
+M42	SRR22817780	SAMN32287696	M42	diploid_single_stressor	diploid	single_stressor	M42	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5424520
+X46	SRR22817781	SAMN32287758	X46	triploid_control	triploid	control	X46	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6724226
+X45	SRR22817782	SAMN32287757	X45	triploid_control	triploid	control	X45	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5863494
+X44	SRR22817783	SAMN32287756	X44	triploid_single_stressor	triploid	single_stressor	X44	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	1106928
+X43	SRR22817784	SAMN32287755	X43	triploid_single_stressor	triploid	single_stressor	X43	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5034770
+X42	SRR22817785	SAMN32287754	X42	triploid_single_stressor	triploid	single_stressor	X42	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	3912227
+X41	SRR22817786	SAMN32287753	X41	triploid_single_stressor	triploid	single_stressor	X41	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5714075
+T62	SRR22817787	SAMN32287752	T62	triploid_control	triploid	control	T62	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4365714
+T61	SRR22817788	SAMN32287751	T61	triploid_control	triploid	control	T61	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	7033842
+T60	SRR22817789	SAMN32287750	T60	triploid_control	triploid	control	T60	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5526042
+T59	SRR22817790	SAMN32287749	T59	triploid_control	triploid	control	T59	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4443432
+M41	SRR22817791	SAMN32287695	M41	diploid_single_stressor	diploid	single_stressor	M41	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5715573
+T58	SRR22817792	SAMN32287748	T58	triploid_control	triploid	control	T58	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4432924
+T57	SRR22817793	SAMN32287747	T57	triploid_control	triploid	control	T57	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	7144886
+T56	SRR22817794	SAMN32287746	T56	triploid_control	triploid	control	T56	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5471833
+T55	SRR22817795	SAMN32287745	T55	triploid_control	triploid	control	T55	triploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5574286
+R78	SRR22817796	SAMN32287744	R78	triploid_single_stressor	triploid	single_stressor	R78	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5777941
+R62	SRR22817797	SAMN32287743	R62	triploid_multiple_stressor	triploid	multiple_stressor	R62	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	3061587
+R61	SRR22817798	SAMN32287742	R61	triploid_multiple_stressor	triploid	multiple_stressor	R61	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4499316
+R60	SRR22817799	SAMN32287741	R60	triploid_multiple_stressor	triploid	multiple_stressor	R60	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5164126
+R59	SRR22817800	SAMN32287740	R59	triploid_multiple_stressor	triploid	multiple_stressor	R59	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	3986275
+R58	SRR22817801	SAMN32287739	R58	triploid_multiple_stressor	triploid	multiple_stressor	R58	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5722422
+D59	SRR22817802	SAMN32287694	D59	diploid_control	diploid	control	D59	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5606697
+R57	SRR22817803	SAMN32287738	R57	triploid_multiple_stressor	triploid	multiple_stressor	R57	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5994048
+R56	SRR22817804	SAMN32287737	R56	triploid_multiple_stressor	triploid	multiple_stressor	R56	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5317538
+R55	SRR22817805	SAMN32287736	R55	triploid_multiple_stressor	triploid	multiple_stressor	R55	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5585971
+R54	SRR22817806	SAMN32287735	R54	triploid_multiple_stressor	triploid	multiple_stressor	R54	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6201192
+R53	SRR22817807	SAMN32287734	R53	triploid_multiple_stressor	triploid	multiple_stressor	R53	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5654729
+R52	SRR22817808	SAMN32287733	R52	triploid_multiple_stressor	triploid	multiple_stressor	R52	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4829830
+R51	SRR22817809	SAMN32287732	R51	triploid_multiple_stressor	triploid	multiple_stressor	R51	triploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5723502
+R50	SRR22817810	SAMN32287731	R50	triploid_single_stressor	triploid	single_stressor	R50	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5282710
+R48	SRR22817811	SAMN32287730	R48	triploid_single_stressor	triploid	single_stressor	R48	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5196856
+R47	SRR22817812	SAMN32287729	R47	triploid_single_stressor	triploid	single_stressor	R47	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5026816
+D58	SRR22817813	SAMN32287693	D58	diploid_control	diploid	control	D58	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	8269925
+R46	SRR22817814	SAMN32287728	R46	triploid_single_stressor	triploid	single_stressor	R46	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	7231195
+R43	SRR22817815	SAMN32287727	R43	triploid_single_stressor	triploid	single_stressor	R43	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6082170
+R42	SRR22817816	SAMN32287726	R42	triploid_single_stressor	triploid	single_stressor	R42	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5241561
+R41	SRR22817817	SAMN32287725	R41	triploid_single_stressor	triploid	single_stressor	R41	triploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6762351
+N59	SRR22817818	SAMN32287724	N59	diploid_multiple_stressor	diploid	multiple_stressor	N59	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5902525
+N58	SRR22817819	SAMN32287723	N58	diploid_multiple_stressor	diploid	multiple_stressor	N58	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5671465
+N57	SRR22817820	SAMN32287722	N57	diploid_multiple_stressor	diploid	multiple_stressor	N57	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6030447
+N56	SRR22817821	SAMN32287721	N56	diploid_multiple_stressor	diploid	multiple_stressor	N56	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	915138
+N55	SRR22817822	SAMN32287720	N55	diploid_multiple_stressor	diploid	multiple_stressor	N55	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4233556
+N54	SRR22817823	SAMN32287719	N54	diploid_multiple_stressor	diploid	multiple_stressor	N54	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6583940
+D57	SRR22817824	SAMN32287692	D57	diploid_control	diploid	control	D57	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5605571
+N53	SRR22817825	SAMN32287718	N53	diploid_multiple_stressor	diploid	multiple_stressor	N53	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5839603
+N52	SRR22817826	SAMN32287717	N52	diploid_multiple_stressor	diploid	multiple_stressor	N52	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	7533767
+N51	SRR22817827	SAMN32287716	N51	diploid_multiple_stressor	diploid	multiple_stressor	N51	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5294905
+N50	SRR22817828	SAMN32287715	N50	diploid_multiple_stressor	diploid	multiple_stressor	N50	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6187885
+N49	SRR22817829	SAMN32287714	N49	diploid_multiple_stressor	diploid	multiple_stressor	N49	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4970990
+N48	SRR22817830	SAMN32287713	N48	diploid_multiple_stressor	diploid	multiple_stressor	N48	diploid, multiple stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4458921
+N47	SRR22817831	SAMN32287712	N47	diploid_single_stressor	diploid	single_stressor	N47	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5426447
+N46	SRR22817832	SAMN32287711	N46	diploid_single_stressor	diploid	single_stressor	N46	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5755855
+N45	SRR22817833	SAMN32287710	N45	diploid_single_stressor	diploid	single_stressor	N45	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5934147
+N44	SRR22817834	SAMN32287709	N44	diploid_single_stressor	diploid	single_stressor	N44	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5541136
+D56	SRR22817835	SAMN32287691	D56	diploid_control	diploid	control	D56	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6294000
+N43	SRR22817836	SAMN32287708	N43	diploid_single_stressor	diploid	single_stressor	N43	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6287403
+N42	SRR22817837	SAMN32287707	N42	diploid_single_stressor	diploid	single_stressor	N42	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5313491
+N41	SRR22817838	SAMN32287706	N41	diploid_single_stressor	diploid	single_stressor	N41	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5413846
+M90	SRR22817839	SAMN32287705	M90	diploid_control	diploid	control	M90	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4802612
+M89	SRR22817840	SAMN32287704	M89	diploid_control	diploid	control	M89	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6968842
+M49	SRR22817841	SAMN32287703	M49	diploid_control	diploid	control	M49	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6928030
+M48	SRR22817842	SAMN32287702	M48	diploid_control	diploid	control	M48	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5159846
+M47	SRR22817843	SAMN32287701	M47	diploid_single_stressor	diploid	single_stressor	M47	diploid, single stressor	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6180136
+M46	SRR22817844	SAMN32287700	M46	diploid_control	diploid	control	M46	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5620183
+M45	SRR22817845	SAMN32287699	M45	diploid_control	diploid	control	M45	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	5773701
+D55	SRR22817846	SAMN32287690	D55	diploid_control	diploid	control	D55	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	6252618
+D54	SRR22817847	SAMN32287689	D54	diploid_control	diploid	control	D54	diploid, control	ctenidium	2 years	2021-07-12	SINGLE	Illumina NovaSeq 6000	4634061
