@@ -60,10 +60,12 @@ process VIRAL_QUANT {
 
     script:
     // Every read pair is used (no subsampling), so the fraction is not biased
-    // by the flowcell position of the first reads in the file.
+    // by the flowcell position of the first reads in the file. With
+    // --single_end, "pairs" in the output columns are single reads.
+    def reads_opt = params.single_end ? "-r ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
     """
     salmon quant -i ${viral_index} -l A \\
-        -1 ${reads[0]} -2 ${reads[1]} \\
+        ${reads_opt} \\
         -p ${task.cpus} -o viral_quant
 
     processed=\$(sed -n 's/.*"num_processed": *\\([0-9]*\\).*/\\1/p' viral_quant/aux_info/meta_info.json)

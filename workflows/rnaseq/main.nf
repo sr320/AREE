@@ -74,7 +74,9 @@ workflow {
             error "raw_reanalysis mode requires --reads (glob for fromFilePairs), e.g. 'reads/*_R{1,2}.fastq.gz'"
         }
 
-        read_pairs_ch = Channel.fromFilePairs(params.reads, checkIfExists: true)
+        // --single_end: one FASTQ per sample, e.g. 'reads/*.fastq.gz'; the
+        // sample id is the file name up to the first dot.
+        read_pairs_ch = Channel.fromFilePairs(params.reads, size: params.single_end ? 1 : 2, checkIfExists: true)
 
         FASTQC(read_pairs_ch)
         TRIM_FASTP(read_pairs_ch)
@@ -133,6 +135,7 @@ workflow {
             params.treatment_level,
             params.exclude_samples ?: '',
             params.replicate_unit ?: '',
+            params.tag_seq as boolean,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)

@@ -21,6 +21,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     val treatment_level
     val exclude_samples
     val replicate_unit
+    val tag_seq
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
@@ -58,6 +59,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         treatment_level = "${treatment_level}",
         exclude_samples = "${exclude_samples}",
         replicate_unit  = "${replicate_unit}",
+        tag_seq         = ${tag_seq ? 'TRUE' : 'FALSE'},
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
         out_rdata      = "${study_id}_${comparison_id}_deseq2.RData"
     )
@@ -205,11 +207,16 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     tx2gene\$transcript_id <- sub("\\\\..*", "", tx2gene\$transcript_id)
     tx2gene <- unique(tx2gene)
 
+    # 3' tag libraries (QuantSeq-style) give about one read per transcript, so
+    # a gene's count does not scale with transcript length. Their counts are
+    # used as they are, with no tximport length offset or length scaling.
+    if (args\$tag_seq) message("tag_seq: DESeq2 on counts without transcript-length offsets")
+
     if (pseudo_bulk) {
         # Length-scaled counts can be summed across animals; tximport's
         # per-sample length offsets cannot, so they are folded in here.
         txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE,
-                        countsFromAbundance = "lengthScaledTPM")
+                        countsFromAbundance = if (args\$tag_seq) "no" else "lengthScaledTPM")
         unit_counts <- t(rowsum(t(txi\$counts), group = samples\$replicate_unit))
         unit_info <- unique(samples[, c("replicate_unit", "condition")])
         unit_info\$n_libraries <- as.integer(table(samples\$replicate_unit)[unit_info\$replicate_unit])
@@ -222,6 +229,15 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         dds <- DESeqDataSetFromMatrix(
             countData = round(unit_counts),
             colData   = unit_info,
+            design    = ~condition
+        )
+    } else if (args\$tag_seq) {
+        txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
+        rownames(samples) <- samples\$sample_id
+
+        dds <- DESeqDataSetFromMatrix(
+            countData = round(txi\$counts),
+            colData   = samples[colnames(txi\$counts), ],
             design    = ~condition
         )
     } else {
