@@ -29,6 +29,7 @@ process EMIT_MANIFEST {
     val workflow_start_iso
     val extra_warnings
     path viral_summary   // VIRAL_SUMMARY JSON, or assets/NO_VIRAL_QC when viral QC was not run
+    path deseq2_design   // DESeq2 design JSON, or assets/NO_DESEQ2_DESIGN in processed mode
     // Every upstream process's versions.yml (mixed + collected in main.nf),
     // renamed on staging because they all share one file name.
     path process_versions, stageAs: 'process_versions/versions_*.yml'
@@ -78,6 +79,15 @@ process EMIT_MANIFEST {
     control_levels = _levels("${params.control_level ?: ''}")
     treatment_levels = _levels("${params.treatment_level ?: ''}")
     replicate_unit = "${params.replicate_unit ?: ''}".strip() or None
+    covariates = _levels("${params.covariates ?: ''}")
+
+    # The DESeq2 model actually fitted. It can differ from the covariates
+    # requested: a covariate constant within the contrast is dropped.
+    design_path = "${deseq2_design}"
+    deseq2_design = None
+    if design_path != "NO_DESEQ2_DESIGN":
+        with open(design_path) as fh:
+            deseq2_design = json.load(fh)
 
     viral_path = "${viral_summary}"
     viral = None
@@ -94,6 +104,10 @@ process EMIT_MANIFEST {
     # manifest, so it cannot be among the collected files.
     software_versions["EMIT_MANIFEST"] = {"python": platform.python_version()}
     warnings = warnings + collected["warnings"]
+    if deseq2_design and deseq2_design.get("covariates_dropped_constant"):
+        warnings.append(
+            "covariates_dropped_constant: " + ", ".join(deseq2_design["covariates_dropped_constant"])
+            + " had one level in this contrast and were not fitted")
     if excluded_samples:
         warnings.append(
             "samples_excluded_by_curation: " + ", ".join(excluded_samples)
@@ -120,8 +134,11 @@ process EMIT_MANIFEST {
             "control_levels": control_levels,
             "treatment_levels": treatment_levels,
             "replicate_unit": replicate_unit,
+            "covariates": covariates,
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
+        # The DESeq2 design as fitted (null in processed mode).
+        "deseq2_design": deseq2_design,
         # Tools as reported by each process that ran, keyed by process name.
         "software_versions": software_versions,
         "software_versions_not_captured": {

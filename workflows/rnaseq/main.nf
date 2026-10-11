@@ -64,6 +64,7 @@ workflow {
 
     report_template = file("${projectDir}/assets/report_template.qmd")
     no_viral_qc     = file("${projectDir}/assets/NO_VIRAL_QC")
+    no_deseq2_design = file("${projectDir}/assets/NO_DESEQ2_DESIGN")
     collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
@@ -145,12 +146,14 @@ workflow {
             params.treatment_level,
             params.exclude_samples ?: '',
             params.replicate_unit ?: '',
+            params.covariates ?: '',
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)
         )
 
         raw_de_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.results.map { sid, cid, tsv -> tsv }
+        deseq2_design_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.design
         versions_ch = versions_ch.mix(DIFFERENTIAL_EXPRESSION_DESEQ2.out.versions)
         workflow_warnings = []
 
@@ -202,6 +205,7 @@ workflow {
 
         STANDARDIZE_OUTPUT(study_id, comparison_id, processed_ch)
         viral_summary_ch = Channel.value(no_viral_qc)
+        deseq2_design_ch = Channel.value(no_deseq2_design)
         versions_ch = Channel.empty()
     }
 
@@ -222,6 +226,7 @@ workflow {
         workflow_start_iso,
         warnings_json,
         viral_summary_ch,
+        deseq2_design_ch,
         versions_ch.collect(),
         collect_versions_py
     )
