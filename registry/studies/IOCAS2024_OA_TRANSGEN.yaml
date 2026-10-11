@@ -1,6 +1,17 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# Transgenerational ocean acidification in M. gigas larvae: offspring of
+# parents held at pH 7.4 vs pH 8.1. Tier 2 #8 in docs/candidate_studies.md.
+#
+# Registered from deposited metadata only. As of 2026-10-10 no publication
+# citing PRJNA1196326 could be found: Europe PMC full-text search for the
+# accession returned 0 hits, and PubMed topic searches (oyster, transgenerational
+# or parental, acidification, larvae, transcriptome; 2024 onward) returned
+# nothing. Like IOCAS2022_OA_ENERGY, the study_id names the submitting
+# institute and the year of collection/registration because there is no first
+# author. Rename it only if a publication is found.
+#
+# QC: see the `qc_status` note below. The replicate-independence checks were
+# run BEFORE harmonization, as docs/candidate_studies.md requires for every
+# raw_reanalysis study.
 
 study_id: IOCAS2024_OA_TRANSGEN
 simulated: false
@@ -9,54 +20,162 @@ accessions:
   doi: null
   bioproject: "PRJNA1196326"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR31663815-SRR31663820"
+  ena: "PRJNA1196326"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN45420527-SAMN45420532"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Institute of Oceanology, Chinese Academy of Sciences (2024). Transcriptional acclimation following transgenerational exposure of oysters to ocean acidification [RNA-seq dataset]. NCBI BioProject PRJNA1196326, registered 2024-12-10, reads public 2024-12-11. No associated publication identified as of 2026-10-10."
+
+species: "Magallana gigas"
+# BioSample isolation_source: 'Penglai , Yantai , Shandong Province'. Whether
+# the broodstock are wild-caught or hatchery stock is not stated; BioSample
+# isolate calls the control arm 'wild type group', which may mean 'control'
+# rather than 'wild-caught'.
+strain_or_population: "Penglai, Yantai, Shandong, China (BioSample isolation_source); broodstock origin not stated"
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end 2x150 RNA-seq (6 libraries, 17.1-21.8 M read pairs each; 16.4 GB FASTQ reported by ENA)"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 6 runs are public in ENA/SRA under PRJNA1196326 (first public 2024-12-11). No count matrix, DE table, or publication is available. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+# QC FAILED, 2026-10-10: the three libraries per arm are not independent
+# replicates of the treatment. Two independent checks agree:
+#
+# (1) Expression dispersion (scripts/check_replicate_dispersion.py, on this
+#     study's own full-depth run). Median within-group dispersion is 0.00096
+#     (pH 8.1 parents) and 0.00084 (pH 7.4 parents), against 0.03-0.05 for
+#     CALLA2026_OSHV and LUTIER2022_OA_TIPPING's real biological replicates,
+#     and in the same range as IOCAS2022_OA_ENERGY (0.0002-0.0016), the
+#     study from the same institute that failed for the same reason. See
+#     data/studies/IOCAS2024_OA_TRANSGEN/replicate_dispersion_qc.tsv. The
+#     DESeq2 output shows the same symptoms as IOCAS2022: 11,091 of 26,021
+#     genes (42.6%) at padj < 0.05, and a median lfcSE of 0.11 for genes with
+#     baseMean > 100 (0.19 for CALLA2026_OSHV, 0.25 for LUTIER2022_OA_TIPPING),
+#     i.e. 3-5x the inverse-variance weight of a real study per gene.
+#
+# (2) Expressed-SNP genotypes (an earlier screen of this BioProject in the
+#     sister repository sr320/AREE-co, 2026-10-02; 4,106 sites, depth >= 30 in
+#     all 6 libraries). No library shows the 0 / 0.5 / 1 allele-frequency
+#     peaks of a single diploid animal, so each library is a pool of larvae.
+#     Within an arm, libraries differ in allele frequency by 0.061 on average,
+#     barely above the 0.051 expected from read sampling of ONE RNA sample
+#     (r = 0.90). Between arms they differ by 0.235. The three libraries per
+#     arm are therefore genetically the same pool (one RNA sample split, or
+#     subsamples of one larval culture), and the two arms are different sets
+#     of parents.
+#
+# Consequences. The treatment (parental pH) was applied to one parental
+# cohort per arm, so the effective n is 1 vs 1. Any DE result confounds
+# parental pH with parental genotype (the arms are different families) and
+# with culture effects. DESeq2's lfcSE reflects only technical noise, so
+# inverse-variance pooling would let this study swamp every real one. Nothing
+# is harmonized: results_file stays null and no comparison is
+# meta_analysis_primary. The run manifest and report are archived in
+# data/studies/IOCAS2024_OA_TRANSGEN/ as provenance for the decision.
+qc_status: "failed"
+analysis_status: "in_progress"
 
+# ---------------------------------------------------------------------------
+# One comparison: larvae of pH 7.4 parents vs larvae of pH 8.1 parents. Arms
+# come from the sample alias (S74_n / S81_n); BioSample `isolate` agrees
+# ('acidification group n' / 'wild type group n'), and the BioProject
+# description gives the pH values ("ambient (control, pH 8.1) or elevated
+# pCO2 (acidified, pH 7.4)").
+#
+# ON PHENOTYPE CLASSIFICATION. The project title says "transcriptional
+# acclimation", but the deposit holds no organismal measurement: no larval
+# survival, size, shell formation, or development rate. Acclimation is the
+# authors' interpretation of expression, not a measured tolerance phenotype.
+# So the comparison sits on the acidification_tolerance axis but is
+# classified exposure_only, overriding the ontology default; the validator's
+# warning about this override is expected.
+#
+# Unknown, and left null rather than guessed: how long the parents were
+# exposed and at what stage (conditioning before spawning?), the larval
+# rearing pH (were offspring reared at ambient pH, at the parental pH, or
+# both?), larval age at sampling, and pCO2/carbonate chemistry. The deposit
+# says only 'larvae', collected 2024-09-24.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
-    life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
+  - comparison_id: "parental_ph7_4_vs_ph8_1_larvae"
+    tissue: "whole_larva"
+    life_stage: "larva"
+    stressor_original: "Parental exposure to 'elevated pCO2 (acidified, pH 7.4)' vs 'ambient (control, pH 8.1)' (BioProject description); offspring larvae sequenced. Sample alias S74_n / S81_n; BioSample isolate 'acidification group n' / 'wild type group n'"
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "parental pH 7.4 vs 8.1 (pCO2 and carbonate chemistry not stated)"
     exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+    exposure_timing: "parental (transgenerational) exposure; larval rearing pH and larval age at sampling not stated"
+    control_condition: "larvae from parents held at ambient pH 8.1 (S81_1-3, 'wild type group')"
+    treatment_condition: "larvae from parents held at pH 7.4 (S74_1-3, 'acidification group')"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
     results_file: null
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - ambiguous_phenotype_definition
+  - single_timepoint
+  - low_replication   # nominal n=3 libraries per arm, effective n=1: one larval pool per arm, one parental cohort per arm
+
+limitations: >
+  (1) No publication has been identified, so the exposure protocol (duration
+  and timing of parental exposure, larval rearing pH, larval age, pCO2 and
+  carbonate chemistry, temperature) is unknown. (2) No organismal phenotype
+  was deposited; the comparison is exposure_only and cannot support a
+  resilience or acclimation claim. (3) QC FAILED: each arm is one larval pool
+  sequenced as three libraries, and each arm descends from a different set of
+  parents (see the qc_status note). The effective n is 1 vs 1, parental pH is
+  confounded with parental genotype and culture, and no p-value or lfcSE from
+  this study is valid. (4) Library pooling hides individual variation even
+  where it exists; even three independent pools from one cross would not
+  replicate the parental treatment. The study is retained, not deleted, so
+  the reason stays on record and the accession is not curated again.
 
 provenance:
   registered_by: "sr320"
   date_registered: "2026-10-10"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA1196326 --study-id
+    IOCAS2024_OA_TRANSGEN` (draft PR sr320/AREE#17). Sample sheet from live
+    ENA metadata with `aree fetch-samplesheet --label-field sample_alias
+    --label-pattern '^S(?P<parental_ph>74|81)_(?P<replicate>[1-3])$'`
+    (full command in config/IOCAS2024_OA_TRANSGEN.config). The ENA portal API
+    returned HTTP 500 for part of 2026-10-10; the design was cross-checked
+    against NCBI SRA runinfo and BioSample XML in the meantime and agreed run
+    for run. Six distinct sample_alias values, 3 per arm, so the study passed
+    the pre-download replication check; as with IOCAS2022_OA_ENERGY, that
+    check was necessary but not sufficient. The pre-run dispersion and
+    genotype screens used Salmon quantifications made in the sister repository
+    sr320/AREE-co (2026-10-02, decoy-aware index on the same GCF_963853765.1
+    reference, full-depth reads: processed fragments equal SRA spot counts for
+    all 6 runs). Publication search (2026-10-10): Europe PMC for
+    "PRJNA1196326" returned nothing; PubMed topic searches returned nothing.
+    Run (2026-10-10/11, Nextflow 26.04.7 session d1cb25ac-a100-45d6-a416-1b8df7fb84ee,
+    native -profile local,workstation on a 16 GB / 8-core Mac, work dir on an
+    HFS+ external drive): all 12 FASTQ verified against ENA MD5s (two needed
+    re-download after multi-connection corruption); 22/22 tasks plus 2 cached;
+    Salmon mapping 72.7-83.3%, library type ISR for all 6. The run used
+    Homebrew tools, not containers: Salmon 2.3.4, fastp 1.3.6, MultiQC 1.9.
+    The workflow manifest's software_versions block reports the container
+    pins (e.g. salmon 1.10.3) and is wrong for this run; the versions each
+    process actually reported are archived in process_versions.yml.
+    SALMON_INDEX/QUANT memory was lowered to 12 GB in the study config to fit
+    the machine. QC decision (2026-10-11, sr320): keep the registration, mark
+    qc_status failed, do not harmonize or pool. The standardized DE table is
+    deliberately not committed.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1196326"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA1196326"

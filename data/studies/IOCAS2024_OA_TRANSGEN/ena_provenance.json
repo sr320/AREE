@@ -1,0 +1,43 @@
+{
+  "study_id": "IOCAS2024_OA_TRANSGEN",
+  "bioproject": "PRJNA1196326",
+  "date_generated": "2026-10-10",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1196326&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "parental_ph"
+  ],
+  "n_runs": 6,
+  "n_samples": 6,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "74": 3,
+    "81": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 16370876881,
+  "outputs": {
+    "data/studies/IOCAS2024_OA_TRANSGEN/samplesheet.tsv": "ec6d49ba89eb564671799d8b17782bd6c179287dacb30069857bc58bed8e465a",
+    "data/studies/IOCAS2024_OA_TRANSGEN/fastq_manifest.tsv": "41e76c2dd40809a65eb67ffab615d2fcc06fa24535001790164ddd4b829dcdad"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^S(?P<parental_ph>74|81)_(?P<replicate>[1-3])$",
+    "labels": {
+      "SRR31663815": "S81_3",
+      "SRR31663816": "S81_2",
+      "SRR31663817": "S81_1",
+      "SRR31663818": "S74_3",
+      "SRR31663819": "S74_2",
+      "SRR31663820": "S74_1"
+    }
+  }
+}

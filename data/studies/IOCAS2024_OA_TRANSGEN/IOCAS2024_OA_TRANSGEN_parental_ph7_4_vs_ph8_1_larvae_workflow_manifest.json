@@ -1,0 +1,53 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "IOCAS2024_OA_TRANSGEN",
+  "comparison_id": "parental_ph7_4_vs_ph8_1_larvae",
+  "input_files": [
+    {
+      "name": "IOCAS2024_OA_TRANSGEN_parental_ph7_4_vs_ph8_1_larvae_dge_standardized.tsv",
+      "sha256": "1e2d3f2c14a7cc2262e42779d7fcc6e7efad72df4287d1d74479ae22a1f02eac"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "IOCAS2024_OA_TRANSGEN",
+    "comparison_id": "parental_ph7_4_vs_ph8_1_larvae",
+    "outdir": "results/rnaseq/IOCAS2024_OA_TRANSGEN",
+    "exclude_samples": [],
+    "control_levels": [
+      "81"
+    ],
+    "treatment_levels": [
+      "74"
+    ],
+    "replicate_unit": null,
+    "viral_reference": null
+  },
+  "software_versions": {
+    "fastqc": "0.12.1",
+    "fastp": "0.23.4",
+    "salmon": "1.10.3",
+    "star": "2.7.11b",
+    "multiqc": "1.21",
+    "bioconductor_docker": "RELEASE_3_18",
+    "deseq2": "1.42.0",
+    "tximport": "1.30.0",
+    "quarto": "1.5.57",
+    "python": "3.11"
+  },
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-10T23:13:13.910493-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

@@ -1,0 +1,22 @@
+# Tool versions reported by each process of the 2026-10-11 native run (-profile local,workstation,
+# no container; Nextflow 26.04.7, OpenJDK 26). The workflow manifest's software_versions block
+# lists the container pins instead and is wrong for this run (e.g. it says salmon 1.10.3).
+TRIM_FASTP:
+    fastp: 1.3.6   # from `fastp --version` on the run machine; the process wrote no versions.yml
+FASTQC:
+    fastqc: 0.12.1
+SALMON_QUANT:
+    salmon: 2.3.4
+SAMPLE_QC:
+    multiqc: 1.9
+DIFFERENTIAL_EXPRESSION_DESEQ2:
+    r-base: 4.3.2
+    bioconductor-deseq2: 1.42.1
+    bioconductor-tximport: 1.30.0
+STANDARDIZE_OUTPUT:
+    python: 3.9.6
+    pandas: 2.3.3
+RENDER_REPORT:
+    quarto: 1.6.40
+EMIT_MANIFEST:
+    python: 3.9.6
