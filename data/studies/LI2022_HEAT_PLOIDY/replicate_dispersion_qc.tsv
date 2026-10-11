@@ -1,3 +1,4 @@
 condition	n_samples	samples	n_genes	median_dispersion	passes
-d_0	3	A0d_1,A0d_2,A0d_3	5536	0.01384	True
-d_f	3	Afd_1,Afd_2,Afd_3	5446	0.01427	True
+d_0	3	A0d_1,A0d_2,A0d_3	5511	0.01383	True
+d_12	3	A12d_1,A12d_2,A12d_3	6099	0.02247	True
+d_f	3	Afd_1,Afd_2,Afd_3	5421	0.01428	True

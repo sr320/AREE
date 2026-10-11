@@ -21,8 +21,11 @@
 # genes have padj < 0.05 (431 up, 418 down), every one with a real lfcSE.
 # The paper reports 418 DEGs for this contrast from its own pipeline.
 # Replicates pass the dispersion check (median 0.014 in both groups,
-# data/studies/LI2022_HEAT_PLOIDY/replicate_dispersion_qc.tsv). The other
-# three comparisons have not been run, so analysis_status is in_progress.
+# data/studies/LI2022_HEAT_PLOIDY/replicate_dispersion_qc.tsv).
+# Diploid acute 12 h vs baseline, run 2026-10-11: 2,522 of 26,155 genes at
+# padj < 0.05 (1,202 up, 1,320 down); the paper reports 779. d_12 median
+# dispersion 0.022. The two triploid comparisons have not been run, so
+# analysis_status is in_progress.
 
 study_id: LI2022_HEAT_PLOIDY
 simulated: false
@@ -132,7 +135,7 @@ comparisons:
     resilience_classification: "exposure_only"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_diploid_acute_heat_12h_vs_baseline_dge_standardized.tsv"
 
   - comparison_id: "triploid_prolonged_heat_vs_baseline"
     tissue: "gill"
@@ -260,6 +263,19 @@ provenance:
     cohort may simply vary less than whole spat or juveniles; it is noted,
     not treated as a failure. Harmonized locally against the committed
     crosswalk: 25,823 evidence records, all mapping_confidence exact.
+    DIPLOID ACUTE 12 H (Pori, 2026-10-11): all 6 d_12 FASTQ files matched
+    ENA's MD5s (SRR15851232_2 needed a second download after a full-size
+    MD5 mismatch). The first run was correct in content but mislabelled:
+    config/LI2022_HEAT_PLOIDY.config set rnaseq.comparison_id to the
+    primary comparison, and the workflow reads that before --comparison_id,
+    so every output carried the primary's name. Nothing was renamed by
+    hand. The config now leaves rnaseq.comparison_id null and sets the
+    default as a top-level param, the results were deleted, and the run
+    was repeated with -resume (11 tasks run, 12 cached: FastQC, fastp and
+    Salmon). Manifest records control d_0, treatment d_12. The committed
+    primary result is unaffected: its id and levels matched. Salmon mapped
+    81.0-81.4% of read pairs (23.0-24.3 M pairs), unstranded. d_12 median
+    dispersion 0.0225.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA762441"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA762441"
