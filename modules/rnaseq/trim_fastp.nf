@@ -9,10 +9,10 @@ process TRIM_FASTP {
     container 'quay.io/biocontainers/fastp:0.23.4--h5f740d0_0'
     // Trimmed FASTQ are tens of GB per study and are regenerable from the raw
     // reads, so they are only ever symlinked into outdir; `--publish_mode copy`
-    // applies to the small fastp reports alone. Copying them once filled a
-    // workstation disk.
+    // applies to the small fastp reports and versions.yml alone. Copying them
+    // once filled a workstation disk.
     publishDir "${params.outdir}/rnaseq/trimmed", mode: 'symlink', pattern: '*.fastq.gz'
-    publishDir "${params.outdir}/rnaseq/trimmed", mode: params.publish_mode, pattern: '*.fastp.{json,html}'
+    publishDir "${params.outdir}/rnaseq/trimmed", mode: params.publish_mode, pattern: '{*.fastp.json,*.fastp.html,versions.yml}'
 
     input:
     tuple val(sample_id), path(reads)

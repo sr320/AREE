@@ -58,6 +58,7 @@ workflow {
     def comparison_id = params.methylation.comparison_id
     def run_start_iso = workflow.start.toString()
     def report_template = file("${projectDir}/assets/report_template.qmd")
+    def collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
 
@@ -151,6 +152,21 @@ workflow {
 
         warnings_ch = Channel.value([])
 
+        // Each process's versions.yml, merged by EMIT_MANIFEST into the
+        // manifest's software_versions. A process added to this DAG must add
+        // its .out.versions here too (tests/test_workflow_versions.py checks).
+        versions_ch = FASTQC.out.versions
+            .mix(TRIM_GALORE.out.versions)
+            .mix(BISMARK_GENOME_PREPARATION.out.versions)
+            .mix(BISMARK_ALIGN.out.versions)
+            .mix(BISMARK_DEDUPLICATE.out.versions)
+            .mix(BISMARK_METHYLATION_EXTRACTOR.out.versions)
+            .mix(COVERAGE_FILTER.out.versions)
+            .mix(DMR_METHYLKIT.out.versions)
+            .mix(ANNOTATE_REGIONS.out.versions)
+            .mix(STANDARDIZE_OUTPUT.out.versions)
+            .collect()
+
         manifest_ch = EMIT_MANIFEST(
             study_id,
             comparison_id,
@@ -160,7 +176,9 @@ workflow {
             paramsAsJson(),
             warnings_ch,
             workflow.manifest.version ?: '0.1.0-scaffold',
-            run_start_iso
+            run_start_iso,
+            versions_ch,
+            collect_versions_py
         )
 
         RENDER_REPORT(
@@ -196,6 +214,8 @@ workflow {
             'verified by AREE.'
         ])
 
+        versions_ch = STANDARDIZE_OUTPUT.out.versions.collect()
+
         manifest_ch = EMIT_MANIFEST(
             study_id,
             comparison_id,
@@ -205,7 +225,9 @@ workflow {
             paramsAsJson(),
             warnings_ch,
             workflow.manifest.version ?: '0.1.0-scaffold',
-            run_start_iso
+            run_start_iso,
+            versions_ch,
+            collect_versions_py
         )
 
         RENDER_REPORT(

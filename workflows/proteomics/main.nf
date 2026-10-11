@@ -71,6 +71,7 @@ workflow {
     start_time_ch    = Channel.value(workflow.start.toString())
 
     report_template = file("${projectDir}/assets/report_template.qmd")
+    collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
 
@@ -103,6 +104,15 @@ workflow {
 
         manifest_qc_input = MISSINGNESS_REPORT.out.summary_json
 
+        // Each process's versions.yml, merged by EMIT_MANIFEST into the
+        // manifest's software_versions. A process added to this DAG must add
+        // its .out.versions here too (tests/test_workflow_versions.py checks).
+        versions_ch = HARMONIZE_INPUT.out.versions
+            .mix(NORMALIZE.out.versions)
+            .mix(MISSINGNESS_REPORT.out.versions)
+            .mix(DIFFERENTIAL_ABUNDANCE.out.versions)
+            .mix(ID_TRANSLATION.out.versions)
+
     } else if (params.mode == 'processed_results_harmonization') {
 
         processed_results_path = requireParam('proteomics.processed_results', params.proteomics.processed_results)
@@ -128,6 +138,7 @@ workflow {
         )
 
         manifest_qc_input = Channel.value(no_missingness_file)
+        versions_ch = Channel.empty()
 
     } else {
         exit 1, "Unknown params.mode '${params.mode}': expected 'raw_reanalysis' or 'processed_results_harmonization'"
@@ -140,7 +151,9 @@ workflow {
         STANDARDIZE_OUTPUT.out.standardized.map { sid, cid, f -> f },
         manifest_qc_input,
         Channel.value(workflowVersion()),
-        start_time_ch
+        start_time_ch,
+        versions_ch.mix(STANDARDIZE_OUTPUT.out.versions).collect(),
+        collect_versions_py
     )
 
     RENDER_REPORT(
