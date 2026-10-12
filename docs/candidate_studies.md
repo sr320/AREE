@@ -177,7 +177,7 @@ evidence from methylation is also exposed to the assembly change in
 
 | Accession | Runs | Design | Caveat |
 |---|---|---|---|
-| `PRJEB105019` | 60 WGBS | 2 families (F14R, H2D) × 3 age cohorts at T0, plus post-challenge **R vs S** individuals, n=6 (Ifremer DECICOMP) | Best design on this list: individual-level resistance outcome, n=6. Released 2025-12 with no publication yet, so treat as unpublished and check the embargo/reuse terms. |
+| `PRJEB105019` | 60 WGBS | 2 families (F14R, H2D) × 3 age cohorts at T0, plus post-challenge **R vs S** individuals, n=6 (Ifremer DECICOMP) | Best design on this list: individual-level resistance outcome, n=6. Released 2025-12 with no publication yet, so treat as unpublished and check the embargo/reuse terms. The EM-seq arm of DECICOMP: its metabolomics arm is `MTBLS13463`, registered as `DECICOMP2025_POMS_AGE` (#21). Run titles give the cohort codes: C3 = 4, C7 = 16, C8 = 28 months. Its 24 resistant/susceptible libraries are all from the 28-month cohort, at 500 hpc. |
 | `PRJNA609264` | 47 WGBS | early microbial exposure vs control, F1/F2, 2 families, n=3 at most timepoints | **Confirmed**: Fallet et al. 2022, *Microbiome*. Transgenerational disease protection is directly relevant to breeding. However, the design is a sprawling time course with pools and mixed assays, so intake needs a curated subset. |
 | `PRJNA807732` | 24 WGBS | intertidal F0/F1/F2 and subtidal F0, control vs heat, n=3 | Probably Wang et al. 2023, *Sci Total Environ* (transgenerational intertidal). Not confirmed. |
 | `PRJNA1113357` | 9 WGBS | *V. alginolyticus*, gill, 0/6/48 h, n=3 | Probably Li et al. 2024, *Fish Shellfish Immunol*. Small and exposure-only, but pairs with `HESSER2024_VCOR` on *Vibrio*. |
@@ -256,15 +256,63 @@ AREE's only metabolomics study is the simulated `GIGAS_GROW06`. Both of these
 are POMS studies, AREE's best-populated stressor class, and both have a
 **measured disease outcome**:
 
+> **Status 2026-10-11.** X1 and X2 are registered as `DECICOMP2025_POMS_AGE`
+> (#21) and `DUPERRET2025_POMS_STARVE` (#22). Both are draft PRs, because
+> **neither can be analyzed**: every Metabolite Assignment File (MAF) in both
+> deposits lists metabolite names but holds **no abundance values**. The only
+> data are Agilent targeted-dMRM vendor files (`.d`), which no AREE workflow
+> reads. Ask the submitters (J. Vidal-Dupiol, IHPE) to complete the MAFs, or
+> add an MRM integration step. Curation also found, in the order it matters:
+>
+> - **X2: diet is fully confounded with MS batch** on all four platforms.
+>   Fed samples were acquired Dec 2023–Feb 2024 and starved samples May–Jun
+>   2024, with no overlap. Even with abundances, a diet effect here cannot be
+>   separated from batch.
+> - **X2 samples are pools of 10 oysters per tank × family**, with 3 tanks per
+>   diet, so replication is 3 tanks.
+> - **X1 age is confounded with challenge year**: each age cohort was
+>   challenged in a different year. MS batch is not confounded with age.
+> - **X1 sampling time (0 hpc) is inferred**, from the EM-seq arm's identical
+>   2 × 3 × 6 structure at 0 hpc. Whether the metabolomics and EM-seq samples
+>   are the **same animals is not stated**. The first draft of this table said
+>   they were; that was an assumption.
+> - Neither deposit has database identifiers or MSI levels, so metabolite
+>   mapping confidence starts at `unresolved`.
+> - The studies may not be independent: both use family F14R from the same
+>   2020 Ifremer production, and X1's MAFs carry X2's sample columns.
+
 | # | Accession | Design | Context | Notes |
 |---|---|---|---|---|
-| X1 | `MTBLS13463` + `PRJEB105019` | DECICOMP (Ifremer): families × 3 ages (4/16/28 mo), OsHV-1 cohabitation, 0–24 h; older oysters are **more tolerant** of POMS | Disease **resistance**, measured | Same project as `PRJEB105019` (methylation Tier 2): the ENA description names the same families, ages, and design. Metabolomics (MS, 3 assays) + EM-seq on the same animals is AREE's **first real multi-omics convergence candidate** where both layers are public. Paper title is in MetaboLights; no DOI yet. Check reuse terms, as for `PRJEB105019`. |
-| X2 | `MTBLS13313` | ad libitum vs starved, then OsHV-1 µVar challenge; starvation **reduced susceptibility** | Disease resistance × `nutritional_limitation` | Title: *Food Deprivation Enhances Disease Resistance…* (DOI not in MetaboLights). The paper describes "integrative omics", so look for a matching RNA-seq BioProject at intake. |
+| X1 🟡 | `MTBLS13463` (+ `PRJEB105019`) | DECICOMP (Ifremer): 2 families × 3 ages (4/16/28 mo) × 6 whole animals, 0 hpc before OsHV-1 cohabitation; older oysters are **more tolerant** of POMS | Disease **resistance**, measured per cohort | Registered as `DECICOMP2025_POMS_AGE` (#21): 28 vs 4 mo (primary) and 16 vs 4 mo. Same project as `PRJEB105019` (methylation Tier 2), which is cited but kept out of `accessions` so it can be registered on its own. Manuscript in preparation; no DOI. |
+| X2 🟡 | `MTBLS13313` | 2 families × fed/starved (3 tanks each) × 0–12 hpc, pools of 10; starvation **reduced POMS mortality** (F14R 34.8% vs 75.5%; F11N 93.3% vs 100%) | Disease resistance × `nutritional_limitation` | Registered as `DUPERRET2025_POMS_STARVE` (#22): starved vs fed at 0 hpc. Published: Duperret et al. 2025, *iScience* 29:114333 ([10.1016/j.isci.2025.114333](https://doi.org/10.1016/j.isci.2025.114333)). Its RNA-seq arm is public and is the better study; see below. |
 
-Neither has a feature-table converter yet. Metabolomics harmonization exists
-only for the demo format, so a real MTBLS `m_*.tsv` intake script is the
-blocking task. MTBLS also records annotation confidence (MSI levels), which
-maps directly onto AREE's annotation-confidence field.
+Beyond the empty MAFs, there is no converter for real MTBLS `m_*.tsv`
+tables: metabolomics harmonization exists only for the demo format.
+
+### The RNA-seq arm of X2
+
+The "integrative omics" in X2's paper includes RNA-seq, deposited as two ENA
+projects split by diet: `PRJEB86618` (starved) and `PRJEB86525` (fed). The
+design is 2 families × 2 diets × 7 times (0–72 hpc) × 3 tank pools, 83 of 84
+libraries deposited, single-end 75 bp. Unlike the metabolomics, library
+numbering interleaves the two diets.
+
+> **Registered** as `DUPERRET2025_STARVE_RNASEQ` (#23), one study across both
+> projects. It is runnable but not yet run (about 104 GB of FASTQ). Comparisons:
+> starved vs fed at 0 hpc (primary, `resilience`), matching X2's metabolomic
+> contrast, and 24 vs 0 hpc within each diet (`disease`). It needed two
+> workflow changes, now merged: single-end input (#25) and, as a general
+> feature, `--covariates` (#27).
+>
+> **It is fitted on tanks, not with a family covariate.** Both families share
+> each tank, so `~ family + condition` would count 6 libraries per diet when 3
+> tanks were treated. Each tank's two family libraries are summed
+> (`--replicate_unit tank`, or `tank_hpc` for the time contrasts), giving
+> 3 vs 3. This is the same lesson as `LUTIER2022_OA_TIPPING`: find the unit
+> the treatment was applied to before counting replicates.
+>
+> It shares tanks with X2, so the two are convergent evidence across omics
+> layers, not independent replication.
 
 Metabolomics Workbench has no *C. gigas* study. Its oyster entries are
 *C. virginica* predator/shell studies.

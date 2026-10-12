@@ -157,11 +157,12 @@ The quick start above runs on **simulated** studies and a **synthetic** crosswal
 AREE also ships one **real** registered study — `HESSER2024_VCOR`, curated from the
 open-access supplementary tables of
 [Hesser et al. 2024](https://doi.org/10.3389/fimmu.2024.1380089) (Vibrio
-coralliilyticus challenge of *C. gigas* larvae). Harmonizing it requires the real
-crosswalk:
+coralliilyticus challenge of *C. gigas* larvae). Harmonizing it uses the real
+oyster crosswalk committed under `data/reference/crosswalk/`, which the study's
+genome assembly selects automatically (see
+[docs/identifier_mapping.md](docs/identifier_mapping.md)):
 
 ```bash
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study HESSER2024_VCOR
 ```
 

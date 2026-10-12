@@ -101,10 +101,9 @@ jobs:
           aree register-study registry/studies/HESSER2024_VCOR.yaml --update
 
       # Runs against the real 33k-gene NCBI/UniProt crosswalk committed to the repo,
-      # not the synthetic demo crosswalk.
+      # not the synthetic demo crosswalk. The study's genome assembly selects it
+      # (data/reference/genome_assemblies.yaml); no environment variable is needed.
       - name: Harmonize against the real crosswalk
-        env:
-          AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
         run: aree harmonize --study HESSER2024_VCOR
 
       - name: Check the harmonized output

@@ -426,26 +426,75 @@ def build_dashboard_cmd(out_path):
 
 @main.command("build-crosswalk")
 @click.option("--taxid", default=29159, show_default=True, type=int,
-              help="NCBI taxonomy id to build the crosswalk for.")
-@click.option("--slug", default="mgigas", show_default=True,
-              help="Output filename prefix, e.g. 'mgigas' -> mgigas_gene_id_crosswalk.tsv.")
-@click.option("--organism", default="Magallana gigas (Crassostrea gigas), Pacific oyster",
-              show_default=False, help="Human-readable organism label recorded in provenance.")
+              help="NCBI taxonomy id to build the crosswalk for. Must be a registered species.")
+@click.option("--slug", default=None,
+              help="Output filename prefix, e.g. 'mgigas' -> mgigas_gene_id_crosswalk.tsv. "
+                   "Defaults to 'mgigas' for the Pacific oyster; required for any other species.")
+@click.option("--organism", default=None,
+              help="Human-readable organism label recorded in provenance. "
+                   "Defaults to the species vocabulary's name, synonyms and label.")
+@click.option("--assembly", default=None,
+              help="Reference annotation recorded in provenance (and on every evidence record "
+                   "as identifier_annotation_release). Defaults to the species' NCBI reference "
+                   "assembly in data/reference/genome_assemblies.yaml.")
 @click.option("--gene-info", "gene_info", default=None, type=click.Path(exists=True),
               help="Pre-downloaded taxid-filtered NCBI gene_info TSV.")
 @click.option("--uniprot", default=None, type=click.Path(exists=True),
               help="Pre-downloaded UniProt TSV export.")
 @click.option("--download", is_flag=True, help="Force re-download of reference sources.")
-def build_crosswalk_cmd(taxid, slug, organism, gene_info, uniprot, download):
+def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, download):
     """Build a real identifier crosswalk from NCBI Gene and UniProtKB.
 
     Downloads reference data from public sources (~230 MB streamed from NCBI) and
     writes a crosswalk plus a JSON provenance sidecar to data/reference/crosswalk/.
+    The species and its reference assembly must already be registered (see
+    docs/adding_a_species.md), so that provenance names the right annotation.
     """
+    from common import load_assemblies, load_vocab
+    from harmonize.identifiers import crosswalk_taxid
+    from mappings.build_crosswalk import CROSSWALK_DIR
+
+    def fail(message):
+        click.echo(click.style(message, fg="red"))
+        sys.exit(1)
+
+    term = next((t for t in load_vocab("species").values() if t["ncbi_taxid"] == taxid), None)
+    if term is None:
+        fail(f"taxid {taxid} is not in registry/controlled_vocabularies/species.yaml; "
+             "register the species first (docs/adding_a_species.md).")
+    reference = [a for a in load_assemblies().values()
+                 if a.get("ncbi_taxid") == taxid and a.get("is_ncbi_reference")]
+    if assembly is None:
+        if not reference:
+            fail(f"no NCBI reference assembly for taxid {taxid} in "
+                 "data/reference/genome_assemblies.yaml; register it, or pass --assembly.")
+        ref = reference[0]
+        assembly = (f"{ref['ncbi_assembly_accession']} ({ref['assembly_id']}), "
+                    f"annotation release {ref.get('annotation_release')}")
+    if organism is None:
+        synonyms = term.get("accepted_synonyms") or []
+        organism = term["scientific_name"]
+        if synonyms:
+            organism += f" ({', '.join(synonyms)})"
+        organism += f", {term['label']}"
+    if slug is None:
+        if taxid != 29159:
+            fail("--slug is required for any species other than the Pacific oyster, "
+                 "so its crosswalk cannot overwrite another species' file.")
+        slug = "mgigas"
+
+    # Never overwrite a crosswalk built for a different species.
+    existing = CROSSWALK_DIR / f"{slug}_gene_id_crosswalk.tsv"
+    if existing.exists():
+        existing_taxid = crosswalk_taxid(existing)
+        if existing_taxid is not None and existing_taxid != taxid:
+            fail(f"{existing} was built for taxid {existing_taxid}; choose a different --slug "
+                 f"for taxid {taxid}.")
+
     from mappings.build_crosswalk import build
 
     try:
-        path = build(taxid=taxid, organism=organism, gene_info_path=gene_info,
+        path = build(taxid=taxid, organism=organism, assembly=assembly, gene_info_path=gene_info,
                      uniprot_path=uniprot, download=download, slug=slug)
     except (RuntimeError, ValueError, FileNotFoundError) as exc:
         click.echo(click.style(str(exc), fg="red"))
@@ -455,8 +504,13 @@ def build_crosswalk_cmd(taxid, slug, organism, gene_info, uniprot, download):
     click.echo(click.style(f"Wrote {path}", fg="green"))
     click.echo(f"Provenance: {prov}")
     click.echo("")
-    click.echo("To harmonize real studies against it, set:")
-    click.echo(click.style(f"  export AREE_CROSSWALK={path}", fg="cyan"))
+    try:
+        shown = path.relative_to(REPO_ROOT)
+    except ValueError:
+        shown = path
+    click.echo("Real studies resolve against it once it is registered for this species'")
+    click.echo("assemblies in data/reference/genome_assemblies.yaml:")
+    click.echo(click.style(f"  identifier_crosswalk: \"{shown}\"", fg="cyan"))
 
 
 if __name__ == "__main__":
