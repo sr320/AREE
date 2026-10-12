@@ -24,12 +24,24 @@ process TRIM_FASTP {
     path "versions.yml", emit: versions
 
     script:
-    // Real paired-end fastp invocation. Not executed here.
+    // Paired-end or single-end, decided by how many files the sample carries
+    // (main.nf sends one with --single_end). A single file stages as a Path,
+    // not a list, so normalize before indexing. Single-end output is R1 only.
+    //
+    // Single-end adapters are given explicitly (params.se_adapter), not
+    // auto-detected. fastp's single-end detection guesses from overrepresented
+    // sequence: on DUPERRET2025_STARVE_RNASEQ it picked an abundant oyster
+    // transcript as the "adapter" and trimmed it from about 1% of reads, and
+    // each library gets its own guess. Paired-end detection uses read overlap
+    // and is reliable, so it is kept.
+    def fq = reads instanceof Collection ? reads as List : [ reads ]
+    def se_adapter = params.se_adapter == 'auto' ? '' : "--adapter_sequence ${params.se_adapter}"
+    def io = fq.size() == 1 \
+        ? "-i ${fq[0]} -o ${sample_id}_trimmed_R1.fastq.gz ${se_adapter}" \
+        : "-i ${fq[0]} -I ${fq[1]} -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz --detect_adapter_for_pe"
     """
     fastp \\
-        -i ${reads[0]} -I ${reads[1]} \\
-        -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz \\
-        --detect_adapter_for_pe \\
+        ${io} \\
         --thread ${task.cpus} \\
         --json ${sample_id}.fastp.json \\
         --html ${sample_id}.fastp.html \\
@@ -42,8 +54,10 @@ process TRIM_FASTP {
     """
 
     stub:
+    def n = reads instanceof Collection ? (reads as List).size() : 1
+    def trimmed = n == 1 ? "${sample_id}_trimmed_R1.fastq.gz" : "${sample_id}_trimmed_R1.fastq.gz ${sample_id}_trimmed_R2.fastq.gz"
     """
-    touch ${sample_id}_trimmed_R1.fastq.gz ${sample_id}_trimmed_R2.fastq.gz
+    touch ${trimmed}
     echo '{}' > ${sample_id}.fastp.json
     touch ${sample_id}.fastp.html
     echo '${task.process}:' > versions.yml

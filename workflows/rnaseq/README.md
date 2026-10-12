@@ -57,6 +57,26 @@ Required params: `--reads` (a `Channel.fromFilePairs` glob, e.g.
 build one). See `nextflow.config` for the full parameter list and defaults
 (all `null` — nothing is silently assumed).
 
+**Single-end libraries.** Add `--single_end` and point `--reads` at one file
+per library, e.g. `'data/raw/DUPERRET2025_STARVE_RNASEQ/ERR*.fastq.gz'`. The
+sample id is the file name without `.fastq`/`.fq`(`.gz`). For ENA downloads
+that is the run accession, which the DESeq2 step matches to the sample
+sheet's `run_accession` column. The single-end path changes three steps:
+
+- fastp trims a **given** 3′ adapter, `--se_adapter` (default: Illumina
+  TruSeq/NEBNext read 1, `AGATCGGAAGAGCACACGTCTGAACTCCAGTCA`). It does not
+  auto-detect, because fastp's single-end detection guesses from
+  overrepresented sequence. On real DUPERRET2025_STARVE_RNASEQ reads it chose
+  an abundant oyster transcript and trimmed it from about 1% of reads, with
+  a separate guess per library. Pass `--se_adapter auto` to restore detection
+  deliberately.
+- Salmon quantifies with `-r` and without `--gcBias`. Fragment GC-bias
+  correction needs the fragment-length distribution that single-end reads do
+  not observe, and Salmon marks it beta for single-end data.
+- Viral read QC counts reads; its `*_pairs` columns hold reads.
+
+`single_end` and `se_adapter` are recorded in the manifest's `parameters`.
+
 ### `processed_results_harmonization`
 
 An existing DE-like TSV (e.g. already-published DESeq2/edgeR/limma output)
@@ -194,8 +214,16 @@ regenerated from raw data), not the evidence records themselves.
   DAG in `main.nf` uses real `Channel.fromFilePairs`/`Channel.fromPath`
   factories and real `if (params.mode == ...)` branching — it is not a
   linear echo-only stub chain.
+- **Single-end**: executed natively (`-profile local`, Salmon 2.3.4, fastp
+  1.3.6) on 2026-10-11 against 40,000 real reads from each of four
+  DUPERRET2025_STARVE_RNASEQ runs and a 300-transcript RefSeq subset. All 24
+  tasks completed, through DESeq2, the manifest and the report. That checks
+  the command lines, not the biology; no full-depth single-end run has been
+  made.
 - **CI coverage**: tiny paired FASTQ, reference, annotation, tx2gene, and sample
-  fixtures live under `../../tests/fixtures/rnaseq_raw`. Every RNA-seq process
+  fixtures live under `../../tests/fixtures/rnaseq_raw`, and single-end ones
+  (ENA-style file names, `run_accession` in the sample sheet) under
+  `../../tests/fixtures/rnaseq_raw_se`. Every RNA-seq process
   has an explicit `stub:` output contract, so current Nextflow can exercise the
   complete raw DAG without a bioinformatics toolchain. This verifies channels,
   parameter validation, and artifact handoffs only; it is not a container test
