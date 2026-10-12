@@ -1,6 +1,6 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-12:** WP0 to WP3 are implemented (see their entries in
+**Status, 2026-10-12:** WP0 to WP4 are implemented (see their entries in
 section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
@@ -365,6 +365,34 @@ to end with `-profile local,workstation`, producing a manifest that names the
 mussel assembly and annotation release.
 
 ### WP4. Second-species demo and regression fixtures
+
+**Status: done, 2026-10-12.** `MYTGAL_HEAT01` is a simulated *M.
+galloprovincialis* larval heat-stress study. It reports the oyster demo's gene
+identifiers under the same phenotype (`larval_viability`) as the two oyster
+larval studies, which pool *hsp70* and disagree on *sod1*, so without the
+species partition it would have joined both pools. What was done and found:
+
+- **The partition holds.** `tests/test_demo_species.py` runs the demo with and
+  without the mussel study and requires every oyster meta-analysis row and
+  every oyster candidate, down to adjusted p-values and scores, to be
+  identical. They are. The mussel study forms its own pools (k = 1), and its
+  candidates never reach the high-priority tier.
+- **Seven existing tests assumed one species.** Each took the first row or card
+  for a gene and now got the mussel one. No oyster result changed; the tests
+  now select the oyster partition explicitly (`oyster()` and `oyster_card()` in
+  `tests/conftest.py`).
+- **Two outputs could not tell species apart.** Evidence cards printed only a
+  taxid, and the top-candidates summary listed the oyster and mussel *hsp70*
+  as two identical-looking rows. Cards now name the species and state that they
+  pool one species only; the summary has a species column.
+- **The demo list is no longer hard-coded.** It was spelled out in the
+  Makefile, both GitHub workflows, the README and the test fixtures. It is now
+  every `simulated: true` study (`aree study-ids --simulated`), so the next demo
+  study needs no list edits.
+- The demo study declares `species_identity` (collection site) and carries
+  `species_assignment_unverified`, exercising the WP0 species-complex rule.
+- The synthetic crosswalk header says both demo species share its identifiers
+  on purpose, and drops its stale `AREE_CROSSWALK` instructions.
 
 - Add one simulated *M. galloprovincialis* study (`MYTGAL_HEAT01`, clearly
   `simulated: true`) sharing feature identifiers with the oyster demo so the

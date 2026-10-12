@@ -90,6 +90,21 @@ def list_studies_cmd():
     ))
 
 
+@main.command("study-ids")
+@click.option("--simulated", "which", flag_value="simulated", help="Only simulated (demo) studies.")
+@click.option("--real", "which", flag_value="real", help="Only real studies.")
+def study_ids_cmd(which):
+    """Print registered study_ids, one per line, read from registry/studies/.
+
+    `aree study-ids --simulated` is the demo study list the Makefile, CI and the
+    Pages build iterate over.
+    """
+    from common import study_ids
+
+    for sid in study_ids({"simulated": True, "real": False}.get(which)):
+        click.echo(sid)
+
+
 @main.command("build-registry")
 @click.option("--strict", is_flag=True, help="Exit non-zero if any study YAML fails validation.")
 def build_registry_cmd(strict):

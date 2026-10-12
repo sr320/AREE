@@ -30,8 +30,8 @@ jobs:
 
       - name: Validate all demo studies
         run: |
-          for f in registry/studies/GIGAS_*.yaml; do
-            aree validate-study "$f"
+          for sid in $(aree study-ids --simulated); do
+            aree validate-study "registry/studies/$sid.yaml"
           done
 
       # The registry CSV is generated, not committed. Every study YAML on the
@@ -41,10 +41,10 @@ jobs:
 
       - name: Run full demo pipeline end-to-end
         run: |
-          for f in registry/studies/GIGAS_*.yaml; do
-            aree register-study "$f" --update
+          for sid in $(aree study-ids --simulated); do
+            aree register-study "registry/studies/$sid.yaml" --update
           done
-          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+          for sid in $(aree study-ids --simulated); do
             aree harmonize --study "$sid"
           done
           aree meta-analyze --feature-type gene
