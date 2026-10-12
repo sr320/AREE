@@ -347,24 +347,73 @@ def real_crosswalk():
     set_crosswalk_path(None)
 
 
-def test_real_crosswalk_gene_ids_are_unique_and_numeric(real_crosswalk):
+def _committed_crosswalks():
+    """Every real crosswalk registered in genome_assemblies.yaml, one test id per species."""
+    from common import registered_crosswalks
+
+    return [
+        pytest.param(entry, id=entry["path"].name.replace("_gene_id_crosswalk.tsv", ""))
+        for entry in registered_crosswalks()
+    ]
+
+
+@pytest.fixture(params=_committed_crosswalks())
+def committed_crosswalk(request):
+    entry = request.param
+    if not entry["path"].exists():
+        pytest.skip(f"{entry['path'].name} not built; run `aree build-crosswalk`")
+    return entry
+
+
+def test_real_crosswalk_gene_ids_are_unique_and_numeric(committed_crosswalk):
     import pandas as pd
 
-    df = pd.read_csv(real_crosswalk, sep="\t", comment="#", dtype=str)
+    df = pd.read_csv(committed_crosswalk["path"], sep="\t", comment="#", dtype=str)
+    assert len(df) > 1000
     assert df["ncbi_gene_id"].is_unique
     assert df["ncbi_gene_id"].str.fullmatch(r"\d+").all()
     assert (df["locus_id"] == "LOC" + df["ncbi_gene_id"]).all()
 
 
-def test_real_crosswalk_provenance_matches_the_artifact(real_crosswalk):
+def test_real_crosswalk_never_invents_orthogroups(committed_crosswalk):
+    import pandas as pd
+
+    df = pd.read_csv(committed_crosswalk["path"], sep="\t", comment="#", dtype=str)
+    assert df["orthogroup_id"].isna().all()
+
+
+def test_real_crosswalk_provenance_matches_the_artifact(committed_crosswalk):
     from common import sha256_file
 
-    prov = json.loads(REAL_CROSSWALK.with_name(
-        "mgigas_gene_id_crosswalk.provenance.json").read_text())
-    assert prov["artifact_sha256"] == sha256_file(real_crosswalk), (
-        "crosswalk has changed since its provenance sidecar was written; rebuild it"
+    path = committed_crosswalk["path"]
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    assert prov["artifact_sha256"] == sha256_file(path), (
+        f"{path.name} has changed since its provenance sidecar was written; rebuild it"
     )
-    assert prov["ncbi_taxid"] == 29159
+    assert prov["ncbi_taxid"] == committed_crosswalk["ncbi_taxid"]
+
+
+def test_real_crosswalk_provenance_names_the_species_reference_annotation(committed_crosswalk):
+    """The annotation recorded at build time is what every evidence record reports as
+    identifier_annotation_release, so it must be this species' reference assembly,
+    not a default carried over from another species."""
+    from common import load_assemblies
+
+    path = committed_crosswalk["path"]
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    reference = [
+        a for a in load_assemblies().values()
+        if a["ncbi_taxid"] == committed_crosswalk["ncbi_taxid"] and a.get("is_ncbi_reference")
+    ]
+    assert len(reference) == 1
+    assert reference[0]["ncbi_assembly_accession"] in prov["ncbi_reference_annotation_at_build"]
+
+
+def test_real_crosswalk_has_a_retired_gene_id_sidecar(committed_crosswalk):
+    from harmonize.identifiers import retired_table_path
+
+    sidecar = retired_table_path(committed_crosswalk["path"])
+    assert sidecar is not None and sidecar.exists()
 
 
 def test_real_crosswalk_resolves_a_known_gene(real_crosswalk):
