@@ -1,5 +1,5 @@
 """End-to-end smoke test: the full demo pipeline (validate -> register -> harmonize ->
-meta-analyze -> build-evidence-cards) must run successfully on all 6 demo studies."""
+meta-analyze -> build-evidence-cards) must run successfully on every simulated demo study."""
 from click.testing import CliRunner
 from conftest import ALL_DEMO_STUDY_IDS
 
