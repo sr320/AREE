@@ -14,7 +14,10 @@ the registry instead:
   comparison at a time, which works for processed-table and raw_reanalysis
   studies alike. Comparisons with no results_file yet are listed, not errors.
 
-Run with AREE_CROSSWALK pointing at the real crosswalk.
+Each study resolves against the crosswalk registered for its genome assembly in
+data/reference/genome_assemblies.yaml, so studies of several species harmonize
+in one run. AREE_CROSSWALK is not needed (and, if set, must match each study's
+taxon or harmonization stops).
 
 Usage: python scripts/harmonize_committed_results.py [--date YYYY-MM-DD] [--dry-run]
 """

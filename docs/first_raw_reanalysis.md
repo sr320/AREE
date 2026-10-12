@@ -151,7 +151,6 @@ nextflow run workflows/rnaseq -profile local,workstation \
 # 4. Harmonize the standardized output. --comparison is required: the workflow
 #    names its output for the stage that produced it, and a raw-mode study has
 #    no results_file to match a filename against.
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study CALLA2026_OSHV \
   --comparison midori_oshv1_france_vs_control \
   --input results/rnaseq/standardized/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv

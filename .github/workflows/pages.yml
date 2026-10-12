@@ -58,9 +58,9 @@ jobs:
       # Every committed results_file of every real study that has not failed QC,
       # one comparison at a time, read from the registry. A newly merged study
       # appears without editing this file; a qc_status: failed study never does.
-      - name: Harmonize real studies (real crosswalk)
-        env:
-          AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+      # Each study resolves against the crosswalk registered for its genome
+      # assembly, so a study of a new species needs no edit here either.
+      - name: Harmonize real studies (each against its own species' crosswalk)
         run: python scripts/harmonize_committed_results.py
 
       - name: Meta-analyze, rank, and summarize

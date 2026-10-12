@@ -24,21 +24,44 @@ Every evidence record keeps both:
 
 ## Which crosswalk is in force
 
-AREE ships **two** crosswalks and never merges them.
+AREE keeps a synthetic demo crosswalk and one real crosswalk per species, and
+never merges any of them.
 
 | File | Contents | When it is used |
 |---|---|---|
-| `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Default. Keeps `make demo` and the test suite self-contained. |
-| `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Curating real studies. Selected explicitly. |
+| `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Every study with `simulated: true`. Keeps `make demo` and the test suite self-contained. |
+| `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Real studies on either oyster assembly. |
+| `data/reference/crosswalk/<slug>_gene_id_crosswalk.tsv` | One per further species, built with `aree build-crosswalk --taxid` | Real studies on that species' assemblies. None built yet for mussels or clams. |
 
-Selection precedence is `set_crosswalk_path()` > `$AREE_CROSSWALK` > the demo
-crosswalk. To harmonize real data:
+**The study decides, through its genome assembly.** Each entry in
+`data/reference/genome_assemblies.yaml` names its `identifier_crosswalk`.
+Harmonizing a real study looks up the study's `genome_assembly` there and
+resolves against that file, so an oyster study and a mussel study harmonized in
+the same run each use their own species' identifiers. No environment variable is
+needed:
 
 ```bash
-aree build-crosswalk                       # writes the real crosswalk + provenance sidecar
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study <STUDY_ID> --input <results.tsv>
 ```
+
+The assembly decides rather than the study's species because identifiers come
+from the annotation the reads were mapped to. A study that mapped reads to a
+related species' genome (quality flag `reference_species_mismatch`) therefore
+reports the reference species' gene identifiers, while its evidence is still
+partitioned under the study animal's `species_taxid`.
+
+A real study whose assembly has no registered crosswalk is an error, not a
+fallback to some other crosswalk. The error names the `aree build-crosswalk
+--taxid <n>` command to run, after which the new file is registered by setting
+`identifier_crosswalk` for that species' assemblies.
+
+`$AREE_CROSSWALK` still exists as an override for local experiments, such as
+testing a rebuilt crosswalk before committing it. It is honoured only if its
+provenance sidecar shows it was built for the study's assembly taxon; a
+crosswalk for another species, or one with no provenance, stops harmonization.
+Earlier versions of AREE let the most recently selected crosswalk carry over to
+the next study in the same process. That is no longer possible: every study
+selects afresh.
 
 **The two files must never be concatenated.** The demo crosswalk's LOC numbers
 are not unused placeholders — most of them collide with real NCBI GeneIDs that
