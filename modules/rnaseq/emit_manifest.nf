@@ -30,6 +30,9 @@ process EMIT_MANIFEST {
     val extra_warnings
     path viral_summary   // VIRAL_SUMMARY JSON, or assets/NO_VIRAL_QC when viral QC was not run
     path deseq2_design   // DESeq2 design JSON, or assets/NO_DESEQ2_DESIGN in processed mode
+    // Transcriptome, GTF, tx2gene and (for a fetched bundle) its
+    // reference_provenance.json; empty in processed mode.
+    path reference_files, stageAs: 'reference/*'
     // Every upstream process's versions.yml (mixed + collected in main.nf),
     // renamed on staging because they all share one file name.
     path process_versions, stageAs: 'process_versions/versions_*.yml'
@@ -56,6 +59,7 @@ process EMIT_MANIFEST {
     # Build the AREE RNA-seq workflow provenance manifest.
     import hashlib
     import json
+    import os
     import platform
 
     def sha256_of(path):
@@ -113,6 +117,42 @@ process EMIT_MANIFEST {
             "samples_excluded_by_curation: " + ", ".join(excluded_samples)
             + " (see the study registry for the reason)")
 
+    # Reference files actually read, with checksums. When the bundle's
+    # reference_provenance.json was staged too, each file is compared with the
+    # checksum recorded when it was fetched, and the bundle's assembly with the
+    # one this run declares.
+    declared_assembly = "${params.rnaseq?.genome_assembly ?: ''}"
+    reference_files = []
+    bundle = None
+    if os.path.isdir("reference"):
+        names = sorted(os.listdir("reference"))
+        if "reference_provenance.json" in names:
+            with open(os.path.join("reference", "reference_provenance.json")) as fh:
+                bundle = json.load(fh)
+        recorded = {f["file"]: f["sha256"] for f in (bundle or {}).get("files", [])}
+        for name in names:
+            entry = {"name": name, "sha256": sha256_of(os.path.join("reference", name))}
+            if name in recorded:
+                entry["matches_bundle_provenance"] = entry["sha256"] == recorded[name]
+                if not entry["matches_bundle_provenance"]:
+                    warnings.append(
+                        "reference_file_differs_from_bundle: " + name
+                        + " does not match reference_provenance.json; re-run `aree fetch-reference --check`")
+            reference_files.append(entry)
+    if bundle is not None:
+        if declared_assembly and bundle.get("ncbi_assembly_accession") not in (declared_assembly, None):
+            warnings.append(
+                "reference_bundle_assembly_mismatch: bundle is " + str(bundle.get("ncbi_assembly_accession"))
+                + " but rnaseq.genome_assembly is " + declared_assembly)
+        if not bundle.get("annotation_release_matches_registry", True):
+            warnings.append(
+                "reference_bundle_annotation_release_unregistered: the bundle's GTF names a different "
+                "annotation release from the one registered for its assembly")
+    elif "${mode}" == "raw_reanalysis":
+        warnings.append(
+            "reference_bundle_provenance_missing: no reference_provenance.json beside the reference "
+            "files; fetch them with `aree fetch-reference` to record where they came from")
+
     manifest = {
         "workflow_name": "aree-rnaseq",
         "workflow_version": "${workflow.manifest.version ?: '0.1.0-scaffold'}",
@@ -153,6 +193,22 @@ process EMIT_MANIFEST {
         "reference": {
             "genome_assembly": "${params.rnaseq?.genome_assembly ?: 'not_specified'}",
             "annotation_version": "${params.rnaseq?.annotation_version ?: 'not_specified'}",
+            "transcript_fasta": "${params.transcript_fasta ?: ''}" or None,
+            "gtf": "${params.gtf ?: ''}" or None,
+            "tx2gene": "${params.tx2gene ?: ''}" or None,
+            "salmon_index": "${params.salmon_index ?: ''}" or None,
+            # Checksums of the files above as staged for this run (empty in
+            # processed mode), and the bundle they came from, if fetched.
+            "files": reference_files,
+            "bundle": None if bundle is None else {
+                "bundle": bundle.get("bundle"),
+                "assembly_id": bundle.get("assembly_id"),
+                "ncbi_assembly_accession": bundle.get("ncbi_assembly_accession"),
+                "annotation_source": (bundle.get("gtf_header") or {}).get("annotation-source"),
+                "annotation_release_matches_registry": bundle.get("annotation_release_matches_registry"),
+                "date_generated": bundle.get("date_generated"),
+                "bundler_version": bundle.get("bundler_version"),
+            },
         },
         "workflow_start": "${workflow_start_iso}",
         "qc_metrics": {

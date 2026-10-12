@@ -43,6 +43,8 @@ website:
             href: parallel_study_runs.md
           - text: "First raw reanalysis"
             href: first_raw_reanalysis.md
+          - text: "Reference bundles"
+            href: reference_bundles.md
           - text: "Defining a phenotype"
             href: defining_a_phenotype.md
           - text: "Resilience vs. exposure-only"

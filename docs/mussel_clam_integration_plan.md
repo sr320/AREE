@@ -1,6 +1,6 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-11:** WP0, WP1 and WP2 are implemented (see their entries in
+**Status, 2026-10-12:** WP0 to WP3 are implemented (see their entries in
 section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
@@ -310,6 +310,43 @@ Acceptance: six new crosswalks committed with provenance; test suite green.
 
 ### WP3. Reference bundles and workflow configs
 
+**Status: done, 2026-10-12.** `aree fetch-reference` fetches, verifies and
+records a bundle for any registered RefSeq assembly; see
+[reference_bundles.md](reference_bundles.md). What was done and found:
+
+- **Every registered RefSeq assembly resolves** to its NCBI folder (`--plan`),
+  all eight of them; the Roslin oyster assembly, which has no RefSeq
+  annotation, is refused.
+- **The oyster bundle was backfilled** with `reference_provenance.json` and the
+  genome FASTA that `config/CIBNOR2021_HEAT_RRSS.config` already expected. The
+  new tx2gene builder reproduces the pilot's awk-built `tx2gene.tsv` byte for
+  byte (60,992 transcripts, 33,068 genes, all in the oyster crosswalk).
+- **The *M. galloprovincialis* bundle was fetched.** Its GTF names the
+  registered release (`GCF_965363235.1-RS_2025_08`), and all 43,185 of its
+  genes are in the WP2 crosswalk.
+- **Acceptance, run with simulated reads.** No mussel study is curated yet
+  (WP5), so six single-end libraries (3 vs 3, about 85,000 to 97,000 reads
+  each) were simulated from 400 single-isoform mussel genes, 60 of them with a
+  4-fold change. The real RNA-seq workflow ran end to end on this machine
+  (8 GB RAM, `-profile local` with the machine-local resource config): 24 of
+  24 tasks, 3 min 12 s, including a Salmon index of the full mussel
+  transcriptome. Harmonizing the output resolved all 425 records `exact`
+  against `mgall_gene_id_crosswalk.tsv` under taxid 29158. All 60 simulated
+  changes were called at padj < 0.05 in the right direction, 3 of 340
+  unchanged genes were called, and estimated and true log2 fold changes
+  correlated at 0.989. The simulated reads were not committed.
+- **The manifest now checksums its reference.** The run showed the RNA-seq
+  manifest named the assembly but recorded no checksum for the transcriptome,
+  GTF or tx2gene it read. It now stages and hashes them, compares each with
+  the bundle's `reference_provenance.json`, and warns on a mismatch, on a
+  bundle for a different assembly, or on reference files with no bundle
+  provenance.
+
+Not done: bundles for the other five species are fetched on demand when a
+study needs them (each `--plan` already resolves). The methylation manifest
+does not yet checksum its genome FASTA, and the Bismark index is still built
+by the workflow rather than kept in the bundle.
+
 - Write a `data/reference/README.md` recipe, or an `aree fetch-reference
   --assembly GCF_...` command, that downloads the RefSeq transcript FASTA and
   GTF from the NCBI genomes FTP, verifies `md5checksums.txt`, builds
@@ -472,7 +509,7 @@ WP6 could first be tested.
 | 2 | WP1 per-study crosswalk selection | WP0 | 2 to 3 |
 | 3 | WP2 six crosswalks | WP1 | 1, mostly download time |
 | 4 | WP4 simulated mussel demo | WP1 | 1 |
-| 5 | WP3 reference bundles + first config | WP0 | 1 to 2 plus a workflow run |
+| 5 | WP3 reference bundles + first config (done) | WP0 | 1 to 2 plus a workflow run |
 | 6 | WP5 backlog page, then first four studies | WP1 to WP3 | 1 for the page; each study as today (a day or more of compute per raw reanalysis) |
 | 7 | WP6 orthology and cross-species pooling | WP2, WP5 | 5 to 10, plus an OrthoFinder run (hours to a day for ten proteomes) |
 | 8 | WP7 non-RefSeq crosswalks | WP6 | 3 to 5 |

@@ -424,6 +424,81 @@ def build_dashboard_cmd(out_path):
     click.echo(click.style(f"Wrote dashboard data to {out_path}", fg="green"))
 
 
+@main.command("fetch-reference")
+@click.option("--assembly", "assembly", required=True,
+              help="Registered assembly: assembly_id or accession, e.g. GCF_965363235.1.")
+@click.option("--dest", default=None, type=click.Path(),
+              help="Bundle directory. Defaults to data/reference/<ACCESSION> (often a symlink "
+                   "to external storage; see docs/reference_bundles.md).")
+@click.option("--genome", "with_genome", is_flag=True,
+              help="Also fetch the genome FASTA (genomic.fna), needed for methylation.")
+@click.option("--plan", "plan_only", is_flag=True,
+              help="Only resolve the NCBI folder and checksums; download no sequence data.")
+@click.option("--check", "check_only", is_flag=True,
+              help="Verify an existing bundle against its reference_provenance.json.")
+def fetch_reference_cmd(assembly, dest, with_genome, plan_only, check_only):
+    """Fetch a RefSeq reference bundle (transcriptome, GTF, tx2gene) for raw reanalysis.
+
+    Every file is checked against NCBI's MD5s and recorded with SHA-256 in
+    reference_provenance.json, along with whether the GTF's annotation release
+    matches the registry and how many of its genes the species' crosswalk knows.
+    """
+    from intake.reference_bundle import (
+        ReferenceBundleError,
+        check_bundle,
+        default_bundle_dir,
+        fetch_bundle,
+        plan_bundle,
+    )
+
+    try:
+        if check_only:
+            from common import resolve_assembly
+
+            record = resolve_assembly(assembly)
+            if record is None:
+                raise ReferenceBundleError(f"{assembly!r} is not a registered assembly")
+            target = Path(dest) if dest else default_bundle_dir(record["ncbi_assembly_accession"])
+            problems = check_bundle(target)
+            for problem in problems:
+                click.echo(click.style(f"  - {problem}", fg="red"))
+            click.echo(click.style(f"FAIL: {target}", fg="red") if problems
+                       else click.style(f"OK: {target}", fg="green"))
+            sys.exit(1 if problems else 0)
+
+        if plan_only:
+            plan = plan_bundle(assembly, with_genome=with_genome)
+            click.echo(f"{plan['assembly']['assembly_id']}: {plan['base_url']}")
+            for f in plan["files"]:
+                click.echo(f"  {f['remote']}  md5 {f['ncbi_md5']}  -> {f['local']}")
+            return
+
+        prov = fetch_bundle(assembly, dest=Path(dest) if dest else None, with_genome=with_genome)
+    except (ReferenceBundleError, OSError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    click.echo(click.style(f"Bundle {prov['bundle']} for {prov['assembly_id']} ({prov['species']})",
+                           fg="green"))
+    click.echo(f"  tx2gene: {prov['tx2gene']['transcripts']} transcripts, "
+               f"{prov['tx2gene']['genes']} genes")
+    cov = prov["crosswalk_coverage"]
+    if cov.get("checked"):
+        colour = "green" if cov["pct"] >= 99 else "yellow"
+        click.echo(click.style(f"  genes in {cov['crosswalk']}: {cov['found_in_crosswalk']} "
+                               f"({cov['pct']}%)", fg=colour))
+    else:
+        click.echo(click.style("  no crosswalk registered for this assembly; gene IDs unchecked",
+                               fg="yellow"))
+    if not prov["annotation_release_matches_registry"]:
+        click.echo(click.style(
+            f"  WARNING: GTF annotation-source {prov['gtf_header'].get('annotation-source')!r} "
+            f"does not name the registered release {prov['registered_annotation_release']!r}. "
+            "Update genome_assemblies.yaml (and rebuild the crosswalk) before using it.",
+            fg="red"))
+        sys.exit(1)
+
+
 @main.command("build-crosswalk")
 @click.option("--taxid", default=29159, show_default=True, type=int,
               help="NCBI taxonomy id to build the crosswalk for. Must be a registered species.")
