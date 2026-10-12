@@ -1,0 +1,14 @@
+# Expressed-SNP replicate check, 2026-10-12: scripts/check_replicate_genotypes.py from sr320/AREE-co
+# (targets -> pileup of the first 4M read pairs per library through Salmon --writeMappings -> compare).
+# Library names: control_1..3 = SRR8485511, SRR8485512, SRR8485509; HS_1..3 = SRR8485510, SRR8485507, SRR8485508.
+3244 sites with pooled minor-allele frequency >= 0.15 and depth >= 30 in all 6 libraries
+per-library allele-frequency histogram (0-1 in tenths); one diploid animal peaks at 0, 0.5 and 1:
+  control_1            [461 604 718 600 377 270 130  62  17   5]
+  control_2            [510 594 693 562 401 256 145  51  25   7]
+  control_3            [494 597 661 539 419 305 133  57  28  11]
+  HS_1                 [480 620 662 581 414 271 128  62  19   7]
+  HS_2                 [472 567 714 586 428 270 126  53  22   6]
+  HS_3                 [487 577 678 583 414 292 131  62  13   7]
+mean |allele-frequency difference| (observed, same-RNA simulation, correlation):
+  within   pairs=  6 observed 0.188 (0.185-0.192) noise 0.054 r 0.17
+  between  pairs=  9 observed 0.187 (0.182-0.192) noise 0.054 r 0.17
