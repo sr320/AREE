@@ -148,6 +148,25 @@ Other outputs (all under `params.outdir`, default `results/rnaseq/`):
 - (`raw_reanalysis` only) `fastqc/`, `trimmed/`, `salmon/`, `multiqc/`,
   `deseq2/` — intermediate per-step outputs.
 
+## 3' Tag-seq libraries (`raw_reanalysis` only)
+
+`--tag_seq` is for 3' tag libraries such as Lexogen QuantSeq, which give
+about one read per transcript whatever its length. It is independent of
+`--single_end` (QuantSeq also comes paired-end) and changes three steps:
+
+| Step | Standard RNA-seq | `--tag_seq` |
+|---|---|---|
+| fastp | adapter trimming | also `--trim_poly_x` (poly-A tails) |
+| Salmon | `--gcBias` (paired-end) | `--noLengthCorrection`, no `--gcBias` |
+| DESeq2 | `DESeqDataSetFromTximport` (per-sample length offsets) | `DESeqDataSetFromMatrix` on the counts, no length offset; pseudo-bulk sums raw counts |
+
+Applying length correction to 3' tags makes long genes look less expressed
+than they are. A quick way to tell a QuantSeq FWD library from full-length
+RNA-seq when the deposit does not say: the fraction of reads containing 15+
+consecutive A's is several percent for QuantSeq and about 0.1% for
+full-length libraries. `tag_seq` is recorded in the workflow manifest's
+`parameters`.
+
 ## Covariates (`raw_reanalysis` only)
 
 **`--covariates`** takes a comma-separated list of sample-sheet columns to fit
