@@ -135,6 +135,8 @@ process EMIT_MANIFEST {
             "treatment_levels": treatment_levels,
             "replicate_unit": replicate_unit,
             "covariates": covariates,
+            "single_end": ${params.single_end ? 'True' : 'False'},
+            "se_adapter": "${params.se_adapter}" if ${params.single_end ? 'True' : 'False'} else None,
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
         # The DESeq2 design as fitted (null in processed mode).
