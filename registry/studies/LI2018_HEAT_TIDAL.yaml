@@ -1,62 +1,189 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# Heat stress (35 C) in adult gill of common-garden F1 oysters from four wild
+# populations: intertidal (J) and subtidal (X) origin at two Bohai Sea sites.
+# Chosen 2026-10-11 as a pool partner for GEORGE2023_HEATWAVE_PLOIDY's
+# primary (adult gill, single thermal stressor), from the RNA-seq studies the
+# sister repository sr320/AREE-co had curated; not in candidate_studies.md.
+#
+# Source: Li et al. 2018, Front Physiol (open access, PMC6120431), which names
+# PRJNA407831. Methods read in full 2026-10-11.
+#
+# TWO KINDS OF EVIDENCE.
+# (1) Heat response: 35 C vs 0 h, in the same tanks (stress_response).
+# (2) A MEASURED, HERITABLE TOLERANCE CONTRAST: in the same F1 cohorts,
+#     intertidal-origin oysters survived acute heat stress (42 C, 1 h,
+#     4-month-olds, n = 206-326, 14 d) significantly better than
+#     subtidal-origin oysters at both sites, and had higher metabolic rates
+#     at 35 C. The F1 were reared in a common garden, so the difference is
+#     inherited, not acclimated. intertidal_vs_subtidal_0h compares the
+#     tolerant with the sensitive populations before heating
+#     (resilience). Its replicates are the populations, 2 v 2, not tanks.
 
 study_id: LI2018_HEAT_TIDAL
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.3389/fphys.2018.00825"
   bioproject: "PRJNA407831"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR6057012, SRR6058486-SRR6058630"
+  ena: "PRJNA407831"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN07665079-SAMN07665114; PMID 30210351; PMC6120431"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Li A, Li L, Wang W, Song K, Zhang G (2018). Transcriptomics and Fitness Data Reveal Adaptive Plasticity of Thermal Tolerance in Oysters Inhabiting Different Tidal Zones. Frontiers in Physiology 9:825. https://doi.org/10.3389/fphys.2018.00825"
+
+species: "Magallana gigas"
+strain_or_population: "F1 of four wild populations, intertidal (J) and subtidal (X) zones at Bayuquan (BYQ, 40°18'N) and Laoting (LT, 39°16'N), Bohai Sea, China; mass-spawned (30 females x 30 males per population), reared in a common garden in three culture replicates; 10-month-old oysters used for heat stress."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina, paired-end 125/150 bp, TruSeq Stranded mRNA (36 libraries, 13.4-16.7 M read pairs each; 94.1 GB FASTQ reported by ENA)"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 36 runs are public in ENA/SRA under PRJNA407831. No DE table is deposited. Site, tidal zone, hours and tank are encoded in each sample alias (e.g. BYQJ241); BioSample `isolate` gives the site and `temp` the hours (35_0, 35_6, 35_24), the zone only the alias. Sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
+# ---------------------------------------------------------------------------
+# Comparisons, prespecified 2026-10-11 before any result was computed.
+#
+# REPLICATION. Each population was split into three tanks at 35 C; at each
+# time, gill of five oysters per tank was pooled into one library. So each
+# library is one tank, and the heat comparisons are 12 tanks (11 at 0 h) per
+# arm, four populations pooled. The SAME tanks are sampled at 0, 6 and 24 h:
+# the control is the pre-heating state of the same tanks, not a concurrent
+# unheated group, so time in the aquarium and handling are confounded with
+# heat. AREE's DESeq2 step fits one factor, so neither tank pairing nor
+# population is blocked; both add variance but not bias (the design is
+# balanced across populations).
+#
+# For intertidal_vs_subtidal_0h the tolerance phenotype belongs to the
+# population, so populations are the replicates: --replicate_unit population
+# sums each population's tanks before DESeq2, giving 2 v 2 (family-level
+# replication, flagged).
+#
+# TIDAL ZONE CODE. The paper labels zones I and S; the aliases use J and X,
+# read as Chinese jian (intertidal, 潮间) and xia (subtidal, 潮下). The
+# reading is corroborated: the library the authors discarded as LT-I_0h_2 is
+# LTJ02, which an outlier screen in sr320/AREE-co also flagged blind.
+#
+# meta_analysis_primary = heat_35c_24h_vs_0h: 24 h is the end of the
+# exposure and past the 6-24 h aerobic-to-anaerobic transition the paper
+# cites, so it is the more sustained heat state, closer to the post-exposure
+# sampling of the other thermal studies. The 6 h comparison shares the 0 h
+# libraries, and the population contrast is a different question.
+#
+# EXCLUSION: LTJ02 (= LT-I_0h_2), the authors' outlier, from every comparison.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "heat_35c_24h_vs_0h"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
+    stressor_original: "'stimulated by high temperature seawater of 35°C for 24 h' (sublethal temperature), Li et al. 2018; BioSample temp '35_24' vs '35_0'"
+    stressor_standardized: "temperature"
+    exposure_intensity: "35 C seawater vs laboratory acclimation at 14.2-18.2 C"
+    exposure_duration: "24 h"
+    exposure_timing: "acute; same tanks sampled before heating (0 h) and after 24 h"
+    control_condition: "0 h: the same 12 tanks before heating (4 populations x 3), acclimated 2 weeks at 14.2-18.2 C; LTJ02 excluded"
+    treatment_condition: "24 h at 35 C seawater, same 12 tanks"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 23
+    biological_replicates: 11
+    meta_analysis_primary: true
+    excluded_samples:
+      - sample_id: "LTJ02"
+        reason: "Discarded by the authors as an outlier (LT-I_0h_2); AREE follows the authors' prespecified exclusion."
+        evidence: "Li et al. 2018 methods (PMC6120431): 'One sample of LT-I_0h_2 was used as an outlier and was abandoned from subsequent analysis.'"
+    results_file: null
+
+  - comparison_id: "heat_35c_6h_vs_0h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "35°C seawater, sampled after 6 h (Li et al. 2018); BioSample temp '35_6' vs '35_0'"
+    stressor_standardized: "temperature"
+    exposure_intensity: "35 C seawater vs laboratory acclimation at 14.2-18.2 C"
+    exposure_duration: "6 h"
+    exposure_timing: "acute; same tanks sampled before heating (0 h) and after 6 h"
+    control_condition: "0 h: the same 12 tanks before heating; LTJ02 excluded"
+    treatment_condition: "6 h at 35 C seawater, same 12 tanks"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 23
+    biological_replicates: 11
+    excluded_samples:
+      - sample_id: "LTJ02"
+        reason: "Discarded by the authors as an outlier (LT-I_0h_2); AREE follows the authors' prespecified exclusion."
+        evidence: "Li et al. 2018 methods (PMC6120431)."
+    results_file: null
+
+  - comparison_id: "intertidal_vs_subtidal_0h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "No treatment contrast: F1 of intertidal-origin (thermally tolerant) vs subtidal-origin (sensitive) populations, both sites, before heating (0 h, laboratory acclimation 14.2-18.2 C)"
     stressor_standardized: "temperature"
     exposure_intensity: null
     exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
+    exposure_timing: "baseline (0 h); tolerance measured separately as survival after 42 C for 1 h"
+    control_condition: "subtidal-origin F1 (BYQ X, LT X), 0 h; 2 populations, 3 tanks each, summed per population"
+    treatment_condition: "intertidal-origin F1 (BYQ J, LT J), 0 h; 2 populations, 3 tanks each (LT J: 2 after exclusion), summed per population"
     phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
-    phenotype_unit: null
+    phenotype_direction: "increase"
+    phenotype_unit: "survival after acute heat stress (42 C, 1 h; 14 d), higher in intertidal F1 at both sites (Kaplan-Meier, log-rank p < 0.05); measured per population, in 4-month-olds from the same cohorts"
     resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 11
+    biological_replicates: 2
+    excluded_samples:
+      - sample_id: "LTJ02"
+        reason: "Discarded by the authors as an outlier (LT-I_0h_2); AREE follows the authors' prespecified exclusion."
+        evidence: "Li et al. 2018 methods (PMC6120431)."
     results_file: null
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - family_level_replication   # intertidal_vs_subtidal_0h: tolerance is a population trait, 2 v 2 populations
+
+limitations: >
+  (1) The heat comparisons' control is the same tanks before heating, not a
+  concurrent unheated group, so time and handling are confounded with heat.
+  (2) Libraries pool five oysters each. (3) Population and tank pairing are
+  not blocked (single-factor model), which costs power but not bias. (4) The
+  tolerance contrast rests on two populations per class: one intertidal and
+  one subtidal population at each of two sites. Populations differ in more
+  than tidal origin (growth, energy reserves), so intertidal_vs_subtidal_0h
+  is resilience-associated evidence, not a mechanism. Survival was measured
+  in 4-month-olds, transcriptomes in 10-month-olds of the same cohorts. (5)
+  The tidal-zone code (J = intertidal) is read from the aliases, not the
+  BioSamples; see the note above the comparisons.
 
 provenance:
   registered_by: "sr320"
   date_registered: "2026-10-11"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA407831 --study-id
+    LI2018_HEAT_TIDAL` (draft PR sr320/AREE#28). Sample sheet from live ENA
+    metadata with `aree fetch-samplesheet --label-field sample_alias` and the
+    pattern in config/LI2018_HEAT_TIDAL.config; all 36 aliases match, 12 groups
+    of 3, and the parsed hours agree with each BioSample's `temp` attribute and
+    the site with `isolate`. Design, replication, the outlier and the survival
+    phenotype read from the paper's methods and results (PMC6120431). The
+    comparisons, the meta_analysis_primary flag and the exclusion were fixed
+    before any result was computed. Does not need the design-table code of
+    sr320/AREE#24.
+  source_links:
+    - "https://doi.org/10.3389/fphys.2018.00825"
+    - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6120431/"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA407831"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA407831"
