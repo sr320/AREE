@@ -195,6 +195,21 @@ workflow {
 
         STANDARDIZE_OUTPUT(study_id, comparison_id, raw_de_ch)
 
+        // The reference files this run read, checksummed into the manifest. A
+        // bundle fetched with `aree fetch-reference` carries
+        // reference_provenance.json beside them; it is staged too, so the
+        // manifest can confirm the files still match what was fetched.
+        def ref_paths = [params.transcript_fasta, params.gtf, params.tx2gene]
+            .findAll { it }
+            .collect { file(it, checkIfExists: true) }
+        if (ref_paths) {
+            def bundle_provenance = ref_paths[0].parent.resolve('reference_provenance.json')
+            if (bundle_provenance.exists()) {
+                ref_paths << bundle_provenance
+            }
+        }
+        reference_files_ch = Channel.value(ref_paths)
+
     } else {
 
         // ---- processed_results_harmonization branch ---------------------
@@ -217,6 +232,7 @@ workflow {
         viral_summary_ch = Channel.value(no_viral_qc)
         deseq2_design_ch = Channel.value(no_deseq2_design)
         versions_ch = Channel.empty()
+        reference_files_ch = Channel.value([])
     }
 
     // ---- shared tail: manifest + report (both modes) --------------------
@@ -237,6 +253,7 @@ workflow {
         warnings_json,
         viral_summary_ch,
         deseq2_design_ch,
+        reference_files_ch,
         versions_ch.collect(),
         collect_versions_py
     )

@@ -130,15 +130,11 @@ awk -F'\t' 'NR>1 {print $4"  "$1"_"$2".fastq.gz"}' \
   data/studies/CALLA2026_OSHV/fastq_manifest.tsv > md5sums.txt
 md5sum -c md5sums.txt
 
-# 2. Reference transcriptome + annotation, and a transcript->gene map.
-BASE=https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/963/853/765/GCF_963853765.1_xbMagGiga1.1
-curl -O "$BASE/GCF_963853765.1_xbMagGiga1.1_rna.fna.gz"
-curl -O "$BASE/GCF_963853765.1_xbMagGiga1.1_genomic.gtf.gz"
-awk -F'\t' '$3=="transcript"{
-  if (match($9, /transcript_id "[^"]+"/)) tx=substr($9,RSTART+15,RLENGTH-16)
-  if (match($9, /GeneID:[0-9]+/))        g=substr($9,RSTART+7,RLENGTH-7)
-  if (tx && g) print tx"\t"g
-}' genomic.gtf | sort -u > tx2gene.tsv
+# 2. Reference transcriptome + annotation, and a transcript->gene map, verified
+#    against NCBI's MD5s and recorded in reference_provenance.json
+#    (docs/reference_bundles.md). The pilot used an equivalent curl/awk recipe;
+#    `fetch-reference` reproduces its tx2gene.tsv byte for byte.
+aree fetch-reference --assembly GCF_963853765.1
 
 # 3. Run one comparison. The `workstation` profile puts the work directory on
 #    the T5 SSD (see "Storage layout" below); never put it on exFAT.
