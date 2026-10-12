@@ -7,7 +7,7 @@
 #   stress_response  - molecular/physiological response to a stressor, not itself an outcome measure
 #   disease          - disease susceptibility/resistance outcome
 #   exposure_only    - describes exposure/treatment, not an outcome phenotype
-version: "0.2.0"
+version: "0.3.0"
 terms:
   - id: survival
     label: Survival
@@ -99,3 +99,8 @@ terms:
       Clams that cannot rebury are exposed to predation and dislodgement.
     resilience_relevance: resilience
     unit_examples: ["time_to_burrow_s", "burrowing_depth_mm"]
+  - id: toxicant_tolerance
+    label: Toxicant tolerance
+    definition: Capacity to maintain function/survival under exposure to biotoxins (e.g. harmful-algal-bloom toxins) or chemical pollutants (e.g. pesticides, microplastic or tire-particle leachates).
+    resilience_relevance: resilience
+    unit_examples: ["percent_survival_under_exposure", "LC50", "toxin_body_burden_at_which_function_is_maintained"]
