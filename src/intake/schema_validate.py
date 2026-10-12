@@ -17,6 +17,7 @@ import jsonschema
 from common import (
     DATA_DIR,
     SCHEMAS_DIR,
+    assembly_crosswalk_path,
     load_json,
     load_vocab,
     load_yaml,
@@ -101,12 +102,70 @@ def validate_study_file(path) -> ValidationResult:
             "(data/reference/genome_assemblies.yaml). Add it there with a verified "
             "NCBI accession — see docs/handling_genome_versions.md."
         )
-    elif species is not None and assembly.get("ncbi_taxid") != species.ncbi_taxid:
-        errors.append(
+    declared_flags = set(study.get("quality_flags") or [])
+
+    if assembly is not None and species is not None and assembly.get("ncbi_taxid") != species.ncbi_taxid:
+        # Mapping reads to a related species' genome is sometimes the only option
+        # (e.g. Mytilus chilensis has no assembly). It is allowed only when the
+        # study says so, because the gene identifiers then belong to the
+        # reference species, not to the animal the evidence is about.
+        mismatch = (
             f"genome_assembly {assembly['assembly_id']!r} belongs to taxid "
-            f"{assembly.get('ncbi_taxid')}, but species {species_name!r} is taxid "
-            f"{species.ncbi_taxid}"
+            f"{assembly.get('ncbi_taxid')} ({assembly.get('species')}), but species "
+            f"{species_name!r} is taxid {species.ncbi_taxid}"
         )
+        if "reference_species_mismatch" in declared_flags:
+            warnings.append(
+                f"{mismatch}. Accepted because the study declares "
+                "reference_species_mismatch; identifiers will be standardized against "
+                "the assembly's crosswalk, evidence partitioned under the study's species."
+            )
+        else:
+            errors.append(
+                f"{mismatch}. If the reads really were mapped to another species' genome, "
+                "add the quality flag reference_species_mismatch and explain it in limitations."
+            )
+    elif "reference_species_mismatch" in declared_flags and assembly is not None and species is not None:
+        errors.append(
+            "quality flag reference_species_mismatch is declared, but the assembly and "
+            "the species are the same taxon"
+        )
+
+    # A real study on an assembly with no crosswalk can be registered (so the
+    # registry is honest about what exists) but cannot be harmonized yet.
+    if assembly is not None and not study.get("simulated", False):
+        crosswalk = assembly_crosswalk_path(assembly)
+        if crosswalk is None:
+            warnings.append(
+                f"genome_assembly {assembly['assembly_id']!r} has no identifier_crosswalk "
+                "in data/reference/genome_assemblies.yaml, so this study can be registered "
+                "but not harmonized. Build one with `aree build-crosswalk --taxid "
+                f"{assembly.get('ncbi_taxid')}` and register it there."
+            )
+        elif not crosswalk.exists():
+            warnings.append(
+                f"the identifier crosswalk registered for {assembly['assembly_id']!r} "
+                f"({crosswalk}) does not exist on this machine; build it before harmonizing."
+            )
+
+    # Species in a hybridizing complex are routinely mislabelled in public
+    # deposits. The study must say how its animals were assigned, and anything
+    # short of genotyping is flagged rather than trusted.
+    if species is not None and species.complex:
+        identity = study.get("species_identity")
+        if not identity:
+            errors.append(
+                f"species {species.scientific_name!r} is in the {species.complex} and is "
+                "often mislabelled in public deposits; declare species_identity "
+                "(basis: genotyped | morphology | collection_site | authors_statement | "
+                "unstated) — see docs/adding_a_species.md."
+            )
+        elif identity.get("basis") != "genotyped" and "species_assignment_unverified" not in declared_flags:
+            errors.append(
+                f"species_identity.basis is {identity.get('basis')!r}, not genotyped, for a "
+                f"species in the {species.complex}; add the quality flag "
+                "species_assignment_unverified."
+            )
 
     for assay in study.get("assay_type", []):
         if assay not in assay_ids:
