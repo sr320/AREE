@@ -21,6 +21,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     val treatment_level
     val exclude_samples
     val replicate_unit
+    val covariates
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
@@ -28,6 +29,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     output:
     tuple val(study_id), val(comparison_id), path("${study_id}_${comparison_id}_deseq2_raw.tsv"), emit: results
     path "${study_id}_${comparison_id}_deseq2.RData", emit: rdata
+    path "${study_id}_${comparison_id}_deseq2_design.json", emit: design
     path "versions.yml", emit: versions
 
     script:
@@ -58,13 +60,15 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         treatment_level = "${treatment_level}",
         exclude_samples = "${exclude_samples}",
         replicate_unit  = "${replicate_unit}",
+        covariates      = "${covariates}",
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
-        out_rdata      = "${study_id}_${comparison_id}_deseq2.RData"
+        out_rdata      = "${study_id}_${comparison_id}_deseq2.RData",
+        out_design     = "${study_id}_${comparison_id}_deseq2_design.json"
     )
 
     # sample_sheet.tsv is expected to have columns: sample_id, condition,
     # quant_subdir (name of the per-sample Salmon output directory), and
-    # optionally covariates (batch, family_line, etc.).
+    # optionally covariate columns named by --covariates (family, batch, ...).
     samples <- read.delim(args\$sample_sheet, stringsAsFactors = FALSE)
 
     # The two condition levels are named by the caller rather than assumed to be
@@ -157,6 +161,51 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         samples\$replicate_unit <- units
     }
 
+    # Covariates: sample-sheet columns fitted as factors ahead of condition,
+    # e.g. family or sequencing batch (~ family + condition). The contrast is
+    # still condition only. A covariate adjusts for a known source of variation;
+    # it does not make correlated libraries independent. If one replicate unit
+    # (tank) holds libraries at several covariate levels (both families), the
+    # libraries are still clustered by unit. Use --replicate_unit, or one run
+    # per covariate level, for that design (workflows/rnaseq/README.md).
+    covariates_requested <- split_levels(args\$covariates)
+    reserved <- c("condition", "sample_id", "source_condition", "replicate_unit", "quant_subdir")
+    if (pseudo_bulk) reserved <- c(reserved, unit_col)
+    clash <- intersect(covariates_requested, reserved)
+    if (length(clash) > 0) {
+        stop("covariates cannot include ", paste(clash, collapse = ", "),
+             " (the contrast, an identifier, or the replicate unit)")
+    }
+    unknown_cov <- setdiff(covariates_requested, names(samples))
+    if (length(unknown_cov) > 0) {
+        stop("covariate column(s) not in the sample sheet: ", paste(unknown_cov, collapse = ", "))
+    }
+    for (cv in covariates_requested) {
+        v <- as.character(samples[[cv]])
+        if (any(is.na(v) | !nzchar(v))) {
+            stop("covariate column '", cv, "' is empty for some samples in this contrast")
+        }
+        samples[[cv]] <- v
+        if (pseudo_bulk) {
+            levels_per_unit <- tapply(v, samples\$replicate_unit, function(x) length(unique(x)))
+            if (any(levels_per_unit > 1)) {
+                stop("covariate '", cv, "' varies within replicate_unit '", unit_col, "' (",
+                     paste(names(levels_per_unit)[levels_per_unit > 1], collapse = ", "),
+                     "); summed units cannot carry it. Run once per level instead.")
+            }
+        }
+    }
+    # A covariate with one level here (e.g. family in a single-family run)
+    # carries no information; it is dropped, and the drop is recorded.
+    n_levels <- vapply(covariates_requested, function(cv) length(unique(samples[[cv]])), integer(1))
+    covariates_dropped <- covariates_requested[n_levels < 2]
+    covariates_used    <- covariates_requested[n_levels >= 2]
+    if (length(covariates_dropped) > 0) {
+        message("Covariate(s) constant in this contrast, dropped: ", paste(covariates_dropped, collapse = ", "))
+    }
+    design_formula <- as.formula(paste("~", paste(c(covariates_used, "condition"), collapse = " + ")))
+    message("DESeq2 design: ", deparse(design_formula))
+
     n_per_group <- if (pseudo_bulk) {
         table(unique(samples[, c("replicate_unit", "condition")])\$condition)
     } else {
@@ -211,7 +260,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE,
                         countsFromAbundance = "lengthScaledTPM")
         unit_counts <- t(rowsum(t(txi\$counts), group = samples\$replicate_unit))
-        unit_info <- unique(samples[, c("replicate_unit", "condition")])
+        unit_info <- unique(samples[, c("replicate_unit", "condition", covariates_used)])
         unit_info\$n_libraries <- as.integer(table(samples\$replicate_unit)[unit_info\$replicate_unit])
         rownames(unit_info) <- unit_info\$replicate_unit
         unit_info <- unit_info[colnames(unit_counts), ]
@@ -219,19 +268,31 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
                 nrow(samples), " libraries (",
                 paste(sprintf("%s:%s=%d", unit_info\$condition, unit_info\$replicate_unit,
                               unit_info\$n_libraries), collapse = ", "), ")")
-        dds <- DESeqDataSetFromMatrix(
-            countData = round(unit_counts),
-            colData   = unit_info,
-            design    = ~condition
-        )
+        col_data <- unit_info
     } else {
         txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
+        col_data <- samples
+    }
 
-        dds <- DESeqDataSetFromTximport(
-            txi,
-            colData = samples,
-            design  = ~condition
-        )
+    # Covariates enter as factors. Check the model before DESeq2 sees it, so a
+    # covariate confounded with condition (e.g. one family per arm) fails with
+    # its name rather than DESeq2's generic full-rank error.
+    for (cv in covariates_used) col_data[[cv]] <- factor(col_data[[cv]])
+    mm <- model.matrix(design_formula, data = as.data.frame(col_data))
+    if (qr(mm)\$rank < ncol(mm)) {
+        stop("design ", deparse(design_formula), " is not full rank: covariate(s) ",
+             paste(covariates_used, collapse = ", "), " are confounded with condition or each other")
+    }
+    residual_df <- nrow(mm) - ncol(mm)
+    if (residual_df < 1) {
+        stop("design ", deparse(design_formula), " leaves no residual degrees of freedom (",
+             nrow(mm), " libraries, ", ncol(mm), " coefficients)")
+    }
+
+    dds <- if (pseudo_bulk) {
+        DESeqDataSetFromMatrix(countData = round(unit_counts), colData = col_data, design = design_formula)
+    } else {
+        DESeqDataSetFromTximport(txi, colData = col_data, design = design_formula)
     }
 
     # Minimal prefiltering: drop genes with essentially no signal anywhere.
@@ -254,6 +315,21 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     write.table(out, args\$out_tsv, sep = "\\t", quote = FALSE, row.names = FALSE, na = "NA")
     save(dds, res, file = args\$out_rdata)
 
+    # What was actually fitted, for the manifest. Written without jsonlite so
+    # the step needs nothing beyond DESeq2 and tximport.
+    json_str <- function(x) paste0('"', gsub('"', '\\\\"', x), '"')
+    json_arr <- function(x) paste0("[", paste(vapply(x, json_str, ""), collapse = ", "), "]")
+    writeLines(c(
+        "{",
+        paste0('  "design": ', json_str(paste(deparse(design_formula), collapse = "")), ","),
+        paste0('  "covariates_requested": ', json_arr(covariates_requested), ","),
+        paste0('  "covariates_used": ', json_arr(covariates_used), ","),
+        paste0('  "covariates_dropped_constant": ', json_arr(covariates_dropped), ","),
+        paste0('  "n_libraries_or_units": ', nrow(mm), ","),
+        paste0('  "residual_df": ', residual_df),
+        "}"
+    ), args\$out_design)
+
     cat(sprintf(
         "AREE DESeq2 step complete for %s:%s — %d genes tested\\n",
         args\$study_id, args\$comparison_id, nrow(out)
@@ -274,6 +350,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     """
     printf 'gene_id\tbaseMean\tlog2FoldChange\tlfcSE\tstat\tpvalue\tpadj\nGENE1\t10\t1\t0.2\t5\t0.001\t0.01\n' > ${study_id}_${comparison_id}_deseq2_raw.tsv
     touch ${study_id}_${comparison_id}_deseq2.RData
+    printf '{"design": "~condition", "covariates_requested": [], "covariates_used": [], "covariates_dropped_constant": [], "n_libraries_or_units": 0, "residual_df": 0, "stub": true}\n' > ${study_id}_${comparison_id}_deseq2_design.json
     echo '${task.process}:' > versions.yml
     """
 

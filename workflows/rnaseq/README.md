@@ -122,6 +122,7 @@ evidence-record-level `quality_flags` from study/comparison metadata).
 | DE model | DESeq2 via tximport | n/a (table assumed already DE-modeled upstream) |
 | Standardized output | `STANDARDIZE_OUTPUT` validates/reshapes DESeq2 output | `STANDARDIZE_OUTPUT` validates/reshapes the provided table |
 | Sample exclusion | `--exclude_samples`, recorded in the manifest | n/a |
+| Covariates | `--covariates` (e.g. `family`), fitted design recorded in the manifest | n/a |
 | Viral read QC | optional, `--viral_reference` | n/a |
 
 Both modes converge on the same standardized TSV schema, written to
@@ -146,6 +147,40 @@ Other outputs (all under `params.outdir`, default `results/rnaseq/`):
   `assets/report_template.qmd`.
 - (`raw_reanalysis` only) `fastqc/`, `trimmed/`, `salmon/`, `multiqc/`,
   `deseq2/` — intermediate per-step outputs.
+
+## Covariates (`raw_reanalysis` only)
+
+**`--covariates`** takes a comma-separated list of sample-sheet columns to fit
+as factors ahead of the contrast, e.g. `--covariates family` fits
+`~ family + condition`. The contrast is still condition. Use it for a known
+source of variation that is balanced across both arms, such as family,
+sequencing batch or lane. The run stops, naming the problem, when:
+
+- a column is missing from the sample sheet, or empty for a sample in the contrast;
+- a covariate is `condition`, an identifier, or the `--replicate_unit` column;
+- a covariate is confounded with condition (the model is not full rank),
+  e.g. one family per arm;
+- the model leaves no residual degrees of freedom;
+- with `--replicate_unit`, a covariate varies within a unit (summed units
+  cannot carry it).
+
+A covariate with only one level in the contrast is dropped, not fitted. This
+happens when a run is subset to one family. The drop is reported as a
+`covariates_dropped_constant` warning.
+
+DESeq2 writes `deseq2/<study_id>_<comparison_id>_deseq2_design.json` (the
+formula fitted, covariates requested/used/dropped, libraries or units, and
+residual df). The manifest carries it under `deseq2_design` and the request
+under `parameters.covariates`.
+
+**A covariate does not fix clustering.** If several libraries share the unit
+that received the treatment, they are not independent replicates, whatever
+covariates are fitted. DESeq2 cannot take that unit as a term when it is
+nested in condition. An example is DUPERRET2025_STARVE_RNASEQ, where both
+families share each tank. There, `~ family + condition` would count 6
+libraries per diet when 3 tanks were treated. The defensible fits are
+`--replicate_unit tank` (sum each tank's libraries, 3 vs 3) or one run per
+family, as the source paper did.
 
 ## Sample exclusion and viral read QC (`raw_reanalysis` only)
 
