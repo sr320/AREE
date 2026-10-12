@@ -140,9 +140,10 @@ def test_every_comparison_fits_three_tank_units_per_arm(samplesheet):
         assert set(families.values()) == {2}
 
 
-def test_config_fits_primary_on_tanks_not_family_covariate():
+def test_config_is_single_end_and_fits_primary_on_tanks():
     config = (REPO_ROOT / "config" / f"{STUDY_ID}.config").read_text()
     assert "replicate_unit  = 'tank'" in config
+    assert "single_end = true" in config
     assert "covariates" not in config.split("params {", 1)[1]
 
 

@@ -16,10 +16,10 @@
 # study's primary comparison, so the two can support multi-omics convergence.
 # They are the same tanks and must not be counted as independent studies.
 #
-# NOT YET RUNNABLE. The libraries are single-end 75 bp (NextSeq 550), and
-# AREE's RNA-seq workflow is paired-end only on main (fromFilePairs, salmon
-# -1/-2, fastp -i/-I). Single-end support is PR #25; this study needs it
-# merged, then a rebase, then `single_end = true` in its config.
+# RUNNABLE, NOT YET RUN. The libraries are single-end 75 bp (NextSeq 550).
+# The RNA-seq workflow supports single-end input since PR #25, and the
+# config sets `single_end = true`. The reads (about 104 GB) have not been
+# downloaded or reanalyzed.
 
 study_id: DUPERRET2025_STARVE_RNASEQ
 simulated: false
@@ -169,8 +169,9 @@ quality_flags:
   - low_replication
 
 limitations: >
-  (1) Not yet runnable: the libraries are single-end, and AREE's RNA-seq
-  workflow is paired-end only until PR #25 merges. (2) Replication is 3
+  (1) Not yet reanalyzed. The libraries are single-end, which the workflow
+  supports since PR #25, but no full-depth single-end run has been made in
+  AREE. (2) Replication is 3
   tanks per diet. Each library is a pool of 10 oysters, so between-oyster
   variance is averaged away. Both families share each tank, so every
   comparison is fitted on pseudo-bulk tank units (families summed), 3 vs 3.
