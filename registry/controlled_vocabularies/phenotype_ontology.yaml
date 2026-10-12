@@ -7,7 +7,7 @@
 #   stress_response  - molecular/physiological response to a stressor, not itself an outcome measure
 #   disease          - disease susceptibility/resistance outcome
 #   exposure_only    - describes exposure/treatment, not an outcome phenotype
-version: "0.2.0"
+version: "0.3.0"
 terms:
   - id: survival
     label: Survival
@@ -84,6 +84,21 @@ terms:
     definition: Capacity to maintain function/survival under reduced dissolved oxygen.
     resilience_relevance: resilience
     unit_examples: ["critical_oxygen_tension", "percent_survival_hypoxia"]
+  - id: byssal_attachment
+    label: Byssal attachment
+    definition: >-
+      Capacity of a mussel to produce byssal threads and remain attached under
+      or after stress. A direct survival and farm-retention trait, since
+      detached mussels are lost.
+    resilience_relevance: resilience
+    unit_examples: ["attachment_strength_N", "byssal_threads_per_day"]
+  - id: burrowing_performance
+    label: Burrowing performance
+    definition: >-
+      Speed or depth of reburial by an infaunal clam under or after stress.
+      Clams that cannot rebury are exposed to predation and dislodgement.
+    resilience_relevance: resilience
+    unit_examples: ["time_to_burrow_s", "burrowing_depth_mm"]
   - id: toxicant_tolerance
     label: Toxicant tolerance
     definition: Capacity to maintain function/survival under exposure to biotoxins (e.g. harmful-algal-bloom toxins) or chemical pollutants (e.g. pesticides, microplastic or tire-particle leachates).

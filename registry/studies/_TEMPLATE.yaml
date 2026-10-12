@@ -16,6 +16,12 @@ accessions:
 
 citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
 species: "Crassostrea gigas"
+# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
+# complex); see docs/adding_a_species.md. Any basis other than genotyped also
+# needs the quality flag species_assignment_unverified.
+# species_identity:
+#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
+#   notes: null
 strain_or_population: null
 genome_assembly: "cgigas_uk_roslin_v1"
 annotation_version: null

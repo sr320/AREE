@@ -43,6 +43,20 @@
     },
     "citation": {"type": "string", "description": "Full citation string for the source publication/dataset."},
     "species": {"type": "string", "description": "Scientific name, e.g. Crassostrea gigas."},
+    "species_identity": {
+      "type": ["object", "null"],
+      "description": "How the study animals were assigned to species. Required (by aree validate-study) for species whose vocabulary term has a `complex`, e.g. the hybridizing Mytilus edulis complex; optional otherwise.",
+      "additionalProperties": false,
+      "required": ["basis"],
+      "properties": {
+        "basis": {
+          "type": "string",
+          "enum": ["genotyped", "morphology", "collection_site", "authors_statement", "unstated"],
+          "description": "genotyped = species-diagnostic markers or sequence data on the study animals themselves; collection_site = inferred from where they were collected; authors_statement = the paper or deposit names the species with no stated basis; unstated = nothing recorded."
+        },
+        "notes": {"type": ["string", "null"], "description": "Markers used, hybrid-zone context, or why the label is doubted."}
+      }
+    },
     "strain_or_population": {
       "type": ["string", "null"],
       "description": "Strain, population, family, or breeding line where available."
