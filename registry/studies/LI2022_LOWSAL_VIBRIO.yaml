@@ -47,8 +47,22 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 14 runs are public in ENA/SRA under PRJNA756710. The paper's supplementary DEG tables (10‰Vibrio vs 30‰Vibrio at 12 h and 48 h) report only significant genes against an older assembly (GCA_902806645.1); AREE reanalyzes from raw reads. Salinity and timepoint are only in each BioSample's title, not in its attributes; design.tsv records the parse with the verbatim titles. Sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+# QC PASSED WITH WARNINGS, 2026-10-11 (full-depth run of the 12 libraries).
+# - Replicates are real: median within-group dispersion 0.012-0.073
+#   (replicate_dispersion_qc.tsv). 30ppt_12h is lowest (0.012) but well above
+#   the 0.005 floor; each library pools three oysters, which by itself lowers
+#   dispersion about threefold.
+# - Agrees with the authors: of their Supplementary Table 4 DEGs (10‰Vibrio
+#   vs 30‰Vibrio, padj < 0.05, matched by GeneID), 98.7% (12 h) and 99.0%
+#   (48 h) change in the same direction here (fold-change r = 0.87, 0.85),
+#   and 99.8% / 100% of those also significant here.
+# - Warning: the 12 h and 48 h responses barely agree (fold-change r = 0.03
+#   across all genes; 63% same direction among the 792 genes significant at
+#   both). That is in the authors' own lists too (74% of their 659 genes DE at
+#   both times), so it is the biology of a fast-changing response, not a
+#   pipeline fault, but it means one timepoint does not stand for the other.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # Comparisons: 10 ppt vs 30 ppt, both Vibrio-injected, at each timepoint.
@@ -91,7 +105,7 @@ comparisons:
     sample_size: 6
     biological_replicates: 3
     meta_analysis_primary: true
-    results_file: null
+    results_file: "data/studies/LI2022_LOWSAL_VIBRIO/LI2022_LOWSAL_VIBRIO_lowsal_10ppt_vs_30ppt_vibrio_48h_dge_standardized.tsv"
 
   - comparison_id: "lowsal_10ppt_vs_30ppt_vibrio_12h"
     tissue: "gill"
@@ -109,7 +123,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/LI2022_LOWSAL_VIBRIO/LI2022_LOWSAL_VIBRIO_lowsal_10ppt_vs_30ppt_vibrio_12h_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -150,6 +164,14 @@ provenance:
     in the sister repository sr320/AREE-co found within-group dispersion of
     0.011-0.074 on its Salmon quantifications, i.e. real (pooled) biological
     replicates.
+    Runs (2026-10-11, Nextflow 26.04.7, native -profile local,workstation on
+    a 16 GB / 8-core Mac, work dir on an HFS+ external drive): all 24 FASTQ
+    verified against ENA MD5s; 48 h comparison 42/42 tasks, 12 h reuses its
+    Salmon quantifications. Salmon mapping 75.5-83.7%, library type IU
+    (unstranded, as expected for NEBNext Ultra). DE at padj < 0.05: 48 h
+    3,711 of 25,689 genes; 12 h 4,012 of 25,508 (the paper reports 3,187 and
+    3,038 with |FC| > 1 against an older assembly). Harmonized 2026-10-11:
+    51,197 evidence records, identifier mapping 100% exact.
   source_links:
     - "https://doi.org/10.3389/fimmu.2022.859975"
     - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9162580/"

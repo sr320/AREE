@@ -106,3 +106,26 @@ def test_fastq_manifest_covers_every_run_paired(samplesheet):
     assert {r["run_accession"] for r in manifest} == {r["run_accession"] for r in samplesheet}
     assert len(manifest) == 28
     assert all(len(r["md5"]) == 32 for r in manifest)
+
+
+def test_replicates_pass_dispersion_qc():
+    rows = _tsv(STUDY_DIR / "replicate_dispersion_qc.tsv")
+    assert {r["condition"] for r in rows} == {"10ppt_12h", "10ppt_48h", "30ppt_12h", "30ppt_48h"}
+    assert all(r["passes"] == "True" and float(r["median_dispersion"]) > 0.005 for r in rows)
+
+
+def test_each_comparison_was_run_as_registered(study):
+    from common import REPO_ROOT
+
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        hours = cid.rsplit("_", 1)[1]
+        params = json.loads((STUDY_DIR / f"LI2022_LOWSAL_VIBRIO_{cid}_workflow_manifest.json").read_text())["parameters"]
+        assert params["comparison_id"] == cid
+        assert params["control_levels"] == [f"30ppt_{hours}"]
+        assert params["treatment_levels"] == [f"10ppt_{hours}"]
+        assert params["single_end"] is False and params["tag_seq"] is False
+        rows = _tsv(REPO_ROOT / comp["results_file"])
+        assert len(rows) > 20000
+        assert sum(r["lfcSE"] not in ("", "NA") for r in rows) > 0.95 * len(rows)
+        assert (STUDY_DIR / f"LI2022_LOWSAL_VIBRIO_{cid}_rnaseq_report.html").exists()
