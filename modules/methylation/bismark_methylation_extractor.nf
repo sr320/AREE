@@ -38,6 +38,7 @@ process BISMARK_METHYLATION_EXTRACTOR {
         --bedGraph \\
         --gzip \\
         --multicore ${Math.max((task.cpus / 3) as int, 1)} \\
+        ${params.methylation?.extractor_args ?: ''} \\
         ${dedup_bam}
 
     cat <<-END_VERSIONS > versions.yml

@@ -48,6 +48,8 @@ def paramsAsJson() {
         tile_step            : params.methylation?.tile_step,
         replicate_unit       : params.methylation?.replicate_unit ?: null,
         design_sheet         : params.methylation?.design_sheet ?: null,
+        bismark_align_args   : params.methylation?.bismark_align_args ?: '',
+        extractor_args       : params.methylation?.extractor_args ?: '',
         promoter_upstream_bp : params.methylation?.promoter_upstream_bp,
         genome_assembly      : params.genome_assembly,
     ]

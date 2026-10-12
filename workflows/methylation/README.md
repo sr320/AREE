@@ -74,6 +74,18 @@ test should generate a small synthetic bisulfite-converted FASTQ pair (e.g.
 via `Sherman` or a hand-rolled converter) plus a toy genome/GTF, per the
 roadmap in `docs/roadmap.md`.
 
+#### Alignment and extraction options
+
+`methylation.bismark_align_args` and `methylation.extractor_args` are
+passed to `bismark` and `bismark_methylation_extractor` as written, and
+recorded in the manifest. Both are empty by default. Bismark's default
+`--score_min L,0,-0.2` is strict for a genome as heterozygous as
+*M. gigas*. On 50,000 trimmed pairs from `CIBNOR2021_HEAT_RRSS`, the
+default mapped 15.5% of pairs uniquely, and `--score_min L,0,-0.6` mapped
+53.9%. Non-directional mode and a larger insert limit made no difference.
+Use `extractor_args` for M-bias trimming (e.g. `--ignore_r2 N`) after
+checking the M-bias plot.
+
 #### Replication unit (`methylation.replicate_unit`)
 
 When the phenotype or treatment belongs to a group of libraries, such as a

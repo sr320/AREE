@@ -68,6 +68,7 @@ process BISMARK_ALIGN {
         -2 ${read2} \\
         --bowtie2 \\
         --multicore ${Math.max((task.cpus / 3) as int, 1)} \\
+        ${params.methylation?.bismark_align_args ?: ''} \\
         -o .
 
     # Bismark 0.24 refuses --basename together with --multicore, so outputs
