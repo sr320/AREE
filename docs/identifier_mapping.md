@@ -31,7 +31,7 @@ never merges any of them.
 |---|---|---|
 | `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Every study with `simulated: true`. Keeps `make demo` and the test suite self-contained. |
 | `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Real studies on either oyster assembly. |
-| `data/reference/crosswalk/<slug>_gene_id_crosswalk.tsv` | One per further species, built with `aree build-crosswalk --taxid` | Real studies on that species' assemblies. None built yet for mussels or clams. |
+| `data/reference/crosswalk/{mgall,medul,mtros,mcali,mmerc,rphil}_gene_id_crosswalk.tsv` | Real genes for six mussel and clam species, same sources and builder (see below) | Real studies on that species' assemblies. |
 
 **The study decides, through its genome assembly.** Each entry in
 `data/reference/genome_assemblies.yaml` names its `identifier_crosswalk`.
@@ -112,6 +112,42 @@ result:
    inference run (OrthoFinder/OrthoDB). Fabricating them would manufacture
    cross-species confidence that does not exist, so the column ships empty and
    `resolve_identifier` returns `None` for it.
+
+### Mussel and clam crosswalks
+
+Built 2026-10-11 with the same builder, each against its species' NCBI
+reference annotation (recorded in the provenance sidecar and checked by a
+test). NCBI `gene_info` and `gene_history` were downloaded once and filtered
+per taxid; every species' rows were confirmed contiguous in both files, which
+the builder's streaming shortcut assumes.
+
+| Crosswalk | Species | Genes | Ensembl xref | Named symbol | UniProt-linked genes | Retired GeneIDs remapped / dead |
+|---|---|---|---|---|---|---|
+| `mgall` | *Mytilus galloprovincialis* | 43,869 | 59.9% | 10.9% | 42 | 0 / 0 |
+| `medul` | *Mytilus edulis* | 49,210 | 51.0% | 8.1% | 31 | 0 / 12 |
+| `mtros` | *Mytilus trossulus* | 47,781 | 58.7% | 12.1% | 94 | 0 / 0 |
+| `mcali` | *Mytilus californianus* | 41,309 | 55.0% | 9.4% | 7 | 0 / 0 |
+| `mmerc` | *Mercenaria mercenaria* | 45,378 | 56.2% | 2.4% | 2 | 3,656 / 9,078 |
+| `rphil` | *Ruditapes philippinarum* | 48,038 | 57.1% | 2.5% | 18 | 0 / 12 |
+
+What this means in practice:
+
+- **UniProt is effectively unusable for these species.** UniProtKB holds 81,997
+  entries for *M. galloprovincialis* and 74,071 for *M. edulis*, but only 43 and
+  32 of them cross-reference an NCBI GeneID. They are translated from GenBank
+  submissions, not from the RefSeq annotation the crosswalk is built on. A
+  mussel or clam proteomics table reported in UniProt accessions will resolve
+  almost nothing until a sequence-based mapping exists. Report RefSeq protein
+  or GeneID identifiers where the source allows.
+- **Ensembl xrefs are unusually good** (51 to 60%, against 38% for the oyster),
+  so a study reporting Ensembl gene IDs resolves well.
+- **Hard clam has two annotated assemblies.** Both use `mmerc`. Of the 43,960
+  GeneIDs on the older assembly (ASM1480567v1.1), 3,656 were discontinued in
+  February 2023 and remap through `mmerc_retired_gene_ids.tsv`, and 9,078 have
+  no replacement. See that assembly's notes in
+  `data/reference/genome_assemblies.yaml`.
+- **No retirement history yet** for most mussels: their RefSeq annotations are
+  first releases, so there are no older GeneIDs to remap.
 
 ### Design decisions in the real crosswalk
 

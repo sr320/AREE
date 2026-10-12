@@ -5,8 +5,8 @@ plain data field on every study and evidence record, not an assumption baked
 into the schemas or code. Onboarding another species is a data-addition
 exercise. The mussel and clam work in
 [mussel_clam_integration_plan.md](mussel_clam_integration_plan.md) is the
-running example: six mussel and clam species and seven of their assemblies are
-already registered, but no crosswalk has been built for them yet.
+running example: six mussel and clam species, seven of their assemblies, and a
+crosswalk for each species are registered, so their studies can be harmonized.
 
 ## What is already species-agnostic
 

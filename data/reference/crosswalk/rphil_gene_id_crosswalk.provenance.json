@@ -1,0 +1,77 @@
+{
+  "artifact": "rphil_gene_id_crosswalk.tsv",
+  "artifact_sha256": "2d7fc865aa5666b9e924e92c39af428e90f92c381a29238356adb362e0992a82",
+  "builder": "src/mappings/build_crosswalk.py",
+  "builder_version": "1.0.0",
+  "date_generated": "2026-10-11",
+  "organism": "Ruditapes philippinarum (Venerupis philippinarum, Tapes philippinarum, Venus philippinarum, Venerupis japonica, Tapes japonica, Ruditapes (Venerupis) philippinarum, Venerupis (Ruditapes) philippinarum), Manila clam",
+  "ncbi_taxid": 129788,
+  "ncbi_reference_annotation_at_build": "GCF_026571515.1 (ASM2657151v2), annotation release GCF_026571515.1-RS_2023_10",
+  "sources": [
+    {
+      "name": "NCBI Gene gene_info",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Invertebrates/All_Invertebrates.gene_info.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/rphil_gene_info.tsv",
+      "sha256_filtered": "962695ffb2e431b0a10ed33dc454ffe009c65a79bcc198f69e035f53eb556433",
+      "records": 48038
+    },
+    {
+      "name": "UniProtKB",
+      "url": "https://rest.uniprot.org/uniprotkb/stream?query=organism_id:129788&fields=accession,reviewed,protein_name,gene_names,gene_primary,xref_geneid,xref_refseq&format=tsv&compressed=true",
+      "local_copy": "data/reference/crosswalk/_sources/rphil_uniprot.tsv",
+      "sha256": "da08a1b8a3ae2da65d1b82675405b1e25f8cdbe4bdb198db1c37253a800a2a5c",
+      "entries_with_geneid_xref": 18,
+      "genes_linked": 18
+    },
+    {
+      "name": "NCBI Gene gene_history",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_history.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/rphil_gene_history.tsv",
+      "sha256_filtered": "8a0688f5317a7d036b69afe8f2a35ae98646e5eaa185c5381597eec13b63da51",
+      "remappable_retired_ids": 0,
+      "discontinued_without_replacement": 12
+    }
+  ],
+  "coverage": {
+    "genes_total": 48038,
+    "with_ensembl_xref": {
+      "n": 27413,
+      "pct": 57.07
+    },
+    "with_uniprot_accession": {
+      "n": 18,
+      "pct": 0.04
+    },
+    "with_multiple_uniprot_accessions": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "with_named_symbol": {
+      "n": 1222,
+      "pct": 2.54
+    },
+    "with_orthogroup": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "genes_by_type": {
+      "protein-coding": 40909,
+      "ncRNA": 5136,
+      "tRNA": 1206,
+      "pseudo": 612,
+      "snRNA": 91,
+      "snoRNA": 70,
+      "rRNA": 13,
+      "other": 1
+    },
+    "retired_gene_ids_remappable": 0,
+    "retired_gene_ids_without_replacement": 12
+  },
+  "known_limitations": [
+    "UniProt cross-references to NCBI GeneID are sparse for this organism; most TrEMBL entries carry no GeneID or RefSeq xref and therefore cannot be linked.",
+    "orthogroup_id is empty; cross-species evidence pooling requires an ortholog inference run that this builder does not perform.",
+    "Ensembl xrefs come from NCBI dbXrefs and reflect Ensembl Metazoa's assembly, which may differ from the current NCBI reference assembly.",
+    "gene_synonyms is emitted for curation and future symbol resolution but is not currently consulted by harmonize.identifiers.",
+    "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are labelled 'inferred' because the remap crosses an annotation version; GeneIDs discontinued without a replacement stay 'unresolved' by design."
+  ]
+}

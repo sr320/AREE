@@ -1,6 +1,6 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-11:** WP0 and WP1 are implemented (see their entries in
+**Status, 2026-10-11:** WP0, WP1 and WP2 are implemented (see their entries in
 section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
@@ -278,6 +278,23 @@ harmonizes both, and the evidence table's `identifier_crosswalk` provenance
 names a different file and checksum for each.
 
 ### WP2. Crosswalks for the first-wave species
+
+**Status: done, 2026-10-11.** Six crosswalks built and registered, one per
+species; coverage is in [identifier_mapping.md](identifier_mapping.md#mussel-and-clam-crosswalks).
+Findings that change later work:
+
+- **UniProt linkage is near zero** for every mussel and clam (2 to 94 genes per
+  species), because UniProtKB entries for them derive from GenBank, not RefSeq.
+  Proteomics studies (WP5) will need sequence-based protein mapping before they
+  can contribute.
+- **Hard clam:** the two annotated assemblies share 31,226 GeneIDs. On the older
+  one, 3,656 GeneIDs remap to a current gene and 9,078 were discontinued without
+  replacement, so both assemblies use one crosswalk and the older one carries a
+  note that up to about 21% of its genes will stay unresolved.
+- NCBI's `gene_info` and `gene_history` were confirmed to keep each taxid's rows
+  contiguous, which the builder's early-exit streaming depends on.
+- The real-crosswalk invariant tests now run over every registered crosswalk,
+  and a new test checks that no GeneID appears in two species' crosswalks.
 
 Run `aree build-crosswalk --taxid <id> --slug <slug>` for each of the six
 species (five first wave plus *M. californianus*), commit the TSV and
