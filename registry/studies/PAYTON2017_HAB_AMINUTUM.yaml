@@ -1,62 +1,124 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# Harmful algal bloom exposure: adult gill after 6 days on the paralytic-
+# shellfish-toxin (PST) producer Alexandrium minutum vs a non-toxic
+# dinoflagellate. AREE's FIRST harmful_algal_bloom STRESSOR. Chosen
+# 2026-10-11 from the RNA-seq studies the sister repository sr320/AREE-co had
+# curated; not in candidate_studies.md.
+#
+# Source: Payton et al. 2017, Sci Rep (open access, PMC5471176); data
+# ArrayExpress E-MTAB-5345 = ENA PRJEB18614. Methods read in full 2026-10-11.
+# The paper's subject is the circadian transcriptome; AREE uses only its
+# diet contrast, as the paper's own differential-expression analysis did
+# ("considering the 13 sample times ... of each algal treatment as
+# replicates").
+#
+# REPLICATION, AND ITS LIMIT. 156 oysters in six tanks, three per diet. During
+# the last two days, gill of six oysters per diet was taken every 4 h for
+# 52 h and pooled per diet and time: 13 libraries per diet, each pooling
+# animals from that diet's three tanks, each sequenced on two lanes. So the
+# replicates DESeq2 sees are the 13 libraries (lanes summed with
+# replicate_unit = sample_accession), which are different animals at
+# different times of day. Every library contains the same three tanks, so
+# tank-to-tank variation never enters the error term: lfcSE is somewhat too
+# small, in the way LUTIER2022's would have been without pseudo-bulking. The
+# libraries cannot be assigned to tanks, so this cannot be fixed; it is
+# flagged (tank_level_replication) and limits how much weight the study
+# should carry. Time-of-day is balanced between diets but not modelled.
+#
+# PHENOTYPE. Exposure is confirmed (gill PST 95.8 ± 13.5 ng STX eq/g in the
+# A. minutum group, none in controls) and valve behaviour changed (daytime
+# valve-opening rose from 20.6% to 38.0%), but no tolerance outcome was
+# measured. So toxicant_tolerance is the axis and the comparison is
+# stress_response, overriding the ontology default.
 
 study_id: PAYTON2017_HAB_AMINUTUM
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1038/s41598-017-03797-4"
   bioproject: "PRJEB18614"
   geo: null
-  sra: null
-  ena: null
+  sra: "ERR1758942-ERR1758993"
+  ena: "PRJEB18614"
   proteomexchange: null
-  other: null
+  other: "ArrayExpress E-MTAB-5345; BioSamples ERS1473698-ERS1473723; PMID 28615697; PMC5471176"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Payton L, Perrigault M, Hoede C, Massabuau JC, Sow M, Huvet A, Boullot F, Fabioux C, Hegaret H, Tran D (2017). Remodeling of the cycling transcriptome of the oyster Crassostrea gigas by the harmful algae Alexandrium minutum. Scientific Reports 7:3480. https://doi.org/10.1038/s41598-017-03797-4"
+
+species: "Magallana gigas"
+strain_or_population: "Diploid oysters, 1.5 years old, Bay of Arcachon, France (72.8 ± 0.5 mm shell length); held at 15 C, 9 h light : 15 h dark, in December to avoid gametogenesis."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end 100 bp, TruSeq Stranded mRNA; 26 pooled libraries, each on two lanes (52 runs, 23.4-43.9 M read pairs per run; 274 GB FASTQ reported by ENA)"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 52 runs are public in ENA (PRJEB18614) / ArrayExpress (E-MTAB-5345). Diet is the ENA sample attribute `growth condition`; sampling time is only in the ArrayExpress SDRF, committed here as E-MTAB-5345.sdrf.txt. Sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "alexandrium_vs_heterocapsa_6d"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+    stressor_original: "Continuous feeding on the PST-producing dinoflagellate Alexandrium minutum (strain AM89BM), ~400 cells/mL in tanks, 'mimicking a realistic HAB', for 6 days; control fed the non-toxic dinoflagellate Heterocapsa triquetra (strain HT99PZ) at matched supply (Payton et al. 2017); ENA growth condition 'Alexandrium minutum' / 'Heterocapsa triquetra'"
+    stressor_standardized: "harmful_algal_bloom"
+    exposure_intensity: "A. minutum 430.9 ± 160.8 cells/mL measured in tanks (1.3 pg saxitoxin per cell), vs H. triquetra 159.1 ± 15.7 cells/mL; gill PST burden 95.8 ± 13.5 ng STX eq/g"
+    exposure_duration: "6 days; gill sampled during the last 52 h"
+    exposure_timing: "sampled every 4 h over 52 h (13 times, Zeitgeber time) on days 5-6 of exposure; times pooled as replicates"
+    control_condition: "Heterocapsa triquetra (non-toxic dinoflagellate) diet; 3 tanks; 13 pooled libraries (6 oysters each), one per sampling time"
+    treatment_condition: "Alexandrium minutum (PST-producing) diet; 3 tanks; 13 pooled libraries (6 oysters each), one per sampling time"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    resilience_classification: "stress_response"
+    sample_size: 26
+    biological_replicates: 13
+    meta_analysis_primary: true
     results_file: null
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - tank_level_replication   # each library pools a diet's three tanks; tank variance is absent from lfcSE
+
+limitations: >
+  (1) Treatment was applied per tank (three per diet), but every library
+  pools animals from all three tanks of its diet, so tank-to-tank variation is
+  not in the error term and lfcSE is somewhat anti-conservative; the 13
+  libraries per diet differ in animals and time of day, not tank. (2)
+  Libraries pool six oysters. (3) Sampling times are pooled as replicates;
+  circadian variation, which the paper shows is large and is itself changed
+  by A. minutum, adds variance and can make a time-specific effect look
+  smaller. (4) No tolerance outcome was measured: the comparison describes
+  the response to a realistic toxic bloom, not which oysters cope with it.
+  (5) The control alga differs from A. minutum in more than toxicity, and
+  its measured density in tanks was lower.
 
 provenance:
   registered_by: "sr320"
   date_registered: "2026-10-11"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB18614 --study-id
+    PAYTON2017_HAB_AMINUTUM` (draft PR sr320/AREE#32). Uses the
+    toxicant_tolerance phenotype added by sr320/AREE#31; this branch contains
+    that commit until #31 merges. Sample sheet from live ENA metadata with
+    `aree fetch-samplesheet --label-field run_accession` (each run its own
+    sample_id) and `--condition-attribute "growth condition"`: 52 runs, 26 per
+    diet, two runs per BioSample, which are the two sequencing lanes of one
+    pooled library (paper methods). replicate_unit = sample_accession sums the
+    lanes. All 26 libraries are used, as in the paper's own DE analysis (an
+    earlier reanalysis in sr320/AREE-co dropped both day-2 ZT 8.5 pools by its
+    own QC rule; AREE does not, without an author-stated reason).
+    meta_analysis_primary is set on the study's only comparison; there is no
+    other real HAB study to pool with yet.
+  source_links:
+    - "https://doi.org/10.1038/s41598-017-03797-4"
+    - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5471176/"
+    - "https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-5345"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB18614"
