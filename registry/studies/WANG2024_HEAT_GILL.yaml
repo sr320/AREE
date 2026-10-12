@@ -1,68 +1,165 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# SECOND REAL THERMAL RNA-SEQ STUDY, and the closest like-for-like partner of
+# LI2022_HEAT_PLOIDY's diploid acute comparison: adult C. gigas gill, 12 h of
+# heat, n=3 per arm.
+#
+# Registered from deposited metadata. The deposit is a two-species,
+# two-assay design: C. gigas and C. angulata gill, heat vs no heat, each oyster
+# sequenced by RNA-seq and ATAC-seq (24 runs, 12 BioSamples). Only the
+# C. gigas RNA-seq arm is registered as a comparison. The other 18 runs stay
+# in the sample sheet so that the ATAC arm (once AREE has an
+# accessible-region feature type) and a species contrast can be added later
+# without re-curating the deposit.
+#
+# The publication is INFERRED, not confirmed. Wang C et al. 2024 (Aquaculture
+# 579:740177) is titled for exactly this design: chromatin dynamics in two
+# congeneric oysters with differential thermal tolerance. No full text citing
+# PRJNA970954 was found, and the paper's full text was not read. The same
+# group's open-access follow-up (Wang et al. 2024, Cell Commun Signal,
+# doi:10.1186/s12964-024-01923-0) reuses "transcriptomic, ATAC-Seq ... data
+# for [both species] under 12 h of heat stress ... from our previous study".
+# That confirms the 12 h exposure but not its temperature.
+#
+# Registered 2026-10-11. Not yet reanalyzed: sample sheet and FASTQ manifest
+# only.
 
 study_id: WANG2024_HEAT_GILL
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1016/j.aquaculture.2023.740177"
   bioproject: "PRJNA970954"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR24489460-SRR24489483 (C. gigas RNA-seq: SRR24489461, SRR24489463, SRR24489465, SRR24489471, SRR24489481, SRR24489483)"
+  ena: "PRJNA970954"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN35017932-SAMN35017943 (one per oyster, shared by its RNA-seq and ATAC-seq library); C. gigas: SAMN35017932-SAMN35017937"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Wang C, Jiang Z, Du M, Li Q, Cong R, Wang W, Zhang G, Li L (2024). Comparative chromatin dynamics reveal differential thermal tolerance mechanisms between two congeneric oyster species. Aquaculture 579:740177. https://doi.org/10.1016/j.aquaculture.2023.740177"
+
+species: "Magallana gigas"
+strain_or_population: "Adult C. gigas, Qingdao, China (BioSample geo_loc_name China: Qingdao; collected 2022-12-10). Origin (wild or cultured), age and size are not stated in the deposit."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "C. gigas RNA-seq: Illumina NovaSeq 6000, paired-end 2x150 bp, 6 libraries, 21.1-24.7 M read pairs each, 14.5 GB FASTQ. (ATAC-seq arm: HiSeq X Ten, not registered.)"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 24 runs are public in ENA/SRA under PRJNA970954 (first public 2023-12-31). The registered comparison needs only the 6 C. gigas RNA-seq runs (14.5 GB of 102.8 GB). No count matrix or DE table is deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. Every library has a unique library_name,
+# <HC|NC>.<species><rep>_<RNA-Seq|ATAC-Seq>_fastq. HC = heat, NC = no heat
+# (experiment_title: "adult gill under heat stress" / "without heat stress").
+# The sample sheet parses it, so condition = <assay>_<species>_<heat>, giving
+# 8 groups x n=3. Each oyster has one BioSample, shared by its RNA-seq and
+# ATAC-seq library; fetch-samplesheet's "24 runs share 12 BioSamples" warning
+# is that pairing, not pseudo-replication. Within the C. gigas RNA-seq arm,
+# all 6 libraries are distinct BioSamples. BioSample replicate attributes read
+# "HGi biological replicate 1" etc.
+#
+# ONE COMPARISON, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-11):
+# C. gigas RNA-seq, heat (RNA_Seq_gigas_HC) vs no heat (RNA_Seq_gigas_NC).
+# It is meta_analysis_primary. It matches LI2022_HEAT_PLOIDY's
+# diploid_acute_heat_12h_vs_baseline in species, tissue, life stage and
+# exposure length. Unlike LI2022's time-0 baseline, the no-heat arm is a
+# concurrent control (to be confirmed from the methods).
+#
+# ON PHENOTYPE CLASSIFICATION. Heat vs no heat within one species is an
+# exposure. The paper's contrast in thermal tolerance is between species (C.
+# angulata more tolerant than C. gigas), and no oyster here was scored for
+# its own tolerance. Classified exposure_only on thermal_tolerance, like
+# LI2022_HEAT_PLOIDY, so the validator warning is expected. A C. angulata vs
+# C. gigas contrast would be species-level, needs cross-species identifier
+# mapping, and is not registered.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "gigas_heat_12h_vs_control"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
+    stressor_original: "12 h of heat treatment; 'adult gill under heat stress' vs 'adult gill without heat stress' (BioProject description and experiment titles). Temperature not stated in the deposit or the abstract."
     stressor_standardized: "temperature"
     exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
+    exposure_duration: "12 h"
+    exposure_timing: "gill sampled at the end of 12 h of heat treatment"
+    control_condition: "C. gigas adults without heat stress (sample-sheet level RNA_Seq_gigas_NC; NC.gigas1-3)"
+    treatment_condition: "C. gigas adults after 12 h of heat stress (sample-sheet level RNA_Seq_gigas_HC; HC.gigas1-3)"
     phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+
+limitations: >
+  (1) n = 3 oysters per arm, so DESeq2 dispersion rests on 2 residual degrees
+  of freedom per arm. (2) The heat temperature is unknown. The deposit and
+  abstract give only "12 h of heat treatment". The open-access follow-up's
+  42 C runs are a separate mortality assay, not this exposure. Until the
+  methods are read, effect sizes are not dose-comparable to other thermal
+  studies, including LI2022_HEAT_PLOIDY. (3) The publication link is
+  inferred from title, design, species pair and group. (4) Exposure only:
+  the paper's tolerance difference is between species, and no oyster here
+  was scored for its own tolerance. (5) Single timepoint (12 h), single
+  site (Qingdao), single collection (2022-12-10). Oyster age, size, origin
+  and acclimation are not stated. (6) Gill only. (7) The paired ATAC-seq
+  libraries come from the same oysters. Once registered, they are convergent
+  evidence across omics layers, not independent replication. (8) RNA-seq and
+  ATAC-seq were sequenced on different platforms (NovaSeq 6000 vs HiSeq X
+  Ten). That does not affect this comparison.
 
 provenance:
   registered_by: "Steven Roberts"
   date_registered: "2026-10-11"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study` (draft PR #34). Registered from live ENA
+    metadata for PRJNA970954 with `aree fetch-samplesheet --bioproject
+    PRJNA970954 --study WANG2024_HEAT_GILL --label-field library_name
+    --label-pattern
+    '^(?P<heat>HC|NC)\.(?P<species>gigas|angulata)(?P<replicate>[1-3])_(?P<assay>RNA-Seq|ATAC-Seq)_fastq$'
+    --condition-attribute assay --condition-attribute species
+    --condition-attribute heat --attribute replicate --attribute tissue
+    --attribute organism --attribute collection_date --attribute geo_loc_name
+    --attribute "replicate'_attribute"`. library_name was used because
+    sample_alias (e.g. HC.gigas1) is shared by an oyster's RNA-seq and
+    ATAC-seq runs, and experiment_title has no replicate number. The design
+    was first read from NCBI SRA runinfo while the ENA portal API was timing
+    out, then regenerated from ENA. REPLICATION CHECK: 6 distinct
+    BioSamples in the C. gigas RNA-seq arm (SAMN35017932-37), each paired
+    with one ATAC-seq run. Run scripts/check_replicate_dispersion.py after
+    quantification. PUBLICATION: Europe PMC finds no paper citing the
+    accession. A search on species pair, ATAC and heat returned Wang C et al.
+    2024, Aquaculture (AGRICOLA record). Crossref gives DOI
+    10.1016/j.aquaculture.2023.740177 (vol. 579, art. 740177, January 2024)
+    and the full author list. The paper was not read. Per PubMed Central, the
+    open-access Wang et al. 2024 Cell Commun Signal (PMC11552224,
+    doi:10.1186/s12964-024-01923-0) reuses this group's 12 h heat RNA-seq and
+    ATAC-seq data for both species. It deposits its own new data under
+    PRJNA1059049 and PRJNA1058704, which are not part of this study. A 2025
+    Aquaculture paper from the same group (doi:10.1016/j.aquaculture.2025.742855,
+    MAPK/ERK and divergent thermal tolerance) may also reuse these data; not
+    checked. TO DO BEFORE HARMONIZING: read the 2024 Aquaculture methods for
+    heat temperature, control temperature, acclimation and oyster
+    origin/age, and confirm PRJNA970954 in its data availability statement.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA970954"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA970954"
+    - "https://doi.org/10.1016/j.aquaculture.2023.740177"
+    - "https://doi.org/10.1186/s12964-024-01923-0"
