@@ -46,6 +46,10 @@ def paramsAsJson() {
         dmr_mode             : params.methylation?.dmr_mode,
         tile_size            : params.methylation?.tile_size,
         tile_step            : params.methylation?.tile_step,
+        replicate_unit       : params.methylation?.replicate_unit ?: null,
+        design_sheet         : params.methylation?.design_sheet ?: null,
+        bismark_align_args   : params.methylation?.bismark_align_args ?: '',
+        extractor_args       : params.methylation?.extractor_args ?: '',
         promoter_upstream_bp : params.methylation?.promoter_upstream_bp,
         genome_assembly      : params.genome_assembly,
     ]
@@ -116,6 +120,17 @@ workflow {
             tuple(study_id, comparison_id, cx_reports, sample_ids, treatments)
         }
 
+        // Family-level (or other unit-level) replication: the design sheet
+        // maps each library to its unit. Without replicate_unit the step is
+        // unchanged and fits libraries as independent.
+        def replicate_unit = params.methylation.replicate_unit ?: ''
+        if (replicate_unit && !params.methylation.design_sheet) {
+            error "methylation.replicate_unit '${replicate_unit}' needs methylation.design_sheet naming a TSV with that column"
+        }
+        design_sheet_ch = replicate_unit
+            ? Channel.fromPath(params.methylation.design_sheet, checkIfExists: true).first()
+            : Channel.value(file("${projectDir}/assets/NO_DESIGN_SHEET"))
+
         dmr_result_ch = DMR_METHYLKIT(
             dmr_ch.map { it[0] },
             dmr_ch.map { it[1] },
@@ -127,7 +142,9 @@ workflow {
             params.methylation.meth_diff_cutoff,
             params.methylation.dmr_mode,
             params.methylation.tile_size,
-            params.methylation.tile_step
+            params.methylation.tile_step,
+            replicate_unit,
+            design_sheet_ch
         )
 
         annotated_ch = ANNOTATE_REGIONS(

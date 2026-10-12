@@ -75,7 +75,7 @@ def _mixed_project(monkeypatch):
                      "library_strategy": strategy, "library_layout": layout,
                      "instrument_model": "NovaSeq", "read_count": "1000",
                      "fastq_ftp": f"ftp.example/SRR{i}.fastq.gz", "fastq_md5": "abc", "fastq_bytes": "10"})
-        attrs[sample] = {"Treatment": group}
+        attrs[sample] = {"Treatment": group, "isolate": f"I{i}"}
     monkeypatch.setattr(es, "fetch_run_report", lambda *a, **k: runs)
     monkeypatch.setattr(es, "fetch_sample_attributes", lambda accs: {a: attrs[a] for a in accs})
     return es
@@ -113,3 +113,82 @@ def test_unknown_library_strategy_is_an_error(monkeypatch, tmp_path):
     with pytest.raises(es.ENAError, match="not in this project"):
         es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path,
                              condition_attributes=["Treatment"], library_strategies=["WGS"])
+
+
+def _design(tmp_path, rows):
+    path = tmp_path / "design.tsv"
+    path.write_text("isolate\tploidy\ttreatment\n" + "".join("\t".join(r) + "\n" for r in rows))
+    return path
+
+
+ATTRS = {"SAMN1": {"isolate": "D54", "tissue": "ctenidium"},
+         "SAMN2": {"isolate": "T59", "tissue": "ctenidium"}}
+
+
+def test_design_table_joins_on_a_deposited_attribute(tmp_path):
+    from intake.ena_samplesheet import read_design_table
+
+    path = _design(tmp_path, [("D54", "diploid", "control"), ("T59", "triploid", "heat")])
+    out = read_design_table(path, "isolate", ATTRS)
+    assert out == {"SAMN1": {"ploidy": "diploid", "treatment": "control"},
+                   "SAMN2": {"ploidy": "triploid", "treatment": "heat"}}
+
+
+def test_design_table_rejects_partial_or_ambiguous_joins(tmp_path):
+    from intake.ena_samplesheet import ENAError, read_design_table
+
+    with pytest.raises(ENAError, match="no row"):
+        read_design_table(_design(tmp_path, [("D54", "diploid", "control")]), "isolate", ATTRS)
+    with pytest.raises(ENAError, match="match no sample"):
+        read_design_table(_design(tmp_path, [("D54", "diploid", "control"), ("T59", "triploid", "heat"),
+                                             ("X99", "triploid", "heat")]), "isolate", ATTRS)
+    with pytest.raises(ENAError, match="repeats"):
+        read_design_table(_design(tmp_path, [("D54", "diploid", "control"), ("D54", "triploid", "heat")]),
+                          "isolate", ATTRS)
+    with pytest.raises(ENAError, match="no 'sample_name' column"):
+        read_design_table(_design(tmp_path, [("D54", "diploid", "control")]), "sample_name", ATTRS)
+
+
+def test_design_table_overrides_deposited_attributes_and_is_recorded(tmp_path, monkeypatch):
+    import json
+
+    import intake.ena_samplesheet as ena
+
+    runs = [{"run_accession": "SRR1", "sample_accession": "SAMN1", "sample_alias": "D54",
+             "library_strategy": "RNA-Seq", "library_layout": "SINGLE", "instrument_model": "NovaSeq",
+             "read_count": "10", "fastq_ftp": "ftp.x/SRR1.fastq.gz", "fastq_md5": "a" * 32, "fastq_bytes": "5"},
+            {"run_accession": "SRR2", "sample_accession": "SAMN2", "sample_alias": "T59",
+             "library_strategy": "RNA-Seq", "library_layout": "SINGLE", "instrument_model": "NovaSeq",
+             "read_count": "10", "fastq_ftp": "ftp.x/SRR2.fastq.gz", "fastq_md5": "b" * 32, "fastq_bytes": "5"}]
+    attrs = {"SAMN1": {"isolate": "D54", "treatment": "deposited"}, "SAMN2": {"isolate": "T59"}}
+    monkeypatch.setattr(ena, "fetch_run_report", lambda bp, extra=None: runs)
+    monkeypatch.setattr(ena, "fetch_sample_attributes", lambda accs: attrs)
+
+    table = _design(tmp_path, [("D54", "diploid", "control"), ("T59", "triploid", "heat")])
+    prov = ena.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "out",
+                                 condition_attributes=["ploidy", "treatment"], extra_attributes=["isolate"],
+                                 design_table=table, design_join="isolate", design_source="https://example.org/s")
+    assert prov["group_sizes"] == {"diploid_control": 1, "triploid_heat": 1}
+    recorded = json.loads((tmp_path / "out" / "ena_provenance.json").read_text())["design_table"]
+    assert recorded["join_attribute"] == "isolate"
+    assert recorded["source"] == "https://example.org/s"
+    assert len(recorded["sha256"]) == 64
+    with pytest.raises(ena.ENAError, match="together"):
+        ena.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "o2",
+                              condition_attributes=["ploidy"], design_table=table)
+
+
+def test_library_strategy_filter_applies_before_the_design_table_join(monkeypatch, tmp_path):
+    """A design table needs rows only for the runs kept: the filter runs first."""
+    es = _mixed_project(monkeypatch)
+    rnaseq = [i for i in range(12) if (i // 3) % 2 == 0]  # SAMN0-2 (primed), SAMN6-8 (naive)
+    table = tmp_path / "design.tsv"
+    table.write_text("isolate\tarm\n" + "".join(f"I{i}\t{'P' if i < 6 else 'N'}\n" for i in rnaseq))
+
+    report = es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "ok",
+                                  condition_attributes=["arm"], library_strategies=["RNA-Seq"],
+                                  design_table=table, design_join="isolate")
+    assert report["group_sizes"] == {"N": 3, "P": 3}
+    with pytest.raises(es.ENAError, match="no row"):
+        es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "bad",
+                             condition_attributes=["arm"], design_table=table, design_join="isolate")

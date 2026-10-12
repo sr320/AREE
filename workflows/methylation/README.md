@@ -74,6 +74,47 @@ test should generate a small synthetic bisulfite-converted FASTQ pair (e.g.
 via `Sherman` or a hand-rolled converter) plus a toy genome/GTF, per the
 roadmap in `docs/roadmap.md`.
 
+#### Alignment and extraction options
+
+`methylation.bismark_align_args` and `methylation.extractor_args` are
+passed to `bismark` and `bismark_methylation_extractor` as written, and
+recorded in the manifest. Both are empty by default. Bismark's default
+`--score_min L,0,-0.2` is strict for a genome as heterozygous as
+*M. gigas*. On 50,000 trimmed pairs from `CIBNOR2021_HEAT_RRSS`, the
+default mapped 15.5% of pairs uniquely, and `--score_min L,0,-0.6` mapped
+53.9%. Non-directional mode and a larger insert limit made no difference.
+Use `extractor_args` for M-bias trimming (e.g. `--ignore_r2 N`) after
+checking the M-bias plot.
+
+#### Replication unit (`methylation.replicate_unit`)
+
+When the phenotype or treatment belongs to a group of libraries, such as a
+breeding family or a tank, the libraries in a group are not independent
+replicates of it. Set `methylation.replicate_unit` to the design-sheet
+column that names the group, and `methylation.design_sheet` to a TSV with
+that column plus `run_accession` or `sample_id`:
+
+```
+methylation.replicate_unit = 'family'
+methylation.design_sheet   = 'data/studies/<STUDY_ID>/samplesheet.tsv'
+```
+
+`DMR_METHYLKIT` then sums each unit's methylated and unmethylated counts per
+region after `unite`, and tests the units with methylKit's McCullagh-Nelder
+overdispersion correction and an F test (`overdispersion = "MN"`,
+`test = "F"`), so the error comes from unit-to-unit variation. Each unit must
+lie wholly in one arm, and each arm needs at least two units. Without
+`replicate_unit` the step is unchanged.
+
+On synthetic data with family-to-family variation and no true class effect
+(4 families × 3 libraries, 380 null and 20 true regions), testing the 12
+libraries as independent called 162 of 380 null regions significant; testing
+the 4 families called none. With 2 families per arm the test has very little
+power: the true regions ranked near the top but none reached q < 0.05. Where
+a region's estimated overdispersion falls below 1, methylKit resets it to 1,
+so a few null regions can still get small q-values; the `meth_diff_cutoff`
+filter is the second guard.
+
 ### `processed_results_harmonization`
 
 For studies where only a processed DMR/DML table is publicly available (the
