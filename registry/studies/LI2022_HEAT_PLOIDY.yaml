@@ -27,8 +27,14 @@
 # dispersion 0.022. Triploid prolonged heat vs baseline, run 2026-10-11:
 # 2,209 of 26,545 genes at padj < 0.05 (1,417 up, 792 down); the paper
 # reports 483. t_f median dispersion 0.0095 is a borderline pass (see
-# curation_notes). Triploid acute 12 h has not been run, so analysis_status
-# is in_progress.
+# curation_notes). Triploid acute 12 h vs baseline, run 2026-10-11: 971 of
+# 27,039 genes at padj < 0.05 (568 up, 403 down); the paper reports 396.
+# All four comparisons are run and harmonized. AREE finds more DEGs than the
+# paper in every comparison, but the ordering by ploidy matches the paper's:
+# acute heat diploid > triploid (2,522 vs 971; paper 779 vs 396), prolonged
+# heat triploid > diploid (2,209 vs 849; paper 483 vs 418).
+# qc_status is passed_with_warnings: n = 3, borderline t_f dispersion, and
+# exposure details still unread (see limitations).
 
 study_id: LI2022_HEAT_PLOIDY
 simulated: false
@@ -62,8 +68,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA762441 (first public 2021-11-05). No count matrix or differential-expression table is deposited, and the paper is closed access, so its supplementary tables were not checked. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. Each BioSample carries one sample_alias,
@@ -174,7 +180,7 @@ comparisons:
     resilience_classification: "exposure_only"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_triploid_acute_heat_12h_vs_baseline_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -293,6 +299,14 @@ provenance:
     log2 fold changes for prolonged heat barely correlate between ploidies
     (r = 0.05, 25,000+ shared genes). Of the 232 genes at padj < 0.05 in
     both, 219 change in the same direction.
+    TRIPLOID ACUTE 12 H (Pori, 2026-10-11): all 36 study FASTQ files are now
+    downloaded and MD5-verified. 23 tasks, status OK, 33 min; manifest
+    records control t_0, treatment t_12. Salmon mapped 81.1-81.9% of read
+    pairs (21.6-25.4 M pairs), unstranded. t_12 median dispersion 0.0295.
+    Descriptive: acute-heat fold changes correlate weakly between ploidies
+    (r = 0.17). Of the 447 genes at padj < 0.05 in both, 445 change in the
+    same direction. Final dispersion table (all six groups) is in
+    replicate_dispersion_qc.tsv.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA762441"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA762441"
