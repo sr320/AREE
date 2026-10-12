@@ -198,6 +198,27 @@ jobs:
             --viral_reference data/reference/pathogens/OsHV-1/NC_005881.2.fasta \
             --outdir /tmp/aree-smoke/rnaseq-raw-se \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw-se
+          # 3' Tag-seq mode wires through the same DAG, and an unknown protocol stops the run.
+          nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
+            --mode raw_reanalysis \
+            --single_end \
+            --library_protocol three_prime_tag \
+            --study_id CI_RNASEQ_TAG \
+            --comparison_id treatment_vs_control \
+            --reads 'tests/fixtures/rnaseq_raw_se/ERR*.fastq' \
+            --transcript_fasta tests/fixtures/rnaseq_raw/reference.fa \
+            --gtf tests/fixtures/rnaseq_raw/annotation.gtf \
+            --tx2gene tests/fixtures/rnaseq_raw/tx2gene.tsv \
+            --sample_sheet tests/fixtures/rnaseq_raw_se/samples.tsv \
+            --control_level control \
+            --treatment_level treatment \
+            --outdir /tmp/aree-smoke/rnaseq-raw-tag \
+            -work-dir /tmp/aree-smoke/work-rnaseq-raw-tag
+          ! nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
+            --mode raw_reanalysis --library_protocol quantseq \
+            --study_id X --comparison_id y \
+            --outdir /tmp/aree-smoke/rnaseq-bad-protocol \
+            -work-dir /tmp/aree-smoke/work-rnaseq-bad-protocol
           # One trimmed file per library, none for a second mate.
           test "$(ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R1.fastq.gz | wc -l)" -eq 4
           ! ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R2.fastq.gz 2>/dev/null

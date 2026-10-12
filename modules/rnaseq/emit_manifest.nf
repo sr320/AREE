@@ -176,6 +176,7 @@ process EMIT_MANIFEST {
             "replicate_unit": replicate_unit,
             "covariates": covariates,
             "single_end": ${params.single_end ? 'True' : 'False'},
+            "library_protocol": "${params.library_protocol}",
             "se_adapter": "${params.se_adapter}" if ${params.single_end ? 'True' : 'False'} else None,
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },

@@ -64,13 +64,20 @@ process SALMON_QUANT {
     // Fragment GC-bias correction is applied to paired-end libraries only:
     // single-end reads do not observe fragment length, which the model needs,
     // and Salmon documents it as beta for single-end data.
+    //
+    // 3' Tag-Seq (params.library_protocol = 'three_prime_tag'): a transcript
+    // yields reads in proportion to its abundance, not its length, so the
+    // effective-length model would mis-weight them. Salmon documents
+    // --noLengthCorrection for exactly this case (QuantSeq).
     def fq = reads instanceof Collection ? reads as List : [ reads ]
     def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]} --gcBias"
+    def length_model = params.library_protocol == 'three_prime_tag' ? '--noLengthCorrection' : ''
     """
     salmon quant \\
         -i ${salmon_index} \\
         -l A \\
         ${input} \\
+        ${length_model} \\
         -p ${task.cpus} \\
         --geneMap ${gtf} \\
         --validateMappings \\
