@@ -218,6 +218,127 @@ protocol pools 10 oysters per timepoint per population, which leaves six
 pooled samples and no replicates. This is the proteomic version of
 `PRJNA623063` below.
 
+## Non-coding RNA, chromatin, and metabolomics candidates
+
+Screened **2026-10-11**. Sources:
+- every ENA read run under taxon 29159 (12,994 runs), bucketed by `library_strategy`;
+- every `RNA-Seq` run with `library_selection = size fractionation`, or with miRNA/lncRNA/circRNA in its study or experiment title;
+- MetaboLights (EBI search for "gigas");
+- Metabolomics Workbench (species and title search);
+- a PRIDE refresh;
+- PubMed searches for *C. gigas* lncRNA/circRNA and miRNA under stress (18 papers).
+
+Group sizes come from `sample_alias` and `experiment_title`.
+
+Non-RNA-seq run counts for *M. gigas* in ENA on this date:
+
+| Strategy | Runs |
+|---|---|
+| Bisulfite-Seq | 607 |
+| miRNA-Seq | 117 |
+| RIP-Seq | 44 |
+| ChIP-Seq | 28 |
+| ATAC-seq | 24 |
+| MeDIP-Seq | 21 |
+| ncRNA-Seq | 8 |
+
+`AMPLICON` (3,329) and `OTHER` (2,069) runs are mostly microbiome and
+genotyping runs, but `LUTIER2022_OA_TIPPING` shows that mislabelled RNA-seq can
+hide there.
+
+The methylation and proteomics findings above still hold: no new
+stress-relevant WGBS/EM-seq project has appeared since 2026-09-30, and the one
+new *C. gigas* PRIDE project (`PXD082789`, simulated digestion) is food science.
+
+### Metabolomics: the real find of this screen
+
+AREE's only metabolomics study is the simulated `GIGAS_GROW06`. Both of these
+are POMS studies, AREE's best-populated stressor class, and both have a
+**measured disease outcome**:
+
+| # | Accession | Design | Context | Notes |
+|---|---|---|---|---|
+| X1 | `MTBLS13463` + `PRJEB105019` | DECICOMP (Ifremer): families × 3 ages (4/16/28 mo), OsHV-1 cohabitation, 0–24 h; older oysters are **more tolerant** of POMS | Disease **resistance**, measured | Same project as `PRJEB105019` (methylation Tier 2): the ENA description names the same families, ages, and design. Metabolomics (MS, 3 assays) + EM-seq on the same animals is AREE's **first real multi-omics convergence candidate** where both layers are public. Paper title is in MetaboLights; no DOI yet. Check reuse terms, as for `PRJEB105019`. |
+| X2 | `MTBLS13313` | ad libitum vs starved, then OsHV-1 µVar challenge; starvation **reduced susceptibility** | Disease resistance × `nutritional_limitation` | Title: *Food Deprivation Enhances Disease Resistance…* (DOI not in MetaboLights). The paper describes "integrative omics", so look for a matching RNA-seq BioProject at intake. |
+
+Neither has a feature-table converter yet. Metabolomics harmonization exists
+only for the demo format, so a real MTBLS `m_*.tsv` intake script is the
+blocking task. MTBLS also records annotation confidence (MSI levels), which
+maps directly onto AREE's annotation-confidence field.
+
+Metabolomics Workbench has no *C. gigas* study. Its oyster entries are
+*C. virginica* predator/shell studies.
+
+### Chromatin accessibility (ATAC-seq)
+
+| # | Accession | Runs | Design | Context | Notes |
+|---|---|---|---|---|---|
+| C1 | `PRJNA970954` | 6 ATAC + 6 RNA-seq | adult gill, heat (HC) vs no heat (NC), n=3, sample labels shared across both assays (HC.gigas1–3 / NC.gigas1–3) | Thermal (exposure) | Two-species study (*C. gigas* vs *C. angulata*). Paired ATAC + RNA-seq gives a clean, linkable multi-omics pair (peak → nearest gene → DE). Needs a new `feature_type` for accessible regions and a peak-calling workflow. |
+| C2 | `PRJNA1212587` | 6 ATAC | intertidal vs subtidal, n=3 | Thermal / habitat origin | Probably the same group as M3 (`PRJNA562805`, Wang et al. 2021, intertidal vs subtidal WGBS). Would give methylation + accessibility on one contrast. No publication confirmed. |
+| — | `PRJNA1113803` | 4 ATAC | fast vs slow growth strains, **n=2** | Growth | Skip: n=2, no stressor. |
+| — | `PRJNA417263` | ATAC + 1 RNA | hepatopancreas, 2 technical reps | — | Skip: reference chromatin map, no contrast. |
+
+### ChIP-seq / CUT&Tag: annotation, not evidence
+
+`PRJNA577897` (HSF1 ChIP, gill, heat), `PRJNA1292992` (BTF3L4 CUT&Tag, HSP
+regulation, 2026), and `PRJNA1193684` (CLOCK DAP-seq, thermal adaptation) are
+all **n=1 vs input**. They cannot produce effect sizes. They can, however,
+annotate candidates: "HSF1 binds this promoter" is useful mechanism context on
+an evidence card. Treat them as a reference layer (`data/reference/`), not as
+studies. `PRJNA1292166` is a 2026 ChIP method-optimization set (H3K4me3, gill
+and mantle) and has the same use.
+
+### Non-coding RNA
+
+The deposited small-RNA record is weak for AREE's purposes. Most miRNA-Seq
+projects are atlases, developmental series, or reproduction/triploidy studies.
+The stress-relevant ones are mostly unreplicated:
+
+| Accession | Runs | Design | Verdict |
+|---|---|---|---|
+| `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Best ncRNA candidate.** Whole-transcriptome (miRNA + lncRNA-capable stranded RNA-seq) on breeding lines. The stressor/phenotype behind "HH vs CC" must be recovered from the paper. Probably growth or heat line, not confirmed. |
+| `PRJNA750516` | 2 miRNA + 6 lncRNA-labelled RNA | two groups (RZ_GH vs KTD_GL), **one sample alias each** | Skip: replicates are re-sequenced libraries of one sample. |
+| `PRJNA694837` | 6 miRNA + 6 RNA | BM vs OM mantle, n=3 | Probably shell colour/biomineralization. No stressor, so low priority. |
+| `PRJNA341808` | 3 miRNA + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | miRNA was sequenced **only for control**. The RNA-seq arm (n=3 per stress group) is a multi-stressor *larval* RNA-seq candidate worth moving to the RNA-seq list. |
+| `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. |
+| `PRJNA266361`, `PRJNA259995`, `PRJNA232734` | 1–3 | miRNA stress/atlas, single pooled sample | Skip: unreplicated. |
+
+Several published stress miRNA studies have **no accession in their
+abstracts**. Check their data-availability statements before treating them
+as raw-data candidates:
+- exosomal miRNAs after heat or *Vibrio* (2024, *Dev Comp Immunol*, [10.1016/j.dci.2024.105174](https://doi.org/10.1016/j.dci.2024.105174));
+- miRNAs in haemocyte immune priming (2026, *Front Immunol*, [10.3389/fimmu.2026.1753252](https://doi.org/10.3389/fimmu.2026.1753252));
+- haemocyte miRNAs after bacteria and heat (2014, *PLoS One*, [10.1371/journal.pone.0088397](https://doi.org/10.1371/journal.pone.0088397)).
+
+**lncRNA and circRNA almost never have their own deposits.** The *C. gigas*
+lncRNA stress papers found re-quantify ordinary RNA-seq:
+- heat, built from 27 public RNA-seq sets ([10.1007/s10126-022-10140-0](https://doi.org/10.1007/s10126-022-10140-0));
+- OsHV-1 antiviral response ([10.1016/j.fsi.2018.07.032](https://doi.org/10.1016/j.fsi.2018.07.032));
+- growth at low temperature ([10.1186/s12864-023-09543-7](https://doi.org/10.1186/s12864-023-09543-7)).
+
+The realistic route to lncRNA evidence is therefore a **workflow feature, not
+a curation task**: add lncRNA loci to the quantification index and run them
+through the existing RNA-seq path for studies already registered
+(`CALLA2026_OSHV`, `DELISLE2020_OSHV_TEMP`, `LUTIER2022_OA_TIPPING`).
+PolyA-selected libraries will under-sample non-polyadenylated lncRNAs and miss
+circRNAs entirely, so record library selection as a caveat.
+
+### Other non-RNA-seq projects noted, not shortlisted
+
+- `PRJNA894789` — 5-Aza-dC demethylation × heat, gill, n=3 (0 h control /
+  6 h H₂O / 6 h 5-Aza). The runs are RNA-seq despite the `size fractionation`
+  label. It is a pharmacological perturbation of methylation, so it is
+  mechanism support for M1/M3 rather than population evidence, like P6.
+- `PRJNA291364` — diuron-exposed parents → spat, WGBS + RNA-seq, n=2. This is
+  transgenerational `pollutant_exposure`, and too small to pool.
+- `PRJNA689936` — "wild oysters" WGBS, 6 runs from **one** sample alias. Skip.
+- `PRJNA748038` — m6A RIP-seq (MeRIP) across development. It has no stressor,
+  and RNA modification is a new evidence type.
+- `PRJEB77044` — 96 runs, BC field stations × mantle/hemolymph. Labelled
+  `RNA-Seq` with `size fractionation`; whether it is small RNA or standard
+  RNA-seq was not checked. If standard, it belongs on the RNA-seq list as a
+  field/environmental gradient design.
+
 ## Rejected, and why it matters
 
 `PRJNA623063` — *"Transcriptome of the Pacific Oyster, Crassostrea gigas Larvae
