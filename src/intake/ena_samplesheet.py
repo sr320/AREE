@@ -157,6 +157,7 @@ def build_samplesheet(
     label_field: str | None = None,
     label_pattern: str | None = None,
     methylkit_levels: tuple[str, str] | None = None,
+    library_strategies: list[str] | None = None,
 ) -> dict:
     """Write samplesheet + FASTQ manifest + provenance for one BioProject.
 
@@ -170,6 +171,14 @@ def build_samplesheet(
     pattern (see `parse_run_labels`) are also available as attributes; they
     take precedence over sample attributes of the same name. `methylkit_levels`
     = (control, treatment) additionally writes methylkit_samplesheet.csv.
+
+    `library_strategies`, if given, keeps only runs with one of those ENA
+    `library_strategy` values. Projects often deposit RNA-seq and 16S amplicon
+    runs from the same animals under the same attributes, and counting both
+    doubles every group. The filter is never applied silently, because the
+    label can also be wrong (LUTIER2022_OA_TIPPING's "AMPLICON" runs are
+    RNA-seq): when strategies are mixed, the returned report carries group
+    sizes per strategy so the curator can choose, and the choice is recorded.
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -178,6 +187,17 @@ def build_samplesheet(
         raise ENAError("--label-field and --label-pattern must be given together.")
 
     runs = fetch_run_report(bioproject, [label_field] if label_field else None)
+    strategies_present: dict[str, int] = {}
+    for r in runs:
+        strategies_present[r["library_strategy"]] = strategies_present.get(r["library_strategy"], 0) + 1
+    if library_strategies:
+        unknown = set(library_strategies) - set(strategies_present)
+        if unknown:
+            raise ENAError(
+                f"--library-strategy {sorted(unknown)} not in this project; it has "
+                f"{dict(sorted(strategies_present.items()))}"
+            )
+        runs = [r for r in runs if r["library_strategy"] in library_strategies]
     attrs = fetch_sample_attributes(sorted({r["sample_accession"] for r in runs}))
     run_labels = parse_run_labels(runs, label_field, label_pattern) if label_field else {}
 
@@ -235,6 +255,11 @@ def build_samplesheet(
     group_counts: dict[str, int] = {}
     for r in rows:
         group_counts[r[4]] = group_counts.get(r[4], 0) + 1
+    strategy_of = {r["run_accession"]: r["library_strategy"] for r in runs}
+    group_counts_by_strategy: dict[str, dict[str, int]] = {}
+    for r in rows:
+        per = group_counts_by_strategy.setdefault(strategy_of[r[1]], {})
+        per[r[4]] = per.get(r[4], 0) + 1
 
     total_bytes = sum(int(m[4]) for m in manifest_rows if m[4])
 
@@ -273,7 +298,18 @@ def build_samplesheet(
                                     "labels": {k: v["_label"] for k, v in sorted(run_labels.items())}}
     if methylkit:
         provenance["methylkit_samplesheet"] = methylkit
+    if library_strategies:
+        # Recorded only when used, so earlier provenance files stay reproducible.
+        provenance["library_strategy_filter"] = {
+            "kept": sorted(library_strategies),
+            "runs_by_strategy_before_filter": dict(sorted(strategies_present.items())),
+        }
     prov_path = out_dir / "ena_provenance.json"
     prov_path.write_text(json.dumps(provenance, indent=2) + "\n")
     provenance["provenance_file"] = str(prov_path)
+    # Report-only (not written to provenance): lets the CLI show what each
+    # strategy contributes to each group when a project mixes them.
+    provenance["group_sizes_by_strategy"] = {
+        k: dict(sorted(v.items())) for k, v in sorted(group_counts_by_strategy.items())
+    }
     return provenance

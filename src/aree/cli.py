@@ -214,10 +214,14 @@ def check_study_scope_cmd(branch, base):
                    "and the matched text becomes sample_id. Every run must match.")
 @click.option("--methylkit-levels", nargs=2, default=None, metavar="CONTROL TREATMENT",
               help="Also write methylkit_samplesheet.csv coding these two condition levels as 0 and 1.")
+@click.option("--library-strategy", "library_strategies", multiple=True,
+              help="Keep only runs with this ENA library_strategy (repeatable), e.g. RNA-Seq when a "
+                   "project also deposits 16S amplicon runs from the same animals. Check that the "
+                   "labels are right first: they are submitter-supplied and sometimes wrong.")
 @click.option("--out", "out_dir", default=None, type=click.Path(),
               help="Output directory (default: data/studies/<study_id>/).")
 def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attributes,
-                          label_field, label_pattern, methylkit_levels, out_dir):
+                          label_field, label_pattern, methylkit_levels, library_strategies, out_dir):
     """Build a sample sheet + FASTQ manifest from a BioProject's deposited metadata.
 
     Downloads no sequence data. Reads ENA's run report and sample attributes and
@@ -234,6 +238,7 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             label_field=label_field,
             label_pattern=label_pattern,
             methylkit_levels=tuple(methylkit_levels) if methylkit_levels else None,
+            library_strategies=list(library_strategies) or None,
         )
     except ENAError as exc:
         click.echo(click.style(str(exc), fg="red"))
@@ -246,6 +251,19 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
     click.echo("  groups:")
     for group, n in report["group_sizes"].items():
         click.echo(f"    {group:28} n={n}")
+
+    by_strategy = report.get("group_sizes_by_strategy") or {}
+    if len(by_strategy) > 1:
+        click.echo(click.style(
+            "\nWARNING: this sheet mixes library strategies, so every group size above counts "
+            "runs of each. Per strategy:", fg="yellow"))
+        for strategy, groups in by_strategy.items():
+            click.echo(click.style(
+                f"    {strategy:10} " + ", ".join(f"{g} n={n}" for g, n in groups.items()), fg="yellow"))
+        click.echo(click.style(
+            "  If some runs are another assay (e.g. 16S amplicon from the same animals), re-run "
+            "with --library-strategy. Check layouts and read counts first: the label itself can "
+            "be wrong (LUTIER2022_OA_TIPPING's AMPLICON runs are RNA-seq).", fg="yellow"))
 
     smallest = report["min_group_size"]
     if smallest < 3:

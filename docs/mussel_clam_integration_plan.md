@@ -1,6 +1,6 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-12:** WP0 to WP4 are implemented (see their entries in
+**Status, 2026-10-12:** WP0 to WP4 are implemented and WP5 has started (backlog done, no study claimed yet) (see their entries in
 section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
@@ -403,6 +403,28 @@ species partition it would have joined both pools. What was done and found:
   demo LOC numbers for real mussel genes, as the oyster demo already warns.
 
 ### WP5. First real studies (curation backlog)
+
+**Status: backlog done, 2026-10-12; no study claimed yet.** The screen is in
+[candidate_studies_mussels_clams.md](candidate_studies_mussels_clams.md): 186
+ENA RNA-seq projects listed, about 40 inspected from deposited metadata, and
+publications matched in PubMed. Three within-species pools are within reach:
+Manila clam heat (k = 2, about 22 GB in total, curate first), hard clam
+salinity (k = 3), and *M. edulis* heat (k = 2, up to 4). Findings:
+
+- **Mixed assays inflate group sizes.** Both Manila clam heat projects deposit
+  16S amplicon runs from the same animals under the same attributes, which
+  doubled every group in `fetch-samplesheet`. It now takes
+  `--library-strategy` and, whenever a project mixes strategies, prints group
+  sizes per strategy instead of filtering silently (the label can be wrong,
+  as it was for `LUTIER2022_OA_TIPPING`).
+- **Three hard clam acidification projects look like one experiment** (one
+  Stony Brook rearing program sampled at three ages), so they should be one
+  study, not k = 3.
+- **Pooling within *Mytilus* is thin.** *M. galloprovincialis* has no
+  same-phenotype pair with n ≥ 3; its strongest study (larval acidification
+  with measured abnormality) waits for cross-species pooling in WP6.
+- The one candidate with a measured survival difference between sequenced
+  groups is Manila clam heat priming (Tucci et al. 2025), primed vs naive.
 
 Open `docs/candidate_studies_mussels_clams.md` using the same screen as the
 oyster backlog: raw reads public, n ≥ 3 biological replicates confirmed from
