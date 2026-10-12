@@ -52,6 +52,21 @@ reach.
 
 ### A. Manila clam, heat (k = 2) — curate first
 
+> **Claimed 2026-10-12** as `TUCCI2025_HEAT_PRIMING` (PRJNA1132140, draft PR
+> #41), registered but **not runnable yet**. Reading the paper's methods found
+> three things the deposit does not show:
+>
+> - **The libraries are 3′ Tag-Seq** (Lexogen QuantSeq, 75 bp single-end),
+>   not full-length RNA-seq. The RNA-seq workflow's length correction (Salmon
+>   effective length, tximport offsets in DESeq2) is wrong for 3′ counts, so
+>   the workflow needs a 3′ Tag-seq mode first. `PRJNA906528` is from the same
+>   group at the same depth and layout; check its library type before claiming.
+> - **Tank is the unit of treatment** (two 25 L tanks per condition) and tank
+>   membership is not deposited, so it cannot be fitted on tanks without the
+>   authors' tank IDs.
+> - **The heatwave clams are survivors.** RNA was taken 15 days after the
+>   heatwave, from the digestive gland, after about 25% of naive clams had died.
+
 | Project | Runs used | Design (from deposited metadata) | Publication | Size |
 |---|---|---|---|---|
 | `PRJNA1132140` | 40 RNA-seq, single-end, about 7 M reads | Primed vs naive × heatwave vs no heatwave, **n = 10 per group** | Tucci et al. 2025, *iScience* 28:113108, [10.1016/j.isci.2025.113108](https://doi.org/10.1016/j.isci.2025.113108) | 13.8 GB |
@@ -84,7 +99,7 @@ Curation notes:
   unpublished). The 2023 project is a 30-day non-lethal exposure deposited
   before the priming experiment was published, so separate animals are likely,
   but confirm sampling dates or source cohort before counting k = 2.
-- Tissue for `PRJNA1132140` is not in the deposit; take it from the paper.
+- Tissue for `PRJNA1132140` is not in the deposit; the paper gives digestive gland.
 
 ```bash
 aree fetch-samplesheet --bioproject PRJNA1132140 --study TUCCI2025_RPHIL_PRIMING \
