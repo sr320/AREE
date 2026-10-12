@@ -152,7 +152,7 @@ provenance:
     LI2022_LOWSAL_VIBRIO` (draft PR sr320/AREE#26). Chosen 2026-10-11 by sr320
     from candidates outside docs/candidate_studies.md, after its RNA-seq
     backlog was exhausted. Design parsed from each BioSample TITLE (fetched
-    from the ENA sample XML; regex in tests/test_li2022_lowsal_study.py) into
+    from the ENA sample XML; regex in tests/test_li2022_lowsal_vibrio.py) into
     design.tsv, which keeps the verbatim titles, and joined on the deposited
     `ID` attribute with `aree fetch-samplesheet --design-table` (code PR
     sr320/AREE#24). The sample names agree with the titles: C10-n are low
