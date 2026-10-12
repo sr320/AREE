@@ -72,17 +72,19 @@ intake-check:
 
 real-study: intake-check
 	@test -f $(REAL_CROSSWALK) || (echo "Real crosswalk missing. Run: make crosswalk" && exit 1)
-	AREE_CROSSWALK=$(REAL_CROSSWALK) aree register-study registry/studies/HESSER2024_VCOR.yaml --update
-	AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study HESSER2024_VCOR
+	aree register-study registry/studies/HESSER2024_VCOR.yaml --update
+	aree harmonize --study HESSER2024_VCOR
 
 # Everything the Pages workflow does to populate the dashboard: every committed
 # results_file of every real study that has not failed QC, read from the
 # registry (scripts/harmonize_committed_results.py), so a newly merged study
-# needs no edit here.
+# needs no edit here. Each study resolves against the crosswalk registered for
+# its genome assembly in data/reference/genome_assemblies.yaml, so a study of a
+# new species needs no edit here either.
 real-pool:
 	@test -f $(REAL_CROSSWALK) || (echo "Real crosswalk missing. Run: make crosswalk" && exit 1)
 	aree build-registry
-	AREE_CROSSWALK=$(REAL_CROSSWALK) python scripts/harmonize_committed_results.py
+	python scripts/harmonize_committed_results.py
 
 dashboard:
 	aree build-dashboard

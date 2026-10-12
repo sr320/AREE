@@ -177,7 +177,7 @@ evidence from methylation is also exposed to the assembly change in
 
 | Accession | Runs | Design | Caveat |
 |---|---|---|---|
-| `PRJEB105019` | 60 WGBS | 2 families (F14R, H2D) × 3 age cohorts at T0, plus post-challenge **R vs S** individuals, n=6 (Ifremer DECICOMP) | Best design on this list: individual-level resistance outcome, n=6. Released 2025-12 with no publication yet, so treat as unpublished and check the embargo/reuse terms. |
+| `PRJEB105019` | 60 WGBS | 2 families (F14R, H2D) × 3 age cohorts at T0, plus post-challenge **R vs S** individuals, n=6 (Ifremer DECICOMP) | Best design on this list: individual-level resistance outcome, n=6. Released 2025-12 with no publication yet, so treat as unpublished and check the embargo/reuse terms. The EM-seq arm of DECICOMP: its metabolomics arm is `MTBLS13463`, registered as `DECICOMP2025_POMS_AGE` (#21). Run titles give the cohort codes: C3 = 4, C7 = 16, C8 = 28 months. Its 24 resistant/susceptible libraries are all from the 28-month cohort, at 500 hpc. |
 | `PRJNA609264` | 47 WGBS | early microbial exposure vs control, F1/F2, 2 families, n=3 at most timepoints | **Confirmed**: Fallet et al. 2022, *Microbiome*. Transgenerational disease protection is directly relevant to breeding. However, the design is a sprawling time course with pools and mixed assays, so intake needs a curated subset. |
 | `PRJNA807732` | 24 WGBS | intertidal F0/F1/F2 and subtidal F0, control vs heat, n=3 | Probably Wang et al. 2023, *Sci Total Environ* (transgenerational intertidal). Not confirmed. |
 | `PRJNA1113357` | 9 WGBS | *V. alginolyticus*, gill, 0/6/48 h, n=3 | Probably Li et al. 2024, *Fish Shellfish Immunol*. Small and exposure-only, but pairs with `HESSER2024_VCOR` on *Vibrio*. |
@@ -217,6 +217,175 @@ Immunol* covers salinity tolerance with multi-omics.
 protocol pools 10 oysters per timepoint per population, which leaves six
 pooled samples and no replicates. This is the proteomic version of
 `PRJNA623063` below.
+
+## Non-coding RNA, chromatin, and metabolomics candidates
+
+Screened **2026-10-11**. Sources:
+- every ENA read run under taxon 29159 (12,994 runs), bucketed by `library_strategy`;
+- every `RNA-Seq` run with `library_selection = size fractionation`, or with miRNA/lncRNA/circRNA in its study or experiment title;
+- MetaboLights (EBI search for "gigas");
+- Metabolomics Workbench (species and title search);
+- a PRIDE refresh;
+- PubMed searches for *C. gigas* lncRNA/circRNA and miRNA under stress (18 papers).
+
+Group sizes come from `sample_alias` and `experiment_title`.
+
+Non-RNA-seq run counts for *M. gigas* in ENA on this date:
+
+| Strategy | Runs |
+|---|---|
+| Bisulfite-Seq | 607 |
+| miRNA-Seq | 117 |
+| RIP-Seq | 44 |
+| ChIP-Seq | 28 |
+| ATAC-seq | 24 |
+| MeDIP-Seq | 21 |
+| ncRNA-Seq | 8 |
+
+`AMPLICON` (3,329) and `OTHER` (2,069) runs are mostly microbiome and
+genotyping runs, but `LUTIER2022_OA_TIPPING` shows that mislabelled RNA-seq can
+hide there.
+
+The methylation and proteomics findings above still hold: no new
+stress-relevant WGBS/EM-seq project has appeared since 2026-09-30, and the one
+new *C. gigas* PRIDE project (`PXD082789`, simulated digestion) is food science.
+
+### Metabolomics: the real find of this screen
+
+AREE's only metabolomics study is the simulated `GIGAS_GROW06`. Both of these
+are POMS studies, AREE's best-populated stressor class, and both have a
+**measured disease outcome**:
+
+> **Status 2026-10-11.** X1 and X2 are registered as `DECICOMP2025_POMS_AGE`
+> (#21) and `DUPERRET2025_POMS_STARVE` (#22). Both are draft PRs, because
+> **neither can be analyzed**: every Metabolite Assignment File (MAF) in both
+> deposits lists metabolite names but holds **no abundance values**. The only
+> data are Agilent targeted-dMRM vendor files (`.d`), which no AREE workflow
+> reads. Ask the submitters (J. Vidal-Dupiol, IHPE) to complete the MAFs, or
+> add an MRM integration step. Curation also found, in the order it matters:
+>
+> - **X2: diet is fully confounded with MS batch** on all four platforms.
+>   Fed samples were acquired Dec 2023–Feb 2024 and starved samples May–Jun
+>   2024, with no overlap. Even with abundances, a diet effect here cannot be
+>   separated from batch.
+> - **X2 samples are pools of 10 oysters per tank × family**, with 3 tanks per
+>   diet, so replication is 3 tanks.
+> - **X1 age is confounded with challenge year**: each age cohort was
+>   challenged in a different year. MS batch is not confounded with age.
+> - **X1 sampling time (0 hpc) is inferred**, from the EM-seq arm's identical
+>   2 × 3 × 6 structure at 0 hpc. Whether the metabolomics and EM-seq samples
+>   are the **same animals is not stated**. The first draft of this table said
+>   they were; that was an assumption.
+> - Neither deposit has database identifiers or MSI levels, so metabolite
+>   mapping confidence starts at `unresolved`.
+> - The studies may not be independent: both use family F14R from the same
+>   2020 Ifremer production, and X1's MAFs carry X2's sample columns.
+
+| # | Accession | Design | Context | Notes |
+|---|---|---|---|---|
+| X1 🟡 | `MTBLS13463` (+ `PRJEB105019`) | DECICOMP (Ifremer): 2 families × 3 ages (4/16/28 mo) × 6 whole animals, 0 hpc before OsHV-1 cohabitation; older oysters are **more tolerant** of POMS | Disease **resistance**, measured per cohort | Registered as `DECICOMP2025_POMS_AGE` (#21): 28 vs 4 mo (primary) and 16 vs 4 mo. Same project as `PRJEB105019` (methylation Tier 2), which is cited but kept out of `accessions` so it can be registered on its own. Manuscript in preparation; no DOI. |
+| X2 🟡 | `MTBLS13313` | 2 families × fed/starved (3 tanks each) × 0–12 hpc, pools of 10; starvation **reduced POMS mortality** (F14R 34.8% vs 75.5%; F11N 93.3% vs 100%) | Disease resistance × `nutritional_limitation` | Registered as `DUPERRET2025_POMS_STARVE` (#22): starved vs fed at 0 hpc. Published: Duperret et al. 2025, *iScience* 29:114333 ([10.1016/j.isci.2025.114333](https://doi.org/10.1016/j.isci.2025.114333)). Its RNA-seq arm is public and is the better study; see below. |
+
+Beyond the empty MAFs, there is no converter for real MTBLS `m_*.tsv`
+tables: metabolomics harmonization exists only for the demo format.
+
+### The RNA-seq arm of X2
+
+The "integrative omics" in X2's paper includes RNA-seq, deposited as two ENA
+projects split by diet: `PRJEB86618` (starved) and `PRJEB86525` (fed). The
+design is 2 families × 2 diets × 7 times (0–72 hpc) × 3 tank pools, 83 of 84
+libraries deposited, single-end 75 bp. Unlike the metabolomics, library
+numbering interleaves the two diets.
+
+> **Registered** as `DUPERRET2025_STARVE_RNASEQ` (#23), one study across both
+> projects. It is runnable but not yet run (about 104 GB of FASTQ). Comparisons:
+> starved vs fed at 0 hpc (primary, `resilience`), matching X2's metabolomic
+> contrast, and 24 vs 0 hpc within each diet (`disease`). It needed two
+> workflow changes, now merged: single-end input (#25) and, as a general
+> feature, `--covariates` (#27).
+>
+> **It is fitted on tanks, not with a family covariate.** Both families share
+> each tank, so `~ family + condition` would count 6 libraries per diet when 3
+> tanks were treated. Each tank's two family libraries are summed
+> (`--replicate_unit tank`, or `tank_hpc` for the time contrasts), giving
+> 3 vs 3. This is the same lesson as `LUTIER2022_OA_TIPPING`: find the unit
+> the treatment was applied to before counting replicates.
+>
+> It shares tanks with X2, so the two are convergent evidence across omics
+> layers, not independent replication.
+
+Metabolomics Workbench has no *C. gigas* study. Its oyster entries are
+*C. virginica* predator/shell studies.
+
+### Chromatin accessibility (ATAC-seq)
+
+| # | Accession | Runs | Design | Context | Notes |
+|---|---|---|---|---|---|
+| C1 | `PRJNA970954` | 6 ATAC + 6 RNA-seq | adult gill, heat (HC) vs no heat (NC), n=3, sample labels shared across both assays (HC.gigas1–3 / NC.gigas1–3) | Thermal (exposure) | Two-species study (*C. gigas* vs *C. angulata*). Paired ATAC + RNA-seq gives a clean, linkable multi-omics pair (peak → nearest gene → DE). Needs a new `feature_type` for accessible regions and a peak-calling workflow. |
+| C2 | `PRJNA1212587` | 6 ATAC | intertidal vs subtidal, n=3 | Thermal / habitat origin | Probably the same group as M3 (`PRJNA562805`, Wang et al. 2021, intertidal vs subtidal WGBS). Would give methylation + accessibility on one contrast. No publication confirmed. |
+| — | `PRJNA1113803` | 4 ATAC | fast vs slow growth strains, **n=2** | Growth | Skip: n=2, no stressor. |
+| — | `PRJNA417263` | ATAC + 1 RNA | hepatopancreas, 2 technical reps | — | Skip: reference chromatin map, no contrast. |
+
+### ChIP-seq / CUT&Tag: annotation, not evidence
+
+`PRJNA577897` (HSF1 ChIP, gill, heat), `PRJNA1292992` (BTF3L4 CUT&Tag, HSP
+regulation, 2026), and `PRJNA1193684` (CLOCK DAP-seq, thermal adaptation) are
+all **n=1 vs input**. They cannot produce effect sizes. They can, however,
+annotate candidates: "HSF1 binds this promoter" is useful mechanism context on
+an evidence card. Treat them as a reference layer (`data/reference/`), not as
+studies. `PRJNA1292166` is a 2026 ChIP method-optimization set (H3K4me3, gill
+and mantle) and has the same use.
+
+### Non-coding RNA
+
+The deposited small-RNA record is weak for AREE's purposes. Most miRNA-Seq
+projects are atlases, developmental series, or reproduction/triploidy studies.
+The stress-relevant ones are mostly unreplicated:
+
+| Accession | Runs | Design | Verdict |
+|---|---|---|---|
+| `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Best ncRNA candidate.** Whole-transcriptome (miRNA + lncRNA-capable stranded RNA-seq) on breeding lines. The stressor/phenotype behind "HH vs CC" must be recovered from the paper. Probably growth or heat line, not confirmed. |
+| `PRJNA750516` | 2 miRNA + 6 lncRNA-labelled RNA | two groups (RZ_GH vs KTD_GL), **one sample alias each** | Skip: replicates are re-sequenced libraries of one sample. |
+| `PRJNA694837` | 6 miRNA + 6 RNA | BM vs OM mantle, n=3 | Probably shell colour/biomineralization. No stressor, so low priority. |
+| `PRJNA341808` | 3 miRNA + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | miRNA was sequenced **only for control**. The RNA-seq arm (n=3 per stress group) is a multi-stressor *larval* RNA-seq candidate worth moving to the RNA-seq list. |
+| `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. |
+| `PRJNA266361`, `PRJNA259995`, `PRJNA232734` | 1–3 | miRNA stress/atlas, single pooled sample | Skip: unreplicated. |
+
+Several published stress miRNA studies have **no accession in their
+abstracts**. Check their data-availability statements before treating them
+as raw-data candidates:
+- exosomal miRNAs after heat or *Vibrio* (2024, *Dev Comp Immunol*, [10.1016/j.dci.2024.105174](https://doi.org/10.1016/j.dci.2024.105174));
+- miRNAs in haemocyte immune priming (2026, *Front Immunol*, [10.3389/fimmu.2026.1753252](https://doi.org/10.3389/fimmu.2026.1753252));
+- haemocyte miRNAs after bacteria and heat (2014, *PLoS One*, [10.1371/journal.pone.0088397](https://doi.org/10.1371/journal.pone.0088397)).
+
+**lncRNA and circRNA almost never have their own deposits.** The *C. gigas*
+lncRNA stress papers found re-quantify ordinary RNA-seq:
+- heat, built from 27 public RNA-seq sets ([10.1007/s10126-022-10140-0](https://doi.org/10.1007/s10126-022-10140-0));
+- OsHV-1 antiviral response ([10.1016/j.fsi.2018.07.032](https://doi.org/10.1016/j.fsi.2018.07.032));
+- growth at low temperature ([10.1186/s12864-023-09543-7](https://doi.org/10.1186/s12864-023-09543-7)).
+
+The realistic route to lncRNA evidence is therefore a **workflow feature, not
+a curation task**: add lncRNA loci to the quantification index and run them
+through the existing RNA-seq path for studies already registered
+(`CALLA2026_OSHV`, `DELISLE2020_OSHV_TEMP`, `LUTIER2022_OA_TIPPING`).
+PolyA-selected libraries will under-sample non-polyadenylated lncRNAs and miss
+circRNAs entirely, so record library selection as a caveat.
+
+### Other non-RNA-seq projects noted, not shortlisted
+
+- `PRJNA894789` — 5-Aza-dC demethylation × heat, gill, n=3 (0 h control /
+  6 h H₂O / 6 h 5-Aza). The runs are RNA-seq despite the `size fractionation`
+  label. It is a pharmacological perturbation of methylation, so it is
+  mechanism support for M1/M3 rather than population evidence, like P6.
+- `PRJNA291364` — diuron-exposed parents → spat, WGBS + RNA-seq, n=2. This is
+  transgenerational `pollutant_exposure`, and too small to pool.
+- `PRJNA689936` — "wild oysters" WGBS, 6 runs from **one** sample alias. Skip.
+- `PRJNA748038` — m6A RIP-seq (MeRIP) across development. It has no stressor,
+  and RNA modification is a new evidence type.
+- `PRJEB77044` — 96 runs, BC field stations × mantle/hemolymph. Labelled
+  `RNA-Seq` with `size fractionation`; whether it is small RNA or standard
+  RNA-seq was not checked. If standard, it belongs on the RNA-seq list as a
+  field/environmental gradient design.
 
 ## Rejected, and why it matters
 

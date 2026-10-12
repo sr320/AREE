@@ -57,6 +57,26 @@ Required params: `--reads` (a `Channel.fromFilePairs` glob, e.g.
 build one). See `nextflow.config` for the full parameter list and defaults
 (all `null` — nothing is silently assumed).
 
+**Single-end libraries.** Add `--single_end` and point `--reads` at one file
+per library, e.g. `'data/raw/DUPERRET2025_STARVE_RNASEQ/ERR*.fastq.gz'`. The
+sample id is the file name without `.fastq`/`.fq`(`.gz`). For ENA downloads
+that is the run accession, which the DESeq2 step matches to the sample
+sheet's `run_accession` column. The single-end path changes three steps:
+
+- fastp trims a **given** 3′ adapter, `--se_adapter` (default: Illumina
+  TruSeq/NEBNext read 1, `AGATCGGAAGAGCACACGTCTGAACTCCAGTCA`). It does not
+  auto-detect, because fastp's single-end detection guesses from
+  overrepresented sequence. On real DUPERRET2025_STARVE_RNASEQ reads it chose
+  an abundant oyster transcript and trimmed it from about 1% of reads, with
+  a separate guess per library. Pass `--se_adapter auto` to restore detection
+  deliberately.
+- Salmon quantifies with `-r` and without `--gcBias`. Fragment GC-bias
+  correction needs the fragment-length distribution that single-end reads do
+  not observe, and Salmon marks it beta for single-end data.
+- Viral read QC counts reads; its `*_pairs` columns hold reads.
+
+`single_end` and `se_adapter` are recorded in the manifest's `parameters`.
+
 ### `processed_results_harmonization`
 
 An existing DE-like TSV (e.g. already-published DESeq2/edgeR/limma output)
@@ -96,12 +116,13 @@ evidence-record-level `quality_flags` from study/comparison metadata).
 
 | | raw_reanalysis | processed_results_harmonization |
 |---|---|---|
-| Input | paired (or, with `--single_end`, single) FASTQ + genome/transcriptome + GTF + sample sheet | one DE-like TSV |
+| Input | paired FASTQ + genome/transcriptome + GTF + sample sheet | one DE-like TSV |
 | QC | FastQC, fastp, MultiQC (real) | not run; flagged in manifest |
 | Quantification | Salmon (pseudoalignment + `--geneMap`) | n/a |
 | DE model | DESeq2 via tximport | n/a (table assumed already DE-modeled upstream) |
 | Standardized output | `STANDARDIZE_OUTPUT` validates/reshapes DESeq2 output | `STANDARDIZE_OUTPUT` validates/reshapes the provided table |
 | Sample exclusion | `--exclude_samples`, recorded in the manifest | n/a |
+| Covariates | `--covariates` (e.g. `family`), fitted design recorded in the manifest | n/a |
 | Viral read QC | optional, `--viral_reference` | n/a |
 
 Both modes converge on the same standardized TSV schema, written to
@@ -127,25 +148,58 @@ Other outputs (all under `params.outdir`, default `results/rnaseq/`):
 - (`raw_reanalysis` only) `fastqc/`, `trimmed/`, `salmon/`, `multiqc/`,
   `deseq2/` — intermediate per-step outputs.
 
-## Single-end and 3' Tag-seq libraries (`raw_reanalysis` only)
-
-`--single_end` takes one FASTQ per sample. `--reads` then names single files
-(e.g. `'data/raw/STUDY/SRR*.fastq.gz'`), and the sample id is the part the
-wildcard matched. fastp, Salmon (`-r`) and the optional viral QC switch to
-their single-end forms.
+## 3' Tag-seq libraries (`raw_reanalysis` only)
 
 `--tag_seq` is for 3' tag libraries such as Lexogen QuantSeq, which give
-about one read per transcript whatever its length. It changes three things:
+about one read per transcript whatever its length. It is independent of
+`--single_end` (QuantSeq also comes paired-end) and changes three steps:
 
 | Step | Standard RNA-seq | `--tag_seq` |
 |---|---|---|
 | fastp | adapter trimming | also `--trim_poly_x` (poly-A tails) |
-| Salmon | `--gcBias` | `--noLengthCorrection`, no `--gcBias` |
+| Salmon | `--gcBias` (paired-end) | `--noLengthCorrection`, no `--gcBias` |
 | DESeq2 | `DESeqDataSetFromTximport` (per-sample length offsets) | `DESeqDataSetFromMatrix` on the counts, no length offset; pseudo-bulk sums raw counts |
 
-Applying length correction to 3' tags makes long genes look less expressed than
-they are. The two flags are independent (QuantSeq also comes paired-end), and
-both are recorded in the workflow manifest's `parameters`.
+Applying length correction to 3' tags makes long genes look less expressed
+than they are. A quick way to tell a QuantSeq FWD library from full-length
+RNA-seq when the deposit does not say: the fraction of reads containing 15+
+consecutive A's is several percent for QuantSeq and about 0.1% for
+full-length libraries. `tag_seq` is recorded in the workflow manifest's
+`parameters`.
+
+## Covariates (`raw_reanalysis` only)
+
+**`--covariates`** takes a comma-separated list of sample-sheet columns to fit
+as factors ahead of the contrast, e.g. `--covariates family` fits
+`~ family + condition`. The contrast is still condition. Use it for a known
+source of variation that is balanced across both arms, such as family,
+sequencing batch or lane. The run stops, naming the problem, when:
+
+- a column is missing from the sample sheet, or empty for a sample in the contrast;
+- a covariate is `condition`, an identifier, or the `--replicate_unit` column;
+- a covariate is confounded with condition (the model is not full rank),
+  e.g. one family per arm;
+- the model leaves no residual degrees of freedom;
+- with `--replicate_unit`, a covariate varies within a unit (summed units
+  cannot carry it).
+
+A covariate with only one level in the contrast is dropped, not fitted. This
+happens when a run is subset to one family. The drop is reported as a
+`covariates_dropped_constant` warning.
+
+DESeq2 writes `deseq2/<study_id>_<comparison_id>_deseq2_design.json` (the
+formula fitted, covariates requested/used/dropped, libraries or units, and
+residual df). The manifest carries it under `deseq2_design` and the request
+under `parameters.covariates`.
+
+**A covariate does not fix clustering.** If several libraries share the unit
+that received the treatment, they are not independent replicates, whatever
+covariates are fitted. DESeq2 cannot take that unit as a term when it is
+nested in condition. An example is DUPERRET2025_STARVE_RNASEQ, where both
+families share each tank. There, `~ family + condition` would count 6
+libraries per diet when 3 tanks were treated. The defensible fits are
+`--replicate_unit tank` (sum each tank's libraries, 3 vs 3) or one run per
+family, as the source paper did.
 
 ## Sample exclusion and viral read QC (`raw_reanalysis` only)
 
@@ -214,8 +268,16 @@ regenerated from raw data), not the evidence records themselves.
   DAG in `main.nf` uses real `Channel.fromFilePairs`/`Channel.fromPath`
   factories and real `if (params.mode == ...)` branching — it is not a
   linear echo-only stub chain.
-- **CI coverage**: tiny paired FASTQ (also run single-end with `--tag_seq`), reference, annotation, tx2gene, and sample
-  fixtures live under `../../tests/fixtures/rnaseq_raw`. Every RNA-seq process
+- **Single-end**: executed natively (`-profile local`, Salmon 2.3.4, fastp
+  1.3.6) on 2026-10-11 against 40,000 real reads from each of four
+  DUPERRET2025_STARVE_RNASEQ runs and a 300-transcript RefSeq subset. All 24
+  tasks completed, through DESeq2, the manifest and the report. That checks
+  the command lines, not the biology; no full-depth single-end run has been
+  made.
+- **CI coverage**: tiny paired FASTQ, reference, annotation, tx2gene, and sample
+  fixtures live under `../../tests/fixtures/rnaseq_raw`, and single-end ones
+  (ENA-style file names, `run_accession` in the sample sheet) under
+  `../../tests/fixtures/rnaseq_raw_se`. Every RNA-seq process
   has an explicit `stub:` output contract, so current Nextflow can exercise the
   complete raw DAG without a bioinformatics toolchain. This verifies channels,
   parameter validation, and artifact handoffs only; it is not a container test

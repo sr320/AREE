@@ -74,9 +74,11 @@ def _harmonize_comparison(
     if not results_path.exists():
         raise FileNotFoundError(f"results file not found: {results_path}")
 
-    # The study decides which crosswalk it resolves against, so that simulated and
-    # real studies can coexist in one evidence table without cross-contamination.
-    set_crosswalk_path(crosswalk_for_study(bool(study.get("simulated", False))))
+    # The study decides which crosswalk it resolves against (its assembly's, or the
+    # demo crosswalk if simulated), so that simulated and real studies, and real
+    # studies of different species, coexist in one evidence table without
+    # resolving against each other's identifiers.
+    set_crosswalk_path(crosswalk_for_study(study))
 
     evidence_df = harmonizer(
         study, comparison, results_path,

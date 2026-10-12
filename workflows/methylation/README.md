@@ -155,10 +155,12 @@ is intentionally propagated to `quality_flags` at the evidence-record level
 downstream, not hidden.
 
 A separate `versions.yml` (nf-core-style `process: {tool: version}` mapping)
-is emitted by every process, using the actual CLI's own `--version` output
-where the tool is genuinely installed in its declared container (not
-hardcoded, unlike the manifest's `software_versions` block, which is
-necessarily hardcoded since no container was pulled in this build).
+is emitted by every process from the tool's own `--version` output, whether
+the tool runs natively or in its declared container. `main.nf` collects them
+into `EMIT_MANIFEST`, which merges them (`modules/shared/collect_versions.py`)
+into the manifest's `software_versions`, so the manifest reports what ran.
+`RENDER_REPORT` runs after the manifest and is listed under
+`software_versions_not_captured`.
 
 ## Containers
 

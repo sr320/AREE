@@ -64,19 +64,29 @@ workflow {
 
     report_template = file("${projectDir}/assets/report_template.qmd")
     no_viral_qc     = file("${projectDir}/assets/NO_VIRAL_QC")
+    no_deseq2_design = file("${projectDir}/assets/NO_DESEQ2_DESIGN")
+    collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
 
         // ---- raw_reanalysis branch --------------------------------------
         // Expect params.reads as a glob resolving paired-end FASTQ, e.g.:
         //   params.reads = "data/raw/GIGAS_HEAT01/*_R{1,2}.fastq.gz"
+        // or, with --single_end, one FASTQ per library, e.g.:
+        //   params.reads = "data/raw/DUPERRET2025_STARVE_RNASEQ/ERR*.fastq.gz"
+        // Single-end sample ids are the file name without .fastq/.fq(.gz), so
+        // ENA downloads are keyed by run accession, which the DESeq2 step
+        // matches against the sample sheet's run_accession column.
         if (!params.reads) {
-            error "raw_reanalysis mode requires --reads (glob for fromFilePairs), e.g. 'reads/*_R{1,2}.fastq.gz'"
+            error "raw_reanalysis mode requires --reads (glob for fromFilePairs, or one file per library with --single_end), e.g. 'reads/*_R{1,2}.fastq.gz'"
         }
 
-        // --single_end: one FASTQ per sample, e.g. 'reads/*.fastq.gz'; the
-        // sample id is the file name up to the first dot.
-        read_pairs_ch = Channel.fromFilePairs(params.reads, size: params.single_end ? 1 : 2, checkIfExists: true)
+        if (params.single_end) {
+            read_pairs_ch = Channel.fromPath(params.reads, checkIfExists: true)
+                .map { f -> [ f.name.replaceFirst(/\.(fastq|fq)(\.gz)?$/, ''), [ f ] ] }
+        } else {
+            read_pairs_ch = Channel.fromFilePairs(params.reads, checkIfExists: true)
+        }
 
         FASTQC(read_pairs_ch)
         TRIM_FASTP(read_pairs_ch)
@@ -93,6 +103,14 @@ workflow {
                 Channel.fromPath(params.gtf, checkIfExists: true)
             )
             salmon_index_ch = SALMON_INDEX.out.index
+        }
+        // Each process's versions.yml, merged by EMIT_MANIFEST into the
+        // manifest's software_versions. A process added to this DAG must add
+        // its .out.versions here too (tests/test_workflow_versions.py checks).
+        versions_ch = FASTQC.out.versions
+            .mix(TRIM_FASTP.out.versions)
+        if (!params.salmon_index) {
+            versions_ch = versions_ch.mix(SALMON_INDEX.out.versions)
         }
 
         gtf_ch = Channel.fromPath(params.gtf, checkIfExists: true)
@@ -111,6 +129,9 @@ workflow {
             .collect()
 
         SAMPLE_QC(qc_inputs_ch)
+        versions_ch = versions_ch
+            .mix(SALMON_QUANT.out.versions)
+            .mix(SAMPLE_QC.out.versions)
 
         if (!params.tx2gene) {
             error "raw_reanalysis mode requires --tx2gene (transcript-to-gene map TSV) for DESeq2 gene-level summarization"
@@ -135,6 +156,7 @@ workflow {
             params.treatment_level,
             params.exclude_samples ?: '',
             params.replicate_unit ?: '',
+            params.covariates ?: '',
             params.tag_seq as boolean,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
@@ -142,6 +164,8 @@ workflow {
         )
 
         raw_de_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.results.map { sid, cid, tsv -> tsv }
+        deseq2_design_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.design
+        versions_ch = versions_ch.mix(DIFFERENTIAL_EXPRESSION_DESEQ2.out.versions)
         workflow_warnings = []
 
         // Optional viral read QC: did every challenged animal carry the
@@ -162,6 +186,10 @@ workflow {
                 VIRAL_QUANT.out.counts.collect()
             )
             viral_summary_ch = VIRAL_SUMMARY.out.json
+            versions_ch = versions_ch
+                .mix(VIRAL_INDEX.out.versions)
+                .mix(VIRAL_QUANT.out.versions)
+                .mix(VIRAL_SUMMARY.out.versions)
         } else {
             viral_summary_ch = Channel.value(no_viral_qc)
         }
@@ -188,6 +216,8 @@ workflow {
 
         STANDARDIZE_OUTPUT(study_id, comparison_id, processed_ch)
         viral_summary_ch = Channel.value(no_viral_qc)
+        deseq2_design_ch = Channel.value(no_deseq2_design)
+        versions_ch = Channel.empty()
     }
 
     // ---- shared tail: manifest + report (both modes) --------------------
@@ -197,6 +227,8 @@ workflow {
     // Python source generated inside EMIT_MANIFEST's script block.
     warnings_json = groovy.json.JsonOutput.toJson(workflow_warnings)
 
+    versions_ch = versions_ch.mix(STANDARDIZE_OUTPUT.out.versions)
+
     EMIT_MANIFEST(
         study_id,
         comparison_id,
@@ -204,7 +236,10 @@ workflow {
         standardized_ch,
         workflow_start_iso,
         warnings_json,
-        viral_summary_ch
+        viral_summary_ch,
+        deseq2_design_ch,
+        versions_ch.collect(),
+        collect_versions_py
     )
 
     RENDER_REPORT(

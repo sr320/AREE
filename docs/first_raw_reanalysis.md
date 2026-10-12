@@ -167,7 +167,6 @@ nextflow run workflows/rnaseq -profile local,workstation \
 # 4. Harmonize the standardized output. --comparison is required: the workflow
 #    names its output for the stage that produced it, and a raw-mode study has
 #    no results_file to match a filename against.
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study CALLA2026_OSHV \
   --comparison midori_oshv1_france_vs_control \
   --input results/rnaseq/standardized/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv
@@ -313,12 +312,15 @@ workflow accepts it. Combine it with an executor profile
 Three comparisons have been run on all reads and committed, 11 libraries each
 (6 control, 5 challenged), with the same `-profile local` toolchain as the
 pilot, against `GCF_963853765.1` / `RS_2024_06`. Each committed workflow
-manifest records the input checksum and parameters. Its `software_versions`
-block lists the versions the workflow declares for its containers (Salmon
-1.10.3, DESeq2 1.42.0, tximport 1.30.0), not the Homebrew builds that actually
-ran — Salmon 2.6.0 (per each quant directory's `cmd_info.json`) and, at the
-2026-09-30 re-run, DESeq2 1.50.2 and tximport 1.38.2. Until the manifest
-records observed versions, treat that block as intent rather than record.
+manifest records the input checksum and parameters. In these committed
+manifests the `software_versions` block lists the versions the workflow
+declared for its containers (Salmon 1.10.3, DESeq2 1.42.0, tximport 1.30.0),
+not the Homebrew builds that actually ran — Salmon 2.6.0 (per each quant
+directory's `cmd_info.json`) and, at the 2026-09-30 re-run, DESeq2 1.50.2 and
+tximport 1.38.2. Treat that block as intent rather than record. Runs made after
+2026-10-11 build `software_versions` from each process's `versions.yml`
+(keyed by process name) and record `container_engine` (null for a native run),
+so a new manifest reports the tools that ran.
 
 The table below is the state before the DO_CT_4 exclusion. Re-run without
 DO_CT_4 on 2026-09-30, Midori × Australia has 30,482 genes, 5,473 at
