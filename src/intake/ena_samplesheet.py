@@ -128,6 +128,46 @@ def parse_run_labels(runs: list[dict], label_field: str, label_pattern: str) -> 
     return out
 
 
+def read_design_table(path: Path, join_attribute: str, attrs: dict) -> dict[str, dict]:
+    """Per-sample design attributes from a curated table, joined on one attribute.
+
+    For projects whose BioSamples do not carry the design at all (no treatment,
+    no genotype, only an isolate code), the groups have to come from somewhere
+    else: typically the authors' own submission sheet or sample list. That
+    table is committed with the study and joined here on a deposited attribute
+    (`join_attribute`, e.g. isolate) that both sides share.
+
+    Every other column of the table becomes an attribute of the matched
+    sample. Every sample must match exactly one row, and every row must match
+    a sample: a partial join is an error, never a silent default.
+    """
+    import csv
+
+    with open(path, newline="") as fh:
+        table = list(csv.DictReader(fh, delimiter="\t"))
+    if not table or join_attribute not in table[0]:
+        raise ENAError(f"--design-table {path} has no '{join_attribute}' column to join on.")
+    keys = [row[join_attribute] for row in table]
+    dupes = sorted({k for k in keys if keys.count(k) > 1})
+    if dupes:
+        raise ENAError(f"--design-table {path} repeats {join_attribute} values: {dupes[:5]}")
+    by_key = {row[join_attribute]: {k: v for k, v in row.items() if k != join_attribute} for row in table}
+
+    out, unmatched = {}, []
+    for sample, a in attrs.items():
+        key = a.get(join_attribute)
+        if key not in by_key:
+            unmatched.append(f"{sample} ({join_attribute}={key!r})")
+            continue
+        out[sample] = by_key[key]
+    if unmatched:
+        raise ENAError(f"{len(unmatched)} sample(s) have no row in --design-table: {unmatched[:5]}")
+    unused = sorted(set(by_key) - {attrs[s].get(join_attribute) for s in out})
+    if unused:
+        raise ENAError(f"--design-table rows match no sample in the project: {unused[:5]}")
+    return out
+
+
 def write_methylkit_samplesheet(rows: list[dict], path: Path, control_level: str, treatment_level: str) -> dict:
     """methylKit sample sheet (sample_id,treatment) keyed by run accession.
 
@@ -157,6 +197,9 @@ def build_samplesheet(
     label_field: str | None = None,
     label_pattern: str | None = None,
     methylkit_levels: tuple[str, str] | None = None,
+    design_table: Path | None = None,
+    design_join: str | None = None,
+    design_source: str | None = None,
 ) -> dict:
     """Write samplesheet + FASTQ manifest + provenance for one BioProject.
 
@@ -170,16 +213,25 @@ def build_samplesheet(
     pattern (see `parse_run_labels`) are also available as attributes; they
     take precedence over sample attributes of the same name. `methylkit_levels`
     = (control, treatment) additionally writes methylkit_samplesheet.csv.
+
+    When `design_table` and `design_join` are given, the table's columns are
+    joined to each sample on the `design_join` attribute (see
+    `read_design_table`) and override deposited attributes of the same name.
+    `design_source` (e.g. the URL the table was taken from) is recorded in the
+    provenance file alongside the table's checksum.
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     extra_attributes = extra_attributes or []
     if bool(label_field) != bool(label_pattern):
         raise ENAError("--label-field and --label-pattern must be given together.")
+    if bool(design_table) != bool(design_join):
+        raise ENAError("--design-table and --design-join must be given together.")
 
     runs = fetch_run_report(bioproject, [label_field] if label_field else None)
     attrs = fetch_sample_attributes(sorted({r["sample_accession"] for r in runs}))
     run_labels = parse_run_labels(runs, label_field, label_pattern) if label_field else {}
+    design = read_design_table(Path(design_table), design_join, attrs) if design_table else {}
 
     strategies = {r["library_strategy"] for r in runs}
     layouts = {r["library_layout"] for r in runs}
@@ -191,7 +243,8 @@ def build_samplesheet(
 
     rows, manifest_rows, missing = [], [], []
     for r in sorted(runs, key=lambda x: x["run_accession"]):
-        a = {**attrs.get(r["sample_accession"], {}), **run_labels.get(r["run_accession"], {})}
+        a = {**attrs.get(r["sample_accession"], {}), **design.get(r["sample_accession"], {}),
+             **run_labels.get(r["run_accession"], {})}
         values = [a.get(c) for c in condition_attributes]
         if any(v is None for v in values):
             missing.append(f"{r['run_accession']} ({r['sample_accession']})")
@@ -271,6 +324,14 @@ def build_samplesheet(
         # Recorded only when used, so earlier provenance files stay reproducible.
         provenance["run_labels"] = {"field": label_field, "pattern": label_pattern,
                                     "labels": {k: v["_label"] for k, v in sorted(run_labels.items())}}
+    if design_table:
+        table = Path(design_table).resolve()
+        provenance["design_table"] = {
+            "path": str(table.relative_to(REPO_ROOT)) if table.is_relative_to(REPO_ROOT) else str(table),
+            "sha256": sha256_file(table),
+            "join_attribute": design_join,
+            "source": design_source,
+        }
     if methylkit:
         provenance["methylkit_samplesheet"] = methylkit
     prov_path = out_dir / "ena_provenance.json"

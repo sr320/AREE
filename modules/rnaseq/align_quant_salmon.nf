@@ -64,8 +64,14 @@ process SALMON_QUANT {
     // Fragment GC-bias correction is applied to paired-end libraries only:
     // single-end reads do not observe fragment length, which the model needs,
     // and Salmon documents it as beta for single-end data.
+    //
+    // --tag_seq is for 3' tag libraries (e.g. QuantSeq), which yield about one
+    // read per transcript regardless of its length: effective-length
+    // correction is switched off, and so is --gcBias, which models GC content
+    // along whole fragments.
     def fq = reads instanceof Collection ? reads as List : [ reads ]
-    def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]} --gcBias"
+    def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]}" + (params.tag_seq ? '' : ' --gcBias')
+    def length_opt = params.tag_seq ? '--noLengthCorrection' : ''
     """
     salmon quant \\
         -i ${salmon_index} \\
@@ -73,7 +79,7 @@ process SALMON_QUANT {
         ${input} \\
         -p ${task.cpus} \\
         --geneMap ${gtf} \\
-        --validateMappings \\
+        --validateMappings ${length_opt} \\
         -o ${sample_id}
 
     cat <<-END_VERSIONS > versions.yml

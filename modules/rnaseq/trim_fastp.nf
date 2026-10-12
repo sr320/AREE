@@ -39,9 +39,12 @@ process TRIM_FASTP {
     def io = fq.size() == 1 \
         ? "-i ${fq[0]} -o ${sample_id}_trimmed_R1.fastq.gz ${se_adapter}" \
         : "-i ${fq[0]} -I ${fq[1]} -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz --detect_adapter_for_pe"
+    // --tag_seq (3' QuantSeq-style libraries) also trims the poly-A/poly-X
+    // tails those libraries carry at the 3' end of many reads.
+    def tag_seq_opts = params.tag_seq ? '--trim_poly_x' : ''
     """
     fastp \\
-        ${io} \\
+        ${io} ${tag_seq_opts} \\
         --thread ${task.cpus} \\
         --json ${sample_id}.fastp.json \\
         --html ${sample_id}.fastp.html \\

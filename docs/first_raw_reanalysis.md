@@ -72,6 +72,22 @@ convenience — it is how an unreplicated design gets caught before anyone
 downloads 226 GB. `aree validate-study` cross-checks that the study's declared
 BioProject matches the one the sample sheet was generated from.
 
+Not every deposit carries its design. Where it sits in a run-level string,
+`--label-field` / `--label-pattern` parse it out. Where the BioSamples hold only
+an isolate code, take the design from the authors' own table (a submission
+sheet or sample list), commit it under `data/studies/<STUDY_ID>/`, and join it:
+
+```bash
+aree fetch-samplesheet --bioproject PRJNA913164 --study GEORGE2023_HEATWAVE_PLOIDY \
+  --design-table data/studies/GEORGE2023_HEATWAVE_PLOIDY/design.tsv --design-join isolate \
+  --design-source https://github.com/... \
+  --condition-attribute ploidy --condition-attribute treatment
+```
+
+Every sample must match exactly one row and every row a sample, and the
+table's checksum and source go into `ena_provenance.json`. The design is then
+the authors' claim, not the archive's, so say so in the study YAML.
+
 ## Curation judgements
 
 **This is not registered as resilience evidence.** The BioProject is titled
