@@ -113,7 +113,6 @@ def test_comparisons_are_tank_replicated_and_classified(study):
         assert comps[cid]["phenotype"] == "disease_susceptibility"
     for c in comps.values():
         assert c["sample_size"] == 12 and c["biological_replicates"] == 3
-        assert c["results_file"] is None
     assert "tank_level_replication" in study["quality_flags"]
 
 
@@ -150,3 +149,73 @@ def test_config_is_single_end_and_fits_primary_on_tanks():
 def test_outputs_match_provenance_checksums(provenance):
     for rel, digest in provenance["outputs"].items():
         assert hashlib.sha256((REPO_ROOT / rel).read_bytes()).hexdigest() == digest
+
+
+# ---- 2026-10-12 reanalysis outputs -------------------------------------------
+
+RUN = {
+    "starved_vs_fed_0hpc": (["3_0"], ["5_0"], "tank", False),
+    "fed_oshv1_24hpc_vs_0hpc": (["3_0"], ["3_24"], "tank_hpc", True),
+    "starved_oshv1_24hpc_vs_0hpc": (["5_0"], ["5_24"], "tank_hpc", True),
+}
+
+
+def test_registry_points_at_committed_results(study):
+    assert study["qc_status"] == "passed_with_warnings"
+    assert study["analysis_status"] == "harmonized"
+    for comp in study["comparisons"]:
+        assert comp["results_file"] == (
+            f"data/studies/{STUDY_ID}/{STUDY_ID}_{comp['comparison_id']}_dge_standardized.tsv")
+        assert (REPO_ROOT / comp["results_file"]).exists()
+
+
+@pytest.mark.parametrize("comparison_id", list(RUN))
+def test_manifest_records_the_registered_fit(comparison_id):
+    control, treatment, unit, viral = RUN[comparison_id]
+    manifest = json.loads((STUDY_DIR / f"{STUDY_ID}_{comparison_id}_workflow_manifest.json").read_text())
+    params = manifest["parameters"]
+    assert manifest["mode"] == "raw_reanalysis"
+    assert params["control_levels"] == control and params["treatment_levels"] == treatment
+    assert params["replicate_unit"] == unit
+    assert params["single_end"] is True
+    assert params["se_adapter"] == "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+    assert bool(params["viral_reference"]) is viral
+    assert params["covariates"] == []
+    # Three tank units per arm, four residual df.
+    assert manifest["deseq2_design"]["design"] == "~condition"
+    assert manifest["deseq2_design"]["n_libraries_or_units"] == 6
+    assert manifest["deseq2_design"]["residual_df"] == 4
+    assert manifest["reference"]["genome_assembly"] == "GCF_963853765.1"
+
+
+@pytest.mark.parametrize("comparison_id", list(RUN))
+def test_results_have_standard_errors(comparison_id):
+    with open(STUDY_DIR / f"{STUDY_ID}_{comparison_id}_dge_standardized.tsv") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    assert len(rows) > 25000
+    assert all(r["lfcSE"] not in ("", "NA") for r in rows if r["log2FoldChange"] not in ("", "NA"))
+
+
+def test_every_fetched_run_matches_ena_read_count(samplesheet):
+    with open(STUDY_DIR / "read_source.tsv") as fh:
+        source = {r["run_accession"]: r for r in csv.DictReader(fh, delimiter="\t")}
+    used = {r["run_accession"]: r for r in samplesheet if r["hpc"] in ("0", "24")}
+    assert set(source) == set(used) and len(source) == 24
+    for run, r in source.items():
+        assert r["source_url"] == f"https://sra-pub-run-odp.s3.amazonaws.com/sra/{run}/{run}"
+        assert r["reads_verified"] == used[run]["read_count"]
+        assert len(r["sra_md5"]) == 32 and len(r["fastq_gz_md5"]) == 32
+
+
+def test_dispersion_qc_is_committed_and_interpreted(study):
+    with open(STUDY_DIR / "replicate_dispersion_qc.tsv") as fh:
+        by_group = list(csv.DictReader(fh, delimiter="\t"))
+    assert {r["condition"] for r in by_group} == {"3_0", "3_24", "5_0", "5_24"}
+    assert all(r["passes"] == "True" for r in by_group)
+    with open(STUDY_DIR / "replicate_dispersion_qc_by_family.tsv") as fh:
+        by_family = list(csv.DictReader(fh, delimiter="\t"))
+    assert len(by_family) == 8
+    # Within-family values fall below the single-oyster floor; the registry must
+    # say why (pooled libraries) rather than leave it as a silent failure.
+    assert any(r["passes"] == "False" for r in by_family)
+    assert "not technical replicates" in study["limitations"]

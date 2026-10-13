@@ -16,10 +16,16 @@
 # study's primary comparison, so the two can support multi-omics convergence.
 # They are the same tanks and must not be counted as independent studies.
 #
-# RUNNABLE, NOT YET RUN. The libraries are single-end 75 bp (NextSeq 550).
-# The RNA-seq workflow supports single-end input since PR #25, and the
-# config sets `single_end = true`. The reads (about 104 GB) have not been
-# downloaded or reanalyzed.
+# REANALYZED 2026-10-12 at full depth (single-end, `single_end = true`), all
+# three registered comparisons, each fitted on 3 vs 3 pseudo-bulk tank units.
+# Only the 24 libraries the comparisons use (0 and 24 hpc) were fetched.
+# Results:
+#   starved_vs_fed_0hpc           29,634 genes, 11,248 padj < 0.05
+#   fed_oshv1_24hpc_vs_0hpc       29,516 genes, 10,438 padj < 0.05
+#   starved_oshv1_24hpc_vs_0hpc   29,558 genes,  4,686 padj < 0.05
+# Mapping 65.8-72.8% (Salmon, transcriptome). QC passes with warnings: see
+# quality_flags, limitations (8)-(10) and curation_notes. Reads came from NCBI's
+# SRA open-data mirror, not ENA (read_source.tsv).
 
 study_id: DUPERRET2025_STARVE_RNASEQ
 simulated: false
@@ -52,10 +58,10 @@ data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "Raw single-end FASTQ for 83 runs are public in ENA: PRJEB86618 (starved, 41 runs, public 2025-10-23) and PRJEB86525 (fed, 42 runs, public 2025-08-01). The paper reports 84 libraries; the missing one is an F14R starved 6 hpc replicate, which is not deposited. Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The authors' DEG tables are in the paper's supplementary material and were not harmonized here: AREE reanalyzes raw reads so that every comparison has a standard error."
+  access_notes: "Raw single-end FASTQ for 83 runs are public in ENA: PRJEB86618 (starved, 41 runs, public 2025-10-23) and PRJEB86525 (fed, 42 runs, public 2025-08-01). The paper reports 84 libraries; the missing one is an F14R starved 6 hpc replicate, which is not deposited. Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The authors' DEG tables are in the paper's supplementary material and were not harmonized here: AREE reanalyzes raw reads so that every comparison has a standard error. The 2026-10-12 reanalysis did not use ENA's FASTQ files: ENA was throttling this IP (about 260 KB/s, about 33 h for 31 GB), so the 24 runs used were fetched as .sra files from NCBI's SRA open-data mirror (sra-pub-run-odp on AWS S3) and converted with fasterq-dump 3.4.1. ENA's FASTQ MD5s therefore do not apply. Instead, each run's .sra size was checked against S3's content-length, its read count was checked exactly against ENA's read_count, and the .sra and output FASTQ MD5s are recorded in read_source.tsv. The quality scores are real (binned NextSeq values, not SRA Lite placeholders), and the original Illumina read names are kept."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. 2 families (F11N, F14R) x 2 diets (fed, code 3;
@@ -122,7 +128,7 @@ comparisons:
     resilience_classification: "resilience"
     sample_size: 12
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DUPERRET2025_STARVE_RNASEQ/DUPERRET2025_STARVE_RNASEQ_starved_vs_fed_0hpc_dge_standardized.tsv"
     meta_analysis_primary: true
 
   - comparison_id: "fed_oshv1_24hpc_vs_0hpc"
@@ -141,7 +147,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 12
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DUPERRET2025_STARVE_RNASEQ/DUPERRET2025_STARVE_RNASEQ_fed_oshv1_24hpc_vs_0hpc_dge_standardized.tsv"
     meta_analysis_primary: false
 
   - comparison_id: "starved_oshv1_24hpc_vs_0hpc"
@@ -160,7 +166,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 12
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DUPERRET2025_STARVE_RNASEQ/DUPERRET2025_STARVE_RNASEQ_starved_oshv1_24hpc_vs_0hpc_dge_standardized.tsv"
     meta_analysis_primary: false
 
 quality_flags:
@@ -169,9 +175,8 @@ quality_flags:
   - low_replication
 
 limitations: >
-  (1) Not yet reanalyzed. The libraries are single-end, which the workflow
-  supports since PR #25, but no full-depth single-end run has been made in
-  AREE. (2) Replication is 3
+  (1) Only the 0 and 24 hpc libraries (24 of 83) were fetched and
+  reanalyzed, because no other time point is registered. (2) Replication is 3
   tanks per diet. Each library is a pool of 10 oysters, so between-oyster
   variance is averaged away. Both families share each tank, so every
   comparison is fitted on pseudo-bulk tank units (families summed), 3 vs 3.
@@ -194,7 +199,29 @@ limitations: >
   also shared with DECICOMP2025_POMS_AGE. (7) One planned library (F14R
   starved 6 hpc) is not deposited. The authors excluded one deposited
   library (F11N fed 48 hpc rep 2, 21% mapping). Neither affects the
-  registered comparisons.
+  registered comparisons. (8) Replicate dispersion is low, as expected for
+  libraries that each pool 10 oysters. By diet x time group (two families
+  each) it is 0.0075-0.021, which passes the 0.005 floor. Within a family
+  across its three replicates it is 0.0029-0.0059, and 7 of 8 sets fall
+  below the floor, which was calibrated on single oysters (0.03-0.05). These
+  are not technical replicates: at 24 hpc, viral reads per million differ by
+  orders of magnitude among one family's three libraries (e.g. F14R fed:
+  11,445 / 48 / 1,383), which re-sequencing one RNA sample cannot produce.
+  Residual variance is still small, so lfcSE is small, and the study should
+  not dominate an inverse-variance pool by pooling alone. (9) The tank
+  pairing is unconfirmed. Residual expression of the F11N and F14R libraries
+  sharing a replicate number is no more correlated than different-number
+  pairs (mean r = -0.02 vs 0.01), so either tank effects are negligible or
+  replicate n is not tank n. Summing libraries by replicate number is then
+  an arbitrary pairing of independent pools. The 3 vs 3 fit remains
+  conservative relative to 6 vs 6. (10) The 0 hpc diet contrast calls 38%
+  of genes DE. That fits the size of the manipulation (16 d starvation, with
+  growth and lipid reserves collapsing) and the replicates are independent
+  (8), but it also means a 0 hpc "candidate" is mostly a fasting marker.
+  Viral reads at 24 hpc are low in 5 of 6 starved libraries (1-11 per
+  million) and one fed library (48 per million). This is consistent with the
+  paper's delayed viral replication under starvation, so no library was
+  excluded.
 
 provenance:
   registered_by: sr320
@@ -226,7 +253,22 @@ provenance:
     `tank_hpc` for the time contrasts), not `~ family + condition`, because
     the two family libraries from each tank are not independent replicates
     of its treatment. The tank and tank_hpc columns are derived in the merge
-    step and documented in ena_provenance.json.
+    step and documented in ena_provenance.json. Reanalysis (2026-10-12,
+    sr320 with Claude Code, on a workstation with 8 cores and 16 GB):
+    Nextflow 26.04.7, -profile local,workstation, work dir on Monarch (HFS+),
+    one run per comparison (`--replicate_unit tank` for the diet contrast,
+    `tank_hpc` for the time contrasts, `--viral_reference` OsHV-1
+    NC_005881.2 for the time contrasts only, because both arms of the diet
+    contrast are pre-infection). Tools as recorded in each workflow
+    manifest: fastp 1.3.6, Salmon 2.3.4, DESeq2 1.42.1, tximport 1.30.0, R
+    4.3.2. The three runs shared one session, but -resume reused no tasks
+    across them (task hashes differed), so each comparison quantified its own
+    12 libraries; outputs are unaffected. Replicate dispersion QC:
+    replicate_dispersion_qc.tsv (by group) and
+    replicate_dispersion_qc_by_family.tsv (within family), interpreted in
+    limitations (8). The viral-load independence check and the tank
+    residual-correlation check in limitations (8)-(9) were run ad hoc from
+    the Salmon quant files and are not committed scripts.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86618"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"
