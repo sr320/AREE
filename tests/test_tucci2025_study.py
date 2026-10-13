@@ -5,7 +5,7 @@ The first real clam study: a 2x2 Manila clam priming x heatwave factorial,
 read from ENA and the decisions that are easy to erode later: the 16S amplicon
 runs that share the BioProject are excluded, the two prespecified comparisons
 and their classifications, the tank and survivor caveats, and that the study is
-registered as not runnable until the workflow handles 3' Tag-seq.
+configuration runs the workflow's 3' Tag-seq path (tag_seq = true).
 """
 from __future__ import annotations
 
@@ -101,3 +101,10 @@ def test_config_levels_exist_in_the_samplesheet(samplesheet):
     assert levels <= {r["condition"] for r in samplesheet}
     assert "single_end = true" in text
     assert "GCF_026571515.1" in text
+
+
+def test_config_runs_the_tag_seq_path():
+    """QuantSeq 3' Tag-Seq: the standard path's length offsets would create false
+    fold changes from isoform switching. Never run this study without tag_seq."""
+    text = CONFIG_PATH.read_text(encoding="utf-8")
+    assert re.search(r"^\s*tag_seq\s*=\s*true\b", text, re.M)

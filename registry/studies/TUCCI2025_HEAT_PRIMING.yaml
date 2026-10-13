@@ -7,12 +7,11 @@
 # PRJNA1132140" for both the RNA-seq and the 16S data, and its methods (2x2
 # factorial, 10 clams per group sequenced, 75 bp single-end) match the deposit.
 #
-# STATUS: REGISTERED, NOT RUNNABLE YET. The libraries are Lexogen QuantSeq 3'
-# mRNA-seq (3' Tag-Seq), not full-length RNA-seq. The RNA-seq workflow applies
-# Salmon's length correction and passes tximport length offsets to DESeq2;
-# both are wrong for 3' tag counts, where reads come from one end of each
-# transcript and do not scale with its length. Running this study needs a
-# 3' Tag-seq mode in the workflow (separate code PR). See limitations (1).
+# STATUS: REGISTERED, READY TO RUN, NOT YET RUN. The libraries are Lexogen
+# QuantSeq 3' mRNA-seq (3' Tag-Seq), not full-length RNA-seq, so the run
+# configuration sets tag_seq = true (workflow option added in PR #24): no
+# length correction in Salmon or DESeq2. See limitations (1). Tank membership
+# is still unknown; see limitations (2).
 
 study_id: TUCCI2025_HEAT_PRIMING
 simulated: false
@@ -117,13 +116,15 @@ quality_flags:
 limitations: >
   (1) 3' Tag-Seq libraries (Lexogen QuantSeq, 75 bp single-end). Reads come
   from the 3' end of each transcript, so counts do not scale with transcript
-  length. The current RNA-seq workflow corrects for length twice (Salmon's
-  effective-length model and tximport length offsets in DESeq2), which would
-  bias every gene's estimate by its transcript length. The study must not be
-  run until the workflow has a 3' Tag-seq mode (no length correction in
-  Salmon, raw counts into DESeq2). Gene-level 3' counts also depend on 3' UTR
-  annotation: genes whose RefSeq 3' end is wrong or missing on this
-  contig-level assembly will be under-counted. (2) Tank is the unit of
+  length, and the standard path's length correction (Salmon's effective-length
+  model, tximport length offsets in DESeq2) would be wrong: on simulated 3'
+  reads it called 26 of 40 isoform-switch genes differentially expressed with
+  no change in 3' reads. The run therefore sets tag_seq = true (fastp poly-X
+  trimming, Salmon --noLengthCorrection, DESeq2 on counts without length
+  offsets); the workflow manifest's deseq2_design.length_model must read
+  "none" for this study. Never run it without tag_seq. Gene-level 3' counts
+  also depend on 3' UTR annotation: genes whose RefSeq 3' end is wrong or
+  missing on this contig-level assembly will be under-counted. (2) Tank is the unit of
   treatment: each condition ran in two 25 L tanks of 30 clams, so each arm
   rests on 2 tanks. Which tank each sequenced clam came from is not in the
   deposit or the paper, so the analysis cannot be fitted on tanks (as
@@ -162,7 +163,8 @@ provenance:
     --library-strategy RNA-Seq`. The --library-strategy option is from PR #40
     (WP5), not yet on main when this was generated; the provenance records the
     filter (kept RNA-Seq; 40 RNA-Seq and 40 AMPLICON runs before filtering).
-    Regenerate from main once #40 merges. LIBRARY-STRATEGY CHECK: unlike
+    Regenerate from main once #40 merges. TAG-SEQ: the run configuration sets
+    tag_seq = true (PR #24, merged into this branch 2026-10-12). LIBRARY-STRATEGY CHECK: unlike
     LUTIER2022_OA_TIPPING, the AMPLICON label here is correct. The 40
     AMPLICON runs are paired-end with their own BioSamples; the 40 RNA-Seq
     runs are single-end, 76 bp, 5.5-16.5 M reads, matching the paper's 75 SE
