@@ -1,6 +1,20 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# EM-seq (DNA methylation) arm of Ifremer's DECICOMP POMS age experiment.
+# Families F14R and H2D were challenged by OsHV-1 cohabitation at 4, 16 and 28
+# months; older oysters survived POMS markedly better. This deposit has whole
+# individual oysters at 0 hpc (basal) for all three ages, plus resistant and
+# susceptible 28-month oysters at 500 hpc: an individual-level resistance
+# phenotype, which no other real AREE methylation study has.
+#
+# Registered from deposited ENA metadata only (PRJEB105019, public 2025-12-06).
+# The metabolomics arm of the same experiment is DECICOMP2025_POMS_AGE
+# (MetaboLights MTBLS13463, PR #21), cited here but not listed under
+# `accessions`, as it does not list this project either. Its 0 hpc design
+# (2 families x 3 ages x 6) matches this study's T0 libraries. Whether they are
+# the same animals is not stated. No publication cites this accession; the
+# MetaboLights record names a manuscript in preparation (Valdivieso et al.).
+#
+# NOT YET RUN. 60 paired-end libraries, 699.7 GB of FASTQ; see the config for
+# storage and runtime notes.
 
 study_id: DECICOMP2025_POMS_AGE_EMSEQ
 simulated: false
@@ -10,59 +24,185 @@ accessions:
   bioproject: "PRJEB105019"
   geo: null
   sra: null
-  ena: null
+  ena: "PRJEB105019"
   proteomexchange: null
   other: null
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Ifremer / IHPE (2025). Epigenetic profiling (DNA methylation) of Pacific oysters (Magallana gigas) under control conditions (23C, fed ad libitum), in three ages (4, 16, and 28 month olds), DECICOMP project [EM-seq dataset]. ENA PRJEB105019, public 2025-12-06; collector J. Vidal-Dupiol. No publication cites the accession as of 2026-10-13. Same experiment, metabolomics arm: MetaboLights MTBLS13463 (AREE study DECICOMP2025_POMS_AGE), whose record names the manuscript in preparation: Valdivieso A, ..., Mitta G, Vidal-Dupiol J. Unravelling age-driven molecular transitions underlying Pacific Oyster Mortality Syndrome permissiveness in Magallana gigas."
 
-assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+species: "Magallana gigas"
+strain_or_population: "Ifremer full-sibling biparental families F14R and H2D (two of four families challenged: H2D, F14R, F11N, F14V), produced at the Ifremer Argenton hatchery in 2020 and reared under biosecured conditions (per MTBLS13463 protocols)."
+
+# AREE reanalyzes against its current reference. Region coordinates are
+# assembly-specific: see docs/handling_genome_versions.md.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["methylation"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end Enzymatic Methyl-seq (EM-seq). 60 libraries, 143-213 M read pairs each (median about 173 M), 699.7 GB of FASTQ reported by ENA. ENA library_strategy is Bisulfite-Seq. The project description says NextSeq 550 and calls the assay 'RNA-Seq ... on extracted DNA using the EM-seq kit'; the run records (NovaSeq 6000, Bisulfite-Seq) are taken as authoritative."
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 60 runs are public in ENA under PRJEB105019 (first public 2025-12-06). No methylation calls or publication are available. Sample sheet, methylKit sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. One run, ERR15996548 (F14R_C3_T0_S3, in the primary comparison's reference arm), has no ENA-processed FASTQ (empty fastq_ftp); only the submitter's files are listed (submitted_ftp, with MD5s). fetch-samplesheet silently left it out of fastq_manifest.tsv, so those two files and their MD5s are in fastq_manifest_supplement.tsv. Released before any publication: check reuse expectations with the submitters before publishing results."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. 60 libraries, one whole individual oyster each, parsed
+# from experiment_title ('... sequencing: F14R_C3_T0_S1' = family F14R, cohort
+# C3, group T0, replicate 1). Cohorts: C3 = 4, C7 = 16, C8 = 28 months
+# (BioSample `age` agrees for all 60). Groups:
+#   T0  0 hpc, BioSample phenotype 'No infected (Basal)'   C3, C7, C8 x 2 families x 6
+#   R   500 hpc, phenotype 'Resistant'                      C8 x 2 families x 6
+#   S   500 hpc, phenotype 'Susceptible'                    C8 x 2 families x 6
+# The parsed group matches the BioSample phenotype for all 60 runs. Two sample
+# titles carry swapped replicate numbers (F14R_C8_S_S6 says 'Replicate 1',
+# F14R_C8_T0_S1 says 'Replicate 6'); run labels are unique and used as given.
+#
+# REPLICATION. Libraries are individual oysters, and each arm holds 6 per
+# family from both families, so individuals are the replicates and family is
+# balanced across arms. No replicate_unit is set. DMR_METHYLKIT has no
+# covariate term, so family adds unmodeled variance; per-family runs are the
+# sensitivity analysis. Tank of origin is not deposited (the 28-month cohort
+# was spread over 15 tanks).
+#
+# PRIMARY COMPARISON. The 28 vs 4 month basal contrast is primary so that it
+# pairs with DECICOMP2025_POMS_AGE's primary metabolomic contrast on the same
+# design. The resistant vs susceptible contrast has the stronger phenotype,
+# but how R and S were assigned at 500 hpc is not deposited (see limitations).
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
+  - comparison_id: "age28mo_vs_age4mo_basal"
+    tissue: "whole_animal"
+    # The contrast spans life stages: 4-month oysters are juveniles. Registered
+    # as adult, as in DECICOMP2025_POMS_AGE.
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
-    phenotype_unit: null
+    stressor_original: "Experimental infection by cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, fed ad libitum), mimicking natural POMS transmission; each age cohort challenged in a separate year. Libraries sampled at 0 hpc (basal, 'No infected')."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio"
+    exposure_duration: "until 48 h without mortality (per MTBLS13463 protocol)"
+    exposure_timing: "sampled at 0 hpc, before infection (BioSample phenotype 'No infected (Basal)'); constitutive differences"
+    control_condition: "4-month-old oysters (cohort C3), families F14R and H2D, 6 individuals per family at 0 hpc (12 libraries). Less POMS-resistant reference age; not an unexposed control."
+    treatment_condition: "28-month-old oysters (cohort C8), families F14R and H2D, 6 individuals per family at 0 hpc (12 libraries). The more POMS-resistant age."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_post_challenge (cohort level; values not deposited)"
     resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 24
+    biological_replicates: 6
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+  - comparison_id: "age16mo_vs_age4mo_basal"
+    tissue: "whole_animal"
+    life_stage: "adult"
+    stressor_original: "Experimental infection by cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, fed ad libitum); each age cohort challenged in a separate year. Libraries sampled at 0 hpc (basal, 'No infected')."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio"
+    exposure_duration: "until 48 h without mortality (per MTBLS13463 protocol)"
+    exposure_timing: "sampled at 0 hpc, before infection; constitutive differences"
+    control_condition: "4-month-old oysters (cohort C3), families F14R and H2D, 6 individuals per family at 0 hpc (12 libraries). Reference age; not an unexposed control."
+    treatment_condition: "16-month-old oysters (cohort C7), families F14R and H2D, 6 individuals per family at 0 hpc (12 libraries)."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_post_challenge (cohort level; values not deposited)"
+    resilience_classification: "resilience"
+    sample_size: 24
+    biological_replicates: 6
+    results_file: null
+    meta_analysis_primary: false
+
+  - comparison_id: "resistant_vs_susceptible_28mo_500hpc"
+    tissue: "whole_animal"
+    life_stage: "adult"
+    stressor_original: "Experimental infection by cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, fed ad libitum), 28-month cohort. Libraries sampled at 500 hpc from individuals with BioSample phenotype 'Resistant' or 'Susceptible'."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio"
+    exposure_duration: "500 h post-cohabitation"
+    exposure_timing: "500 hpc, after the infection; R and S assignment criteria not deposited"
+    control_condition: "28-month-old oysters with phenotype 'Susceptible' at 500 hpc, families F14R and H2D, 6 per family (12 libraries). Reference group; not an unexposed control."
+    treatment_condition: "28-month-old oysters with phenotype 'Resistant' at 500 hpc, families F14R and H2D, 6 per family (12 libraries)."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "individual phenotype class (Resistant vs Susceptible), criteria not deposited"
+    resilience_classification: "resilience"
+    sample_size: 24
+    biological_replicates: 6
+    results_file: null
+    meta_analysis_primary: false
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) Not yet run: 699.7 GB of paired-end FASTQ. Staging needs a drive with
+  room (Monarch had 167 GB free on 2026-10-13), and Bismark at about 174 M
+  read pairs per library is a multi-day job. (2) Resistant vs susceptible:
+  how individuals were classed R or S at 500 hpc is not deposited. Both
+  classes were sampled at the same time point, so "susceptible" cannot simply
+  mean "died": possibly infected but surviving, high viral load, or
+  moribund. It is also post-infection, so methylation differences may reflect
+  disease state or tissue composition (whole animal) rather than
+  predisposition. Confirm the criteria with the submitters before treating it
+  as resistance evidence. (3) Age contrasts: age is confounded with challenge
+  year, sampling season and freezer-storage time (each cohort was challenged
+  in a separate year), and with size, maturity and reproductive state. The
+  resistance phenotype is a cohort-level survival difference, not measured on
+  these individuals, and the values are not deposited. Only the two families
+  with the strongest age effect were profiled (selection on the outcome).
+  (4) Family is not modeled by DMR_METHYLKIT. It is balanced across arms, so
+  it adds variance rather than bias; run per family as a sensitivity
+  analysis. Family genetic background also creates C/T SNPs that EM-seq, like
+  bisulfite data, cannot separate from methylation without genotype-aware
+  filtering. (5) Whole-animal libraries mix tissues whose proportions change
+  with age and disease. (6) Same experiment as DECICOMP2025_POMS_AGE
+  (metabolomics): convergent evidence across omics layers, not independent
+  replication. Family F14R and the 2020 Ifremer production are also shared
+  with DUPERRET2025_POMS_STARVE and DUPERRET2025_STARVE_RNASEQ. (7) The
+  project description conflicts with the run records on platform (NextSeq
+  550 vs NovaSeq 6000) and age (3 vs 4 months); run records and BioSample
+  ages are used. (8) Coordinate-based region evidence is tied to
+  GCF_963853765.1 and must be lifted over, not relabeled, if the reference
+  changes.
 
 provenance:
-  registered_by: "Steven Roberts"
+  registered_by: sr320
   date_registered: "2026-10-13"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB105019 --study-id
+    DECICOMP2025_POMS_AGE_EMSEQ` (branch
+    study/PRJEB105019/DECICOMP2025_POMS_AGE_EMSEQ). Sample sheet, methylKit
+    sample sheet and FASTQ manifest were generated from live ENA metadata with
+    `aree fetch-samplesheet --bioproject PRJEB105019 --study
+    DECICOMP2025_POMS_AGE_EMSEQ --label-field experiment_title --label-pattern
+    '(?P<family>F14R|H2D)_(?P<cohort>C[378])_(?P<group>T0|R|S)_S(?P<replicate>[1-6])$'
+    --condition-attribute cohort --condition-attribute group --attribute
+    family --attribute replicate --attribute phenotype --attribute age
+    --attribute isolate --attribute tissue_type --methylkit-levels C3_T0
+    C8_T0`. fastq_manifest.tsv covers 59 runs: ERR15996548 has no
+    fastq_ftp in ENA's read_run report, and fetch-samplesheet drops such runs
+    silently (tool issue flagged separately). Its submitted files were added
+    in fastq_manifest_supplement.tsv from the ENA read_run filereport fields
+    submitted_ftp, submitted_md5 and submitted_bytes (queried 2026-10-13).
+    Cross-checks on all 60 runs: the parsed group matches the
+    BioSample phenotype, the cohort code matches the BioSample age, and the
+    family matches the isolate. Group sizes: 6 per family in each of C3_T0,
+    C7_T0, C8_T0, C8_R and C8_S. The methylKit sheet codes the primary
+    comparison only (C3_T0 = 0, C8_T0 = 1). Three comparisons were registered
+    before any result was computed, with the 28 vs 4 month basal contrast as
+    meta_analysis_primary so that it pairs with DECICOMP2025_POMS_AGE. The
+    BioSample phenotype 'No infected (Basal)' on every T0 library confirms
+    the 0 hpc basal sampling that DECICOMP2025_POMS_AGE had to infer.
+    Publication search 2026-10-13: Europe PMC finds no paper citing
+    "PRJEB105019" (13 DECICOMP-related papers, none using it). Ask the
+    submitters (J. Vidal-Dupiol, IHPE) for the R/S assignment criteria, the
+    cohort survival values, and whether these are the metabolomics animals.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB105019"
+    - "https://www.ebi.ac.uk/metabolights/MTBLS13463"
