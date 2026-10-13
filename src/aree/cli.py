@@ -292,6 +292,16 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             "from the paper or the submitter before treating them as biological replicates.",
             fg="yellow",
         ))
+    if report.get("submitted_ftp_runs"):
+        runs = report["submitted_ftp_runs"]
+        click.echo(click.style(
+            f"\nNOTE: ENA has no generated FASTQ for {len(runs)} run(s); the manifest uses the "
+            f"submitter's own FASTQ (source=submitted_ftp): {', '.join(runs)}. Their file names "
+            "and read headers are the submitter's, not ENA's.", fg="yellow"))
+    if report.get("unpaired_files_dropped"):
+        click.echo(click.style(
+            f"\nNOTE: {len(report['unpaired_files_dropped'])} paired run(s) also carry an unpaired "
+            "FASTQ, left out of the manifest and listed in ena_provenance.json.", fg="yellow"))
     if report.get("methylkit_samplesheet"):
         mk = report["methylkit_samplesheet"]
         click.echo(f"  methylKit  : {mk['control_level']}=0 (n={mk['n_control']}), "

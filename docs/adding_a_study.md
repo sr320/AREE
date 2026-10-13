@@ -206,7 +206,30 @@ prepare those tables by a documented script of your own for now.
 
 ## 7. Next steps
 
-For a `raw_reanalysis` study, check after the workflow runs and **before
+For a `raw_reanalysis` study, `aree fetch-samplesheet` (see
+[first_raw_reanalysis.md](first_raw_reanalysis.md)) writes
+`fastq_manifest.tsv` alongside the sample sheet, and the two always list the
+same runs:
+
+- Each run gets exactly one manifest row per mate: 1 for `SINGLE`, 2 for
+  `PAIRED`. Any other count is an error naming the runs. One exception: when
+  a paired run's ENA FASTQ also includes an unpaired `RUN.fastq.gz` beside
+  `RUN_1`/`RUN_2`, that file is left out and listed under
+  `unpaired_files_dropped` in `ena_provenance.json`.
+- URLs come from ENA's generated FASTQ (`fastq_ftp`) where it exists. Some
+  public runs have none, and only the submitter's own files (`submitted_ftp`).
+  When those are all FASTQ, they are used instead, with the submitter's MD5s
+  and sizes. The manifest's `source` column (`fastq_ftp` or `submitted_ftp`)
+  and `submitted_ftp_runs` in `ena_provenance.json` record which runs these
+  are. PRJEB105019's ERR15996548 is one example. Submitted files keep their
+  own names (e.g. `..._DNA_R1.fastq.gz`), so download them by
+  `run_accession` and `mate`, not by file name.
+- A run with neither (no ENA FASTQ, and submitted files that are BAM, CRAM
+  or missing) is an error naming the run, not a silent omission. Resolve it
+  with the submitter or ENA before going further. Do not hand-edit the
+  manifest.
+
+Check after the workflow runs and **before
 harmonizing** that its replicates are independent animals:
 
 ```bash

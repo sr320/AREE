@@ -14,7 +14,8 @@ plus each sample's attribute block — and emits:
                              define the design, in the column contract
                              ``workflows/rnaseq`` expects;
 * ``fastq_manifest.tsv``   — FASTQ URLs with ENA's own MD5s and byte counts, so
-                             a download can be verified rather than trusted;
+                             a download can be verified rather than trusted,
+                             and which ENA field each URL came from (``source``);
 * ``ena_provenance.json``  — the queries used, the date, and a checksum of each
                              emitted file.
 
@@ -39,7 +40,13 @@ RUN_FIELDS = [
     "run_accession", "sample_accession", "sample_alias", "experiment_accession",
     "library_strategy", "library_layout", "library_selection", "instrument_model",
     "read_count", "base_count", "fastq_ftp", "fastq_md5", "fastq_bytes",
+    "submitted_ftp", "submitted_md5", "submitted_bytes", "submitted_format",
 ]
+
+# FASTQ files expected per run, by ENA library_layout.
+MATES_PER_LAYOUT = {"SINGLE": 1, "PAIRED": 2}
+_FASTQ_NAME = re.compile(r"\.f(ast)?q(\.gz|\.bz2)?$", re.IGNORECASE)
+_MATE_SUFFIX = re.compile(r"_R?([12])(_\d+)?\.f(ast)?q(\.gz|\.bz2)?$", re.IGNORECASE)
 
 TIMEOUT = 120
 
@@ -98,6 +105,50 @@ def fetch_sample_attributes(sample_accessions: list[str]) -> dict:
 
 def _slug(value) -> str:
     return "".join(c if c.isalnum() else "_" for c in str(value or "NA")).strip("_")
+
+
+def _split(value) -> list[str]:
+    return [v for v in (value or "").split(";") if v]
+
+
+def run_fastq_files(run: dict) -> tuple[str | None, list[tuple[str, str, str]], list[str]]:
+    """The FASTQ files for one run: (source, [(url, md5, bytes)], dropped urls).
+
+    ENA's generated FASTQ (`fastq_ftp`) is preferred. Some public runs have
+    none — ENA never converted them — and only the submitter's own files
+    (`submitted_ftp`); those are used when every one is a FASTQ, by
+    `submitted_format` and by file name. Anything else (BAM, CRAM, SFF, no
+    files at all) returns source None, and the caller fails the run.
+
+    A paired run whose fastq_ftp carries a third, unpaired file
+    (`RUN.fastq.gz` beside `RUN_1`/`RUN_2`) has that file dropped and
+    returned so the caller can record it. Mates are ordered by their _1/_2
+    (or _R1/_R2) suffix where one is present on every file.
+    """
+    def files(prefix):
+        urls, md5s, sizes = (_split(run.get(f"{prefix}_{k}")) for k in ("ftp", "md5", "bytes"))
+        return [(u, md5s[i] if i < len(md5s) else "", sizes[i] if i < len(sizes) else "")
+                for i, u in enumerate(urls)]
+
+    source, found = "fastq_ftp", files("fastq")
+    if not found:
+        formats = {f.upper() for f in _split(run.get("submitted_format"))}
+        submitted = files("submitted")
+        if submitted and formats <= {"FASTQ"} and all(_FASTQ_NAME.search(u) for u, _, _ in submitted):
+            source, found = "submitted_ftp", submitted
+        else:
+            return None, [], []
+
+    dropped: list[str] = []
+    if run.get("library_layout") == "PAIRED" and len(found) == 3:
+        unpaired = [f for f in found if not _MATE_SUFFIX.search(f[0])]
+        if len(unpaired) == 1:
+            dropped = [unpaired[0][0]]
+            found = [f for f in found if f is not unpaired[0]]
+    mates = [_MATE_SUFFIX.search(f[0]) for f in found]
+    if len(found) > 1 and all(mates) and len({m.group(1) for m in mates}) == len(found):
+        found = [f for _, f in sorted(zip((m.group(1) for m in mates), found))]
+    return source, found, dropped
 
 
 def parse_run_labels(runs: list[dict], label_field: str, label_pattern: str) -> dict[str, dict]:
@@ -262,6 +313,9 @@ def build_samplesheet(
                   "library_layout", "instrument_model", "read_count"]
 
     rows, manifest_rows, missing = [], [], []
+    no_fastq, wrong_count = [], []
+    sources: dict[str, str] = {}
+    unpaired_dropped: dict[str, list[str]] = {}
     for r in sorted(runs, key=lambda x: x["run_accession"]):
         a = {**attrs.get(r["sample_accession"], {}), **design.get(r["sample_accession"], {}),
              **run_labels.get(r["run_accession"], {})}
@@ -277,15 +331,20 @@ def build_samplesheet(
             r["library_layout"], r["instrument_model"], r["read_count"],
         ])
 
-        urls = [u for u in (r.get("fastq_ftp") or "").split(";") if u]
-        md5s = [m for m in (r.get("fastq_md5") or "").split(";") if m]
-        sizes = [b for b in (r.get("fastq_bytes") or "").split(";") if b]
-        for idx, url in enumerate(urls):
-            manifest_rows.append([
-                r["run_accession"], str(idx + 1), f"ftp://{url}",
-                md5s[idx] if idx < len(md5s) else "",
-                sizes[idx] if idx < len(sizes) else "",
-            ])
+        source, files, dropped = run_fastq_files(r)
+        if source is None:
+            no_fastq.append(f"{r['run_accession']} (submitted_format={r.get('submitted_format') or ''!r})")
+            continue
+        expected = MATES_PER_LAYOUT.get(r["library_layout"])
+        if len(files) != expected:
+            wrong_count.append(f"{r['run_accession']} ({r['library_layout']}: {len(files)} file(s) "
+                               f"from {source}, expected {expected})")
+            continue
+        sources[r["run_accession"]] = source
+        if dropped:
+            unpaired_dropped[r["run_accession"]] = [f"ftp://{u}" for u in dropped]
+        for idx, (url, md5, size) in enumerate(files):
+            manifest_rows.append([r["run_accession"], str(idx + 1), f"ftp://{url}", md5, size, source])
 
     if missing:
         raise ENAError(
@@ -294,6 +353,19 @@ def build_samplesheet(
             "Check the attribute names against the deposited sample records — "
             "they are submitter-defined and vary between projects."
         )
+    if no_fastq:
+        raise ENAError(
+            f"{len(no_fastq)} run(s) have no usable FASTQ: fastq_ftp is empty and submitted_ftp "
+            f"is missing or not FASTQ: {no_fastq}. Check the runs on the ENA browser; they "
+            "cannot be put in the manifest, and leaving them out would make the manifest "
+            "disagree with the sample sheet."
+        )
+    if wrong_count:
+        raise ENAError(
+            f"{len(wrong_count)} run(s) do not have one FASTQ per mate (1 single-end, 2 paired): "
+            f"{wrong_count}. The deposited layout or file list is inconsistent; resolve it "
+            "before downloading."
+        )
 
     sheet_path = out_dir / "samplesheet.tsv"
     sheet_path.write_text(
@@ -301,7 +373,7 @@ def build_samplesheet(
     )
     manifest_path = out_dir / "fastq_manifest.tsv"
     manifest_path.write_text(
-        "run_accession\tmate\turl\tmd5\tbytes\n"
+        "run_accession\tmate\turl\tmd5\tbytes\tsource\n"
         + "\n".join("\t".join(r) for r in manifest_rows) + "\n"
     )
 
@@ -340,6 +412,9 @@ def build_samplesheet(
         "group_sizes": dict(sorted(group_counts.items())),
         "min_group_size": min(group_counts.values()) if group_counts else 0,
         "total_fastq_bytes": total_bytes,
+        # Runs per ENA field the manifest URLs came from. submitted_ftp means ENA had
+        # no generated FASTQ for the run and the submitter's own files are used.
+        "fastq_sources": {k: sum(v == k for v in sources.values()) for k in ("fastq_ftp", "submitted_ftp")},
         "outputs": {
             str(p.relative_to(REPO_ROOT)) if p.is_relative_to(REPO_ROOT) else str(p): sha256_file(p)
             for p in output_paths
@@ -359,6 +434,11 @@ def build_samplesheet(
         }
     if methylkit:
         provenance["methylkit_samplesheet"] = methylkit
+    submitted_runs = sorted(k for k, v in sources.items() if v == "submitted_ftp")
+    if submitted_runs:
+        provenance["submitted_ftp_runs"] = submitted_runs
+    if unpaired_dropped:
+        provenance["unpaired_files_dropped"] = dict(sorted(unpaired_dropped.items()))
     if library_strategies:
         # Recorded only when used, so earlier provenance files stay reproducible.
         provenance["library_strategy_filter"] = {
