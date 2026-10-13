@@ -241,6 +241,48 @@ infected animals; it cannot put reads into an uninfected one. For OsHV-1,
 `config/CALLA2026_OSHV.config` points at RefSeq `NC_005881.2`
 (`data/reference/pathogens/OsHV-1/`, with a provenance sidecar).
 
+## Several comparisons of one study
+
+Run each registered comparison as its own `nextflow run`, one after another,
+from the same launch directory, with the same work directory, and with
+`-resume`. Give each run its own `--outdir`:
+
+```bash
+for c in starved_vs_fed_0hpc fed_oshv1_24hpc_vs_0hpc; do
+  nextflow -c config/DUPERRET2025_STARVE_RNASEQ.config run workflows/rnaseq \
+    -profile local,workstation -resume --comparison_id "$c" ... \
+    --outdir "results/rnaseq/DUPERRET2025_STARVE_RNASEQ/$c"
+done
+```
+
+The first run does all the per-library work. Later runs take FASTQC, fastp,
+`SALMON_INDEX`, `SALMON_QUANT`, `VIRAL_INDEX`, `VIRAL_QUANT` and MultiQC from
+the cache. They rerun only DESeq2, viral summary, standardization, manifest
+and report. The per-library processes read study-level params only (`reads`,
+`single_end`, `se_adapter`, `tag_seq`, the reference files), so a new
+`--comparison_id`, `--control_level`/`--treatment_level`, `--replicate_unit`,
+`--exclude_samples` or `--outdir` leaves their task hashes unchanged. A cached
+task's outputs are published to the new `--outdir` as well.
+`tests/test_rnaseq_resume_across_comparisons.py` checks this with two stub
+runs, paired and single end, in CI's Nextflow job.
+
+**Launch Nextflow with the `nextflow` launcher script**, e.g. from
+`conda activate aree` (`environment.yml`) or a current launcher from
+nextflow.io. Do not run `java -jar ~/.nextflow/framework/<ver>/nextflow-<ver>-one.jar`.
+The launcher passes `--add-opens` flags to the JVM. Without them, Nextflow
+cannot serialize task cache entries. The writes fail silently, every run
+reports `cached=0`, and every library is recomputed. `main.nf` checks for
+this at startup. It warns on a plain run and stops a `-resume` run.
+
+That happened with the three DUPERRET2025_STARVE_RNASEQ comparisons on
+2026-10-12. `-dump-hashes` showed the same FASTQC hash for a library in every
+comparison. The cache database held no entries, so Nextflow treated each
+existing task folder as foreign and moved to a new hash. That is why one
+library showed different task folders in different runs. Those folders are not
+in any cache. The first correctly launched run recomputes them once, and later
+comparisons reuse its tasks. Remove the old work directory only after that run
+has finished.
+
 ## Feeding output into the AREE CLI
 
 The standardized TSV produced by either mode is the direct input to the
