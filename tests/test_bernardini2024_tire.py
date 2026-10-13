@@ -90,3 +90,23 @@ def test_comparisons_classification_and_primary(study):
         assert comp["resilience_classification"] == "stress_response"
         assert comp["exposure_intensity"] is None  # concentrations unknown: paper not read in full
         assert comp["sample_size"] == 12
+
+
+def test_run_outputs_match_the_registered_comparisons(study):
+    """Each manifest's arms and library settings must match its comparison."""
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        params = json.loads((STUDY_DIR / f"BERNARDINI2024_TIRE_{cid}_workflow_manifest.json").read_text())["parameters"]
+        assert params["comparison_id"] == cid
+        assert params["control_levels"] == [CONTROL]
+        assert params["treatment_levels"] == [ARMS[cid]]
+        assert params["single_end"] is True and params["tag_seq"] is True
+        rows = _tsv(REPO_ROOT / comp["results_file"])
+        assert len(rows) > 20000
+        assert sum(r["lfcSE"] not in ("", "NA") for r in rows) > 0.95 * len(rows)
+
+
+def test_replicates_pass_dispersion_qc():
+    rows = _tsv(STUDY_DIR / "replicate_dispersion_qc.tsv")
+    assert {r["condition"] for r in rows} == {CONTROL, *ARMS.values()}
+    assert all(r["passes"] == "True" for r in rows)

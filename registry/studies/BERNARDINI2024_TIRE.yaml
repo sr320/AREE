@@ -53,8 +53,20 @@ data_availability:
   status: "available"
   access_notes: "Raw single-end FASTQ public in ENA/SRA under PRJNA856813. The design is in each run's experiment_title (e.g. 'Illumina NovaSeq 6000 sequencing: D41_GI_MR_H_3'); the BioSamples are 16S metagenome records that each oyster's 16S and RNA-seq runs share. Only the 30 day-41 gill NovaSeq runs of CTL, MR_L, MR_H, LEA_L and LEA_H are staged. Sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+# QC PASSED WITH WARNINGS, 2026-10-12 (full-depth run of the 30 libraries,
+# --single_end --tag_seq).
+# - Replicates are real individual oysters: median within-group dispersion
+#   0.030-0.054 in all five groups (replicate_dispersion_qc.tsv).
+# - Library type confirmed twice: Salmon detected every library as SF
+#   (forward-stranded), as QuantSeq FWD is, matching the poly-A screen.
+# - Small responses, consistent with the abstract's "possible oyster
+#   resilience" and its report of stress and energy-metabolism activation
+#   in the leachate treatment: padj < 0.05 for 48 (leachate high), 88
+#   (leachate low), 13 (particles high) and 17 (particles low) genes.
+# - Warnings: tank layout unknown, concentrations unknown, effect sizes on a
+#   3' count scale.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # Four comparisons, each exposure against the same six day-41 gill controls,
@@ -90,7 +102,7 @@ comparisons:
     sample_size: 12
     biological_replicates: 6
     meta_analysis_primary: true
-    results_file: null
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_particles_high_vs_ctl_d41_gill_dge_standardized.tsv"
 
   - comparison_id: "tire_particles_low_vs_ctl_d41_gill"
     tissue: "gill"
@@ -108,7 +120,7 @@ comparisons:
     resilience_classification: "stress_response"
     sample_size: 12
     biological_replicates: 6
-    results_file: null
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_particles_low_vs_ctl_d41_gill_dge_standardized.tsv"
 
   - comparison_id: "tire_leachate_high_vs_ctl_d41_gill"
     tissue: "gill"
@@ -126,7 +138,7 @@ comparisons:
     resilience_classification: "stress_response"
     sample_size: 12
     biological_replicates: 6
-    results_file: null
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_leachate_high_vs_ctl_d41_gill_dge_standardized.tsv"
 
   - comparison_id: "tire_leachate_low_vs_ctl_d41_gill"
     tissue: "gill"
@@ -144,7 +156,7 @@ comparisons:
     resilience_classification: "stress_response"
     sample_size: 12
     biological_replicates: 6
-    results_file: null
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_leachate_low_vs_ctl_d41_gill_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -177,6 +189,11 @@ provenance:
     7.4%, compared on the same day with GEORGE2023_HEATWAVE_PLOIDY SRR22817776
     (15.9%) and LI2022_LOWSAL_VIBRIO SRR15559845 (0.1%). Comparisons and
     meta_analysis_primary fixed before any result was computed.
+    Run 2026-10-12 (Nextflow 26.04.7, native, merged single-end + tag_seq
+    code): all 30 FASTQ verified against ENA MD5s; first comparison 96/96
+    tasks, the other three reuse its quantifications. Salmon mapping
+    43.5-56.7%, library type SF for all 30. Harmonized: 89,752 evidence
+    records across the four comparisons.
   source_links:
     - "https://doi.org/10.1016/j.jhazmat.2024.135742"
     - "https://pubmed.ncbi.nlm.nih.gov/39276742/"
