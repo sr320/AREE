@@ -4,7 +4,7 @@
   "date_generated": "2026-10-13",
   "generated_by": "src/intake/ena_samplesheet.py",
   "queries": {
-    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB105019&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,experiment_title",
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB105019&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format,experiment_title",
     "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
   },
   "condition_attributes": [
@@ -27,10 +27,14 @@
     "C8_T0": 12
   },
   "min_group_size": 12,
-  "total_fastq_bytes": 699671022190,
+  "total_fastq_bytes": 710527951849,
+  "fastq_sources": {
+    "fastq_ftp": 59,
+    "submitted_ftp": 1
+  },
   "outputs": {
     "data/studies/DECICOMP2025_POMS_AGE_EMSEQ/samplesheet.tsv": "2a9b8ab3291abaf88ca7cbd648f3e1a3e6606b361bfe30542097938cb8e95aa6",
-    "data/studies/DECICOMP2025_POMS_AGE_EMSEQ/fastq_manifest.tsv": "147bb33e108de869b48688b2cbddacf404ff33355b97993cf50d4bc74ebf1c79",
+    "data/studies/DECICOMP2025_POMS_AGE_EMSEQ/fastq_manifest.tsv": "2156380fb6c9de3bd26e89b921c5bbcf33c8ec02b94cb6a993e1296fed3eb790",
     "data/studies/DECICOMP2025_POMS_AGE_EMSEQ/methylkit_samplesheet.csv": "cd21ce859a482429512faa1c656fb98bea174ad35e212e21ed5f2a8a270498fc"
   },
   "run_labels": {
@@ -104,5 +108,8 @@
     "treatment_level": "C8_T0",
     "n_control": 12,
     "n_treatment": 12
-  }
+  },
+  "submitted_ftp_runs": [
+    "ERR15996548"
+  ]
 }

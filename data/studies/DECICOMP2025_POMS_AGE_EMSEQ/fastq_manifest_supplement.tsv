@@ -1,3 +1,0 @@
-run_accession	mate	url	md5	bytes	source
-ERR15996548	1	ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR159/ERR15996548/F14R_C3_T0_S3_DNA_R1.fastq.gz	d7f8d9d53c1076f20ec61c0037eec28e	5293652366	ENA submitted_ftp (no processed fastq_ftp for this run)
-ERR15996548	2	ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR159/ERR15996548/F14R_C3_T0_S3_DNA_R2.fastq.gz	8234541082d86fb9178157000946d6d1	5563277293	ENA submitted_ftp (no processed fastq_ftp for this run)
