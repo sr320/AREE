@@ -110,3 +110,18 @@ def test_samplesheet_checksum_matches_provenance(provenance):
     rel = "data/studies/DECICOMP2025_POMS_AGE/samplesheet.tsv"
     digest = hashlib.sha256((REPO_ROOT / rel).read_bytes()).hexdigest()
     assert provenance["outputs"][rel] == digest
+
+
+def test_paired_emseq_study_owns_the_accession_and_matching_contrast(study):
+    # The EM-seq arm of the same experiment is its own registered study; this
+    # one cites it but must not claim its accession.
+    emseq = yaml.safe_load((STUDIES_DIR / "DECICOMP2025_POMS_AGE_EMSEQ.yaml").read_text())
+    assert emseq["accessions"]["bioproject"] == "PRJEB105019"
+    assert "DECICOMP2025_POMS_AGE_EMSEQ" in study["citation"]
+    ours = {c["comparison_id"]: c for c in study["comparisons"]}
+    theirs = {c["comparison_id"]: c for c in emseq["comparisons"]}
+    shared = set(ours) & set(theirs)
+    assert {"age28mo_vs_age4mo_basal", "age16mo_vs_age4mo_basal"} <= shared
+    # Both layers make the same primary call, so they can be paired.
+    assert ours["age28mo_vs_age4mo_basal"].get("meta_analysis_primary") is True
+    assert theirs["age28mo_vs_age4mo_basal"].get("meta_analysis_primary") is True

@@ -3,11 +3,17 @@
 #
 # Registered from deposited MetaboLights metadata only (MTBLS13463, public
 # 2025-12-08, CC0). It is the metabolomics arm of Ifremer's DECICOMP project.
-# The EM-seq arm of the same experiment is ENA PRJEB105019, which is a separate
-# candidate in docs/candidate_studies.md and deliberately NOT listed under
-# `accessions` here: that block is what `aree start-study` checks for claim
-# conflicts, and listing it would block registering the methylation arm as its
-# own study. The link is recorded in `citation` and `curation_notes` instead.
+# The EM-seq arm of the same experiment is ENA PRJEB105019, registered as
+# DECICOMP2025_POMS_AGE_EMSEQ (PR #45, merged 2026-10-13). Its primary
+# comparison, age28mo_vs_age4mo_basal, is this study's primary comparison on
+# the same design, so the two are this study's paired omics layers. PRJEB105019
+# is that study's accession and is deliberately NOT listed here, because
+# `aree start-study` checks this block for claim conflicts. The link is in
+# `citation` and `curation_notes`.
+#
+# MERGED AS A REGISTRATION (2026-10-13), not analyzable: the MAFs are still
+# empty. Re-fetched 2026-10-13: all three MAFs are byte-identical to the
+# registered copies (same SHA-256), with 0 abundance values.
 #
 # THE PROCESSED TABLES ARE EMPTY. All three Metabolite Assignment Files (MAFs)
 # list metabolite names but have no abundance values (every one of the
@@ -35,7 +41,7 @@ accessions:
   proteomexchange: null
   other: "MTBLS13463"
 
-citation: "Valdivieso A, Duperret L, Petton B, Courtay G, Romatif O, Pouzadoux J, Henry S, Turtoi A, Toulza E, Lagorce A, Degremont L, Morga B, Cosseau C, Pernet F, Mitta G, Vidal-Dupiol J. Unravelling age-driven molecular transitions underlying Pacific Oyster Mortality Syndrome permissiveness in Magallana gigas. Manuscript in preparation (as of 2026-10-11). Targeted metabolomics dataset: MetaboLights MTBLS13463, public 2025-12-08, CC0 1.0. Same experiment as the EM-seq dataset ENA PRJEB105019 (Ifremer DECICOMP project)."
+citation: "Valdivieso A, Duperret L, Petton B, Courtay G, Romatif O, Pouzadoux J, Henry S, Turtoi A, Toulza E, Lagorce A, Degremont L, Morga B, Cosseau C, Pernet F, Mitta G, Vidal-Dupiol J. Unravelling age-driven molecular transitions underlying Pacific Oyster Mortality Syndrome permissiveness in Magallana gigas. Manuscript in preparation (as of 2026-10-11). Targeted metabolomics dataset: MetaboLights MTBLS13463, public 2025-12-08, CC0 1.0. Same experiment as the EM-seq dataset ENA PRJEB105019 (Ifremer DECICOMP project), registered as AREE study DECICOMP2025_POMS_AGE_EMSEQ."
 
 species: "Magallana gigas"
 strain_or_population: "Ifremer full-sibling biparental families F14R and H2D (two of four families challenged: H2D, F14R, F11N, F14V), produced at the Ifremer Argenton hatchery in 2020 and reared under biosecured conditions at the Ifremer Bouin nursery. Per the submitters, these two families showed the strongest age-related increase in POMS survival."
@@ -56,7 +62,7 @@ data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "MetaboLights MTBLS13463 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,TCA_RAW}/, one per sample per platform (108 files). The three MAFs (m_*_v2_maf.tsv) name the metabolites but contain no abundance values; checked 2026-10-11. They also carry 48 sample columns that are not in this study's sample sheet (families F14R and F11N, labelled like F14R-5-0-1). These look like headers carried over from another DECICOMP deposit and are ignored. The submitters' processed data (internal-standard normalized, IQR filtered, quantile normalized, log transformed in MetaboAnalystR 4.0.0) are not deposited. No metabolite has a database identifier or an MSI reliability level in the MAFs."
+  access_notes: "MetaboLights MTBLS13463 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,TCA_RAW}/, one per sample per platform (108 files). The three MAFs (m_*_v2_maf.tsv) name the metabolites but contain no abundance values; checked 2026-10-11 and re-checked unchanged (same SHA-256) 2026-10-13. They also carry 48 sample columns that are not in this study's sample sheet (families F14R and F11N, labelled like F14R-5-0-1). These look like headers carried over from another DECICOMP deposit and are ignored. The submitters' processed data (internal-standard normalized, IQR filtered, quantile normalized, log transformed in MetaboAnalystR 4.0.0) are not deposited. No metabolite has a database identifier or an MSI reliability level in the MAFs."
 
 qc_status: "not_started"
 analysis_status: "not_started"
@@ -70,10 +76,13 @@ analysis_status: "not_started"
 # oysters per family at 0 (basal), 3, 6, 12 and 24 h post-cohabitation (hpc),
 # but the sample sheet has no time factor. The EM-seq arm (PRJEB105019) uses the
 # same cohort codes and has exactly this 2 x 3 x 6 structure at 0 hpc ('T0',
-# titles 'Family F14R, 4 months old, 0 hpc, Replicate 1'). The metabolomics
-# samples are therefore registered as 0 hpc basal: before infection has
-# taken effect. Whether they are the same individuals as the EM-seq T0
-# libraries is not stated. Confirm both points with the submitters.
+# titles 'Family F14R, 4 months old, 0 hpc, Replicate 1'), and every one of
+# those 36 EM-seq BioSamples is labelled phenotype 'No infected (Basal)'. The
+# metabolomics samples are therefore registered as 0 hpc basal: before
+# infection has taken effect. For the EM-seq arm that is deposited; for these
+# metabolomics samples it is still inferred from the identical structure.
+# Whether they are the same individuals as the EM-seq T0 libraries is not
+# stated. Confirm both points with the submitters.
 #
 # ON PHENOTYPE CLASSIFICATION. Survival under OsHV-1 cohabitation was measured
 # for every family x age cohort; older oysters survived markedly better (study
@@ -105,7 +114,7 @@ comparisons:
     stressor_standardized: "pathogen_challenge"
     exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio (donor injection: 100 µL viral suspension, 2.2 x 10^5 genome copies/µL)"
     exposure_duration: "until 48 h without mortality in any tank"
-    exposure_timing: "sampled at 0 hpc (basal, start of cohabitation), inferred from the matching EM-seq design; constitutive differences, not infection response"
+    exposure_timing: "sampled at 0 hpc (basal, start of cohabitation), inferred from the matching EM-seq design, whose T0 BioSamples are labelled 'No infected (Basal)'; constitutive differences, not infection response"
     control_condition: "4-month-old oysters (cohort C3), families F14R and H2D, n=6 per family, sampled at 0 hpc. The less POMS-resistant reference age; not an unexposed control."
     treatment_condition: "28-month-old oysters (cohort C8), families F14R and H2D, n=6 per family, sampled at 0 hpc. The more POMS-resistant age."
     phenotype: "disease_resistance"
@@ -124,7 +133,7 @@ comparisons:
     stressor_standardized: "pathogen_challenge"
     exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio (donor injection: 100 µL viral suspension, 2.2 x 10^5 genome copies/µL)"
     exposure_duration: "until 48 h without mortality in any tank"
-    exposure_timing: "sampled at 0 hpc (basal, start of cohabitation), inferred from the matching EM-seq design; constitutive differences, not infection response"
+    exposure_timing: "sampled at 0 hpc (basal, start of cohabitation), inferred from the matching EM-seq design, whose T0 BioSamples are labelled 'No infected (Basal)'; constitutive differences, not infection response"
     control_condition: "4-month-old oysters (cohort C3), families F14R and H2D, n=6 per family, sampled at 0 hpc. Reference age; not an unexposed control."
     treatment_condition: "16-month-old oysters (cohort C7), families F14R and H2D, n=6 per family, sampled at 0 hpc."
     phenotype: "disease_resistance"
@@ -151,7 +160,7 @@ limitations: >
   with challenge year, sampling season, and freezer-storage time, since each
   cohort was challenged in a different year. MS batch is not confounded.
   (3) The sampling time (0 hpc basal) is inferred from the matching EM-seq
-  design, not deposited. (4) The resistance phenotype is a cohort-level
+  design (deposited there as 'No infected (Basal)'), not deposited here. (4) The resistance phenotype is a cohort-level
   survival difference. It was not measured on the sampled individuals, and
   the values are not deposited. (5) Age also changes size, maturity and
   probably reproductive state, so metabolite differences may reflect
@@ -180,8 +189,9 @@ provenance:
     identical in all three assays; every sample has one raw file per platform.
     The cohort codes and the 0 hpc inference come from the ENA run titles of
     PRJEB105019, which are the same project, families and cohort codes (60
-    EM-seq runs: 36 at 0 hpc, plus 24 resistant/susceptible survivors of
-    the 28-month cohort at 500 hpc). Two comparisons were registered against
+    EM-seq runs: 36 at 0 hpc, plus 24 resistant or susceptible 28-month
+    oysters at 500 hpc). An earlier version of this note called the 500 hpc
+    oysters "survivors"; the deposit does not say how R and S were assigned. Two comparisons were registered against
     the 4-month reference, and 28 vs 4 months was flagged
     meta_analysis_primary before any result was computed. The 16-month arm
     is kept separate rather than fitted as a trend. Publication search
