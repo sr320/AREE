@@ -43,10 +43,33 @@ def validModes() {
     ['raw_reanalysis', 'processed_results_harmonization']
 }
 
+// Nextflow saves each finished task's cache entry with Kryo, which needs
+// java.base/java.util opened to it. The `nextflow` launcher script passes
+// --add-opens for this; `java -jar ~/.nextflow/framework/<ver>/nextflow-<ver>-one.jar`
+// does not. Without it every cache write fails silently inside Nextflow's
+// writer thread: the run succeeds, but -resume never reuses a task. This is
+// what made the 2026-10-12 DUPERRET2025_STARVE_RNASEQ comparisons each
+// recompute every library (see README.md, "Several comparisons of one study").
+def cacheEntriesSerializable() {
+    Collections.getModule().isOpen('java.util', nextflow.Session.getModule())
+}
+
 workflow {
 
     if (!(params.mode in validModes())) {
         error "params.mode must be one of ${validModes()}, got: ${params.mode}"
+    }
+
+    if (!cacheEntriesSerializable()) {
+        def why = "this JVM does not open java.base/java.util to Nextflow, so no task " +
+            "will be written to the resume cache. Launch Nextflow with the `nextflow` " +
+            "launcher script (e.g. from `conda activate aree`), not with " +
+            "`java -jar nextflow-<ver>-one.jar`; see workflows/rnaseq/README.md, " +
+            "\"Several comparisons of one study\"."
+        if (workflow.resume) {
+            error "-resume cannot reuse any task: ${why}"
+        }
+        log.warn "A later -resume will not reuse this run: ${why}"
     }
 
     log.info """

@@ -219,6 +219,14 @@ jobs:
           test "$(ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R1.fastq.gz | wc -l)" -eq 4
           ! ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R2.fastq.gz 2>/dev/null
 
+      # Two stub runs differing only in comparison params, paired and single
+      # end: the second must take FASTQC, fastp, Salmon and viral quant from
+      # the -resume cache. Skipped in the Python job, which has no Nextflow.
+      - name: A second comparison reuses per-library RNA-seq tasks
+        run: |
+          pip install pytest
+          pytest -q tests/test_rnaseq_resume_across_comparisons.py
+
       - name: Assert workflow artifacts exist
         run: |
           test -f /tmp/aree-smoke/rnaseq/rnaseq/standardized/GIGAS_HEAT01_acute_heat_vs_control_dge_standardized.tsv
