@@ -19,8 +19,30 @@
 # for [both species] under 12 h of heat stress ... from our previous study".
 # That confirms the 12 h exposure but not its temperature.
 #
-# Registered 2026-10-11. Not yet reanalyzed: sample sheet and FASTQ manifest
-# only.
+# Registered 2026-10-11.
+#
+# QC FAILED, 2026-10-13: PSEUDO-REPLICATION. Each arm's three libraries come
+# from one shared RNA source, not three oysters. The comparison was run at
+# full depth (2026-10-13). Median replicate dispersion was 0.0009 (control)
+# and 0.0030 (heat), below the 0.005 threshold and in IOCAS2022_OA_ENERGY's
+# range, and 9,732 of 26,874 genes (36%) were "DE". A genotype check confirmed
+# it (data/studies/WANG2024_HEAT_GILL/genotype_check/): at 9,355 SNPs in the
+# 400 most expressed genes, libraries of the same arm differ in allele
+# fraction only 1.8-2.1x as much as two libraries drawn from one RNA would
+# (median |dAF| 0.03-0.04; genotype discordance 9-11%). Libraries of
+# different arms differ 5.9-6.5x as much (|dAF| 0.14-0.15; discordance
+# 37-41%). So the two arms are genetically different sources, but within an
+# arm the "biological replicates" are not distinct animals. Every library
+# also has an excess of low intermediate allele fractions (35% of sites at
+# 0.1-0.3, 10% above 0.9), which points to each source being a pool of
+# several oysters, not one animal. RNA allelic imbalance can also produce
+# intermediate fractions, so the pooling reading is likely, not proven.
+# Effective n is 1 vs 1: p-values are invalid, and lfcSE measures library
+# noise, not animal-to-animal variation. results_file stays null and no
+# comparison is meta_analysis_primary, so nothing reaches the evidence table
+# or a pool. The run manifest, report, dispersion table and genotype check
+# are archived in data/studies/WANG2024_HEAT_GILL/ as provenance for the
+# decision.
 
 study_id: WANG2024_HEAT_GILL
 simulated: false
@@ -54,8 +76,10 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 24 runs are public in ENA/SRA under PRJNA970954 (first public 2023-12-31). The registered comparison needs only the 6 C. gigas RNA-seq runs (14.5 GB of 102.8 GB). No count matrix or DE table is deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+# analysis_status is in_progress because the workflow ran; it is halted at QC,
+# not awaiting harmonization. See the header.
+qc_status: "failed"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. Every library has a unique library_name,
@@ -70,7 +94,8 @@ analysis_status: "not_started"
 #
 # ONE COMPARISON, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-11):
 # C. gigas RNA-seq, heat (RNA_Seq_gigas_HC) vs no heat (RNA_Seq_gigas_NC).
-# It is meta_analysis_primary. It matches LI2022_HEAT_PLOIDY's
+# It was meta_analysis_primary until the study failed QC (flag removed
+# 2026-10-13). It matches LI2022_HEAT_PLOIDY's
 # diploid_acute_heat_12h_vs_baseline in species, tissue, life stage and
 # exposure length. Unlike LI2022's time-0 baseline, the no-heat arm is a
 # concurrent control (to be confirmed from the methods).
@@ -101,11 +126,10 @@ comparisons:
     sample_size: 6
     biological_replicates: 3
     results_file: null
-    meta_analysis_primary: true
 
 quality_flags:
   - raw_data_available
-  - low_replication
+  - low_replication   # nominal n=3 per arm, effective n=1: each arm's libraries share one RNA source (genotype check)
   - single_timepoint
 
 limitations: >
@@ -158,6 +182,36 @@ provenance:
     checked. TO DO BEFORE HARMONIZING: read the 2024 Aquaculture methods for
     heat temperature, control temperature, acclimation and oyster
     origin/age, and confirm PRJNA970954 in its data availability statement.
+    REANALYSIS AND QC DECISION (Pori, 2026-10-12/13): the 6 C. gigas
+    RNA-seq libraries (14.5 GB) were downloaded from ENA. All 12 FASTQ
+    files matched ENA's MD5s. Resumed transfers repeatedly produced
+    full-size files with wrong MD5s; those were discarded. SRR24489463_2
+    was finally fetched fresh over HTTPS without resume. Run with native
+    tools from environment.yml (versions in the workflow manifest: Salmon
+    2.8.0, DESeq2 1.50.2, tximport 1.38.2, FastQC 0.12.1, MultiQC 1.35)
+    and the saved Salmon index: 23 tasks, status OK. Salmon mapped
+    77.4-79.9% of read pairs (20.9-24.4 M pairs), unstranded.
+    scripts/check_replicate_dispersion.py FAILED both arms (control 0.0009,
+    heat 0.0030). GENOTYPE CHECK (data/studies/WANG2024_HEAT_GILL/genotype_check/,
+    scripts committed there): first 3 M read pairs per library mapped with
+    minimap2 2.31 to the most expressed transcript of each of the 400 most
+    expressed genes; joint calling with bcftools 1.24; 9,355 biallelic SNPs
+    with depth >= 30 in all six libraries (median 161-180) and alt AF >
+    0.15 in at least one. Observed pairwise median |dAF| was compared with
+    a binomial simulation of two libraries from one RNA source at the
+    observed depths. Within-arm ratios were 1.78-2.13x, between-arm
+    5.88-6.49x. Conclusion: one RNA source per arm (most likely a pool),
+    replicated at library level only. The sample sheet's "biological
+    replicate" labels and the six distinct BioSamples do not reflect
+    independent animals. This is the second study, after
+    IOCAS2022_OA_ENERGY, where distinct BioSamples labelled biological
+    replicates turned out not to be. Two descriptive numbers from the
+    invalid run, recorded only to show the symptom: 9,732 of 26,874 genes
+    at padj < 0.05; vs LI2022_HEAT_PLOIDY diploid acute 12 h, LFC r = 0.11
+    and 990 of 1,357 jointly significant genes in the same direction. The
+    standardized table is not committed. The ATAC-seq libraries come from
+    the same "oysters" and should get the same genotype check before any
+    registration.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA970954"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA970954"
