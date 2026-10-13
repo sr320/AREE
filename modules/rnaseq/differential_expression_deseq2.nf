@@ -260,6 +260,15 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     # a gene's count does not scale with transcript length. Their counts are
     # used as they are, with no tximport length offset or length scaling.
     if (args\$tag_seq) message("tag_seq: DESeq2 on counts without transcript-length offsets")
+    # Which length model was fitted, for the manifest: the one property that
+    # decides whether these fold changes can be compared with other studies'.
+    length_model <- if (args\$tag_seq) {
+        "none: counts without length offsets (tag_seq)"
+    } else if (pseudo_bulk) {
+        "lengthScaledTPM counts summed per replicate unit"
+    } else {
+        "tximport average transcript length offsets"
+    }
 
     if (pseudo_bulk) {
         # Length-scaled counts can be summed across animals; tximport's
@@ -336,6 +345,8 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         paste0('  "covariates_requested": ', json_arr(covariates_requested), ","),
         paste0('  "covariates_used": ', json_arr(covariates_used), ","),
         paste0('  "covariates_dropped_constant": ', json_arr(covariates_dropped), ","),
+        paste0('  "tag_seq": ', if (args\$tag_seq) "true" else "false", ","),
+        paste0('  "length_model": ', json_str(length_model), ","),
         paste0('  "n_libraries_or_units": ', nrow(mm), ","),
         paste0('  "residual_df": ', residual_df),
         "}"
