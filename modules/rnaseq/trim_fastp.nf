@@ -36,16 +36,15 @@ process TRIM_FASTP {
     // and is reliable, so it is kept.
     def fq = reads instanceof Collection ? reads as List : [ reads ]
     def se_adapter = params.se_adapter == 'auto' ? '' : "--adapter_sequence ${params.se_adapter}"
-    // 3' Tag-Seq reads run into the poly(A) tail; trim homopolymer tails so
-    // they neither fail to map nor map to A-rich sequence.
-    def poly_x = params.library_protocol == 'three_prime_tag' ? '--trim_poly_x' : ''
     def io = fq.size() == 1 \
         ? "-i ${fq[0]} -o ${sample_id}_trimmed_R1.fastq.gz ${se_adapter}" \
         : "-i ${fq[0]} -I ${fq[1]} -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz --detect_adapter_for_pe"
+    // --tag_seq (3' QuantSeq-style libraries) also trims the poly-A/poly-X
+    // tails those libraries carry at the 3' end of many reads.
+    def tag_seq_opts = params.tag_seq ? '--trim_poly_x' : ''
     """
     fastp \\
-        ${io} \\
-        ${poly_x} \\
+        ${io} ${tag_seq_opts} \\
         --thread ${task.cpus} \\
         --json ${sample_id}.fastp.json \\
         --html ${sample_id}.fastp.html \\

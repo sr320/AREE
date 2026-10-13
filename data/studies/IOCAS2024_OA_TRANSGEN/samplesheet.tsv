@@ -1,0 +1,7 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	parental_ph	replicate	isolate	tissue	collection_date	isolation_source	library_layout	instrument_model	read_count
+S81_3	SRR31663815	SAMN45420532	S81_3	81	81	3	wild type group3	larvae	2024-09-24	Penglai , Yantai , Shandong Province	PAIRED	Illumina NovaSeq 6000	17125172
+S81_2	SRR31663816	SAMN45420531	S81_2	81	81	2	wild type group2	larvae	2024-09-24	Penglai , Yantai , Shandong Province	PAIRED	Illumina NovaSeq 6000	17357320
+S81_1	SRR31663817	SAMN45420530	S81_1	81	81	1	wild type group1	larvae	2024-09-24	Penglai , Yantai , Shandong Province	PAIRED	Illumina NovaSeq 6000	21765186
+S74_3	SRR31663818	SAMN45420529	S74_3	74	74	3	acidification group3	larvae	2024-09-24	Penglai , Yantai , Shandong Province	PAIRED	Illumina NovaSeq 6000	21565658
+S74_2	SRR31663819	SAMN45420528	S74_2	74	74	2	acidification group 2	larvae	2024-09-24	Penglai , Yantai , Shandong Province	PAIRED	Illumina NovaSeq 6000	21500747
+S74_1	SRR31663820	SAMN45420527	S74_1	74	74	1	acidification group 1	larvae	2024-09-24	Penglai , Yantai , Shandong Province	PAIRED	Illumina NovaSeq 6000	21715772

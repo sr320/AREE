@@ -65,22 +65,21 @@ process SALMON_QUANT {
     // single-end reads do not observe fragment length, which the model needs,
     // and Salmon documents it as beta for single-end data.
     //
-    // 3' Tag-Seq (params.library_protocol = 'three_prime_tag'): a transcript
-    // yields reads in proportion to its abundance, not its length, so the
-    // effective-length model would mis-weight them. Salmon documents
-    // --noLengthCorrection for exactly this case (QuantSeq).
+    // --tag_seq is for 3' tag libraries (e.g. QuantSeq), which yield about one
+    // read per transcript regardless of its length: effective-length
+    // correction is switched off, and so is --gcBias, which models GC content
+    // along whole fragments.
     def fq = reads instanceof Collection ? reads as List : [ reads ]
-    def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]} --gcBias"
-    def length_model = params.library_protocol == 'three_prime_tag' ? '--noLengthCorrection' : ''
+    def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]}" + (params.tag_seq ? '' : ' --gcBias')
+    def length_opt = params.tag_seq ? '--noLengthCorrection' : ''
     """
     salmon quant \\
         -i ${salmon_index} \\
         -l A \\
         ${input} \\
-        ${length_model} \\
         -p ${task.cpus} \\
         --geneMap ${gtf} \\
-        --validateMappings \\
+        --validateMappings ${length_opt} \\
         -o ${sample_id}
 
     cat <<-END_VERSIONS > versions.yml

@@ -176,8 +176,9 @@ process EMIT_MANIFEST {
             "replicate_unit": replicate_unit,
             "covariates": covariates,
             "single_end": ${params.single_end ? 'True' : 'False'},
-            "library_protocol": "${params.library_protocol}",
             "se_adapter": "${params.se_adapter}" if ${params.single_end ? 'True' : 'False'} else None,
+            # 3' tag counting changes what a count (and so lfcSE) means.
+            "tag_seq": ${params.tag_seq ? 'True' : 'False'},
             "viral_reference": "${params.viral_reference ?: ''}" or None,
         },
         # The DESeq2 design as fitted (null in processed mode).

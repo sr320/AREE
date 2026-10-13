@@ -6,6 +6,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from common import study_ids  # noqa: E402
+
 
 @pytest.fixture
 def isolated_reports(tmp_path, monkeypatch):
@@ -44,10 +46,28 @@ def isolated_registry(tmp_path, monkeypatch):
     return registry_path
 
 
-ALL_DEMO_STUDY_IDS = [
-    "GIGAS_HEAT01", "GIGAS_OA02", "GIGAS_PATH03",
-    "GIGAS_SAL04", "GIGAS_LARV05", "GIGAS_GROW06",
-]
+# Every simulated study in the registry, oyster and mussel alike. Derived, not
+# listed, so a new demo study is exercised by every demo-pipeline test.
+ALL_DEMO_STUDY_IDS = study_ids(simulated=True)
+
+
+# The demo now holds two species that share feature identifiers on purpose
+# (MYTGAL_HEAT01 reuses the oyster demo's IDs). Tests about oyster results must
+# select the oyster partition explicitly rather than take the first row for a gene.
+OYSTER_TAXID = 29159
+
+
+def oyster(df):
+    """Rows of a meta-analysis, candidate or evidence table in the oyster partition."""
+    return df[df["species_taxid"].astype(int) == OYSTER_TAXID]
+
+
+def oyster_card(index, feature_id):
+    """The oyster evidence-card index entry for a feature."""
+    return next(
+        e for e in index
+        if e["feature_id_standardized"] == feature_id and int(e["species_taxid"]) == OYSTER_TAXID
+    )
 
 
 def harmonize_all_demo_studies(date_generated="2026-01-01"):

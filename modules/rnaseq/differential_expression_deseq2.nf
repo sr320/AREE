@@ -22,6 +22,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     val exclude_samples
     val replicate_unit
     val covariates
+    val tag_seq
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
@@ -61,7 +62,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         exclude_samples = "${exclude_samples}",
         replicate_unit  = "${replicate_unit}",
         covariates      = "${covariates}",
-        library_protocol = "${params.library_protocol}",
+        tag_seq         = ${tag_seq ? 'TRUE' : 'FALSE'},
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
         out_rdata      = "${study_id}_${comparison_id}_deseq2.RData",
         out_design     = "${study_id}_${comparison_id}_deseq2_design.json"
@@ -255,29 +256,25 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     tx2gene\$transcript_id <- sub("\\\\..*", "", tx2gene\$transcript_id)
     tx2gene <- unique(tx2gene)
 
-    # 3' Tag-Seq counts do not scale with transcript length, so no length
-    # correction of any kind is applied: raw estimated counts go into DESeq2
-    # without tximport's average-transcript-length offsets. Full-length RNA-seq
-    # keeps the offsets (or length-scaled counts when summing to units).
-    if (!args\$library_protocol %in% c("full_length", "three_prime_tag")) {
-        stop("library_protocol must be full_length or three_prime_tag, got: ", args\$library_protocol)
-    }
-    three_prime_tag <- identical(args\$library_protocol, "three_prime_tag")
-    length_model <- if (three_prime_tag) {
-        "none: raw counts, no length offsets (three_prime_tag)"
+    # 3' tag libraries (QuantSeq-style) give about one read per transcript, so
+    # a gene's count does not scale with transcript length. Their counts are
+    # used as they are, with no tximport length offset or length scaling.
+    if (args\$tag_seq) message("tag_seq: DESeq2 on counts without transcript-length offsets")
+    # Which length model was fitted, for the manifest: the one property that
+    # decides whether these fold changes can be compared with other studies'.
+    length_model <- if (args\$tag_seq) {
+        "none: counts without length offsets (tag_seq)"
     } else if (pseudo_bulk) {
         "lengthScaledTPM counts summed per replicate unit"
     } else {
         "tximport average transcript length offsets"
     }
-    message("Length model: ", length_model)
 
     if (pseudo_bulk) {
         # Length-scaled counts can be summed across animals; tximport's
-        # per-sample length offsets cannot, so they are folded in here. For
-        # 3' Tag-Seq the raw counts are summed instead.
+        # per-sample length offsets cannot, so they are folded in here.
         txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE,
-                        countsFromAbundance = if (three_prime_tag) "no" else "lengthScaledTPM")
+                        countsFromAbundance = if (args\$tag_seq) "no" else "lengthScaledTPM")
         unit_counts <- t(rowsum(t(txi\$counts), group = samples\$replicate_unit))
         unit_info <- unique(samples[, c("replicate_unit", "condition", covariates_used)])
         unit_info\$n_libraries <- as.integer(table(samples\$replicate_unit)[unit_info\$replicate_unit])
@@ -310,8 +307,10 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
 
     dds <- if (pseudo_bulk) {
         DESeqDataSetFromMatrix(countData = round(unit_counts), colData = col_data, design = design_formula)
-    } else if (three_prime_tag) {
-        DESeqDataSetFromMatrix(countData = round(txi\$counts), colData = col_data, design = design_formula)
+    } else if (args\$tag_seq) {
+        rownames(col_data) <- col_data\$sample_id
+        DESeqDataSetFromMatrix(countData = round(txi\$counts), colData = col_data[colnames(txi\$counts), , drop = FALSE],
+                               design = design_formula)
     } else {
         DESeqDataSetFromTximport(txi, colData = col_data, design = design_formula)
     }
@@ -346,7 +345,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         paste0('  "covariates_requested": ', json_arr(covariates_requested), ","),
         paste0('  "covariates_used": ', json_arr(covariates_used), ","),
         paste0('  "covariates_dropped_constant": ', json_arr(covariates_dropped), ","),
-        paste0('  "library_protocol": ', json_str(args\$library_protocol), ","),
+        paste0('  "tag_seq": ', if (args\$tag_seq) "true" else "false", ","),
         paste0('  "length_model": ', json_str(length_model), ","),
         paste0('  "n_libraries_or_units": ', nrow(mm), ","),
         paste0('  "residual_df": ', residual_df),

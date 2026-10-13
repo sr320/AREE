@@ -30,8 +30,8 @@ jobs:
 
       - name: Validate all demo studies
         run: |
-          for f in registry/studies/GIGAS_*.yaml; do
-            aree validate-study "$f"
+          for sid in $(aree study-ids --simulated); do
+            aree validate-study "registry/studies/$sid.yaml"
           done
 
       # The registry CSV is generated, not committed. Every study YAML on the
@@ -41,10 +41,10 @@ jobs:
 
       - name: Run full demo pipeline end-to-end
         run: |
-          for f in registry/studies/GIGAS_*.yaml; do
-            aree register-study "$f" --update
+          for sid in $(aree study-ids --simulated); do
+            aree register-study "registry/studies/$sid.yaml" --update
           done
-          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+          for sid in $(aree study-ids --simulated); do
             aree harmonize --study "$sid"
           done
           aree meta-analyze --feature-type gene
@@ -198,12 +198,13 @@ jobs:
             --viral_reference data/reference/pathogens/OsHV-1/NC_005881.2.fasta \
             --outdir /tmp/aree-smoke/rnaseq-raw-se \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw-se
-          # 3' Tag-seq mode wires through the same DAG, and an unknown protocol stops the run.
+
+      - name: Exercise the RNA-seq raw DAG single-end, as 3' Tag-seq
+        run: |
           nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
             --mode raw_reanalysis \
-            --single_end \
-            --library_protocol three_prime_tag \
-            --study_id CI_RNASEQ_TAG \
+            --single_end --tag_seq \
+            --study_id CI_TAGSEQ \
             --comparison_id treatment_vs_control \
             --reads 'tests/fixtures/rnaseq_raw_se/ERR*.fastq' \
             --transcript_fasta tests/fixtures/rnaseq_raw/reference.fa \
@@ -212,13 +213,8 @@ jobs:
             --sample_sheet tests/fixtures/rnaseq_raw_se/samples.tsv \
             --control_level control \
             --treatment_level treatment \
-            --outdir /tmp/aree-smoke/rnaseq-raw-tag \
-            -work-dir /tmp/aree-smoke/work-rnaseq-raw-tag
-          ! nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
-            --mode raw_reanalysis --library_protocol quantseq \
-            --study_id X --comparison_id y \
-            --outdir /tmp/aree-smoke/rnaseq-bad-protocol \
-            -work-dir /tmp/aree-smoke/work-rnaseq-bad-protocol
+            --outdir /tmp/aree-smoke/rnaseq-tagseq \
+            -work-dir /tmp/aree-smoke/work-rnaseq-tagseq
           # One trimmed file per library, none for a second mate.
           test "$(ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R1.fastq.gz | wc -l)" -eq 4
           ! ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R2.fastq.gz 2>/dev/null
@@ -232,6 +228,7 @@ jobs:
           test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/standardized/CI_RNASEQ_treatment_vs_control_dge_standardized.tsv
           test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/viral_load/CI_RNASEQ_treatment_vs_control_viral_load.tsv
           test -f /tmp/aree-smoke/rnaseq-raw-se/rnaseq/standardized/CI_RNASEQ_SE_treatment_vs_control_dge_standardized.tsv
+          test -f /tmp/aree-smoke/rnaseq-tagseq/rnaseq/standardized/CI_TAGSEQ_treatment_vs_control_dge_standardized.tsv
 
       # Each manifest's software_versions must match the versions.yml every
       # task of that run wrote, so it cannot fall back to declared pins.

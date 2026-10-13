@@ -67,10 +67,6 @@ workflow {
     no_deseq2_design = file("${projectDir}/assets/NO_DESEQ2_DESIGN")
     collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
-    if (!(params.library_protocol in ['full_length', 'three_prime_tag'])) {
-        error "--library_protocol must be 'full_length' or 'three_prime_tag', got '${params.library_protocol}'"
-    }
-
     if (params.mode == 'raw_reanalysis') {
 
         // ---- raw_reanalysis branch --------------------------------------
@@ -161,6 +157,7 @@ workflow {
             params.exclude_samples ?: '',
             params.replicate_unit ?: '',
             params.covariates ?: '',
+            params.tag_seq as boolean,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)

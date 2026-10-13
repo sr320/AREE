@@ -109,6 +109,18 @@ def resolve_species(name: str) -> SpeciesRecord | None:
     return None
 
 
+def species_term_for_taxid(taxid) -> dict | None:
+    """The species vocabulary term for an NCBI taxid, or None if not registered."""
+    try:
+        wanted = int(taxid)
+    except (TypeError, ValueError):
+        return None
+    for term in load_vocab("species").values():
+        if term["ncbi_taxid"] == wanted:
+            return term
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # Reference assemblies
 # --------------------------------------------------------------------------- #
@@ -180,3 +192,20 @@ def registered_crosswalks() -> list[dict]:
         })
         entry["assemblies"].append(record["assembly_id"])
     return list(by_path.values())
+
+
+def study_ids(simulated: bool | None = None) -> list[str]:
+    """study_ids of every registered study YAML, sorted, optionally by `simulated`.
+
+    Read from registry/studies/ directly (not the generated CSV index), so it is
+    the one source for "the demo studies" (simulated=True) used by the Makefile,
+    CI, the Pages build and the test suite. A new demo study needs no list edits.
+    """
+    ids = []
+    for path in sorted(STUDIES_DIR.glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        study = load_yaml(path)
+        if simulated is None or bool(study.get("simulated", False)) == simulated:
+            ids.append(study["study_id"])
+    return ids

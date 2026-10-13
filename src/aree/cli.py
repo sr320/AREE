@@ -90,6 +90,21 @@ def list_studies_cmd():
     ))
 
 
+@main.command("study-ids")
+@click.option("--simulated", "which", flag_value="simulated", help="Only simulated (demo) studies.")
+@click.option("--real", "which", flag_value="real", help="Only real studies.")
+def study_ids_cmd(which):
+    """Print registered study_ids, one per line, read from registry/studies/.
+
+    `aree study-ids --simulated` is the demo study list the Makefile, CI and the
+    Pages build iterate over.
+    """
+    from common import study_ids
+
+    for sid in study_ids({"simulated": True, "real": False}.get(which)):
+        click.echo(sid)
+
+
 @main.command("build-registry")
 @click.option("--strict", is_flag=True, help="Exit non-zero if any study YAML fails validation.")
 def build_registry_cmd(strict):
@@ -199,10 +214,20 @@ def check_study_scope_cmd(branch, base):
                    "and the matched text becomes sample_id. Every run must match.")
 @click.option("--methylkit-levels", nargs=2, default=None, metavar="CONTROL TREATMENT",
               help="Also write methylkit_samplesheet.csv coding these two condition levels as 0 and 1.")
+@click.option("--design-table", default=None, type=click.Path(exists=True, dir_okay=False),
+              help="TSV of design attributes, for projects whose BioSamples do not carry the design "
+                   "(e.g. the authors' submission sheet, committed with the study). Its columns become "
+                   "attributes; every sample must match exactly one row.")
+@click.option("--design-join", default=None,
+              help="Deposited sample attribute (e.g. isolate) that matches the design table's column of "
+                   "the same name.")
+@click.option("--design-source", default=None,
+              help="Where the design table came from (URL or citation); recorded in the provenance file.")
 @click.option("--out", "out_dir", default=None, type=click.Path(),
               help="Output directory (default: data/studies/<study_id>/).")
 def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attributes,
-                          label_field, label_pattern, methylkit_levels, out_dir):
+                          label_field, label_pattern, methylkit_levels, design_table, design_join,
+                          design_source, out_dir):
     """Build a sample sheet + FASTQ manifest from a BioProject's deposited metadata.
 
     Downloads no sequence data. Reads ENA's run report and sample attributes and
@@ -219,6 +244,9 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             label_field=label_field,
             label_pattern=label_pattern,
             methylkit_levels=tuple(methylkit_levels) if methylkit_levels else None,
+            design_table=Path(design_table) if design_table else None,
+            design_join=design_join,
+            design_source=design_source,
         )
     except ENAError as exc:
         click.echo(click.style(str(exc), fg="red"))
