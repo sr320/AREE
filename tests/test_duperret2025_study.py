@@ -112,3 +112,14 @@ def test_samplesheet_checksum_matches_provenance(provenance):
     rel = "data/studies/DUPERRET2025_POMS_STARVE/samplesheet.tsv"
     digest = hashlib.sha256((REPO_ROOT / rel).read_bytes()).hexdigest()
     assert provenance["outputs"][rel] == digest
+
+
+def test_paired_rnaseq_study_owns_the_accessions_and_matching_contrast(study):
+    # The RNA-seq arm of the same tanks is its own registered study; this one
+    # cites it but must not claim its accessions.
+    rnaseq = yaml.safe_load((STUDIES_DIR / "DUPERRET2025_STARVE_RNASEQ.yaml").read_text())
+    assert "PRJEB86618" in rnaseq["accessions"]["ena"] and "PRJEB86525" in rnaseq["accessions"]["ena"]
+    assert "DUPERRET2025_STARVE_RNASEQ" in study["citation"]
+    ours = {c["comparison_id"] for c in study["comparisons"]}
+    theirs = {c["comparison_id"] for c in rnaseq["comparisons"]}
+    assert "starved_vs_fed_0hpc" in ours & theirs

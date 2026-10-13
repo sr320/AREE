@@ -19,11 +19,19 @@
 # instrument drift or batch. This is the main reason the study should not
 # contribute to a pooled estimate without an explicit batch caveat.
 #
-# The same experiment's RNA-seq (ENA PRJEB86618 starved, PRJEB86525 fed) and
-# 16S data are public. They are recorded in `citation` and the provenance
-# file, but not under `accessions`: each RNA-seq project can be claimed as its
-# own study, and the RNA-seq arm is the better AREE candidate because raw
-# reads run through the existing workflow.
+# The same experiment's RNA-seq (ENA PRJEB86618 starved, PRJEB86525 fed) is
+# registered and reanalyzed as DUPERRET2025_STARVE_RNASEQ (PR #23, merged
+# 2026-10-13). Its primary comparison, starved_vs_fed_0hpc, is this study's
+# comparison on the same tanks, so the two are the study's paired omics
+# layers. That pairing will only count once this study has abundances.
+# Neither RNA-seq project is listed under `accessions` here; both are
+# DUPERRET2025_STARVE_RNASEQ's accessions, and the 16S data are cited only.
+#
+# MERGED AS A REGISTRATION (2026-10-13), not analyzable: the MAFs are still
+# empty. Re-fetched 2026-10-13: the GM MAF is byte-identical to the registered
+# copy (still 0 abundance values), and the MetaboLights files API lists the
+# same four MAFs. The other three MAFs could not be re-fetched (EBI FTP
+# unreachable that day).
 
 study_id: DUPERRET2025_POMS_STARVE
 simulated: false
@@ -37,7 +45,7 @@ accessions:
   proteomexchange: null
   other: "MTBLS13313"
 
-citation: "Duperret L, Valdivieso A, Petton B, Morga B, Faury N, de Lorgeril J, Corporeau C, Degremont L, Allienne JF, Henry S, Turtoi A, Pouzadoux J, Romatif O, Courtay G, Monaco CJ, Toulza E, Lagorce A, Pernet F, Vidal-Dupiol J, Mitta G (2025) Food deprivation enhances disease resistance: Underlying mechanisms in oysters confronted with Pacific oyster mortality syndrome. iScience 29(1):114333. https://doi.org/10.1016/j.isci.2025.114333 (PMID 41541659). Metabolomics: MetaboLights MTBLS13313 (CC0). Same experiment, not registered here: RNA-seq ENA PRJEB86618 (starved) and PRJEB86525 (fed); 16S PRJEB86589/PRJEB86519; umbrella BioProject PRJEB86647 (Ifremer DECICOMP)."
+citation: "Duperret L, Valdivieso A, Petton B, Morga B, Faury N, de Lorgeril J, Corporeau C, Degremont L, Allienne JF, Henry S, Turtoi A, Pouzadoux J, Romatif O, Courtay G, Monaco CJ, Toulza E, Lagorce A, Pernet F, Vidal-Dupiol J, Mitta G (2025) Food deprivation enhances disease resistance: Underlying mechanisms in oysters confronted with Pacific oyster mortality syndrome. iScience 29(1):114333. https://doi.org/10.1016/j.isci.2025.114333 (PMID 41541659). Metabolomics: MetaboLights MTBLS13313 (CC0). Same experiment: RNA-seq ENA PRJEB86618 (starved) and PRJEB86525 (fed), registered as AREE study DUPERRET2025_STARVE_RNASEQ; 16S PRJEB86589/PRJEB86519; umbrella BioProject PRJEB86647 (Ifremer DECICOMP)."
 
 species: "Magallana gigas"
 strain_or_population: "Ifremer first-generation full-sib families F11N and F14R (produced 11 May 2020 from G0 families F11 and F14, whose parents were wild Dellec oysters; both G0 families highly POMS-susceptible). Pathogen-free recipients, 3 months old at the start of the diet treatment (9 Aug 2020)."
@@ -57,7 +65,7 @@ data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "MetaboLights MTBLS13313 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,PUFAs_RAW,TCA_RAW}/, one per sample per platform (192 files). The four MAFs name 328 metabolites but contain no abundance values; checked 2026-10-11. No metabolite has a database identifier or MSI reliability level. The authors' processed data (internal-standard normalized, IQR filtered, quantile normalized, log10 in MetaboAnalystR 4.0.0) are described in the paper but are not in MetaboLights; check the paper's supplementary tables before re-integrating raw files."
+  access_notes: "MetaboLights MTBLS13313 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,PUFAs_RAW,TCA_RAW}/, one per sample per platform (192 files). The four MAFs name 328 metabolites but contain no abundance values; checked 2026-10-11, and the GM MAF re-checked unchanged 2026-10-13. No metabolite has a database identifier or MSI reliability level. The authors' processed data (internal-standard normalized, IQR filtered, quantile normalized, log10 in MetaboAnalystR 4.0.0) are described in the paper but are not in MetaboLights; check the paper's supplementary tables before re-integrating raw files."
 
 qc_status: "not_started"
 analysis_status: "not_started"
@@ -137,7 +145,11 @@ limitations: >
   are shared with DECICOMP2025_POMS_AGE (MTBLS13463), and that study's MAFs
   carry this study's sample columns. If the fed arm here shares a challenge
   trial with DECICOMP's 4-month cohort, the two studies are not independent.
-  Confirm before pooling them. (7) Targeted panel of about 330 metabolites
+  Confirm before pooling them. The RNA-seq arm (DUPERRET2025_STARVE_RNASEQ)
+  shares this study's tanks, so it is convergent evidence, not replication.
+  Its 0 hpc diet contrast calls 38% of genes DE, mostly fasting response,
+  and this study's metabolites will share that interpretation. (7) Targeted
+  panel of about 330 metabolites
   with no database identifiers or MSI levels in the deposit. Mapping is
   held at unresolved.
 
