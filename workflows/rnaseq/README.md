@@ -165,7 +165,18 @@ than they are. A quick way to tell a QuantSeq FWD library from full-length
 RNA-seq when the deposit does not say: the fraction of reads containing 15+
 consecutive A's is several percent for QuantSeq and about 0.1% for
 full-length libraries. `tag_seq` is recorded in the workflow manifest's
-`parameters`.
+`parameters`, and the length model DESeq2 actually used in `deseq2_design`
+(`length_model`).
+
+The length offsets do more than shift expression levels. They can create fold
+changes. Measured on simulated QuantSeq-like reads from the *M.
+galloprovincialis* RefSeq transcriptome (six single-end libraries, 3 vs 3,
+2026-10-12): both modes recovered 59 of 60 genes with a simulated 4-fold
+change. But for 40 genes whose expressed isoform switched to one about 2.7
+times longer, with no change in 3' reads, the standard path called 26
+differentially expressed (median |log2FC| 0.84, up to 3.0). The per-sample
+length offset moves with the isoform mix even when the 3' read count does not.
+With `--tag_seq`, none were called (median |log2FC| 0.09).
 
 ## Covariates (`raw_reanalysis` only)
 
@@ -274,6 +285,12 @@ regenerated from raw data), not the evidence records themselves.
   tasks completed, through DESeq2, the manifest and the report. That checks
   the command lines, not the biology; no full-depth single-end run has been
   made.
+- **3' Tag-seq**: executed natively on 2026-10-12, with and without
+  `--tag_seq`, against six simulated QuantSeq-like single-end libraries
+  (82,000 to 101,000 reads) and the full *M. galloprovincialis* RefSeq
+  transcriptome; see the Tag-seq section for the result. Salmon received
+  `--noLengthCorrection` and fastp `--trim_poly_x` in every library. No real
+  Tag-seq study has been run.
 - **CI coverage**: tiny paired FASTQ, reference, annotation, tx2gene, and sample
   fixtures live under `../../tests/fixtures/rnaseq_raw`, and single-end ones
   (ENA-style file names, `run_accession` in the sample sheet) under
