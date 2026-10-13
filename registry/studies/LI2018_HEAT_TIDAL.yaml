@@ -48,8 +48,26 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 36 runs are public in ENA/SRA under PRJNA407831. No DE table is deposited. Site, tidal zone, hours and tank are encoded in each sample alias (e.g. BYQJ241); BioSample `isolate` gives the site and `temp` the hours (35_0, 35_6, 35_24), the zone only the alias. Sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+# QC PASSED WITH WARNINGS, 2026-10-13 (full-depth run of all 36 libraries).
+# - Dispersion screen was low: median within-group dispersion 0.0012-0.040,
+#   7 of 12 groups under the 0.005 floor (LT_J_0 lowest at 0.0012, with only
+#   two libraries after the authors' exclusion). That floor is calibrated on
+#   single animals; each library here pools five oysters, and the five come
+#   from one population's mass spawning, so pools are both averaged and
+#   related.
+# - Genotype check settles it: on the 23 libraries at 0 h and 24 h (1,925
+#   expressed SNPs), pools within a group differ in allele frequency by
+#   0.177 on average and never less than 0.112, against 0.047 expected for one
+#   RNA sample sequenced twice; pools from different groups differ by 0.202.
+#   Every pool is different animals, more alike within a population as
+#   siblings should be (replicate_genotype_check.txt).
+# - No pseudo-replication symptoms: padj < 0.05 for 2,483 of 29,628 genes at
+#   24 h and 768 of 29,849 at 6 h, 99 of 28,221 for intertidal vs subtidal;
+#   fold changes at 6 h and 24 h correlate r = 0.32.
+# - Warnings: the heat contrasts' control is the same tanks before heating;
+#   the tolerance contrast rests on 2 v 2 populations.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # Comparisons, prespecified 2026-10-11 before any result was computed.
@@ -104,7 +122,7 @@ comparisons:
       - sample_id: "LTJ02"
         reason: "Discarded by the authors as an outlier (LT-I_0h_2); AREE follows the authors' prespecified exclusion."
         evidence: "Li et al. 2018 methods (PMC6120431): 'One sample of LT-I_0h_2 was used as an outlier and was abandoned from subsequent analysis.'"
-    results_file: null
+    results_file: "data/studies/LI2018_HEAT_TIDAL/LI2018_HEAT_TIDAL_heat_35c_24h_vs_0h_dge_standardized.tsv"
 
   - comparison_id: "heat_35c_6h_vs_0h"
     tissue: "gill"
@@ -126,7 +144,7 @@ comparisons:
       - sample_id: "LTJ02"
         reason: "Discarded by the authors as an outlier (LT-I_0h_2); AREE follows the authors' prespecified exclusion."
         evidence: "Li et al. 2018 methods (PMC6120431)."
-    results_file: null
+    results_file: "data/studies/LI2018_HEAT_TIDAL/LI2018_HEAT_TIDAL_heat_35c_6h_vs_0h_dge_standardized.tsv"
 
   - comparison_id: "intertidal_vs_subtidal_0h"
     tissue: "gill"
@@ -148,7 +166,7 @@ comparisons:
       - sample_id: "LTJ02"
         reason: "Discarded by the authors as an outlier (LT-I_0h_2); AREE follows the authors' prespecified exclusion."
         evidence: "Li et al. 2018 methods (PMC6120431)."
-    results_file: null
+    results_file: "data/studies/LI2018_HEAT_TIDAL/LI2018_HEAT_TIDAL_intertidal_vs_subtidal_0h_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -182,6 +200,11 @@ provenance:
     comparisons, the meta_analysis_primary flag and the exclusion were fixed
     before any result was computed. Does not need the design-table code of
     sr320/AREE#24.
+    Run 2026-10-12/13 (Nextflow 26.04.7, native -profile local,workstation):
+    all 72 FASTQ verified against ENA MD5s (several re-fetched); first
+    comparison 114/114 tasks, the other two reuse its quantifications. Salmon
+    mapping 69.2-78.1%, library type ISR (stranded TruSeq). Harmonized:
+    87,698 evidence records across the three comparisons.
   source_links:
     - "https://doi.org/10.3389/fphys.2018.00825"
     - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6120431/"

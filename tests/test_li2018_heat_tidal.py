@@ -93,3 +93,30 @@ def test_fastq_manifest_covers_every_run_paired(samplesheet):
     assert {r["run_accession"] for r in manifest} == {r["run_accession"] for r in samplesheet}
     assert len(manifest) == 72
     assert all(len(r["md5"]) == 32 for r in manifest)
+
+
+def test_run_outputs_match_the_registered_comparisons(study):
+    from common import REPO_ROOT
+
+    expected = {
+        "heat_35c_24h_vs_0h": (["BYQ_J_0", "BYQ_X_0", "LT_J_0", "LT_X_0"], ["BYQ_J_24", "BYQ_X_24", "LT_J_24", "LT_X_24"], None),
+        "heat_35c_6h_vs_0h": (["BYQ_J_0", "BYQ_X_0", "LT_J_0", "LT_X_0"], ["BYQ_J_6", "BYQ_X_6", "LT_J_6", "LT_X_6"], None),
+        "intertidal_vs_subtidal_0h": (["BYQ_X_0", "LT_X_0"], ["BYQ_J_0", "LT_J_0"], "population"),
+    }
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        params = json.loads((STUDY_DIR / f"LI2018_HEAT_TIDAL_{cid}_workflow_manifest.json").read_text())["parameters"]
+        control, treatment, unit = expected[cid]
+        assert params["comparison_id"] == cid
+        assert params["control_levels"] == control and params["treatment_levels"] == treatment
+        assert params["replicate_unit"] == unit
+        assert params["exclude_samples"] == ["LTJ02"]
+        rows = _tsv(REPO_ROOT / comp["results_file"])
+        assert len(rows) > 20000
+
+
+def test_genotype_check_shows_distinct_animals_within_groups():
+    text = (STUDY_DIR / "replicate_genotype_check.txt").read_text()
+    within = [line for line in text.splitlines() if line.strip().startswith("within")][0]
+    observed, noise = float(within.split("observed")[1].split()[0]), float(within.split("noise")[1].split()[0])
+    assert observed > 2 * noise
