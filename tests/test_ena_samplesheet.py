@@ -55,6 +55,66 @@ def test_methylkit_sheet_rejects_unknown_level(tmp_path):
         write_methylkit_samplesheet(rows, tmp_path / "mk.csv", "control", "RR")
 
 
+# --------------------------------------------------------------------------- #
+# Mixed library strategies (RNA-seq + 16S amplicon from the same animals)
+# --------------------------------------------------------------------------- #
+
+
+def _mixed_project(monkeypatch):
+    """Two groups of 3 animals, each with one RNA-seq and one amplicon run, as in
+    PRJNA1132140 (Manila clam priming), where counting both doubles every group."""
+    import intake.ena_samplesheet as es
+
+    runs, attrs = [], {}
+    for i, (group, strategy, layout) in enumerate(
+        [(g, s, lay) for g in ("primed", "naive") for s, lay in (("RNA-Seq", "SINGLE"), ("AMPLICON", "PAIRED"))
+         for _ in range(3)]
+    ):
+        sample = f"SAMN{i}"
+        runs.append({"run_accession": f"SRR{i}", "sample_accession": sample, "sample_alias": f"{group}{i}",
+                     "library_strategy": strategy, "library_layout": layout,
+                     "instrument_model": "NovaSeq", "read_count": "1000",
+                     "fastq_ftp": f"ftp.example/SRR{i}.fastq.gz", "fastq_md5": "abc", "fastq_bytes": "10"})
+        attrs[sample] = {"Treatment": group, "isolate": f"I{i}"}
+    monkeypatch.setattr(es, "fetch_run_report", lambda *a, **k: runs)
+    monkeypatch.setattr(es, "fetch_sample_attributes", lambda accs: {a: attrs[a] for a in accs})
+    return es
+
+
+def test_mixed_strategies_are_reported_per_strategy_without_filtering(monkeypatch, tmp_path):
+    es = _mixed_project(monkeypatch)
+    report = es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path,
+                                  condition_attributes=["Treatment"])
+    assert report["group_sizes"] == {"naive": 6, "primed": 6}  # inflated: both assays counted
+    assert report["group_sizes_by_strategy"] == {
+        "AMPLICON": {"naive": 3, "primed": 3}, "RNA-Seq": {"naive": 3, "primed": 3}}
+    assert "library_strategy_filter" not in report
+
+
+def test_library_strategy_filter_keeps_only_the_named_assay_and_records_it(monkeypatch, tmp_path):
+    import json
+
+    es = _mixed_project(monkeypatch)
+    report = es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path,
+                                  condition_attributes=["Treatment"], library_strategies=["RNA-Seq"])
+    assert report["group_sizes"] == {"naive": 3, "primed": 3}
+    assert report["library_layouts"] == ["SINGLE"]
+    sheet = (tmp_path / "samplesheet.tsv").read_text().splitlines()
+    assert len(sheet) == 7
+    manifest = (tmp_path / "fastq_manifest.tsv").read_text().splitlines()
+    assert len(manifest) == 7
+    prov = json.loads((tmp_path / "ena_provenance.json").read_text())
+    assert prov["library_strategy_filter"] == {
+        "kept": ["RNA-Seq"], "runs_by_strategy_before_filter": {"AMPLICON": 6, "RNA-Seq": 6}}
+
+
+def test_unknown_library_strategy_is_an_error(monkeypatch, tmp_path):
+    es = _mixed_project(monkeypatch)
+    with pytest.raises(es.ENAError, match="not in this project"):
+        es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path,
+                             condition_attributes=["Treatment"], library_strategies=["WGS"])
+
+
 def _design(tmp_path, rows):
     path = tmp_path / "design.tsv"
     path.write_text("isolate\tploidy\ttreatment\n" + "".join("\t".join(r) + "\n" for r in rows))
@@ -116,3 +176,19 @@ def test_design_table_overrides_deposited_attributes_and_is_recorded(tmp_path, m
     with pytest.raises(ena.ENAError, match="together"):
         ena.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "o2",
                               condition_attributes=["ploidy"], design_table=table)
+
+
+def test_library_strategy_filter_applies_before_the_design_table_join(monkeypatch, tmp_path):
+    """A design table needs rows only for the runs kept: the filter runs first."""
+    es = _mixed_project(monkeypatch)
+    rnaseq = [i for i in range(12) if (i // 3) % 2 == 0]  # SAMN0-2 (primed), SAMN6-8 (naive)
+    table = tmp_path / "design.tsv"
+    table.write_text("isolate\tarm\n" + "".join(f"I{i}\t{'P' if i < 6 else 'N'}\n" for i in rnaseq))
+
+    report = es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "ok",
+                                  condition_attributes=["arm"], library_strategies=["RNA-Seq"],
+                                  design_table=table, design_join="isolate")
+    assert report["group_sizes"] == {"N": 3, "P": 3}
+    with pytest.raises(es.ENAError, match="no row"):
+        es.build_samplesheet("PRJNA1", study_id="X", out_dir=tmp_path / "bad",
+                             condition_attributes=["arm"], design_table=table, design_join="isolate")

@@ -138,7 +138,7 @@ AREE/
 |---|---|
 | `aree validate-study <file>` | Validate a study YAML against schema + controlled vocabularies |
 | `aree register-study <file> [--update]` | Add (or update) a study in the registry |
-| `aree fetch-samplesheet --bioproject <acc> --study <id>` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata |
+| `aree fetch-samplesheet --bioproject <acc> --study <id> [--library-strategy RNA-Seq] [--design-table <tsv> --design-join <attr>]` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata; warns and shows per-strategy group sizes when a project mixes RNA-seq with, e.g., 16S amplicon runs; `--design-table` joins groups from an authors' table when the BioSamples do not carry them |
 | `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies` | List registered studies and their pipeline status |
 | `aree study-ids [--simulated \| --real]` | Print registered study_ids, one per line, read from `registry/studies/`; the demo list the Makefile and CI use |
