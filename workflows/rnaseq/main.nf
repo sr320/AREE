@@ -157,6 +157,7 @@ workflow {
             params.exclude_samples ?: '',
             params.replicate_unit ?: '',
             params.covariates ?: '',
+            params.tag_seq as boolean,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
             Channel.fromPath(params.sample_sheet, checkIfExists: true)

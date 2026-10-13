@@ -15,9 +15,10 @@ for the assumptions this roadmap is consistent with.
   confidence, and quality flags all exist under
   `registry/controlled_vocabularies/` and are actively checked/consumed by
   code (`src/common/load_vocab`, `src/intake/schema_validate.py`).
-- **Study registry.** Six demo studies are registered
-  (`registry/studies/GIGAS_{HEAT01,OA02,PATH03,SAL04,LARV05,GROW06}.yaml`),
-  covering the required demo mix: two RNA-seq raw-reanalysis studies
+- **Study registry.** Seven demo studies are registered: six oyster
+  (`registry/studies/GIGAS_{HEAT01,OA02,PATH03,SAL04,LARV05,GROW06}.yaml`) and
+  one mussel (`MYTGAL_HEAT01`) that exercises species partitioning. The six
+  oyster studies cover the required demo mix: two RNA-seq raw-reanalysis studies
   (`GIGAS_HEAT01`, `GIGAS_OA02`), one methylation study (`GIGAS_PATH03`), one
   proteomics processed-results-only study (`GIGAS_SAL04`), one metabolomics
   processed-results-only study (`GIGAS_GROW06`), one imperfect-identifier

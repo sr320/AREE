@@ -51,7 +51,7 @@ jobs:
 
       - name: Harmonize simulated demo studies (demo crosswalk)
         run: |
-          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+          for sid in $(aree study-ids --simulated); do
             aree harmonize --study "$sid"
           done
 

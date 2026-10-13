@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import REPORTS_DIR, load_vocab
+from common import REPORTS_DIR, load_vocab, species_term_for_taxid
 from harmonize.core import load_evidence_table
 from meta_analysis.run import run_meta_analysis
 from prioritize.rank import (
@@ -235,7 +235,16 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     lines.append("## Candidate identifiers")
     lines.append(f"- Standardized feature ID: `{candidate['feature_id_standardized']}`")
     lines.append(f"- Feature type: `{candidate['feature_type']}`")
+    term = species_term_for_taxid(candidate["species_taxid"])
+    if term is not None:
+        lines.append(f"- Species: *{term['scientific_name']}* ({term['label']})")
     lines.append(f"- Species taxid: `{candidate['species_taxid']}`")
+    lines.append(
+        "- Ortholog context: none assigned. This card pools evidence from one species "
+        "only; the same feature ID in another species has its own card and is never "
+        "pooled with this one. Cross-species comparison through orthogroups is not "
+        "yet implemented."
+    )
     simulated = _partition_value(candidate["simulated"]) == "true"
     lines.append(f"- Data origin: `{'simulated' if simulated else 'real'}`")
     lines.append(f"- Mapping confidence across contributing studies: {candidate['mapping_confidences']}")

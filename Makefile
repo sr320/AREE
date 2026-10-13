@@ -1,7 +1,8 @@
 # AREE task runner. Run `make help` for the list.
 .PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard docs app clean
 
-DEMO_STUDIES := GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06
+# Every simulated study in registry/studies/, so a new demo study needs no edit here.
+DEMO_STUDIES = $(shell aree study-ids --simulated)
 
 help:
 	@echo "AREE make targets:"
@@ -34,7 +35,7 @@ lint:
 	ruff check src tests
 
 register:
-	@for f in registry/studies/GIGAS_*.yaml; do aree register-study "$$f" --update; done
+	@for sid in $(DEMO_STUDIES); do aree register-study "registry/studies/$$sid.yaml" --update; done
 	@aree list-studies
 
 harmonize:

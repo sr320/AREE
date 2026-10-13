@@ -1,0 +1,74 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "IOCAS2024_OA_TRANSGEN",
+  "comparison_id": "parental_ph7_4_vs_ph8_1_larvae",
+  "input_files": [
+    {
+      "name": "IOCAS2024_OA_TRANSGEN_parental_ph7_4_vs_ph8_1_larvae_dge_standardized.tsv",
+      "sha256": "1e2d3f2c14a7cc2262e42779d7fcc6e7efad72df4287d1d74479ae22a1f02eac"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "IOCAS2024_OA_TRANSGEN",
+    "comparison_id": "parental_ph7_4_vs_ph8_1_larvae",
+    "outdir": "results/rnaseq/IOCAS2024_OA_TRANSGEN",
+    "exclude_samples": [],
+    "control_levels": [
+      "81"
+    ],
+    "treatment_levels": [
+      "74"
+    ],
+    "replicate_unit": null,
+    "viral_reference": null
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.42.1",
+      "bioconductor-tximport": "1.30.0",
+      "r-base": "4.3.2"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.9"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-11T06:29:23.664323-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

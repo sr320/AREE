@@ -62,12 +62,12 @@ See [docs/installation.md](docs/installation.md) for details.
 # 1. Validate a study registration file
 aree validate-study registry/studies/GIGAS_HEAT01.yaml
 
-# 2. Register every demo study
-for f in registry/studies/GIGAS_*.yaml; do aree register-study "$f"; done
+# 2. Register every demo study (every study with simulated: true; six oyster, one mussel)
+for sid in $(aree study-ids --simulated); do aree register-study "registry/studies/$sid.yaml"; done
 aree list-studies
 
 # 3. Harmonize each study into the shared evidence table
-for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+for sid in $(aree study-ids --simulated); do
   aree harmonize --study "$sid"
 done
 
@@ -141,6 +141,7 @@ AREE/
 | `aree fetch-samplesheet --bioproject <acc> --study <id>` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata |
 | `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies` | List registered studies and their pipeline status |
+| `aree study-ids [--simulated \| --real]` | Print registered study_ids, one per line, read from `registry/studies/`; the demo list the Makefile and CI use |
 | `aree build-registry [--strict]` | Rebuild the (uncommitted) `registry/study_registry.csv` index from every study YAML |
 | `aree start-study --accession <acc> --study-id <id>` | Claim a study for this machine: branch `study/<acc>/<id>` in its own worktree, stub YAML + config, draft PR |
 | `aree check-study-scope --branch <b>` | Fail if a study branch changes files its study does not own (run by CI) |
