@@ -166,10 +166,12 @@ provenance:
     live ENA metadata with `aree fetch-samplesheet --bioproject PRJNA1132140
     --study TUCCI2025_HEAT_PRIMING --condition-attribute Treatment
     --condition-attribute "Thermal stress" --attribute Clam_ID
-    --library-strategy RNA-Seq`. The --library-strategy option is from PR #40
-    (WP5), not yet on main when this was generated; the provenance records the
-    filter (kept RNA-Seq; 40 RNA-Seq and 40 AMPLICON runs before filtering).
-    Regenerate from main once #40 merges. TAG-SEQ: the run configuration sets
+    --library-strategy RNA-Seq`; the provenance records the filter (kept
+    RNA-Seq; 40 RNA-Seq and 40 AMPLICON runs before filtering). First
+    generated 2026-10-12 with PR #40's branch code, before --library-strategy
+    reached main; regenerated from main on 2026-10-13 after #40 merged. The
+    sample sheet and FASTQ manifest were byte-identical; only date_generated
+    in ena_provenance.json changed. TAG-SEQ: the run configuration sets
     tag_seq = true (PR #24, merged into this branch 2026-10-12). LIBRARY-STRATEGY CHECK: unlike
     LUTIER2022_OA_TIPPING, the AMPLICON label here is correct. The 40
     AMPLICON runs are paired-end with their own BioSamples; the 40 RNA-Seq

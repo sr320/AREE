@@ -1,7 +1,7 @@
 {
   "study_id": "TUCCI2025_HEAT_PRIMING",
   "bioproject": "PRJNA1132140",
-  "date_generated": "2026-10-12",
+  "date_generated": "2026-10-13",
   "generated_by": "src/intake/ena_samplesheet.py",
   "queries": {
     "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1132140&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
