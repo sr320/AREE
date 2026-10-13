@@ -128,9 +128,15 @@ limitations: >
   treatment: each condition ran in two 25 L tanks of 30 clams, so each arm
   rests on 2 tanks. Which tank each sequenced clam came from is not in the
   deposit or the paper, so the analysis cannot be fitted on tanks (as
-  LUTIER2022_OA_TIPPING is) unless the authors supply tank IDs. Fitted on
-  clams, lfcSE ignores tank-to-tank variation and is too small; the study
-  carries tank_level_replication and biological_replicates records 2.
+  LUTIER2022_OA_TIPPING is) unless the authors supply tank IDs. DECISION
+  (sr320, 2026-10-12): fit on clams now rather than wait for tank IDs. Each
+  arm's 10 clams are therefore treated as independent, so lfcSE ignores
+  tank-to-tank variation and is too small, and adjusted p-values are too
+  optimistic, by an amount that cannot be estimated from these data. The
+  study carries tank_level_replication and biological_replicates records 2;
+  treat its significance calls as an upper bound. If tank IDs arrive, refit
+  with --replicate_unit (two tanks per arm leaves 1 residual df per arm, so
+  expect far fewer calls) and record both.
   (3) Survivor sampling. Naive clams lost about 25% to the heatwave and the
   survivors were sampled 15 d later; primed clams lost about 4%. The naive
   heatwave arm is therefore the more tolerant three-quarters of naive clams,

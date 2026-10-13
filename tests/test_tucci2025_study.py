@@ -108,3 +108,12 @@ def test_config_runs_the_tag_seq_path():
     fold changes from isoform switching. Never run this study without tag_seq."""
     text = CONFIG_PATH.read_text(encoding="utf-8")
     assert re.search(r"^\s*tag_seq\s*=\s*true\b", text, re.M)
+
+
+def test_command_line_comparison_id_is_not_shadowed():
+    """The workflow reads rnaseq.comparison_id before comparison_id; set inside the
+    rnaseq block it would silently name the second comparison after the first."""
+    text = CONFIG_PATH.read_text(encoding="utf-8")
+    block = re.search(r"rnaseq \{(.*?)\}", text, re.S).group(1)
+    assert re.search(r"comparison_id\s*=\s*null", block)
+    assert re.search(r"^\s*comparison_id\s*=\s*'naive_hw_vs_naive_control'", text, re.M)
