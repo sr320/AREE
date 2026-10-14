@@ -1,7 +1,9 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-12:** WP0 to WP4 are implemented and WP5 has started (backlog done, no study claimed yet) (see their entries in
-section 5). Everything else is a proposal. This plan describes the work needed
+**Status, 2026-10-13:** WP0 to WP4 are implemented. WP5 has its backlog and a
+first study (TUCCI2025_HEAT_PRIMING, Manila clam, reanalyzed). WP6 has its
+orthogroup run; orthogroup-level meta-analysis and cross-species candidates
+are not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
 species-by-species and then across species through orthology.
@@ -440,7 +442,35 @@ k ≥ 2 per taxon.
 
 ### WP6. Cross-species orthology and pooling (the new science)
 
-This is where "mussel and clam integration" stops being plumbing.
+**Status: orthogroups done, 2026-10-13; pooling not started.** What exists:
+
+- `aree fetch-reference --proteins` writes one protein per gene (the longest)
+  for each species, keyed by NCBI GeneID; all seven reference assemblies have
+  one, 100% covered by their crosswalks (228,833 proteins).
+- `aree build-orthogroups` ran OrthoFinder 3.1.5 on them (6 threads, 55
+  minutes on Pori) in its own conda environment. The run,
+  `orthofinder3.1.5_2026-10-13`, is committed and active: 38,507 orthogroups,
+  of which 5,552 are single-copy in all seven species, 7,031 single-copy where
+  present, 11,877 multi-copy and 14,047 species-specific. Shared with at least
+  one other species: 95-98% of each mussel's genes, 85-88% of each clam's, 77%
+  of the oyster's.
+- Harmonization attaches the active run's orthogroup to every resolved real
+  GeneID and records the run in its manifest. On HESSER2024_VCOR, 274 of 306
+  resolved genes got one (the rest are non-coding), and 190 of those 274 sit
+  in multi-copy orthogroups, only 18 in single-copy ones. The worry below
+  about lineage-specific expansions is therefore the normal case, not the
+  exception: most genes stress studies report are in expanded families.
+- Checks: in 63% of single-copy-in-all orthogroups with named genes, every
+  species' gene name agrees exactly (the rest are naming variants such as
+  "forkhead box C1-a" vs "forkhead box protein C1"); "heat shock 70 kDa
+  protein" genes fall into 285 orthogroups, the largest holding 17-23 copies
+  in each mussel against 3 in the oyster.
+
+Still to build: orthogroup-level meta-analysis, the cross-species candidate
+category, evidence cards that show both species, and the dashboard gate. The
+OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only
+mode) and only its `Orthogroups.tsv` is used; hierarchical orthogroups are a
+possible refinement.
 
 - **Orthogroup inference.** Run OrthoFinder (or use OrthoDB) on the RefSeq
   proteomes of every species with a committed crosswalk, starting from the

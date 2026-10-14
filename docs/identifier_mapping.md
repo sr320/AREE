@@ -108,10 +108,63 @@ result:
 2. **Only 2% of genes have a real name.** The rest are `LOC`-form. Symbol-based
    matching is close to useless for this species; identifier-based matching is
    the only reliable path.
-3. **`orthogroup_id` is empty by design.** Real orthogroups require an ortholog
-   inference run (OrthoFinder/OrthoDB). Fabricating them would manufacture
-   cross-species confidence that does not exist, so the column ships empty and
-   `resolve_identifier` returns `None` for it.
+3. **`orthogroup_id` is empty in every real crosswalk.** Crosswalks hold only
+   what NCBI and UniProt provide. Orthogroups come from a separate inference
+   run (see *Orthogroups* below); harmonization attaches them to evidence from
+   the active run, never from the crosswalk.
+
+### Orthogroups
+
+Orthogroups link genes across species. They are inferred, not looked up, so
+they live apart from the crosswalks: `aree build-orthogroups` runs OrthoFinder
+on one protein per gene for every species with a crosswalk (the
+`primary_proteins.faa` that `aree fetch-reference --proteins` writes; see
+[reference_bundles.md](reference_bundles.md)). Because those proteomes come
+from the same RefSeq annotations the crosswalks are built on, every orthogroup
+member is a GeneID the harmonizer already resolves.
+
+A run is committed under `data/reference/orthogroups/<run_id>/`:
+
+| File | Contents |
+|---|---|
+| `gene_orthogroups.tsv` | `ncbi_gene_id`, `ncbi_taxid`, `orthogroup_id` for every gene |
+| `orthogroups.tsv` | per orthogroup: `copy_class`, species and gene counts, copies per species |
+| `provenance.json` | OrthoFinder version and command, each proteome's assembly and SHA-256, per-species assignment rates |
+
+`data/reference/orthogroups/active.yaml` names the run harmonization uses.
+`resolve_identifier` attaches that run's orthogroup to every resolved real
+GeneID, and each harmonization manifest records the run ID and the checksum of
+its gene table. The synthetic demo crosswalk keeps its own illustrative
+orthogroups and is never matched against a real run.
+
+`copy_class` says how comparable an orthogroup is across species:
+
+| Class | Meaning |
+|---|---|
+| `single_copy_all` | exactly one gene in every species of the run |
+| `single_copy` | at most one gene per species, in two or more species |
+| `multi_copy` | two or more genes in at least one species |
+| `species_specific` | genes from one species only |
+
+Bivalve genomes carry large lineage-specific expansions (HSP70, C1q, IAPs), and
+those are the families stress studies report most. A `multi_copy` orthogroup
+links a gene to all of its paralogs in another species, not to one
+counterpart, so cross-species comparisons must say which class they rest on.
+
+The active run, `orthofinder3.1.5_2026-10-13` (OrthoFinder 3.1.5, 7 species,
+228,833 proteins):
+
+| Copy class | Orthogroups |
+|---|---|
+| `single_copy_all` | 5,552 |
+| `single_copy` | 7,031 |
+| `multi_copy` | 11,877 |
+| `species_specific` | 14,047 |
+
+On a real oyster study (HESSER2024_VCOR), 274 of 306 resolved genes received
+an orthogroup (the rest are non-coding genes, which have no protein), and 190
+of those 274 are in `multi_copy` orthogroups. Expect most cross-species links
+for stress-response genes to be one-to-many.
 
 ### Mussel and clam crosswalks
 

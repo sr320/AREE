@@ -10,6 +10,7 @@ Bundles are fetched, never hand-assembled:
 ```bash
 aree fetch-reference --assembly GCF_965363235.1            # RNA-seq bundle
 aree fetch-reference --assembly GCF_963853765.1 --genome   # + genome FASTA for Bismark
+aree fetch-reference --assembly GCF_965363235.1 --proteins # + one protein per gene, for orthogroups
 ```
 
 `--assembly` takes any registered assembly id or accession from
@@ -25,6 +26,7 @@ transcriptome or GTF for those; for example the Roslin oyster assembly).
 | `genomic.gtf` | RNA-seq `--gtf`, methylation `annotation_gtf` | NCBI `*_genomic.gtf.gz`, decompressed |
 | `tx2gene.tsv` | RNA-seq `--tx2gene` (DESeq2/tximport) | Built from `genomic.gtf`: one `transcript_id`, NCBI GeneID pair per transcript feature, headerless, sorted |
 | `genomic.fna` | methylation `genome_fasta` (Bismark) | NCBI `*_genomic.fna.gz`, only with `--genome` |
+| `primary_proteins.faa` | `aree build-orthogroups` | One protein per NCBI GeneID, the longest (by the feature table's `product_length`; ties go to the lowest accession), headed by GeneID. Built from NCBI `*_protein.faa.gz` and `*_feature_table.txt.gz`, kept beside it, only with `--proteins` |
 | `md5checksums.txt` | verification | NCBI's own checksum list for the folder |
 | `reference_provenance.json` | provenance | Written by `aree fetch-reference` |
 
@@ -62,6 +64,10 @@ aree fetch-reference --assembly GCF_965363235.1 --check
 
 `--plan` resolves the NCBI folder and checksums without downloading sequence
 data, which is a quick way to confirm an assembly is fetchable.
+
+Pass the same options when re-running a fetch: the provenance file describes
+the files of the latest fetch, so dropping `--genome` or `--proteins` on a
+re-run leaves those files on disk but no longer recorded.
 
 ## Where bundles live
 

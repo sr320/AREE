@@ -91,10 +91,11 @@ for the assumptions this roadmap is consistent with.
 - **Containers.** `containers/README.md` documents the intended
   Docker/Apptainer approach, but container images/definitions themselves are
   not yet built.
-- **Ortholog mapping.** A real 33,356-gene *M. gigas* identifier crosswalk is
-  committed and used for real studies, but its `orthogroup_id` field remains
-  empty. Cross-species pooling still needs a real OrthoFinder/OrthoDB-derived
-  orthology layer — see [identifier_mapping.md](identifier_mapping.md).
+- **Ortholog mapping.** Orthogroups across all seven registered species come
+  from an OrthoFinder run on their RefSeq proteomes and are attached to
+  evidence at harmonization (crosswalks themselves stay NCBI-only).
+  Cross-species pooling on them is the next step — see
+  [identifier_mapping.md](identifier_mapping.md#orthogroups).
 
 ## Next milestones
 

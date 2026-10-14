@@ -32,6 +32,19 @@ chr2\tRefSeq\ttranscript\t1\t500\t.\t-\t.\tgene_id "orphan"; transcript_id "XR_9
 """
 RNA = ">XM_1.1\nACGT\n>XM_2.1\nACGTACGT\n>XM_3.1\nTTTT\n"
 
+# Gene 100 has two isoforms (XP_1.1 is longer); gene 200 has two of equal
+# length (the lower accession wins). The gene CDS row for gene 300 has no protein.
+FEATURE_TABLE = (
+    "# feature\tclass\tproduct_accession\tGeneID\tproduct_length\n"
+    "gene\tprotein_coding\t\t100\t\n"
+    "CDS\twith_protein\tXP_2.1\t100\t3\n"
+    "CDS\twith_protein\tXP_1.1\t100\t5\n"
+    "CDS\twith_protein\tXP_9.1\t200\t4\n"
+    "CDS\twith_protein\tXP_8.1\t200\t4\n"
+    "CDS\twithout_protein\t\t300\t\n"
+)
+PROTEINS = ">XP_1.1 iso1\nMKLVA\n>XP_2.1 iso2\nMKL\n>XP_8.1 b\nMQQQ\n>XP_9.1 a\nMRRR\n"
+
 
 def _md5(path):
     return hashlib.md5(path.read_bytes()).hexdigest()  # noqa: S324
@@ -43,7 +56,8 @@ def fake_ncbi(tmp_path, monkeypatch):
     remote = tmp_path / "ncbi"
     remote.mkdir()
     for suffix, text in (("_rna.fna.gz", RNA), ("_genomic.gtf.gz", GTF),
-                         ("_genomic.fna.gz", ">chr1\nACGT\n>chr2\nACGT\n")):
+                         ("_genomic.fna.gz", ">chr1\nACGT\n>chr2\nACGT\n"),
+                         ("_protein.faa.gz", PROTEINS), ("_feature_table.txt.gz", FEATURE_TABLE)):
         with gzip.open(remote / f"{FOLDER}{suffix}", "wt") as fh:
             fh.write(text)
     md5_text = "".join(f"{_md5(p)}  ./{p.name}\n" for p in sorted(remote.iterdir()))
@@ -117,6 +131,11 @@ def test_tx2gene_is_sorted_unique_and_skips_transcripts_without_a_gene(tmp_path)
         (RELEASE, f"NCBI RefSeq {RELEASE}", True),
         ("NCBI Mytilus californianus Annotation Release 100",
          "NCBI Mytilus californianus Annotation Release 100", True),
+        # The GTF header inserts "RefSeq" into the older release name.
+        ("NCBI Mytilus californianus Annotation Release 100",
+         "NCBI RefSeq Mytilus californianus Annotation Release 100", True),
+        ("NCBI Mytilus californianus Annotation Release 100",
+         "NCBI RefSeq Mytilus californianus Annotation Release 101", False),
         (RELEASE, f"NCBI RefSeq {ACC}-RS_2026_03", False),
         (RELEASE, None, False),
     ],
@@ -210,3 +229,40 @@ def test_every_species_reference_assembly_can_have_a_bundle():
             assert record["ncbi_assembly_accession"].startswith("GCF_"), record["assembly_id"]
             assert record.get("annotation_release"), record["assembly_id"]
             rb.accession_dir_url(record["ncbi_assembly_accession"])
+
+
+# --------------------------------------------------------------------------- #
+# Primary proteome (input to orthogroup inference)
+# --------------------------------------------------------------------------- #
+
+
+def test_primary_proteome_keeps_the_longest_protein_per_gene(tmp_path):
+    (tmp_path / "ft.txt").write_text(FEATURE_TABLE)
+    (tmp_path / "p.faa").write_text(PROTEINS)
+    out = rb.build_primary_proteome(tmp_path / "p.faa", tmp_path / "ft.txt")
+    assert out == [("100", "XP_1.1", "MKLVA"), ("200", "XP_8.1", "MQQQ")]
+
+
+def test_primary_proteome_fails_when_a_chosen_protein_is_missing(tmp_path):
+    (tmp_path / "ft.txt").write_text(FEATURE_TABLE)
+    (tmp_path / "p.faa").write_text(">XP_1.1\nMKLVA\n")
+    with pytest.raises(rb.ReferenceBundleError, match="absent"):
+        rb.build_primary_proteome(tmp_path / "p.faa", tmp_path / "ft.txt")
+
+
+def test_fetch_with_proteins_writes_a_gene_keyed_proteome_and_records_it(fake_ncbi):
+    prov = _fetch(fake_ncbi, with_proteins=True)
+    text = (fake_ncbi["dest"] / "primary_proteins.faa").read_text()
+    assert text == ">100 XP_1.1\nMKLVA\n>200 XP_8.1\nMQQQ\n"
+    assert "primary_proteins.faa" in {f["file"] for f in prov["files"]}
+    assert prov["primary_proteome"]["genes"] == 2
+    assert "longest" in prov["primary_proteome"]["rule"]
+    # Gene 200 is not in the fixture crosswalk.
+    assert prov["primary_proteome"]["crosswalk_coverage"]["found_in_crosswalk"] == 1
+    assert rb.check_bundle(fake_ncbi["dest"]) == []
+
+
+def test_proteins_are_not_fetched_unless_asked(fake_ncbi):
+    prov = _fetch(fake_ncbi)
+    assert "primary_proteome" not in prov
+    assert not (fake_ncbi["dest"] / "protein.faa").exists()
