@@ -1,0 +1,19 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	group	replicate	isolate	tissue	age	isolation_source	collection_date	library_layout	instrument_model	read_count
+V6h_1	SRR19849539	SAMN29336136	V6h_1	V6h	V6h	1	vibrio stress 6h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	23990330
+V3h_3	SRR19849540	SAMN29336135	V3h_3	V3h	V3h	3	vibrio stress 3h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	21058272
+V3h_2	SRR19849541	SAMN29336134	V3h_2	V3h	V3h	2	vibrio stress 3h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	24169298
+V3h_1	SRR19849542	SAMN29336133	V3h_1	V3h	V3h	1	vibrio stress 3h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	22981832
+V1h_3	SRR19849543	SAMN29336132	V1h_3	V1h	V1h	3	vibrio stress 1h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	24393356
+V1h_2	SRR19849544	SAMN29336131	V1h_2	V1h	V1h	2	vibrio stress 1h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	25437677
+V1h_1	SRR19849545	SAMN29336130	V1h_1	V1h	V1h	1	vibrio stress 1h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	23340522
+control3	SRR19849546	SAMN29336129	control3	control	control	3	normal	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	22163264
+V24h_3	SRR19849547	SAMN29336144	V24h_3	V24h	V24h	3	vibrio stress 24h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	25358788
+V24h_2	SRR19849548	SAMN29336143	V24h_2	V24h	V24h	2	vibrio stress 24h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	24113583
+V24h_1	SRR19849549	SAMN29336142	V24h_1	V24h	V24h	1	vibrio stress 24h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	25232001
+V12h_3	SRR19849550	SAMN29336141	V12h_3	V12h	V12h	3	vibrio stress 12h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	27616461
+V12h_2	SRR19849551	SAMN29336140	V12h_2	V12h	V12h	2	vibrio stress 12h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	25723102
+V12h_1	SRR19849552	SAMN29336139	V12h_1	V12h	V12h	1	vibrio stress 12h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	21958184
+V6h_3	SRR19849553	SAMN29336138	V6h_3	V6h	V6h	3	vibrio stress 6h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	20646150
+V6h_2	SRR19849554	SAMN29336137	V6h_2	V6h	V6h	2	vibrio stress 6h	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	24211586
+control2	SRR19849555	SAMN29336128	control2	control	control	2	normal	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	21729695
+control1	SRR19849556	SAMN29336127	control1	control	control	1	normal	digestive gland	9-month	intertidal	2021-04	PAIRED	HiSeq X Ten	22621783
