@@ -229,6 +229,35 @@ same runs:
   with the submitter or ENA before going further. Do not hand-edit the
   manifest.
 
+**Before downloading** a `raw_reanalysis` study, pre-screen its replicates on
+the first ~1 M reads of each library:
+
+```bash
+python scripts/prescreen_replicates.py --source ncbi \
+    --samplesheet data/studies/STUDY_ID/samplesheet.tsv \
+    --manifest data/studies/STUDY_ID/fastq_manifest.tsv \
+    --salmon-index data/reference/GCF_963853765.1/salmon_index \
+    --level CONTROL_LEVEL --level TREATMENT_LEVEL
+```
+
+It quantifies only those reads and applies the same dispersion statistic as
+the full check below, at about 1 GB and 10 minutes per study instead of tens
+of GB. `--source ncbi` uses `fastq-dump -X` (sra-tools, in
+`environment.yml`) and is usually much faster than ENA. Use `--source ena`
+to screen the exact files the manifest would download. It was calibrated on
+two studies with known outcomes (1 M reads per library; full-depth values in
+brackets):
+
+| Study | Pre-screen | Full depth | Verdict |
+|---|---|---|---|
+| `WANG2024_HEAT_GILL` | 0.0038 / 0.0029 | (0.0030 / 0.0009) | fail |
+| `LI2022_HEAT_PLOIDY` d_0 / d_f | 0.0191 / 0.0218 | (0.0139 / 0.0143) | pass |
+
+The subsample reads a little high, so a borderline study can pass the
+pre-screen and still fail at full depth. A pass is permission to download,
+not a substitute for the full check. A fail means: do not download the study
+as is, and record why in [candidate_studies.md](candidate_studies.md).
+
 Check after the workflow runs and **before
 harmonizing** that its replicates are independent animals:
 
@@ -241,10 +270,15 @@ python scripts/check_replicate_dispersion.py \
 It exits non-zero if any group's median gene dispersion falls below 0.005.
 Real *M. gigas* biological replicates sit around 0.03–0.05. A group far below
 that is behaving like technical replicates, and its DESeq2 standard errors
-are too small to pool. `IOCAS2022_OA_ENERGY` failed this check despite
-deposited metadata labelling every library a biological replicate; see
-[candidate_studies.md](candidate_studies.md). If a study fails, set
-`qc_status: failed`, record the evidence, and do not harmonize it.
+are too small to pool. `IOCAS2022_OA_ENERGY` and `WANG2024_HEAT_GILL` failed
+this check even though the deposited metadata labelled every library a
+biological replicate; see [candidate_studies.md](candidate_studies.md). If a
+study fails, set `qc_status: failed`, record the evidence, and do not
+harmonize it. For individually sequenced animals, comparing allele fractions
+at expressed SNPs can show *why* a group failed (one RNA source vs distinct
+animals). `data/studies/WANG2024_HEAT_GILL/genotype_check/` is a worked
+example. It cannot tell pools of larvae from one cross apart, since those
+share parental genotypes.
 
 Once a study is registered and has passed QC, harmonize its results into the shared evidence
 table — see [raw_vs_processed.md](raw_vs_processed.md) for which mode applies
