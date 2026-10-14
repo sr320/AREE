@@ -347,7 +347,7 @@ The stress-relevant ones are mostly unreplicated:
 | `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Best ncRNA candidate.** Whole-transcriptome (miRNA + lncRNA-capable stranded RNA-seq) on breeding lines. The stressor/phenotype behind "HH vs CC" must be recovered from the paper. Probably growth or heat line, not confirmed. |
 | `PRJNA750516` | 2 miRNA + 6 lncRNA-labelled RNA | two groups (RZ_GH vs KTD_GL), **one sample alias each** | Skip: replicates are re-sequenced libraries of one sample. |
 | `PRJNA694837` | 6 miRNA + 6 RNA | BM vs OM mantle, n=3 | Probably shell colour/biomineralization. No stressor, so low priority. |
-| `PRJNA341808` | 3 miRNA + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | miRNA was sequenced **only for control**. The RNA-seq arm (n=3 per stress group) is a multi-stressor *larval* RNA-seq candidate worth moving to the RNA-seq list. |
+| `PRJNA341808` | 3 "miRNA" + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | **Rejected 2026-10-14** (see *Rejected* below): the replicates are technical, and the "miRNA-Seq" control runs are mislabelled RNA-seq. |
 | `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. |
 | `PRJNA266361`, `PRJNA259995`, `PRJNA232734` | 1–3 | miRNA stress/atlas, single pooled sample | Skip: unreplicated. |
 
@@ -422,6 +422,33 @@ The danger is not wasted compute. Harmonized, such a study carries an `lfcSE`
 far too small, so inverse-variance pooling would let it outweigh every real
 study it joins. Run `scripts/check_replicate_dispersion.py` on every
 `raw_reanalysis` study before harmonizing it.
+
+`PRJNA341808`: *C. gigas* D-hinged larvae, control / bacteria / heat /
+bacteria + heat, 3 Ion Torrent runs per group, 26.2 GB. **Rejected before
+download, 2026-10-14**, by `scripts/prescreen_replicates.py`. It is the
+first study turned away by the pre-screen, not after a full reanalysis.
+
+Each group's three runs share one BioSample (`SAMN05728707`–`10`) and one
+`sample_alias`, which was already a warning. The pre-screen, run on the first
+1 M reads per run from NCBI, gave these median dispersions:
+
+| Group | Median dispersion |
+|---|---|
+| heat | −0.0010 |
+| bacteria | 0.0039 |
+| control | 0.0050 |
+| bacteria + heat | 0.0058 |
+
+Two groups fail and two sit at the 0.005 threshold. The pre-screen reads high
+(LI2022_HEAT_PLOIDY's real replicates scored 0.019–0.022 on it), so all four
+groups are in the technical-replicate range. Each group is most likely one
+larval RNA sample sequenced three times.
+
+Two things the screen also settled:
+- The three control runs deposited as `miRNA-Seq` are ordinary RNA-seq. They
+  map to the transcriptome as well as the stress runs (55% vs 53–58%).
+- A genotype check could not have decided this case. Larval pools from one
+  cross share parental genotypes, whether or not the pools are independent.
 
 ## Sourcing notes
 
