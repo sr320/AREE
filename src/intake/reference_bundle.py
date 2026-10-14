@@ -7,6 +7,10 @@ A *reference bundle* is what the raw-reanalysis workflows read from
 * ``genomic.gtf``  RefSeq annotation (Salmon, methylation region annotation)
 * ``tx2gene.tsv``  transcript -> NCBI GeneID, headerless (DESeq2 / tximport)
 * ``genomic.fna``  genome FASTA, only with ``--genome`` (Bismark)
+* ``primary_proteins.faa``  one protein per NCBI GeneID (the longest), only
+  with ``--proteins``; the input to orthogroup inference
+  (``aree build-orthogroups``). Built from NCBI's ``protein.faa`` and
+  ``feature_table.txt``, which are kept beside it.
 
 plus the compressed NCBI originals, NCBI's ``md5checksums.txt``, and
 ``reference_provenance.json``, which records where every file came from and its
@@ -50,6 +54,11 @@ BUNDLER_VERSION = "1.0.0"
 # NCBI file suffix -> name of the decompressed file the workflows read.
 CORE_FILES = {"_rna.fna.gz": "rna.fna", "_genomic.gtf.gz": "genomic.gtf"}
 GENOME_FILE = {"_genomic.fna.gz": "genomic.fna"}
+PROTEIN_FILES = {"_protein.faa.gz": "protein.faa", "_feature_table.txt.gz": "feature_table.txt"}
+PRIMARY_PROTEOME_RULE = (
+    "longest protein (feature_table product_length) per GeneID among CDS features; "
+    "ties broken by the lowest product_accession"
+)
 
 
 class ReferenceBundleError(RuntimeError):
@@ -167,12 +176,20 @@ def annotation_release_matches(registered: str | None, annotation_source: str | 
     """Whether the GTF's ``annotation-source`` names the registered release.
 
     NCBI writes e.g. ``NCBI RefSeq GCF_963853765.1-RS_2024_06`` for recent
-    annotations and ``NCBI <Species> Annotation Release 100`` for older ones; the
-    registry records the release itself, so containment is the comparison.
+    annotations and ``NCBI RefSeq <Species> Annotation Release 100`` for older
+    ones; the registry records the release itself, so containment is the
+    comparison, ignoring the word RefSeq.
     """
     if not registered or not annotation_source:
         return False
-    return registered in annotation_source
+
+    # Older NCBI annotations are named "NCBI <Species> Annotation Release 100" by
+    # the Datasets API but "NCBI RefSeq <Species> Annotation Release 100" in the
+    # GTF header; the word RefSeq does not change which release it is.
+    def norm(text: str) -> str:
+        return " ".join(w for w in text.split() if w.lower() != "refseq")
+
+    return norm(registered) in norm(annotation_source)
 
 
 def crosswalk_coverage(gene_ids: set[str], crosswalk_path: Path | None) -> dict:
@@ -199,6 +216,64 @@ def crosswalk_coverage(gene_ids: set[str], crosswalk_path: Path | None) -> dict:
         "pct": round(100 * found / len(gene_ids), 2) if gene_ids else 0.0,
         "missing_examples": sorted(gene_ids - known)[:10],
     }
+
+
+def build_primary_proteome(protein_faa: Path, feature_table: Path) -> list[tuple[str, str, str]]:
+    """(GeneID, protein accession, sequence) for one protein per gene, sorted by GeneID.
+
+    Orthogroup inference wants one sequence per gene: isoforms of one gene would
+    otherwise look like paralogs. The longest protein is the usual choice (it is
+    what OrthoFinder's primary_transcript.py keeps). Lengths and the
+    protein-to-gene link come from NCBI's feature table, not from FASTA headers.
+    """
+    best: dict[str, tuple[int, str]] = {}
+    header = None
+    with open(feature_table) as fh:
+        for line in fh:
+            fields = line.rstrip("\n").split("\t")
+            if line.startswith("#"):
+                header = [c.lstrip("# ").strip() for c in fields]
+                continue
+            if header is None:
+                raise ReferenceBundleError(f"{feature_table}: no header line")
+            row = dict(zip(header, fields))
+            gene, acc, length = row.get("GeneID", ""), row.get("product_accession", ""), row.get("product_length", "")
+            if row.get("feature") != "CDS" or not gene or not acc or not length.isdigit():
+                continue
+            current = best.get(gene)
+            candidate = (int(length), acc)
+            if current is None or candidate[0] > current[0] or (
+                    candidate[0] == current[0] and candidate[1] < current[1]):
+                best[gene] = candidate
+    wanted = {acc: gene for gene, (_, acc) in best.items()}
+
+    sequences: dict[str, list[str]] = {}
+    accession = None
+    with open(protein_faa) as fh:
+        for line in fh:
+            if line.startswith(">"):
+                accession = line[1:].split()[0]
+                if accession in wanted:
+                    sequences[accession] = []
+                else:
+                    accession = None
+            elif accession is not None:
+                sequences[accession].append(line.strip())
+    missing = sorted(set(wanted) - set(sequences))
+    if missing:
+        raise ReferenceBundleError(
+            f"{len(missing)} chosen protein(s) are absent from {protein_faa}: {missing[:5]}")
+    out = [(gene, acc, "".join(sequences[acc])) for acc, gene in wanted.items()]
+    return sorted(out, key=lambda t: int(t[0]))
+
+
+def write_primary_proteome(proteins: list[tuple[str, str, str]], path: Path) -> None:
+    """FASTA headed by GeneID (OrthoFinder takes the first word as the gene ID)."""
+    with open(path, "w") as fh:
+        for gene, acc, seq in proteins:
+            fh.write(f">{gene} {acc}\n")
+            for i in range(0, len(seq), 80):
+                fh.write(seq[i:i + 80] + "\n")
 
 
 def _decompress(src: Path, dest: Path) -> None:
@@ -234,7 +309,7 @@ def _resolve_refseq_assembly(assembly_value: str) -> dict:
 
 
 def plan_bundle(assembly_value: str, with_genome: bool = False,
-                get_text=_http_get_text) -> dict:
+                get_text=_http_get_text, with_proteins: bool = False) -> dict:
     """Resolve what would be fetched, without downloading any sequence data.
 
     Reads only the NCBI directory listing and ``md5checksums.txt``.
@@ -245,7 +320,8 @@ def plan_bundle(assembly_value: str, with_genome: bool = False,
     folder = find_assembly_folder(get_text(parent), accession)
     base = f"{parent}{folder}/"
     md5s = parse_md5_listing(get_text(f"{base}md5checksums.txt"))
-    wanted = {**CORE_FILES, **(GENOME_FILE if with_genome else {})}
+    wanted = {**CORE_FILES, **(GENOME_FILE if with_genome else {}),
+              **(PROTEIN_FILES if with_proteins else {})}
     files = []
     for suffix, local_name in wanted.items():
         remote = f"{folder}{suffix}"
@@ -259,13 +335,14 @@ def plan_bundle(assembly_value: str, with_genome: bool = False,
 
 def fetch_bundle(assembly_value: str, dest: Path | None = None, with_genome: bool = False,
                  get_text=_http_get_text, download=_http_download,
-                 today: str | None = None) -> dict:
+                 today: str | None = None, with_proteins: bool = False) -> dict:
     """Download, verify and record a reference bundle. Returns the provenance dict.
 
     Compressed files already present with the right MD5 are reused, so a
     re-run (or adding ``--genome`` later) downloads only what is missing.
     """
-    plan = plan_bundle(assembly_value, with_genome=with_genome, get_text=get_text)
+    plan = plan_bundle(assembly_value, with_genome=with_genome, get_text=get_text,
+                       with_proteins=with_proteins)
     record = plan["assembly"]
     dest = Path(dest) if dest else default_bundle_dir(record["ncbi_assembly_accession"])
     dest.mkdir(parents=True, exist_ok=True)
@@ -301,6 +378,18 @@ def fetch_bundle(assembly_value: str, dest: Path | None = None, with_genome: boo
     files.append({"file": "tx2gene.tsv", "sha256": sha256_file(tx2gene),
                   "derived_from": "genomic.gtf", "derivation": "intake.reference_bundle.build_tx2gene"})
 
+    primary = None
+    if with_proteins:
+        proteins = build_primary_proteome(dest / "protein.faa", dest / "feature_table.txt")
+        primary_path = dest / "primary_proteins.faa"
+        write_primary_proteome(proteins, primary_path)
+        files.append({"file": "primary_proteins.faa", "sha256": sha256_file(primary_path),
+                      "derived_from": "protein.faa, feature_table.txt",
+                      "derivation": "intake.reference_bundle.build_primary_proteome"})
+        primary = {"genes": len(proteins), "rule": PRIMARY_PROTEOME_RULE,
+                   "crosswalk_coverage": crosswalk_coverage({g for g, _, _ in proteins},
+                                                            assembly_crosswalk_path(record))}
+
     header = gtf_header(gtf)
     source = header.get("annotation-source")
     gene_ids = {g for _, g in pairs}
@@ -322,6 +411,7 @@ def fetch_bundle(assembly_value: str, dest: Path | None = None, with_genome: boo
         "files": files,
         "tx2gene": {"transcripts": len(pairs), "genes": len(gene_ids)},
         "crosswalk_coverage": crosswalk_coverage(gene_ids, assembly_crosswalk_path(record)),
+        **({"primary_proteome": primary} if primary else {}),
         "not_included": "Salmon and Bismark indexes; the workflows build them from these files.",
     }
     (dest / PROVENANCE_NAME).write_text(json.dumps(provenance, indent=2, sort_keys=True) + "\n")

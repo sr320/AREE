@@ -54,3 +54,7 @@ data/reference/GCF_*
 # Flat study index, generated from registry/studies/*.yaml by `aree build-registry`.
 # Not committed: study branches built in parallel would all conflict on it.
 registry/study_registry.csv
+
+# OrthoFinder intermediates (staged proteomes, DIAMOND results); the run's
+# outputs under data/reference/orthogroups/<run_id>/ ARE committed.
+data/reference/orthogroups/_work/

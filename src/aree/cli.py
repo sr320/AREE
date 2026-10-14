@@ -488,11 +488,14 @@ def build_dashboard_cmd(out_path):
                    "to external storage; see docs/reference_bundles.md).")
 @click.option("--genome", "with_genome", is_flag=True,
               help="Also fetch the genome FASTA (genomic.fna), needed for methylation.")
+@click.option("--proteins", "with_proteins", is_flag=True,
+              help="Also fetch the RefSeq proteins and feature table and write primary_proteins.faa "
+                   "(one protein per gene), the input to `aree build-orthogroups`.")
 @click.option("--plan", "plan_only", is_flag=True,
               help="Only resolve the NCBI folder and checksums; download no sequence data.")
 @click.option("--check", "check_only", is_flag=True,
               help="Verify an existing bundle against its reference_provenance.json.")
-def fetch_reference_cmd(assembly, dest, with_genome, plan_only, check_only):
+def fetch_reference_cmd(assembly, dest, with_genome, with_proteins, plan_only, check_only):
     """Fetch a RefSeq reference bundle (transcriptome, GTF, tx2gene) for raw reanalysis.
 
     Every file is checked against NCBI's MD5s and recorded with SHA-256 in
@@ -523,13 +526,14 @@ def fetch_reference_cmd(assembly, dest, with_genome, plan_only, check_only):
             sys.exit(1 if problems else 0)
 
         if plan_only:
-            plan = plan_bundle(assembly, with_genome=with_genome)
+            plan = plan_bundle(assembly, with_genome=with_genome, with_proteins=with_proteins)
             click.echo(f"{plan['assembly']['assembly_id']}: {plan['base_url']}")
             for f in plan["files"]:
                 click.echo(f"  {f['remote']}  md5 {f['ncbi_md5']}  -> {f['local']}")
             return
 
-        prov = fetch_bundle(assembly, dest=Path(dest) if dest else None, with_genome=with_genome)
+        prov = fetch_bundle(assembly, dest=Path(dest) if dest else None, with_genome=with_genome,
+                            with_proteins=with_proteins)
     except (ReferenceBundleError, OSError) as exc:
         click.echo(click.style(str(exc), fg="red"))
         sys.exit(1)
@@ -546,6 +550,11 @@ def fetch_reference_cmd(assembly, dest, with_genome, plan_only, check_only):
     else:
         click.echo(click.style("  no crosswalk registered for this assembly; gene IDs unchecked",
                                fg="yellow"))
+    if prov.get("primary_proteome"):
+        pp = prov["primary_proteome"]
+        click.echo(f"  primary proteome: {pp['genes']} genes (one protein each)"
+                   + (f", {pp['crosswalk_coverage']['pct']}% in the crosswalk"
+                      if pp["crosswalk_coverage"].get("checked") else ""))
     if not prov["annotation_release_matches_registry"]:
         click.echo(click.style(
             f"  WARNING: GTF annotation-source {prov['gtf_header'].get('annotation-source')!r} "
@@ -553,6 +562,64 @@ def fetch_reference_cmd(assembly, dest, with_genome, plan_only, check_only):
             "Update genome_assemblies.yaml (and rebuild the crosswalk) before using it.",
             fg="red"))
         sys.exit(1)
+
+
+@main.command("build-orthogroups")
+@click.option("--orthofinder", "orthofinder_bin", default="orthofinder", show_default=True,
+              help="OrthoFinder executable; its directory is put first on PATH so its DIAMOND and "
+                   "MCL are used (e.g. ~/miniforge3/envs/orthofinder/bin/orthofinder).")
+@click.option("--threads", default=4, show_default=True, type=int, help="OrthoFinder -t and -a.")
+@click.option("--run-id", default=None,
+              help="Name of the run directory (default: orthofinder<version>_<date>).")
+@click.option("--work-dir", default=None, type=click.Path(),
+              help="Where proteomes are staged and OrthoFinder writes its intermediates "
+                   "(default: data/reference/orthogroups/_work/<run_id>, gitignored).")
+@click.option("--from-results", "from_results", default=None, type=click.Path(exists=True, file_okay=False),
+              help="Read an existing OrthoFinder Results_* directory instead of running OrthoFinder.")
+@click.option("--activate", is_flag=True,
+              help="Make this run the one harmonization attaches to evidence (active.yaml).")
+def build_orthogroups_cmd(orthofinder_bin, threads, run_id, work_dir, from_results, activate):
+    """Infer orthogroups across every species with a crosswalk (OrthoFinder on RefSeq proteomes).
+
+    Needs each species' primary proteome: `aree fetch-reference --assembly <acc> --proteins`.
+    Writes data/reference/orthogroups/<run_id>/ (gene_orthogroups.tsv, orthogroups.tsv,
+    provenance.json). See src/mappings/orthogroups.py.
+    """
+    from datetime import date as _date
+
+    from mappings import orthogroups as og
+
+    try:
+        version = og.orthofinder_version(orthofinder_bin)
+        run_id = run_id or f"orthofinder{version.split()[-1]}_{_date.today().isoformat()}"
+        work = Path(work_dir) if work_dir else og.ORTHOGROUPS_DIR / "_work" / run_id
+        species = og.run_species()
+        staged = og.stage_proteomes(species, work / "proteomes")
+        click.echo(f"Staged {len(staged)} proteomes: "
+                   + ", ".join(f"{s['slug']} ({s['proteins']})" for s in staged))
+        if from_results:
+            results, command = Path(from_results), None
+        else:
+            click.echo(f"Running {version} with {threads} threads (hours for this many proteomes)...")
+            results, command = og.run_orthofinder(work / "proteomes", orthofinder_bin, threads)
+        slug_taxid = {s["slug"]: s["ncbi_taxid"] for s in staged}
+        rows = og.parse_orthogroups(results, slug_taxid)
+        summary = og.summarize(rows, [s["ncbi_taxid"] for s in staged])
+        prov = og.write_run(og.ORTHOGROUPS_DIR / run_id, rows, summary, staged, version=version,
+                            command=command, results_dir=results)
+    except og.OrthogroupError as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    click.echo(click.style(f"Wrote {og.ORTHOGROUPS_DIR / run_id}", fg="green"))
+    click.echo(f"  orthogroups: {prov['orthogroups']['total']} "
+               + ", ".join(f"{k} {v}" for k, v in prov["orthogroups"]["by_copy_class"].items()))
+    for slug, a in prov["per_species"].items():
+        click.echo(f"  {slug:7} {a['in_multi_species_orthogroups']}/{a['genes']} genes in "
+                   "orthogroups shared with another species")
+    if activate:
+        og.activate(run_id)
+        click.echo(f"Active orthogroup run: {run_id}")
 
 
 @main.command("build-crosswalk")

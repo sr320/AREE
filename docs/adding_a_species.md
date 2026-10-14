@@ -18,8 +18,9 @@ crosswalk for each species are registered, so their studies can be harmonized.
   `feature_type` + `simulated` + **`species_taxid`**. The species key keeps two
   species from pooling into one estimate, so same-feature evidence from two
   species produces two pooled rows, by design. Combining across species is only
-  meant to happen through `orthogroup_id`, which is not yet populated (see
-  [roadmap.md](roadmap.md)).
+  meant to happen through `orthogroup_id`, which harmonization now attaches from
+  the active orthogroup run (see
+  [identifier_mapping.md](identifier_mapping.md#orthogroups)).
 - **Identifier resolution follows each study's assembly.** Harmonizing a real
   study reads the `identifier_crosswalk` registered for its `genome_assembly`
   in `data/reference/genome_assemblies.yaml`. Studies of different species in
@@ -95,10 +96,12 @@ crosswalk for each species are registered, so their studies can be harmonized.
    `emersion_desiccation` stressor; and the `byssal_attachment` and
    `burrowing_performance` phenotypes, each with a `resilience_relevance`.
 
-5. **Orthology context across species**, if you want cross-species candidate
-   comparison. The `orthogroup_id` field exists in the crosswalk and evidence
-   schema for exactly this purpose, but real crosswalks ship it empty until an
-   OrthoFinder or OrthoDB run populates it (WP6 in the integration plan).
+5. **Orthology context across species.** Fetch the species' proteins
+   (`aree fetch-reference --assembly <acc> --proteins`), then rebuild the
+   orthogroup run so it includes the new species (`aree build-orthogroups`)
+   and make it active. Orthogroups are inferred jointly, so adding a species
+   means a new run, not an addition to the old one. See
+   [identifier_mapping.md](identifier_mapping.md#orthogroups).
 
 ## Species in a hybridizing complex
 
