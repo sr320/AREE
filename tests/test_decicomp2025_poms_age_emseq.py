@@ -106,15 +106,14 @@ def test_metabolomics_arm_is_context_not_an_accession(study):
     assert study["accessions"]["doi"] is None
 
 
-def test_fastq_manifests_cover_every_run_paired_with_md5s(samplesheet):
-    rows = []
-    for name in ("fastq_manifest.tsv", "fastq_manifest_supplement.tsv"):
-        with open(STUDY_DIR / name) as fh:
-            rows += [(name, r) for r in csv.DictReader(fh, delimiter="\t")]
-    per_run = Counter(r["run_accession"] for _, r in rows)
+def test_fastq_manifest_covers_every_run_paired_with_md5s(samplesheet):
+    with open(STUDY_DIR / "fastq_manifest.tsv") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    per_run = Counter(r["run_accession"] for r in rows)
     assert set(per_run) == {r["run_accession"] for r in samplesheet}
     assert set(per_run.values()) == {2}
-    assert all(len(r["md5"]) == 32 and int(r["bytes"]) > 0 for _, r in rows)
+    assert all(len(r["md5"]) == 32 and int(r["bytes"]) > 0 for r in rows)
     # ERR15996548 has no ENA-processed FASTQ; its submitted files are the only source.
-    supplement = {r["run_accession"] for name, r in rows if name == "fastq_manifest_supplement.tsv"}
-    assert supplement == {"ERR15996548"}
+    submitted = {r["run_accession"] for r in rows if r["source"] == "submitted_ftp"}
+    assert submitted == {"ERR15996548"}
+    assert {r["source"] for r in rows if r["run_accession"] != "ERR15996548"} == {"fastq_ftp"}
