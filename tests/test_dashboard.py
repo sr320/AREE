@@ -90,11 +90,13 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     assert kpis["n_real_pools_k2plus"] == 0
 
     # Cards for the top simulated candidates were copied beside the JSON with
-    # Quarto front matter, and the JSON links to them by site-relative path.
+    # Quarto front matter, and the JSON links to them by a path relative to the
+    # home page, which sits one directory above data.json.
     linked = [r["card_page"] for r in data["candidates"]["top_simulated"] if r["card_page"]]
     assert linked
     for page in linked:
-        card = out.parent / page.replace(".html", ".md")
+        assert page.startswith(f"{out.parent.name}/cards/")
+        card = out.parent.parent / page.replace(".html", ".md")
         assert card.exists()
         text = card.read_text()
         assert text.startswith("---\ntitle:")
