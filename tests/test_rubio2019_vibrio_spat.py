@@ -67,3 +67,21 @@ def test_pathogen_challenge_is_disease_evidence(study):
         assert comp["phenotype"] == "disease_susceptibility"
         assert comp["resilience_classification"] == "disease"
         assert comp["sample_size"] == 6 and comp["biological_replicates"] == 3
+
+
+def test_run_outputs_match_the_registered_comparisons(study):
+    expected = {
+        "vcrass_j29_virulent_vs_mock_8h": ("anesthesis", "Vcrass_J2_9"),
+        "vtasma_lgp32_virulent_vs_mock_8h": ("anesthesis", "Vtasma_LGP32"),
+        "vcrass_virulent_vs_nonvirulent_8h": ("Vcrass_J2_8", "Vcrass_J2_9"),
+        "vtasma_virulent_vs_nonvirulent_8h": ("Vtasma_LMG20012T", "Vtasma_LGP32"),
+    }
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        params = json.loads((STUDY_DIR / f"RUBIO2019_VIBRIO_SPAT_{cid}_workflow_manifest.json").read_text())["parameters"]
+        assert params["comparison_id"] == cid
+        assert (params["control_levels"], params["treatment_levels"]) == ([expected[cid][0]], [expected[cid][1]])
+        assert params["covariates"] == ["experiment"]
+        rows = _tsv(REPO_ROOT / comp["results_file"])
+        assert len(rows) > 20000
+        assert sum(r["lfcSE"] not in ("", "NA") for r in rows) > 0.95 * len(rows)

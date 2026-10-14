@@ -52,8 +52,23 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA515169. Treatment and experiment are in the sample aliases. The untreated time-0 pools are not staged or used. Sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+# QC PASSED WITH WARNINGS, 2026-10-13 (full-depth run of the 15 pools,
+# ~ experiment + condition).
+# - The dispersion screen reads low (0.0035-0.019; 3 of 5 groups under the
+#   0.005 floor). The floor is for single animals: each library pools 30
+#   spat, which by itself lowers dispersion about thirtyfold (0.03 -> ~0.001),
+#   so these values are, if anything, higher than pooling alone predicts.
+#   The expressed-SNP genotype check is not informative here: pools of 30
+#   siblings of one family converge on the family's allele frequencies
+#   whether or not they are separate animals. Replication rests on the paper's
+#   three independent experimental infections, and the model blocks on them
+#   (residual df = 2 per comparison).
+# - Results: padj < 0.05 for 536 (V. crassostreae J2-9) and 480 (V.
+#   tasmaniensis LGP32) genes vs mock, mostly up-regulated; only 5 and 14 for
+#   virulent vs non-virulent at 8 h, i.e. the early host response barely
+#   tells a lethal strain from a harmless one at this time point.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # Four comparisons, prespecified 2026-10-12 before any result, all 3 v 3
 # pools blocked on experiment. meta_analysis_primary = V. crassostreae J2-9
@@ -79,7 +94,7 @@ comparisons:
     sample_size: 6
     biological_replicates: 3
     meta_analysis_primary: true
-    results_file: null
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vcrass_j29_virulent_vs_mock_8h_dge_standardized.tsv"
 
   - comparison_id: "vtasma_lgp32_virulent_vs_mock_8h"
     tissue: "whole_animal"
@@ -97,7 +112,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vtasma_lgp32_virulent_vs_mock_8h_dge_standardized.tsv"
 
   - comparison_id: "vcrass_virulent_vs_nonvirulent_8h"
     tissue: "whole_animal"
@@ -115,7 +130,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vcrass_virulent_vs_nonvirulent_8h_dge_standardized.tsv"
 
   - comparison_id: "vtasma_virulent_vs_nonvirulent_8h"
     tissue: "whole_animal"
@@ -133,7 +148,7 @@ comparisons:
     resilience_classification: "disease"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vtasma_virulent_vs_nonvirulent_8h_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -163,6 +178,10 @@ provenance:
     read from the paper (PMC6628822, 2026-10-12). Comparisons, the experiment
     covariate and meta_analysis_primary fixed before any result. Uses
     --covariates from main (#27); no dependency on other open PRs.
+    Run 2026-10-13 (Nextflow 26.04.7, native): all 30 FASTQ verified
+    against ENA MD5s; first comparison 51/51 tasks, the other three reuse its
+    quantifications. Salmon mapping 74.7-78.3%, library type ISR. Harmonized:
+    114,179 evidence records across the four comparisons.
   source_links:
     - "https://doi.org/10.1073/pnas.1905747116"
     - "https://pmc.ncbi.nlm.nih.gov/articles/PMC6628822/"
