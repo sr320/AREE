@@ -7,11 +7,12 @@
 # PRJNA1132140" for both the RNA-seq and the 16S data, and its methods (2x2
 # factorial, 10 clams per group sequenced, 75 bp single-end) match the deposit.
 #
-# STATUS: REGISTERED, READY TO RUN, NOT YET RUN. The libraries are Lexogen
-# QuantSeq 3' mRNA-seq (3' Tag-Seq), not full-length RNA-seq, so the run
-# configuration sets tag_seq = true (workflow option added in PR #24): no
-# length correction in Salmon or DESeq2. See limitations (1). Tank membership
-# is still unknown; see limitations (2).
+# REANALYZED 2026-10-13 on Pori, fitted on clams with --tag_seq (no length
+# correction in Salmon or DESeq2). Heatwave vs control in naive clams: 1,606
+# of 28,984 genes at padj < 0.05. Primed vs naive under the heatwave: 24 of
+# 28,291. Both are upper bounds: tank, the unit of treatment, is not modelled
+# (limitations 2). Replicate dispersion QC passes (median 0.08-0.12 per
+# group). Salmon mapped 42-49% of reads; see limitations (1).
 
 study_id: TUCCI2025_HEAT_PRIMING
 simulated: false
@@ -46,8 +47,8 @@ data_availability:
   status: "available"
   access_notes: "Raw single-end FASTQ for all 40 RNA-seq libraries are public in ENA/SRA under PRJNA1132140 (first public 2025-06-28). The project also holds 40 paired-end 16S amplicon runs from the same RNA under the same Treatment and Thermal stress attributes; the sample sheet keeps only library_strategy RNA-Seq. Whether supplementary differential-expression tables exist was not checked; they would carry edgeR statistics after RUVSeq normalization and would not be reproduced here. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS PUBLISHED. 2x2 factorial, priming (primed P / naive N) x marine
@@ -88,7 +89,7 @@ comparisons:
     resilience_classification: "exposure_only"
     sample_size: 20
     biological_replicates: 2
-    results_file: null
+    results_file: "data/studies/TUCCI2025_HEAT_PRIMING/TUCCI2025_HEAT_PRIMING_naive_hw_vs_naive_control_dge_standardized.tsv"
     meta_analysis_primary: true
   - comparison_id: "primed_hw_vs_naive_hw"
     tissue: "digestive_gland"
@@ -106,7 +107,7 @@ comparisons:
     resilience_classification: "resilience"
     sample_size: 20
     biological_replicates: 2
-    results_file: null
+    results_file: "data/studies/TUCCI2025_HEAT_PRIMING/TUCCI2025_HEAT_PRIMING_primed_hw_vs_naive_hw_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -124,7 +125,10 @@ limitations: >
   offsets); the workflow manifest's deseq2_design.length_model must read
   "none" for this study. Never run it without tag_seq. Gene-level 3' counts
   also depend on 3' UTR annotation: genes whose RefSeq 3' end is wrong or
-  missing on this contig-level assembly will be under-counted. (2) Tank is the unit of
+  missing on this contig-level assembly will be under-counted. Salmon mapped
+  only 42-49% of reads (mean 46%) to the RefSeq transcriptome, consistent with
+  many 3' tags falling beyond annotated transcript ends; those genes are
+  measured on a fraction of their reads, or not at all. (2) Tank is the unit of
   treatment: each condition ran in two 25 L tanks of 30 clams, so each arm
   rests on 2 tanks. Which tank each sequenced clam came from is not in the
   deposit or the paper, so the analysis cannot be fitted on tanks (as
@@ -192,6 +196,25 @@ provenance:
     et al. 2026, ISME Commun, doi:10.1093/ismeco/ycag059) transplants primed
     microbiomes; its data appear to be PRJNA1292094 (not checked) and it is a
     separate experiment.
+    REANALYSIS (Pori, 2026-10-13): all 40 RNA-seq FASTQs (13.8 GB) were
+    downloaded from ENA and verified against ENA's MD5s; ENA throttled this
+    machine for most of a day, and 12 files needed fresh re-downloads over
+    HTTPS. Both comparisons ran natively (-profile local,workstation, 8 GB
+    resource config) with tag_seq = true, in one work directory: 126 tasks for
+    the primary comparison, then 4 for the second with 122 reused. Both
+    manifests record tag_seq true, length_model "none: counts without length
+    offsets (tag_seq)", 10 vs 10 clams, residual df 18, every reference file
+    matching the GCF_026571515.1 bundle provenance, and no warnings. Salmon
+    mapped 42.3-48.6% of reads per library. Replicate dispersion QC
+    (scripts/check_replicate_dispersion.py, replicate_dispersion_qc.tsv)
+    passes in all four groups: median dispersion 0.082 (Naïve_Heatwave),
+    0.100 (Naïve_No_Heatwave), 0.116 (Primed_Heatwave), 0.092
+    (Primed_No_Heatwave), on about 850 genes per group with mean count >= 500
+    (few, because 3' tag libraries of ~7 M reads are shallow per gene).
+    Harmonized against rphil_gene_id_crosswalk.tsv: every gene resolves exact
+    (28,984 and 28,291 records). DESeq2 calls at padj < 0.05: 1,606 (632 up,
+    974 down) for naive_hw_vs_naive_control, 24 (13 up, 11 down) for
+    primed_hw_vs_naive_hw; the latter is small, as limitations (3) predicts.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1132140"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA1132140"

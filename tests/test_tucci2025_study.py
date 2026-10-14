@@ -90,8 +90,8 @@ def test_tank_replication_and_tag_seq_are_declared(study):
     assert "tank_level_replication" in study["quality_flags"]
     assert all(c["biological_replicates"] == 2 for c in study["comparisons"])
     assert "3' Tag" in study["platform"]
-    assert study["analysis_status"] == "not_started"
-    assert all(c["results_file"] is None for c in study["comparisons"])
+    assert study["analysis_status"] == "harmonized"
+    assert study["qc_status"] == "passed_with_warnings"
 
 
 def test_config_levels_exist_in_the_samplesheet(samplesheet):
@@ -117,3 +117,24 @@ def test_command_line_comparison_id_is_not_shadowed():
     block = re.search(r"rnaseq \{(.*?)\}", text, re.S).group(1)
     assert re.search(r"comparison_id\s*=\s*null", block)
     assert re.search(r"^\s*comparison_id\s*=\s*'naive_hw_vs_naive_control'", text, re.M)
+
+
+@pytest.mark.parametrize("cid", ["naive_hw_vs_naive_control", "primed_hw_vs_naive_hw"])
+def test_each_comparison_was_run_on_the_tag_seq_path(study, cid):
+    """The committed manifest must show the run that produced the results file:
+    tag_seq, no length offsets, 10 vs 10 clams, reference files as fetched."""
+    comp = {c["comparison_id"]: c for c in study["comparisons"]}[cid]
+    assert (REPO_ROOT / comp["results_file"]).exists()
+    manifest = json.loads((STUDY_DIR / f"{STUDY_ID}_{cid}_workflow_manifest.json").read_text())
+    assert manifest["parameters"]["tag_seq"] is True
+    assert manifest["deseq2_design"]["length_model"].startswith("none")
+    assert manifest["deseq2_design"]["n_libraries_or_units"] == 20
+    assert all(f.get("matches_bundle_provenance", True) for f in manifest["reference"]["files"])
+    assert manifest["warnings"] == []
+
+
+def test_replicate_dispersion_qc_passes():
+    with open(STUDY_DIR / "replicate_dispersion_qc.tsv", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    assert {r["condition"] for r in rows} == LEVELS
+    assert all(r["passes"] == "True" for r in rows)
