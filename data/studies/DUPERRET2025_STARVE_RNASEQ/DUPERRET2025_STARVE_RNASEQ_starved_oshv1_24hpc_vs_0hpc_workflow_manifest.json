@@ -7,7 +7,7 @@
   "input_files": [
     {
       "name": "DUPERRET2025_STARVE_RNASEQ_starved_oshv1_24hpc_vs_0hpc_dge_standardized.tsv",
-      "sha256": "e459ee8d30431741bbd1eb4c56750942724a7d73d452973d3e9697e71d7283ad"
+      "sha256": "a258f3e1fdb892e03e23bd5b2d72e1ddad701d0b5a9099a18026e6a5abbdd792"
     }
   ],
   "parameters": {
@@ -26,6 +26,7 @@
     "covariates": [],
     "single_end": true,
     "se_adapter": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+    "tag_seq": false,
     "viral_reference": "data/reference/pathogens/OsHV-1/NC_005881.2.fasta"
   },
   "deseq2_design": {
@@ -33,6 +34,8 @@
     "covariates_requested": [],
     "covariates_used": [],
     "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "lengthScaledTPM counts summed per replicate unit",
     "n_libraries_or_units": 6,
     "residual_df": 4
   },
@@ -80,9 +83,28 @@
   "container_engine": null,
   "reference": {
     "genome_assembly": "GCF_963853765.1",
-    "annotation_version": "GCF_963853765.1-RS_2024_06"
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "/Users/sr320/Documents/GitHub/AREE/.claude/worktrees/non-rnaseq-studies-scan-e82e13/data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "/Users/sr320/Documents/GitHub/AREE/.claude/worktrees/non-rnaseq-studies-scan-e82e13/data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "/Users/sr320/Documents/GitHub/AREE/.claude/worktrees/non-rnaseq-studies-scan-e82e13/data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386"
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "170cae75beb05c1afd9b7b3dbed4bdeb4225c16f9aab757ccc00c2b449092d18"
+      }
+    ],
+    "bundle": null
   },
-  "workflow_start": "2026-10-12T20:19:45.278530-07:00",
+  "workflow_start": "2026-10-13T12:28:30.879942-07:00",
   "qc_metrics": {
     "mean_reads_per_sample": null,
     "mean_mapping_rate_percent": null,
@@ -132,8 +154,8 @@
         "library_id": "ERR14687877",
         "condition": "3_24",
         "pairs_processed": 26939769,
-        "viral_pairs": 718908,
-        "viral_per_million": 26685.75,
+        "viral_pairs": 718907,
+        "viral_per_million": 26685.72,
         "virus_detected": true,
         "excluded_from_de": false
       },
@@ -142,8 +164,8 @@
         "library_id": "ERR14687878",
         "condition": "3_24",
         "pairs_processed": 27732249,
-        "viral_pairs": 746969,
-        "viral_per_million": 26935.03,
+        "viral_pairs": 746971,
+        "viral_per_million": 26935.1,
         "virus_detected": true,
         "excluded_from_de": false
       },
@@ -152,8 +174,8 @@
         "library_id": "ERR14687879",
         "condition": "3_24",
         "pairs_processed": 31048530,
-        "viral_pairs": 336706,
-        "viral_per_million": 10844.51,
+        "viral_pairs": 336699,
+        "viral_per_million": 10844.28,
         "virus_detected": true,
         "excluded_from_de": false
       },
@@ -351,6 +373,7 @@
     "no_viral_reads_in_challenged_sample: P_F14R_5_24_2 (5_24) has 5.4 viral pairs per million, below the 100 threshold",
     "no_viral_reads_in_challenged_sample: P_F14R_5_24_3 (5_24) has 9.0 viral pairs per million, below the 100 threshold",
     "no_viral_reads_in_challenged_sample: P_F11N_5_24_2 (5_24) has 11.2 viral pairs per million, below the 100 threshold",
-    "no_viral_reads_in_challenged_sample: P_F11N_5_24_3 (5_24) has 6.9 viral pairs per million, below the 100 threshold"
+    "no_viral_reads_in_challenged_sample: P_F11N_5_24_3 (5_24) has 6.9 viral pairs per million, below the 100 threshold",
+    "reference_bundle_provenance_missing: no reference_provenance.json beside the reference files; fetch them with `aree fetch-reference` to record where they came from"
   ]
 }
