@@ -13,7 +13,7 @@
 # the same animals is not stated. No publication cites this accession; the
 # MetaboLights record names a manuscript in preparation (Valdivieso et al.).
 #
-# NOT YET RUN. 60 paired-end libraries, 699.7 GB of FASTQ; see the config for
+# NOT YET RUN. 60 paired-end libraries, 710.5 GB of FASTQ; see the config for
 # storage and runtime notes.
 
 study_id: DECICOMP2025_POMS_AGE_EMSEQ
@@ -40,13 +40,13 @@ annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["methylation"]
 analysis_mode: "raw_reanalysis"
-platform: "Illumina NovaSeq 6000, paired-end Enzymatic Methyl-seq (EM-seq). 60 libraries, 143-213 M read pairs each (median about 173 M), 699.7 GB of FASTQ reported by ENA. ENA library_strategy is Bisulfite-Seq. The project description says NextSeq 550 and calls the assay 'RNA-Seq ... on extracted DNA using the EM-seq kit'; the run records (NovaSeq 6000, Bisulfite-Seq) are taken as authoritative."
+platform: "Illumina NovaSeq 6000, paired-end Enzymatic Methyl-seq (EM-seq). 60 libraries, 143-213 M read pairs each (median about 173 M), 710.5 GB of FASTQ reported by ENA. ENA library_strategy is Bisulfite-Seq. The project description says NextSeq 550 and calls the assay 'RNA-Seq ... on extracted DNA using the EM-seq kit'; the run records (NovaSeq 6000, Bisulfite-Seq) are taken as authoritative."
 
 data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "Raw paired-end FASTQ for all 60 runs are public in ENA under PRJEB105019 (first public 2025-12-06). No methylation calls or publication are available. Sample sheet, methylKit sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. One run, ERR15996548 (F14R_C3_T0_S3, in the primary comparison's reference arm), has no ENA-processed FASTQ (empty fastq_ftp); only the submitter's files are listed (submitted_ftp, with MD5s). fetch-samplesheet silently left it out of fastq_manifest.tsv, so those two files and their MD5s are in fastq_manifest_supplement.tsv. Released before any publication: check reuse expectations with the submitters before publishing results."
+  access_notes: "Raw paired-end FASTQ for all 60 runs are public in ENA under PRJEB105019 (first public 2025-12-06). No methylation calls or publication are available. Sample sheet, methylKit sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. One run, ERR15996548 (F14R_C3_T0_S3, in the primary comparison's reference arm), has no ENA-processed FASTQ (empty fastq_ftp); only the submitter's files are listed (submitted_ftp, with MD5s). fastq_manifest.tsv uses those two files for it (source = submitted_ftp). Released before any publication: check reuse expectations with the submitters before publishing results."
 
 qc_status: "not_started"
 analysis_status: "not_started"
@@ -141,7 +141,7 @@ quality_flags:
   - ambiguous_phenotype_definition
 
 limitations: >
-  (1) Not yet run: 699.7 GB of paired-end FASTQ. Staging needs a drive with
+  (1) Not yet run: 710.5 GB of paired-end FASTQ. Staging needs a drive with
   room (Monarch had 167 GB free on 2026-10-13), and Bismark at about 174 M
   read pairs per library is a multi-day job. (2) Resistant vs susceptible:
   how individuals were classed R or S at 500 hpc is not deposited. Both
@@ -185,11 +185,14 @@ provenance:
     --condition-attribute cohort --condition-attribute group --attribute
     family --attribute replicate --attribute phenotype --attribute age
     --attribute isolate --attribute tissue_type --methylkit-levels C3_T0
-    C8_T0`. fastq_manifest.tsv covers 59 runs: ERR15996548 has no
-    fastq_ftp in ENA's read_run report, and fetch-samplesheet drops such runs
-    silently (tool issue flagged separately). Its submitted files were added
-    in fastq_manifest_supplement.tsv from the ENA read_run filereport fields
-    submitted_ftp, submitted_md5 and submitted_bytes (queried 2026-10-13).
+    C8_T0`. ERR15996548 has no fastq_ftp in ENA's read_run report.
+    fetch-samplesheet first dropped it from fastq_manifest.tsv silently, and
+    its submitted files were added by hand in a supplement file. After the
+    tool learned to fall back to submitted FASTQ (sr320/AREE#47), the
+    manifest was regenerated (2026-10-13) with the same command: it now
+    covers all 60 runs, ERR15996548 with source = submitted_ftp and the
+    submitter's MD5s, matching the former supplement row for row. The other
+    59 runs, the sample sheet and the methylKit sheet were unchanged.
     Cross-checks on all 60 runs: the parsed group matches the
     BioSample phenotype, the cohort code matches the BioSample age, and the
     family matches the isolate. Group sizes: 6 per family in each of C3_T0,

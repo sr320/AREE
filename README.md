@@ -146,11 +146,12 @@ AREE/
 | `aree start-study --accession <acc> --study-id <id>` | Claim a study for this machine: branch `study/<acc>/<id>` in its own worktree, stub YAML + config, draft PR |
 | `aree check-study-scope --branch <b>` | Fail if a study branch changes files its study does not own (run by CI) |
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
-| `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table, with BH-adjusted p-values per phenotype / feature-type family |
+| `aree meta-analyze [--phenotype <p>] [--feature-type <t>] [--level gene\|orthogroup] [--include-multi-copy]` | Random-effects meta-analysis over the evidence table, with BH-adjusted p-values per phenotype / feature-type family; `--level orthogroup` pools species' gene-level estimates across species through single-copy orthogroups |
 | `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>] [--max-adjusted-p <q>] [--all-cards]` | Rank every candidate into `reports/evidence_cards/candidates.tsv` and write an evidence card for each one with a BH-adjusted p ≤ `q` (default 0.05, pooled or in any contributing study) |
 | `aree top-candidates [--n <N>] [--candidates <path>] [--out <path>]` | Regroup an existing `candidates.tsv` by phenotype and write the top `N` (default 10) per phenotype, ranked by tier then score, to `reports/top_candidates_summary.md` |
 | `aree build-crosswalk --taxid <n> [--slug <s>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB for a registered species |
-| `aree fetch-reference --assembly <acc> [--genome] [--plan] [--check]` | Fetch, verify and record a RefSeq reference bundle (transcriptome, GTF, tx2gene, optional genome) for raw reanalysis |
+| `aree fetch-reference --assembly <acc> [--genome] [--proteins] [--plan] [--check]` | Fetch, verify and record a RefSeq reference bundle (transcriptome, GTF, tx2gene, optional genome, optional one-protein-per-gene proteome) |
+| `aree build-orthogroups --orthofinder <path> [--threads N] [--activate]` | Infer orthogroups across every species with a crosswalk (OrthoFinder on RefSeq proteomes); writes `data/reference/orthogroups/<run_id>/` |
 | `aree build-dashboard [--out <path>]` | Summarize registry, pipeline, and findings state into `docs/dashboard/data.json` (plus the top candidates' evidence cards) for the Quarto dashboard page |
 
 ## Working with real data

@@ -419,7 +419,11 @@ def test_real_crosswalk_has_a_retired_gene_id_sidecar(committed_crosswalk):
 def test_real_crosswalk_resolves_a_known_gene(real_crosswalk):
     """LOC105331241 is a real M. gigas gene (coadhesin). It is also used by the demo
     crosswalk under a fabricated identity, which is why the two files stay separate."""
+    from mappings.orthogroups import gene_orthogroup
+
     resolved = resolve_identifier("LOC105331241", "locus_id")
     assert resolved.mapping_confidence == "exact"
     assert resolved.feature_id_standardized == "105331241"
-    assert resolved.orthogroup_id is None
+    # The crosswalk carries no orthogroup; resolution takes it from the active
+    # orthogroup run (data/reference/orthogroups/active.yaml), if there is one.
+    assert resolved.orthogroup_id == gene_orthogroup("105331241")

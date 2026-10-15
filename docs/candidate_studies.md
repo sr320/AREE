@@ -347,7 +347,7 @@ The stress-relevant ones are mostly unreplicated:
 | `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Best ncRNA candidate.** Whole-transcriptome (miRNA + lncRNA-capable stranded RNA-seq) on breeding lines. The stressor/phenotype behind "HH vs CC" must be recovered from the paper. Probably growth or heat line, not confirmed. |
 | `PRJNA750516` | 2 miRNA + 6 lncRNA-labelled RNA | two groups (RZ_GH vs KTD_GL), **one sample alias each** | Skip: replicates are re-sequenced libraries of one sample. |
 | `PRJNA694837` | 6 miRNA + 6 RNA | BM vs OM mantle, n=3 | Probably shell colour/biomineralization. No stressor, so low priority. |
-| `PRJNA341808` ❌ | 3 miRNA + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | **Rejected 2026-10-13: pseudo-replicated.** Each group's three runs are one RNA pool sequenced three times (genotype screen; see *Rejected* below). The "miRNA-Seq" control runs are full-size libraries, mislabelled. |
+| `PRJNA341808` ❌ | 3 "miRNA" + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | **Rejected 2026-10-14** (see *Rejected* below): the replicates are technical, and the "miRNA-Seq" control runs are mislabelled RNA-seq. |
 | `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. |
 | `PRJNA266361`, `PRJNA259995`, `PRJNA232734` | 1–3 | miRNA stress/atlas, single pooled sample | Skip: unreplicated. |
 
@@ -433,15 +433,39 @@ times (within-arm allele-frequency difference 0.061 against 0.051 for one
 RNA). The two arms also descend from different parents, so parental pH is
 confounded with parental genotype.
 
-`PRJNA341808` — *"Magallana gigas Transcriptome or Gene expression"*, larvae
-under bacteria / heat / both / control, Ion Torrent (IOCAS, 2016). Each
-group's three runs share **one BioSample**, which is the first warning. An
-expressed-SNP screen on the first ~2 M reads of the control and heat runs
-(2026-10-13, 167 sites) settled it without a full download. Within a group,
-runs differ in allele frequency by **0.062**, which is the **0.057** expected
-from one RNA sample (r = 0.83). Between groups they differ by 0.146. So each
-arm is one larval pool sequenced three times, with effective n = 1. The deposit's
-own analysis reported 9,472 DE genes, the familiar symptom.
+`PRJNA341808`: *C. gigas* D-hinged larvae, control / bacteria / heat /
+bacteria + heat, 3 Ion Torrent runs per group, 26.2 GB. **Rejected before
+download, 2026-10-14**, by `scripts/prescreen_replicates.py`. It is the
+first study turned away by the pre-screen, not after a full reanalysis.
+
+Each group's three runs share one BioSample (`SAMN05728707`–`10`) and one
+`sample_alias`, which was already a warning. The pre-screen, run on the first
+1 M reads per run from NCBI, gave these median dispersions:
+
+| Group | Median dispersion |
+|---|---|
+| heat | −0.0010 |
+| bacteria | 0.0039 |
+| control | 0.0050 |
+| bacteria + heat | 0.0058 |
+
+Two groups fail and two sit at the 0.005 threshold. The pre-screen reads high
+(LI2022_HEAT_PLOIDY's real replicates scored 0.019–0.022 on it), so all four
+groups are in the technical-replicate range. Each group is most likely one
+larval RNA sample sequenced three times.
+
+Two things the screen also settled:
+- The three control runs deposited as `miRNA-Seq` are ordinary RNA-seq. They
+  map to the transcriptome as well as the stress runs (55% vs 53–58%).
+- A genotype check could not have decided this case. Larval pools from one
+  cross share parental genotypes, whether or not the pools are independent.
+
+An expressed-SNP screen run independently on 2026-10-13 (first ~2 M reads
+of the control and heat runs, 167 sites) agrees but cannot decide alone:
+runs within a group differ in allele frequency by 0.062 against 0.057
+expected from one RNA sample, and groups differ from each other by 0.146.
+That is what one RNA per group looks like, but large pools from one cross
+would look much the same, as noted above.
 
 `PRJNA694496` — Tan et al. 2021, *Front Physiol*
 ([10.3389/fphys.2021.663023](https://doi.org/10.3389/fphys.2021.663023)),
@@ -463,11 +487,14 @@ match the 23 °C arm (`C23-n`) of the same lab's `PRJNA756710`
 control would cross BioProjects and probably sequencing batches, so it is not
 done. A within-infection time contrast is not stress-vs-control evidence.
 
-**Two lessons from this batch.** One BioSample per group, or a whole study
-under one BioSample, is the cheapest early warning of pseudo-replication.
-And the expressed-SNP screen (`check_replicate_genotypes.py`, currently in
-sr320/AREE-co) needs only a few hundred MB per library, so it can reject a
-study before the full download.
+**Two lessons from these rejections.** One BioSample per group, or a whole
+study under one BioSample, is the cheapest early warning of
+pseudo-replication. And replication can be checked before the full download:
+`scripts/prescreen_replicates.py` does it from a subsample. An expressed-SNP
+genotype check (`check_replicate_genotypes.py`, currently in sr320/AREE-co)
+complements it when libraries are single animals or small pools of unrelated
+animals. It cannot decide for large pools of siblings, which converge on
+their parents' allele frequencies whether or not they are independent.
 
 ## Sourcing notes
 

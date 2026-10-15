@@ -26,6 +26,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     path quant_dirs, stageAs: 'quants/*'
     path tx2gene
     path sample_sheet
+    path exclude_genes
 
     output:
     tuple val(study_id), val(comparison_id), path("${study_id}_${comparison_id}_deseq2_raw.tsv"), emit: results
@@ -63,6 +64,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         replicate_unit  = "${replicate_unit}",
         covariates      = "${covariates}",
         tag_seq         = ${tag_seq ? 'TRUE' : 'FALSE'},
+        exclude_genes   = "${exclude_genes}",
         out_tsv        = "${study_id}_${comparison_id}_deseq2_raw.tsv",
         out_rdata      = "${study_id}_${comparison_id}_deseq2.RData",
         out_design     = "${study_id}_${comparison_id}_deseq2_design.json"
@@ -256,6 +258,41 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
     tx2gene\$transcript_id <- sub("\\\\..*", "", tx2gene\$transcript_id)
     tx2gene <- unique(tx2gene)
 
+    # Genes dropped before anything is estimated, e.g. rRNA in total-RNA
+    # libraries (65-97% of counts in ZHONG2025_PONV1_MORTALITY). Measured
+    # there, it leaves median-of-ratios size factors unchanged; what it
+    # changes is that rRNA genes no longer appear as results, and the share
+    # they held is recorded. Ids are gene_ids as in tx2gene, one
+    # per line; '#' starts a comment. A list that matches nothing is an error,
+    # so a list built for another annotation cannot silently do nothing.
+    exclude_ids <- character(0)
+    exclude_used <- basename(args\$exclude_genes) != "NO_EXCLUDE_GENES"
+    if (exclude_used) {
+        lines <- trimws(sub("#.*\$", "", readLines(args\$exclude_genes, warn = FALSE)))
+        exclude_ids <- unique(lines[nzchar(lines)])
+        if (length(exclude_ids) == 0) stop("exclude_genes lists no gene_ids: ", args\$exclude_genes)
+    }
+    exclusion <- list(n_listed = length(exclude_ids), n_excluded = 0L,
+                      fraction = c(min = 0, median = 0, max = 0))
+    drop_genes <- function(txi) {
+        if (!exclude_used) return(txi)
+        hit <- rownames(txi\$counts) %in% exclude_ids
+        if (!any(hit)) {
+            stop("none of the ", length(exclude_ids), " gene_ids in exclude_genes (",
+                 basename(args\$exclude_genes), ") are among the quantified genes; ",
+                 "check that the list was built from the same annotation as tx2gene")
+        }
+        frac <- colSums(txi\$counts[hit, , drop = FALSE]) / colSums(txi\$counts)
+        exclusion\$n_excluded <<- sum(hit)
+        exclusion\$fraction <<- c(min = min(frac), median = median(frac), max = max(frac))
+        message(sprintf("exclude_genes: dropped %d of %d listed genes, %.1f%%-%.1f%% of each library's counts",
+                        sum(hit), length(exclude_ids), 100 * min(frac), 100 * max(frac)))
+        for (m in c("counts", "abundance", "length")) {
+            if (!is.null(txi[[m]])) txi[[m]] <- txi[[m]][!hit, , drop = FALSE]
+        }
+        txi
+    }
+
     # 3' tag libraries (QuantSeq-style) give about one read per transcript, so
     # a gene's count does not scale with transcript length. Their counts are
     # used as they are, with no tximport length offset or length scaling.
@@ -275,6 +312,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         # per-sample length offsets cannot, so they are folded in here.
         txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE,
                         countsFromAbundance = if (args\$tag_seq) "no" else "lengthScaledTPM")
+        txi <- drop_genes(txi)
         unit_counts <- t(rowsum(t(txi\$counts), group = samples\$replicate_unit))
         unit_info <- unique(samples[, c("replicate_unit", "condition", covariates_used)])
         unit_info\$n_libraries <- as.integer(table(samples\$replicate_unit)[unit_info\$replicate_unit])
@@ -287,6 +325,7 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         col_data <- unit_info
     } else {
         txi <- tximport(quant_files, type = "salmon", tx2gene = tx2gene, ignoreTxVersion = TRUE)
+        txi <- drop_genes(txi)
         col_data <- samples
     }
 
@@ -347,6 +386,14 @@ process DIFFERENTIAL_EXPRESSION_DESEQ2 {
         paste0('  "covariates_dropped_constant": ', json_arr(covariates_dropped), ","),
         paste0('  "tag_seq": ', if (args\$tag_seq) "true" else "false", ","),
         paste0('  "length_model": ', json_str(length_model), ","),
+        paste0('  "exclude_genes": ', if (exclude_used) paste0("{",
+            '"file": ', json_str(basename(args\$exclude_genes)), ", ",
+            '"md5": ', json_str(unname(tools::md5sum(args\$exclude_genes))), ", ",
+            '"n_listed": ', exclusion\$n_listed, ", ",
+            '"n_excluded": ', exclusion\$n_excluded, ", ",
+            '"count_fraction_min": ', signif(exclusion\$fraction[["min"]], 4), ", ",
+            '"count_fraction_median": ', signif(exclusion\$fraction[["median"]], 4), ", ",
+            '"count_fraction_max": ', signif(exclusion\$fraction[["max"]], 4), "}") else "null", ","),
         paste0('  "n_libraries_or_units": ', nrow(mm), ","),
         paste0('  "residual_df": ', residual_df),
         "}"
