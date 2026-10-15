@@ -76,20 +76,82 @@ html`<div class="kpi-grid">
 
 ```{ojs}
 {
-  const pools = data.pools.filter(p => !p.simulated);
-  const classes = data.candidates.by_evidence_class.filter(d => !d.simulated);
-  const poolText = pools.length
-    ? pools.map(p => `${p.studies.join(" and ")} pool on <em>${phen(p.phenotype)}</em>: ${fmt(p.n_features_k2plus)} genes measured in both, ${fmt(p.n_features_k2plus_significant)} significant after multiple-testing correction`).join("; ")
-    : "no cross-study pool has formed yet";
-  const classText = classes.map(d => `${fmt(d.n)} ${d.evidence_class.replace(/_/g, " ")}`).join(", ");
-  const gap = k.n_real_comparisons_with_resilience_phenotype === 0
-    ? "No real comparison measures a resilience outcome yet."
-    : `${k.n_real_comparisons_with_resilience_phenotype} of ${k.n_comparisons_real} real comparisons measure a resilience outcome.`;
-  return html`<p>${poolText}. Ranked candidates by evidence class: ${classText}.</p>
-  <p>${gap} All real studies so far are RNA-seq pathogen challenges, so the ranked list reflects transcriptional
-  response to infection, not resistance. A candidate here is an association across the available evidence, not a
-  validated biomarker. The next curation step is a second stressor class and a study with a measured survival or
-  pathogen-load phenotype (<a href="candidate_studies.html">candidate studies</a>).</p>`;
+  // Every sentence below is computed from data.json, so it stays current as studies are added.
+  const ASSAY = {rnaseq: "RNA-seq", methylation: "methylation", proteomics: "proteomics", metabolomics: "metabolomics"};
+  const assay = (a) => ASSAY[a] ?? a;
+  const list = (xs) => xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+  // Lower-case a label mid-sentence, leaving acronyms like "pH" alone.
+  const lc = (s) => s.split(" ").map(w => w.length > 1 && w[1] === w[1].toLowerCase() ? w[0].toLowerCase() + w.slice(1) : w).join(" ");
+  const relevance = (id) => data.vocab.phenotype_resilience_relevance?.[id];
+
+  const real = data.studies.filter(s => !s.simulated);
+  const withEvidence = real.filter(s => s.n_evidence_records > 0);
+  const assaysRegistered = [...new Set(real.flatMap(s => s.assay_types))];
+  const assaysWithEvidence = new Set(withEvidence.flatMap(s => s.assay_types));
+  const awaiting = real.filter(s => s.n_evidence_records === 0 && s.qc_status !== "failed"
+                                    && s.assay_types.some(a => !assaysWithEvidence.has(a)));
+  const failed = real.filter(s => s.qc_status === "failed");
+
+  const pools = data.pools.filter(p => !p.simulated && p.feature_type === "gene");
+  const cross = pools.filter(p => p.max_k >= 2).sort((a, b) => b.studies.length - a.studies.length);
+  const single = pools.filter(p => p.max_k < 2);
+
+  const classes = data.candidates.by_evidence_class.filter(d => !d.simulated).sort((a, b) => b.n - a.n);
+  const nRanked = classes.reduce((s, d) => s + d.n, 0);
+  const top = data.candidates.top_real;
+  const topPhens = [...new Set(top.map(r => r.phenotype))];
+
+  const coverage = html`<p>${real.length} real studies cover ${k.n_real_stressor_classes} stressor
+    ${k.n_real_stressor_classes === 1 ? "class" : "classes"}
+    (${list(k.real_stressor_classes.map(s => lc(stress(s))))}) and
+    ${list(assaysRegistered.map(assay))} assays. ${withEvidence.length
+      ? `${withEvidence.length} of them have harmonized evidence (${k.n_comparisons_real_harmonized} of
+         ${k.n_comparisons_real} comparisons), ${assaysWithEvidence.size === 1 ? "all" : "spanning"}
+         ${list([...assaysWithEvidence].map(assay))}.`
+      : "None has harmonized evidence yet."}</p>`;
+
+  const poolItems = cross.map(p => html`<li><strong>${phen(p.phenotype)}</strong>
+    (${p.studies.length} studies: ${p.studies.join(", ")}): ${fmt(p.n_features_k2plus)} genes measured in at
+    least two studies, ${fmt(p.n_features_k2plus_significant)} with a pooled effect significant after
+    multiple-testing correction.</li>`);
+  const poolBlock = cross.length
+    ? html`<p>Cross-study pools, where the same gene can be compared between independent studies:</p><ul>${poolItems}</ul>`
+    : html`<p>No cross-study pool has formed yet; every phenotype is supported by a single study.</p>`;
+  const singleText = single.length
+    ? html`<p>${list(single.map((p, i) => i ? lc(phen(p.phenotype)) : phen(p.phenotype)))} ${single.length === 1 ? "has" : "have"} evidence from one
+      study only (${list(single.flatMap(p => p.studies))}), so ${single.length === 1 ? "its" : "their"} genes stay
+      <em>emerging</em> until a second study replicates them.</p>`
+    : "";
+
+  const tierText = html`<p>${fmt(nRanked)} gene × phenotype candidates are ranked:
+    ${fmt(k.n_candidates_real_high_priority)} high priority (replicated across studies),
+    ${fmt(k.n_candidates_real_multi_omics)} multi-omics, ${fmt(k.n_candidates_real_emerging)} emerging.
+    By evidence class: ${classes.map(d => `${fmt(d.n)} ${d.evidence_class.replace(/_/g, " ")}`).join(", ")}.</p>`;
+
+  const caveats = [];
+  caveats.push(`${k.n_real_comparisons_with_resilience_phenotype} of ${k.n_comparisons_real} real comparisons
+    measure a resilience outcome; the rest measure disease, stress response, or exposure alone.`);
+  if (topPhens.length === 1 && relevance(topPhens[0]) !== "resilience")
+    caveats.push(`The top-ranked candidates all come from the <em>${lc(phen(topPhens[0]))}</em> pool, so they describe the response to ${relevance(topPhens[0]) === "disease" ? "infection" : "the stressor"},
+      not resistance to it; each pool's own top candidates are listed below.`);
+  if (k.n_candidates_real_multi_omics === 0)
+    caveats.push(`The multi-omics tier is empty because no non-RNA-seq study has been harmonized yet.`);
+  caveats.push(`A candidate here is an association across the available evidence, not a validated biomarker.`);
+
+  const next = [];
+  if (awaiting.length)
+    next.push(`harmonize the registered ${list([...new Set(awaiting.flatMap(s => s.assay_types)
+      .filter(a => !assaysWithEvidence.has(a)))].map(assay))} studies (${awaiting.map(s => s.study_id).join(", ")})
+      to open the multi-omics tier`);
+  if (single.length)
+    next.push(`find a second study for ${list(single.map(p => lc(phen(p.phenotype))))}`);
+  if (failed.length)
+    next.push(`resolve the QC failures in ${failed.map(s => s.study_id).join(", ")}`);
+
+  return html`${coverage}${poolBlock}${singleText}${tierText}
+    ${Object.assign(document.createElement("p"), {innerHTML: caveats.join(" ")})}
+    ${next.length ? html`<p>Next curation steps: ${list(next)}
+      (<a href="candidate_studies.html">candidate studies</a>).</p>` : ""}`;
 }
 ```
 
@@ -109,8 +171,8 @@ html`<p>Ranked by tier, then score${topPhen ? html`, all for <em>${topPhen}</em>
 ```
 
 ```{ojs}
-Inputs.table(data.candidates.top_real, {
-  columns: ["feature_id_standardized", "gene_description", ...(topPhen ? [] : ["phenotype_label"]),
+candidateTable = (rows, {showPhenotype = false, maxRows = 15} = {}) => Inputs.table(rows, {
+  columns: ["feature_id_standardized", "gene_description", ...(showPhenotype ? ["phenotype_label"] : []),
             "tier", "k_studies", "pooled_effect", "adjusted_p_value"],
   header: {feature_id_standardized: "Gene", gene_description: "Description", phenotype_label: "Phenotype",
            tier: "Tier", k_studies: "Studies", pooled_effect: "log2FC", adjusted_p_value: "Adj. p"},
@@ -121,8 +183,31 @@ Inputs.table(data.candidates.top_real, {
     pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
     adjusted_p_value: fmtP
   },
-  rows: 15, layout: "auto"
+  rows: maxRows, layout: "auto"
 })
+```
+
+```{ojs}
+candidateTable(data.candidates.top_real, {showPhenotype: !topPhen})
+```
+
+### Top candidates per pool
+
+```{ojs}
+{
+  // The overall list above is dominated by the pool with the most studies, so each
+  // cross-study pool also shows its own best candidates.
+  const byPhen = data.candidates.top_real_by_phenotype ?? {};
+  const pools = data.pools
+    .filter(p => !p.simulated && p.feature_type === "gene" && p.max_k >= 2 && byPhen[p.phenotype]?.length)
+    .sort((a, b) => b.studies.length - a.studies.length || a.phenotype.localeCompare(b.phenotype));
+  if (!pools.length) return html`<p>No cross-study pool has ranked candidates yet.</p>`;
+  return html`${pools.map(p => html`
+    <h4>${phen(p.phenotype)}</h4>
+    <p class="dash-meta">${p.studies.length} studies (${p.studies.join(", ")}); top ${byPhen[p.phenotype].length}
+      by tier, then score.</p>
+    ${candidateTable(byPhen[p.phenotype], {maxRows: byPhen[p.phenotype].length})}`)}`;
+}
 ```
 
 ## Studies
