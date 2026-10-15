@@ -1,0 +1,66 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "GEORGE2023_HEATWAVE_PLOIDY",
+  "comparison_id": "diploid_30c_44c_emersion_vs_control_20c",
+  "input_files": [
+    {
+      "name": "GEORGE2023_HEATWAVE_PLOIDY_diploid_30c_44c_emersion_vs_control_20c_dge_standardized.tsv",
+      "sha256": "15b8eb6cef88baa274f5dec94c5658342e9a199a3f625246335efe65f0e9db44"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "GEORGE2023_HEATWAVE_PLOIDY",
+    "comparison_id": "diploid_30c_44c_emersion_vs_control_20c",
+    "outdir": "results/rnaseq/GEORGE2023_HEATWAVE_PLOIDY",
+    "exclude_samples": [
+      "D54",
+      "N56",
+      "X44",
+      "R53",
+      "M43",
+      "N54",
+      "X42",
+      "T62"
+    ],
+    "control_levels": [
+      "diploid_control"
+    ],
+    "treatment_levels": [
+      "diploid_multiple_stressor"
+    ],
+    "replicate_unit": null,
+    "single_end": true,
+    "tag_seq": true,
+    "viral_reference": null
+  },
+  "software_versions": {
+    "fastqc": "0.12.1",
+    "fastp": "0.23.4",
+    "salmon": "1.10.3",
+    "star": "2.7.11b",
+    "multiqc": "1.21",
+    "bioconductor_docker": "RELEASE_3_18",
+    "deseq2": "1.42.0",
+    "tximport": "1.30.0",
+    "quarto": "1.5.57",
+    "python": "3.11"
+  },
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-11T08:46:33.130500-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": [
+    "samples_excluded_by_curation: D54, N56, X44, R53, M43, N54, X42, T62 (see the study registry for the reason)"
+  ]
+}
