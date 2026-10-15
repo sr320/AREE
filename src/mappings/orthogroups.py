@@ -298,6 +298,21 @@ def gene_orthogroup(gene_id: str) -> str | None:
 gene_orthogroup.cache_clear = _gene_table.cache_clear  # type: ignore[attr-defined]
 
 
+def active_copy_classes() -> dict[str, str]:
+    """orthogroup_id -> copy class for the active run (empty if none is active)."""
+    run_dir = active_run_dir()
+    if run_dir is None:
+        return {}
+    out = {}
+    with open(run_dir / "orthogroups.tsv") as fh:
+        header = fh.readline().rstrip("\n").split("\t")
+        i_og, i_class = header.index("orthogroup_id"), header.index("copy_class")
+        for line in fh:
+            fields = line.rstrip("\n").split("\t")
+            out[fields[i_og]] = fields[i_class]
+    return out
+
+
 def active_run_ref() -> dict | None:
     """Run ID and checksum of the active run, for harmonization manifests."""
     run_dir = active_run_dir()

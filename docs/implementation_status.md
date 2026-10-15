@@ -74,9 +74,10 @@ worth less than one that says what it got wrong.
 - Extending the intake converter beyond differential-expression tables to the
   methylation, proteomics, and metabolomics input contracts.
 - Cross-species pooling. Orthogroups exist (OrthoFinder run
-  `orthofinder3.1.5_2026-10-13`, attached to evidence at harmonization), but
-  orthogroup-level meta-analysis, cross-species candidates and their evidence
-  cards are not built; see WP6 in mussel_clam_integration_plan.md.
+  `orthofinder3.1.5_2026-10-13`, attached to evidence at harmonization) and
+  orthogroup-level meta-analysis exists (`aree meta-analyze --level
+  orthogroup`), but cross-species candidates, their evidence cards and the
+  dashboard gate are not built; see WP6 in mussel_clam_integration_plan.md.
 - Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
   cross-references to NCBI GeneID — most likely by mapping RefSeq protein
   accessions through the NCBI annotation rather than relying on UniProt xrefs.
