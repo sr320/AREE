@@ -1,0 +1,222 @@
+# FIRST REAL CLAM STUDY REGISTERED IN AREE, and the first real study of a
+# species other than the Pacific oyster. Claimed 2026-10-12 from the WP5
+# backlog (docs/candidate_studies_mussels_clams.md, pool A: Manila clam heat).
+#
+# Registered from deposited metadata and the publication, which is CONFIRMED:
+# Tucci et al. 2025 (iScience, open access, PMC12314336) gives "BioProject ID:
+# PRJNA1132140" for both the RNA-seq and the 16S data, and its methods (2x2
+# factorial, 10 clams per group sequenced, 75 bp single-end) match the deposit.
+#
+# REANALYZED 2026-10-13 on Pori, fitted on clams with --tag_seq (no length
+# correction in Salmon or DESeq2). Heatwave vs control in naive clams: 1,606
+# of 28,984 genes at padj < 0.05. Primed vs naive under the heatwave: 24 of
+# 28,291. Both are upper bounds: tank, the unit of treatment, is not modelled
+# (limitations 2). Replicate dispersion QC passes (median 0.08-0.12 per
+# group). Salmon mapped 42-49% of reads; see limitations (1).
+
+study_id: TUCCI2025_HEAT_PRIMING
+simulated: false
+
+accessions:
+  doi: "10.1016/j.isci.2025.113108"
+  bioproject: "PRJNA1132140"
+  geo: null
+  sra: "SRR29712776-SRR29712815 (40 RNA-seq runs)"
+  ena: "PRJNA1132140"
+  proteomexchange: null
+  other: "BioSamples SAMN42331779-SAMN42331818 (one per clam, RNA-seq). The same BioProject holds 40 16S amplicon runs from the same RNA (BioSamples SAMN42638189-SAMN42638228), which are not used."
+
+citation: "Tucci CF, Milan M, Dalla Rovere G, Bernardini I, Ferraresso S, Franch R, Babbucci M, Monticelli G, Panin M, Patarnello T, Bargelloni L, Peruzza L (2025). Thermal priming mitigates the effects of lethal marine heatwaves on the Manila clam. iScience 28(8):113108. https://doi.org/10.1016/j.isci.2025.113108 (PMID 40755456)."
+
+species: "Ruditapes philippinarum"
+strain_or_population: "Commercial hatchery stock from SATMAR (France), adults 26.0 +/- 1.8 mm shell length and 3.75 +/- 0.81 g, purchased February 2022; experiments at the University of Padua marine station, Chioggia, in natural Venice lagoon seawater. Sex could not be determined (per the paper)."
+
+# AREE reanalyzes against the NCBI RefSeq annotation its Manila clam crosswalk
+# is built from. The authors mapped with STAR to the Xu et al. genome and
+# counted with featureCounts; that pipeline is not reproduced.
+genome_assembly: "ASM2657151v2"
+annotation_version: "GCF_026571515.1-RS_2023_10"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, Lexogen QuantSeq 3' mRNA-seq (3' Tag) libraries prepared at CRIBI (University of Padua), 75 bp single-end (76 bp per ENA); 5.5-16.5 M reads per library (median 6.8 M); 13.8 GB FASTQ reported by ENA. Deposited as library_selection PolyA."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ for all 40 RNA-seq libraries are public in ENA/SRA under PRJNA1132140 (first public 2025-06-28). The project also holds 40 paired-end 16S amplicon runs from the same RNA under the same Treatment and Thermal stress attributes; the sample sheet keeps only library_strategy RNA-Seq. Whether supplementary differential-expression tables exist was not checked; they would carry edgeR statistics after RUVSeq normalization and would not be reproduced here. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS PUBLISHED. 2x2 factorial, priming (primed P / naive N) x marine
+# heatwave (HW H / control C). After 15 d acclimation (18 -> 25 C), primed
+# clams were held at 30 C for 7 d, then both groups rested 15 d at 25 C. Each
+# group was then split: a simulated 7 d heatwave oscillating daily 31-35 C,
+# or 25 C. All groups then recovered 15 d at 25 C. Survival was monitored
+# daily; RNA was taken at the end, day 46, from the digestive gland of 10
+# surviving clams per group. Each condition ran in duplicate 25 L aquaria with
+# 30 clams per tank. Measured outcome: about 25% mortality in naive clams
+# after the heatwave against about 4% in primed clams; none in either control.
+#
+# TWO COMPARISONS, PRESPECIFIED 2026-10-12, BEFORE ANY DATA WERE RUN.
+#   naive_hw_vs_naive_control  (NH vs NC) is the meta_analysis_primary
+#     comparison: heatwave exposure in unprimed clams, the contrast that can
+#     pool with other Manila clam heat studies (backlog pool A).
+#   primed_hw_vs_naive_hw      (PH vs NH) compares two groups that took the
+#     same heatwave and differed in measured survival. It is classified
+#     resilience: the closest thing in the mussel and clam backlog to a
+#     tolerant-vs-sensitive contrast. See limitations (3) and (4).
+# Sample-sheet condition levels are Naïve_No_Heatwave, Naïve_Heatwave,
+# Primed_Heatwave, Primed_No_Heatwave (Treatment x Thermal stress).
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "naive_hw_vs_naive_control"
+    tissue: "digestive_gland"
+    life_stage: "adult"
+    stressor_original: "Simulated marine heatwave: 7 d with water temperature oscillating daily from 31 to 35 C (a 2015 Venice lagoon heatwave shifted +1 C), from a 25 C baseline, followed by 15 d recovery at 25 C (Tucci et al. 2025). BioSample attribute 'Thermal stress: Heatwave'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "31-35 C daily oscillation vs constant 25 C"
+    exposure_duration: "7 d heatwave"
+    exposure_timing: "sampled on day 46, 15 d after the heatwave ended, at 25 C; survivors only"
+    control_condition: "Naive clams held at 25 C throughout (condition Naïve_No_Heatwave); 10 clams"
+    treatment_condition: "Naive clams exposed to the heatwave, sampled after 15 d recovery (condition Naïve_Heatwave); 10 surviving clams"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 20
+    biological_replicates: 2
+    results_file: "data/studies/TUCCI2025_HEAT_PRIMING/TUCCI2025_HEAT_PRIMING_naive_hw_vs_naive_control_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "primed_hw_vs_naive_hw"
+    tissue: "digestive_gland"
+    life_stage: "adult"
+    stressor_original: "Thermal priming: 7 d at 30 C (sublethal), 15 d rest at 25 C, then the simulated marine heatwave (7 d, 31-35 C daily) and 15 d recovery at 25 C. Both arms took the same heatwave; they differ only in priming. BioSample attributes 'Treatment: Primed' vs 'Treatment: Naïve', both 'Thermal stress: Heatwave'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "priming 30 C for 7 d; heatwave 31-35 C daily oscillation in both arms"
+    exposure_duration: "7 d priming, then 7 d heatwave"
+    exposure_timing: "sampled on day 46, 15 d after the heatwave ended, at 25 C; survivors only"
+    control_condition: "Naive clams that took the heatwave (condition Naïve_Heatwave); about 25% of naive clams died after the heatwave; 10 survivors sequenced"
+    treatment_condition: "Primed clams that took the heatwave (condition Primed_Heatwave); about 4% died; 10 survivors sequenced"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_after_heatwave (group level)"
+    resilience_classification: "resilience"
+    sample_size: 20
+    biological_replicates: 2
+    results_file: "data/studies/TUCCI2025_HEAT_PRIMING/TUCCI2025_HEAT_PRIMING_primed_hw_vs_naive_hw_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - tank_level_replication
+  - single_timepoint
+
+limitations: >
+  (1) 3' Tag-Seq libraries (Lexogen QuantSeq, 75 bp single-end). Reads come
+  from the 3' end of each transcript, so counts do not scale with transcript
+  length, and the standard path's length correction (Salmon's effective-length
+  model, tximport length offsets in DESeq2) would be wrong: on simulated 3'
+  reads it called 26 of 40 isoform-switch genes differentially expressed with
+  no change in 3' reads. The run therefore sets tag_seq = true (fastp poly-X
+  trimming, Salmon --noLengthCorrection, DESeq2 on counts without length
+  offsets); the workflow manifest's deseq2_design.length_model must read
+  "none" for this study. Never run it without tag_seq. Gene-level 3' counts
+  also depend on 3' UTR annotation: genes whose RefSeq 3' end is wrong or
+  missing on this contig-level assembly will be under-counted. Salmon mapped
+  only 42-49% of reads (mean 46%) to the RefSeq transcriptome, consistent with
+  many 3' tags falling beyond annotated transcript ends; those genes are
+  measured on a fraction of their reads, or not at all. (2) Tank is the unit of
+  treatment: each condition ran in two 25 L tanks of 30 clams, so each arm
+  rests on 2 tanks. Which tank each sequenced clam came from is not in the
+  deposit or the paper, so the analysis cannot be fitted on tanks (as
+  LUTIER2022_OA_TIPPING is) unless the authors supply tank IDs. DECISION
+  (sr320, 2026-10-12): fit on clams now rather than wait for tank IDs. Each
+  arm's 10 clams are therefore treated as independent, so lfcSE ignores
+  tank-to-tank variation and is too small, and adjusted p-values are too
+  optimistic, by an amount that cannot be estimated from these data. The
+  study carries tank_level_replication and biological_replicates records 2;
+  treat its significance calls as an upper bound. If tank IDs arrive, refit
+  with --replicate_unit (two tanks per arm leaves 1 residual df per arm, so
+  expect far fewer calls) and record both.
+  (3) Survivor sampling. Naive clams lost about 25% to the heatwave and the
+  survivors were sampled 15 d later; primed clams lost about 4%. The naive
+  heatwave arm is therefore the more tolerant three-quarters of naive clams,
+  which biases primed_hw_vs_naive_hw toward the null and makes
+  naive_hw_vs_naive_control a recovery-phase contrast among survivors, not a
+  response at the peak of stress. (4) The resilience classification of
+  primed_hw_vs_naive_hw rests on a group-level survival difference. Priming
+  is an induced state, not a heritable line, and no sequenced clam was scored
+  for its own tolerance. The comparison says which genes differ between a
+  group that survives heatwaves better and one that does not, not which genes
+  make an individual tolerant. (5) Priming has a cost: primed clams had a
+  lower condition index with and without the heatwave, so primed vs naive
+  differences mix tolerance with that cost. (6) Single timepoint, single
+  tissue (digestive gland), one hatchery stock; sex not determined.
+  (7) Genome: RefSeq's only Manila clam annotation (ASM2657151v2) is
+  contig-level (N50 about 183 kb); gene-level evidence is unaffected, but see
+  (1) on 3' ends. (8) The independence of this study from PRJNA906528 (same
+  Padova group, 30-day 30 C exposure, digestive gland) must be confirmed
+  before the two are pooled as k = 2.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-12"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA1132140 --study-id
+    TUCCI2025_HEAT_PRIMING`. Sample sheet and FASTQ manifest generated from
+    live ENA metadata with `aree fetch-samplesheet --bioproject PRJNA1132140
+    --study TUCCI2025_HEAT_PRIMING --condition-attribute Treatment
+    --condition-attribute "Thermal stress" --attribute Clam_ID
+    --library-strategy RNA-Seq`; the provenance records the filter (kept
+    RNA-Seq; 40 RNA-Seq and 40 AMPLICON runs before filtering). First
+    generated 2026-10-12 with PR #40's branch code, before --library-strategy
+    reached main; regenerated from main on 2026-10-13 after #40 merged. The
+    sample sheet and FASTQ manifest were byte-identical; only date_generated
+    in ena_provenance.json changed. TAG-SEQ: the run configuration sets
+    tag_seq = true (PR #24, merged into this branch 2026-10-12). LIBRARY-STRATEGY CHECK: unlike
+    LUTIER2022_OA_TIPPING, the AMPLICON label here is correct. The 40
+    AMPLICON runs are paired-end with their own BioSamples; the 40 RNA-Seq
+    runs are single-end, 76 bp, 5.5-16.5 M reads, matching the paper's 75 SE
+    3' Tag libraries and its 16S V3-V4 250 bp paired-end amplicons.
+    REPLICATION CHECK: 40 distinct BioSamples and 40 distinct Clam_ID values
+    (Naive_noHW_1-10, Naive_HW_1-10, Primed_noHW_1-10, Primed_HW_1-10), 10
+    per group, matching the paper's 10 clams per group. Tank membership is
+    not recorded (limitation 2). Distinct names do not prove distinct
+    animals: run scripts/check_replicate_dispersion.py after quantification.
+    MAPPING: tissue 'digestive gland' (paper, RNAseq analyses) maps to
+    digestive_gland; 'Adult individuals' maps to adult. The reference bundle
+    for GCF_026571515.1 was fetched and verified with `aree fetch-reference`
+    on 2026-10-12: 65,336 transcripts, 47,388 genes, all of them in
+    rphil_gene_id_crosswalk.tsv, and the GTF names the registered release.
+    PUBLICATION: found by PubMed search for the design; the article's data
+    availability names PRJNA1132140. A follow-up from the same group (Martino
+    et al. 2026, ISME Commun, doi:10.1093/ismeco/ycag059) transplants primed
+    microbiomes; its data appear to be PRJNA1292094 (not checked) and it is a
+    separate experiment.
+    REANALYSIS (Pori, 2026-10-13): all 40 RNA-seq FASTQs (13.8 GB) were
+    downloaded from ENA and verified against ENA's MD5s; ENA throttled this
+    machine for most of a day, and 12 files needed fresh re-downloads over
+    HTTPS. Both comparisons ran natively (-profile local,workstation, 8 GB
+    resource config) with tag_seq = true, in one work directory: 126 tasks for
+    the primary comparison, then 4 for the second with 122 reused. Both
+    manifests record tag_seq true, length_model "none: counts without length
+    offsets (tag_seq)", 10 vs 10 clams, residual df 18, every reference file
+    matching the GCF_026571515.1 bundle provenance, and no warnings. Salmon
+    mapped 42.3-48.6% of reads per library. Replicate dispersion QC
+    (scripts/check_replicate_dispersion.py, replicate_dispersion_qc.tsv)
+    passes in all four groups: median dispersion 0.082 (Naïve_Heatwave),
+    0.100 (Naïve_No_Heatwave), 0.116 (Primed_Heatwave), 0.092
+    (Primed_No_Heatwave), on about 850 genes per group with mean count >= 500
+    (few, because 3' tag libraries of ~7 M reads are shallow per gene).
+    Harmonized against rphil_gene_id_crosswalk.tsv: every gene resolves exact
+    (28,984 and 28,291 records). DESeq2 calls at padj < 0.05: 1,606 (632 up,
+    974 down) for naive_hw_vs_naive_control, 24 (13 up, 11 down) for
+    primed_hw_vs_naive_hw; the latter is small, as limitations (3) predicts.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1132140"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA1132140"
+    - "https://doi.org/10.1016/j.isci.2025.113108"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC12314336/"

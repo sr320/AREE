@@ -31,9 +31,12 @@ process FASTQC {
     """
 
     stub:
+    def mates = (reads instanceof Collection ? (reads as List).size() : 1) == 1 ? ['R1'] : ['R1', 'R2']
+    def zips  = mates.collect { "${sample_id}_${it}_fastqc.zip" }.join(' ')
+    def htmls = mates.collect { "${sample_id}_${it}_fastqc.html" }.join(' ')
     """
-    touch ${sample_id}_R1_fastqc.zip ${sample_id}_R2_fastqc.zip
-    touch ${sample_id}_R1_fastqc.html ${sample_id}_R2_fastqc.html
+    touch ${zips}
+    touch ${htmls}
     echo '${task.process}:' > versions.yml
     """
 }

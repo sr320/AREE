@@ -25,7 +25,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from common import REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_vocab
+from common import REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_vocab, registered_crosswalks
 
 EVIDENCE_TABLE = REPORTS_DIR / "evidence" / "evidence_table.tsv"
 CANDIDATES_TABLE = REPORTS_DIR / "evidence_cards" / "candidates.tsv"
@@ -33,7 +33,11 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 MANIFESTS_DIR = REPORTS_DIR / "manifests"
 TOP_CANDIDATES_MD = REPORTS_DIR / "top_candidates_summary.md"
 IMPLEMENTATION_STATUS_MD = REPO_ROOT / "docs" / "implementation_status.md"
-REAL_CROSSWALK = REPO_ROOT / "data" / "reference" / "crosswalk" / "mgigas_gene_id_crosswalk.tsv"
+
+
+def _built_crosswalks() -> list[Path]:
+    """Every real crosswalk registered in genome_assemblies.yaml that exists here."""
+    return [entry["path"] for entry in registered_crosswalks() if entry["path"].exists()]
 TESTS_DIR = REPO_ROOT / "tests"
 DEFAULT_OUT_PATH = REPO_ROOT / "docs" / "dashboard" / "data.json"
 CARDS_SUBDIR = "cards"  # evidence cards for the top candidates, copied beside data.json
@@ -234,22 +238,28 @@ def _evidence_summary(evidence: pd.DataFrame) -> dict:
 
 
 def _gene_annotations(gene_ids: list[str]) -> dict[str, dict]:
-    """Symbol and description for real NCBI GeneIDs, from the committed crosswalk."""
-    if not REAL_CROSSWALK.exists() or not gene_ids:
+    """Symbol and description for real NCBI GeneIDs, from the committed crosswalks.
+
+    NCBI GeneIDs are unique across all taxa, so the crosswalks of every
+    registered species can be searched together without ambiguity.
+    """
+    crosswalks = _built_crosswalks()
+    if not crosswalks or not gene_ids:
         return {}
     wanted = set(map(str, gene_ids))
     out: dict[str, dict] = {}
-    for chunk in pd.read_csv(REAL_CROSSWALK, sep="\t", comment="#", dtype=str,
-                             chunksize=20000):
-        hit = chunk[chunk["ncbi_gene_id"].isin(wanted)]
-        for _, row in hit.iterrows():
-            out[row["ncbi_gene_id"]] = {
-                "gene_symbol": row.get("gene_symbol") or "",
-                "gene_description": row.get("gene_description") or "",
-                "gene_type": row.get("gene_type") or "",
-            }
-        if len(out) >= len(wanted):
-            break
+    for crosswalk in crosswalks:
+        for chunk in pd.read_csv(crosswalk, sep="\t", comment="#", dtype=str,
+                                 chunksize=20000):
+            hit = chunk[chunk["ncbi_gene_id"].isin(wanted)]
+            for _, row in hit.iterrows():
+                out[row["ncbi_gene_id"]] = {
+                    "gene_symbol": row.get("gene_symbol") or "",
+                    "gene_description": row.get("gene_description") or "",
+                    "gene_type": row.get("gene_type") or "",
+                }
+            if len(out) >= len(wanted):
+                return out
     return out
 
 
@@ -313,8 +323,9 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
 def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     """Copy one evidence card next to the dashboard so the site can link to it.
 
-    Returns the site-relative page path (without extension, as Quarto links it),
-    or None when the candidate has no rendered card.
+    Returns the page path relative to the home page (index.qmd), which loads
+    data.json from one directory below it, so the link includes that directory
+    (e.g. ``dashboard/cards/<card>.html``). None when the candidate has no card.
     """
     if not card_file or cards_dir is None or (isinstance(card_file, float) and pd.isna(card_file)):
         return None
@@ -337,7 +348,7 @@ def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     dest.write_text(
         f'---\ntitle: "{title}"\nsidebar: false\nbread-crumbs: false\n---\n\n{body}\n'
     )
-    return f"{cards_dir.name}/{src.stem}.html"
+    return f"{cards_dir.parent.name}/{cards_dir.name}/{src.stem}.html"
 
 
 def _pool_summary() -> list[dict]:
@@ -514,8 +525,19 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
             "meta_analysis": META_ANALYSIS_DIR.exists() and any(META_ANALYSIS_DIR.glob("*.tsv")),
             "candidates": CANDIDATES_TABLE.exists(),
             "top_candidates_summary": TOP_CANDIDATES_MD.exists(),
-            "real_crosswalk": REAL_CROSSWALK.exists(),
+            "real_crosswalk": bool(_built_crosswalks()),
         },
+        "crosswalks": [
+            {
+                "species": entry["species"],
+                "ncbi_taxid": entry["ncbi_taxid"],
+                "path": str(entry["path"].relative_to(REPO_ROOT))
+                if entry["path"].is_relative_to(REPO_ROOT) else str(entry["path"]),
+                "assemblies": entry["assemblies"],
+                "built": entry["path"].exists(),
+            }
+            for entry in registered_crosswalks()
+        ],
         "kpis": kpis,
         "studies": study_rows,
         "comparisons": comparison_rows,

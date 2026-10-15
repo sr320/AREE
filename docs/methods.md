@@ -130,7 +130,7 @@ replication and consistency gates.
 
 ## Demonstration dataset
 
-The framework is exercised against six synthetic study records representing
+The framework is exercised against seven synthetic study records. Six represent
 *Crassostrea gigas* resilience contexts (acute and chronic heat challenge,
 ocean acidification, pathogen challenge, salinity stress, nutritional
 limitation affecting larval viability, and hypoxia affecting growth),
@@ -138,7 +138,12 @@ spanning RNA-seq, DNA methylation, proteomics, and metabolomics assays, and
 including both raw-reanalysis and processed-results-only registration modes,
 one study with deliberately imperfect legacy gene-symbol identifiers, and one
 pair of studies reporting opposite-direction effects for the same gene under
-the same phenotype. All demonstration data are explicitly labeled as
+the same phenotype. The seventh is a *Mytilus galloprovincialis* larval
+heat-stress study that reuses the oyster studies' synthetic gene identifiers
+under the same phenotype, so that partitioning by species can be tested: the
+same identifier in two species forms two separate pooled estimates, and every
+oyster estimate is unchanged by the mussel study's presence. All
+demonstration data are explicitly labeled as
 simulated and are not derived from real sequencing reads or a verified
 reference genome accession; they establish that the pipeline runs end to end
 and produces the intended range of mapping-confidence and heterogeneity

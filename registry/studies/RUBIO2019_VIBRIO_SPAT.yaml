@@ -1,0 +1,188 @@
+# Vibrio infection of juvenile M. gigas spat: virulent vs non-virulent
+# strains of two species, and each against a mock injection. Chosen
+# 2026-10-12 from the RNA-seq studies the sister repository sr320/AREE-co had
+# curated; not in candidate_studies.md.
+#
+# Source: Rubio et al. 2019, PNAS (PMC6628822; methods read 2026-10-12 via
+# PMC). Every design label is deposited in the sample aliases
+# (RNAseq_<treatment>_replicate<N>), and the paper confirms replicate N is
+# independent experimental infection N.
+#
+# DESIGN. 150 Decipher-14 spat per experiment, 30 per condition, injected
+# into the adductor muscle at 20 C with 7.5 x 10^7 CFU (the Methods also say
+# 10^7 CFU; the figure legend and infection section say 7.5 x 10^7), or with
+# sterile seawater (mock; alias 'anesthesis'). Sampled 8 h later, "before
+# mortality occurred". One pool of 30 spat per condition per experiment,
+# three experiments, so each comparison is 3 v 3 pools, paired by
+# experiment and blocked on it (covariates = experiment).
+#
+# MEASURED PHENOTYPE, AT STRAIN LEVEL. In a separate infection of the same
+# family, the virulent strains (J2-9, LGP32) killed spat within 1 day (~40%
+# surviving at 3 d) and the non-virulent strains (J2-8, LMG20012T) killed
+# none. So virulent-vs-non-virulent contrasts isolate the host response to a
+# lethal infection, at the same dose, route and time.
+
+study_id: RUBIO2019_VIBRIO_SPAT
+simulated: false
+
+accessions:
+  doi: "10.1073/pnas.1905747116"
+  bioproject: "PRJNA515169"
+  geo: null
+  sra: "SRR8551076-SRR8551093"
+  ena: "PRJNA515169"
+  proteomexchange: null
+  other: "BioSamples SAMN10762891-SAMN10762908; PMID 31221761; PMC6628822"
+
+citation: "Rubio T, Oyanedel D, Labreuche Y, Toulza E, Luo X, Bruto M, Chaparro C, Torres M, de Lorgeril J, Haffner P, Vidal-Dupiol J, Lagorce A, Petton B, Mitta G, Jacq A, Le Roux F, Charriere GM, Destoumieux-Garzon D (2019). Species-specific mechanisms of cytotoxicity toward immune cells determine the successful outcome of Vibrio infections. PNAS 116(28):14238-14247. https://doi.org/10.1073/pnas.1905747116"
+
+species: "Magallana gigas"
+strain_or_population: "Juvenile spat of the Decipher 14 family (Ifremer); spat of 1.5-2 cm used for histology in the same study."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end (dual RNA-seq libraries); 18 pools deposited, 15 used, 20.9-28.9 M read pairs"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA515169. Treatment and experiment are in the sample aliases. The untreated time-0 pools are not staged or used. Sequence data are not committed."
+
+# QC PASSED WITH WARNINGS, 2026-10-13 (full-depth run of the 15 pools,
+# ~ experiment + condition).
+# - The dispersion screen reads low (0.0035-0.019; 3 of 5 groups under the
+#   0.005 floor). The floor is for single animals: each library pools 30
+#   spat, which by itself lowers dispersion about thirtyfold (0.03 -> ~0.001),
+#   so these values are, if anything, higher than pooling alone predicts.
+#   The expressed-SNP genotype check is not informative here: pools of 30
+#   siblings of one family converge on the family's allele frequencies
+#   whether or not they are separate animals. Replication rests on the paper's
+#   three independent experimental infections, and the model blocks on them
+#   (residual df = 2 per comparison).
+# - Results: padj < 0.05 for 536 (V. crassostreae J2-9) and 480 (V.
+#   tasmaniensis LGP32) genes vs mock, mostly up-regulated; only 5 and 14 for
+#   virulent vs non-virulent at 8 h, i.e. the early host response barely
+#   tells a lethal strain from a harmless one at this time point.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# Four comparisons, prespecified 2026-10-12 before any result, all 3 v 3
+# pools blocked on experiment. meta_analysis_primary = V. crassostreae J2-9
+# (virulent) vs mock: a virulent Vibrio challenge against a sham injection is
+# the contrast most like other pathogen-challenge studies (and the species
+# behind summer mortality outbreaks in France). The other three share pools
+# with it and must not pool alongside it.
+comparisons:
+  - comparison_id: "vcrass_j29_virulent_vs_mock_8h"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "intramuscular injection of virulent Vibrio crassostreae J2-9, 7.5 x 10^7 CFU, 20 C, sampled 8 h (Rubio et al. 2019); alias Vcrass_J2-9"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "7.5 x 10^7 CFU per spat by intramuscular injection"
+    exposure_duration: "8 h"
+    exposure_timing: "acute; sampled before mortality"
+    control_condition: "mock injection with sterile seawater (alias 'anesthesis'), one pool of 30 spat per experiment"
+    treatment_condition: "V. crassostreae J2-9 (virulent), one pool of 30 spat per experiment"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "mortality per strain in a separate infection of the same family (virulent strains: ~60% dead by 3 d; non-virulent: none); not measured on the sequenced pools"
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    meta_analysis_primary: true
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vcrass_j29_virulent_vs_mock_8h_dge_standardized.tsv"
+
+  - comparison_id: "vtasma_lgp32_virulent_vs_mock_8h"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "intramuscular injection of virulent Vibrio tasmaniensis LGP32, 7.5 x 10^7 CFU, 20 C, sampled 8 h; alias Vtasma_LGP32"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "7.5 x 10^7 CFU per spat by intramuscular injection"
+    exposure_duration: "8 h"
+    exposure_timing: "acute; sampled before mortality"
+    control_condition: "mock injection with sterile seawater (alias 'anesthesis'), one pool of 30 spat per experiment"
+    treatment_condition: "V. tasmaniensis LGP32 (virulent), one pool of 30 spat per experiment"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "mortality per strain in a separate infection of the same family; not measured on the sequenced pools"
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vtasma_lgp32_virulent_vs_mock_8h_dge_standardized.tsv"
+
+  - comparison_id: "vcrass_virulent_vs_nonvirulent_8h"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "virulent V. crassostreae J2-9 vs non-virulent V. crassostreae J2-8, same dose, route and time"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "7.5 x 10^7 CFU per spat, both arms"
+    exposure_duration: "8 h"
+    exposure_timing: "acute; sampled before mortality"
+    control_condition: "V. crassostreae J2-8 (non-virulent; no mortality), one pool of 30 spat per experiment"
+    treatment_condition: "V. crassostreae J2-9 (virulent), one pool of 30 spat per experiment"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "virulent strain caused mortality, non-virulent none (separate infection of the same family)"
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vcrass_virulent_vs_nonvirulent_8h_dge_standardized.tsv"
+
+  - comparison_id: "vtasma_virulent_vs_nonvirulent_8h"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "virulent V. tasmaniensis LGP32 vs non-virulent V. tasmaniensis LMG20012T, same dose, route and time"
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "7.5 x 10^7 CFU per spat, both arms"
+    exposure_duration: "8 h"
+    exposure_timing: "acute; sampled before mortality"
+    control_condition: "V. tasmaniensis LMG20012T (non-virulent; no mortality), one pool of 30 spat per experiment"
+    treatment_condition: "V. tasmaniensis LGP32 (virulent), one pool of 30 spat per experiment"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "virulent strain caused mortality, non-virulent none (separate infection of the same family)"
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vtasma_virulent_vs_nonvirulent_8h_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+
+limitations: >
+  (1) Each library pools 30 spat, so animal-to-animal variation is averaged
+  out and replication is at the level of the three experiments. (2) One
+  family (Decipher 14), one dose, one time (8 h), before any death: the
+  comparisons describe early host responses to infection, not which animals
+  survive. (3) The libraries are dual RNA-seq (host plus bacteria); bacterial
+  reads that do not map to the oyster transcriptome are simply not counted.
+  (4) The deposited mock alias is 'anesthesis' while the paper describes a
+  sterile-seawater injection; AREE reads the alias as the mock arm. (5) The
+  stated dose differs between the paper's Methods (10^7 CFU) and its figure
+  legend and infection section (7.5 x 10^7 CFU).
+
+provenance:
+  registered_by: "sr320"
+  date_registered: "2026-10-12"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA515169 --study-id
+    RUBIO2019_VIBRIO_SPAT` (draft PR sr320/AREE#42). Sample sheet from live
+    ENA metadata with `aree fetch-samplesheet --label-field sample_alias` and
+    the pattern in config/RUBIO2019_VIBRIO_SPAT.config: 18 runs, 3 per
+    condition. Design, pooling, sampling time and the strain-level mortality
+    read from the paper (PMC6628822, 2026-10-12). Comparisons, the experiment
+    covariate and meta_analysis_primary fixed before any result. Uses
+    --covariates from main (#27); no dependency on other open PRs.
+    Run 2026-10-13 (Nextflow 26.04.7, native): all 30 FASTQ verified
+    against ENA MD5s; first comparison 51/51 tasks, the other three reuse its
+    quantifications. Salmon mapping 74.7-78.3%, library type ISR. Harmonized:
+    114,179 evidence records across the four comparisons.
+  source_links:
+    - "https://doi.org/10.1073/pnas.1905747116"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC6628822/"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA515169"

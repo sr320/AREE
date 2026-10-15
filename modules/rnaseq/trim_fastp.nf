@@ -24,16 +24,27 @@ process TRIM_FASTP {
     path "versions.yml", emit: versions
 
     script:
-    // Paired-end by default. --single_end takes one FASTQ per sample;
-    // --tag_seq (3' QuantSeq-style libraries) also trims poly-A/poly-X tails,
-    // which those libraries carry at the 3' end of most reads.
+    // Paired-end or single-end, decided by how many files the sample carries
+    // (main.nf sends one with --single_end). A single file stages as a Path,
+    // not a list, so normalize before indexing. Single-end output is R1 only.
+    //
+    // Single-end adapters are given explicitly (params.se_adapter), not
+    // auto-detected. fastp's single-end detection guesses from overrepresented
+    // sequence: on DUPERRET2025_STARVE_RNASEQ it picked an abundant oyster
+    // transcript as the "adapter" and trimmed it from about 1% of reads, and
+    // each library gets its own guess. Paired-end detection uses read overlap
+    // and is reliable, so it is kept.
+    def fq = reads instanceof Collection ? reads as List : [ reads ]
+    def se_adapter = params.se_adapter == 'auto' ? '' : "--adapter_sequence ${params.se_adapter}"
+    def io = fq.size() == 1 \
+        ? "-i ${fq[0]} -o ${sample_id}_trimmed_R1.fastq.gz ${se_adapter}" \
+        : "-i ${fq[0]} -I ${fq[1]} -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz --detect_adapter_for_pe"
+    // --tag_seq (3' QuantSeq-style libraries) also trims the poly-A/poly-X
+    // tails those libraries carry at the 3' end of many reads.
     def tag_seq_opts = params.tag_seq ? '--trim_poly_x' : ''
-    if (params.single_end) {
     """
     fastp \\
-        -i ${reads[0]} \\
-        -o ${sample_id}_trimmed_R1.fastq.gz \\
-        ${tag_seq_opts} \\
+        ${io} ${tag_seq_opts} \\
         --thread ${task.cpus} \\
         --json ${sample_id}.fastp.json \\
         --html ${sample_id}.fastp.html \\
@@ -44,28 +55,12 @@ process TRIM_FASTP {
         fastp: \$(fastp --version 2>&1 | sed -e 's/fastp //g')
     END_VERSIONS
     """
-    } else {
-    """
-    fastp \\
-        -i ${reads[0]} -I ${reads[1]} \\
-        -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz \\
-        --detect_adapter_for_pe \\
-        ${tag_seq_opts} \\
-        --thread ${task.cpus} \\
-        --json ${sample_id}.fastp.json \\
-        --html ${sample_id}.fastp.html \\
-        --report_title "${sample_id} fastp report"
-
-    cat <<-END_VERSIONS > versions.yml
-    ${task.process}:
-        fastp: \$(fastp --version 2>&1 | sed -e 's/fastp //g')
-    END_VERSIONS
-    """
-    }
 
     stub:
+    def n = reads instanceof Collection ? (reads as List).size() : 1
+    def trimmed = n == 1 ? "${sample_id}_trimmed_R1.fastq.gz" : "${sample_id}_trimmed_R1.fastq.gz ${sample_id}_trimmed_R2.fastq.gz"
     """
-    touch ${sample_id}_trimmed_R1.fastq.gz ${params.single_end ? '' : "${sample_id}_trimmed_R2.fastq.gz"}
+    touch ${trimmed}
     echo '{}' > ${sample_id}.fastp.json
     touch ${sample_id}.fastp.html
     echo '${task.process}:' > versions.yml

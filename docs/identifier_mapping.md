@@ -24,21 +24,44 @@ Every evidence record keeps both:
 
 ## Which crosswalk is in force
 
-AREE ships **two** crosswalks and never merges them.
+AREE keeps a synthetic demo crosswalk and one real crosswalk per species, and
+never merges any of them.
 
 | File | Contents | When it is used |
 |---|---|---|
-| `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Default. Keeps `make demo` and the test suite self-contained. |
-| `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Curating real studies. Selected explicitly. |
+| `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Every study with `simulated: true`. Keeps `make demo` and the test suite self-contained. |
+| `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Real studies on either oyster assembly. |
+| `data/reference/crosswalk/{mgall,medul,mtros,mcali,mmerc,rphil}_gene_id_crosswalk.tsv` | Real genes for six mussel and clam species, same sources and builder (see below) | Real studies on that species' assemblies. |
 
-Selection precedence is `set_crosswalk_path()` > `$AREE_CROSSWALK` > the demo
-crosswalk. To harmonize real data:
+**The study decides, through its genome assembly.** Each entry in
+`data/reference/genome_assemblies.yaml` names its `identifier_crosswalk`.
+Harmonizing a real study looks up the study's `genome_assembly` there and
+resolves against that file, so an oyster study and a mussel study harmonized in
+the same run each use their own species' identifiers. No environment variable is
+needed:
 
 ```bash
-aree build-crosswalk                       # writes the real crosswalk + provenance sidecar
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study <STUDY_ID> --input <results.tsv>
 ```
+
+The assembly decides rather than the study's species because identifiers come
+from the annotation the reads were mapped to. A study that mapped reads to a
+related species' genome (quality flag `reference_species_mismatch`) therefore
+reports the reference species' gene identifiers, while its evidence is still
+partitioned under the study animal's `species_taxid`.
+
+A real study whose assembly has no registered crosswalk is an error, not a
+fallback to some other crosswalk. The error names the `aree build-crosswalk
+--taxid <n>` command to run, after which the new file is registered by setting
+`identifier_crosswalk` for that species' assemblies.
+
+`$AREE_CROSSWALK` still exists as an override for local experiments, such as
+testing a rebuilt crosswalk before committing it. It is honoured only if its
+provenance sidecar shows it was built for the study's assembly taxon; a
+crosswalk for another species, or one with no provenance, stops harmonization.
+Earlier versions of AREE let the most recently selected crosswalk carry over to
+the next study in the same process. That is no longer possible: every study
+selects afresh.
 
 **The two files must never be concatenated.** The demo crosswalk's LOC numbers
 are not unused placeholders — most of them collide with real NCBI GeneIDs that
@@ -85,10 +108,99 @@ result:
 2. **Only 2% of genes have a real name.** The rest are `LOC`-form. Symbol-based
    matching is close to useless for this species; identifier-based matching is
    the only reliable path.
-3. **`orthogroup_id` is empty by design.** Real orthogroups require an ortholog
-   inference run (OrthoFinder/OrthoDB). Fabricating them would manufacture
-   cross-species confidence that does not exist, so the column ships empty and
-   `resolve_identifier` returns `None` for it.
+3. **`orthogroup_id` is empty in every real crosswalk.** Crosswalks hold only
+   what NCBI and UniProt provide. Orthogroups come from a separate inference
+   run (see *Orthogroups* below); harmonization attaches them to evidence from
+   the active run, never from the crosswalk.
+
+### Orthogroups
+
+Orthogroups link genes across species. They are inferred, not looked up, so
+they live apart from the crosswalks: `aree build-orthogroups` runs OrthoFinder
+on one protein per gene for every species with a crosswalk (the
+`primary_proteins.faa` that `aree fetch-reference --proteins` writes; see
+[reference_bundles.md](reference_bundles.md)). Because those proteomes come
+from the same RefSeq annotations the crosswalks are built on, every orthogroup
+member is a GeneID the harmonizer already resolves.
+
+A run is committed under `data/reference/orthogroups/<run_id>/`:
+
+| File | Contents |
+|---|---|
+| `gene_orthogroups.tsv` | `ncbi_gene_id`, `ncbi_taxid`, `orthogroup_id` for every gene |
+| `orthogroups.tsv` | per orthogroup: `copy_class`, species and gene counts, copies per species |
+| `provenance.json` | OrthoFinder version and command, each proteome's assembly and SHA-256, per-species assignment rates |
+
+`data/reference/orthogroups/active.yaml` names the run harmonization uses.
+`resolve_identifier` attaches that run's orthogroup to every resolved real
+GeneID, and each harmonization manifest records the run ID and the checksum of
+its gene table. The synthetic demo crosswalk keeps its own illustrative
+orthogroups and is never matched against a real run.
+
+`copy_class` says how comparable an orthogroup is across species:
+
+| Class | Meaning |
+|---|---|
+| `single_copy_all` | exactly one gene in every species of the run |
+| `single_copy` | at most one gene per species, in two or more species |
+| `multi_copy` | two or more genes in at least one species |
+| `species_specific` | genes from one species only |
+
+Bivalve genomes carry large lineage-specific expansions (HSP70, C1q, IAPs), and
+those are the families stress studies report most. A `multi_copy` orthogroup
+links a gene to all of its paralogs in another species, not to one
+counterpart, so cross-species comparisons must say which class they rest on.
+
+The active run, `orthofinder3.1.5_2026-10-13` (OrthoFinder 3.1.5, 7 species,
+228,833 proteins):
+
+| Copy class | Orthogroups |
+|---|---|
+| `single_copy_all` | 5,552 |
+| `single_copy` | 7,031 |
+| `multi_copy` | 11,877 |
+| `species_specific` | 14,047 |
+
+On a real oyster study (HESSER2024_VCOR), 274 of 306 resolved genes received
+an orthogroup (the rest are non-coding genes, which have no protein), and 190
+of those 274 are in `multi_copy` orthogroups. Expect most cross-species links
+for stress-response genes to be one-to-many.
+
+### Mussel and clam crosswalks
+
+Built 2026-10-11 with the same builder, each against its species' NCBI
+reference annotation (recorded in the provenance sidecar and checked by a
+test). NCBI `gene_info` and `gene_history` were downloaded once and filtered
+per taxid; every species' rows were confirmed contiguous in both files, which
+the builder's streaming shortcut assumes.
+
+| Crosswalk | Species | Genes | Ensembl xref | Named symbol | UniProt-linked genes | Retired GeneIDs remapped / dead |
+|---|---|---|---|---|---|---|
+| `mgall` | *Mytilus galloprovincialis* | 43,869 | 59.9% | 10.9% | 42 | 0 / 0 |
+| `medul` | *Mytilus edulis* | 49,210 | 51.0% | 8.1% | 31 | 0 / 12 |
+| `mtros` | *Mytilus trossulus* | 47,781 | 58.7% | 12.1% | 94 | 0 / 0 |
+| `mcali` | *Mytilus californianus* | 41,309 | 55.0% | 9.4% | 7 | 0 / 0 |
+| `mmerc` | *Mercenaria mercenaria* | 45,378 | 56.2% | 2.4% | 2 | 3,656 / 9,078 |
+| `rphil` | *Ruditapes philippinarum* | 48,038 | 57.1% | 2.5% | 18 | 0 / 12 |
+
+What this means in practice:
+
+- **UniProt is effectively unusable for these species.** UniProtKB holds 81,997
+  entries for *M. galloprovincialis* and 74,071 for *M. edulis*, but only 43 and
+  32 of them cross-reference an NCBI GeneID. They are translated from GenBank
+  submissions, not from the RefSeq annotation the crosswalk is built on. A
+  mussel or clam proteomics table reported in UniProt accessions will resolve
+  almost nothing until a sequence-based mapping exists. Report RefSeq protein
+  or GeneID identifiers where the source allows.
+- **Ensembl xrefs are unusually good** (51 to 60%, against 38% for the oyster),
+  so a study reporting Ensembl gene IDs resolves well.
+- **Hard clam has two annotated assemblies.** Both use `mmerc`. Of the 43,960
+  GeneIDs on the older assembly (ASM1480567v1.1), 3,656 were discontinued in
+  February 2023 and remap through `mmerc_retired_gene_ids.tsv`, and 9,078 have
+  no replacement. See that assembly's notes in
+  `data/reference/genome_assemblies.yaml`.
+- **No retirement history yet** for most mussels: their RefSeq annotations are
+  first releases, so there are no older GeneIDs to remap.
 
 ### Design decisions in the real crosswalk
 

@@ -129,25 +129,29 @@ def test_simulated_study_always_uses_the_demo_crosswalk(monkeypatch):
     monkeypatch.setenv("AREE_CROSSWALK", str(REAL_CROSSWALK))
     set_crosswalk_path(None)
     try:
-        assert crosswalk_for_study(simulated=True) == DEMO_CROSSWALK_PATH
+        study = {"study_id": "X", "simulated": True, "genome_assembly": "cgigas_uk_roslin_v1"}
+        assert crosswalk_for_study(study) == DEMO_CROSSWALK_PATH
     finally:
         set_crosswalk_path(None)
 
 
-def test_real_study_refuses_to_fall_back_to_the_demo_crosswalk(monkeypatch):
+def test_real_study_uses_its_assemblys_registered_crosswalk(monkeypatch):
+    """No environment variable is needed: the assembly registry decides."""
+    if not REAL_CROSSWALK.exists():
+        pytest.skip("real crosswalk not built; run `aree build-crosswalk`")
     monkeypatch.delenv("AREE_CROSSWALK", raising=False)
     set_crosswalk_path(None)
-    with pytest.raises(FileNotFoundError, match="not simulated"):
-        crosswalk_for_study(simulated=False)
+    study = {"study_id": STUDY_ID, "simulated": False, "genome_assembly": "cgigas_uk_roslin_v1"}
+    assert crosswalk_for_study(study) == REAL_CROSSWALK
 
 
-def test_real_study_uses_the_selected_crosswalk(monkeypatch):
+def test_real_study_honours_a_matching_override(monkeypatch):
+    if not REAL_CROSSWALK.exists():
+        pytest.skip("real crosswalk not built; run `aree build-crosswalk`")
     monkeypatch.setenv("AREE_CROSSWALK", str(REAL_CROSSWALK))
     set_crosswalk_path(None)
-    try:
-        assert crosswalk_for_study(simulated=False) == REAL_CROSSWALK
-    finally:
-        set_crosswalk_path(None)
+    study = {"study_id": STUDY_ID, "simulated": False, "genome_assembly": "GCF_963853765.1"}
+    assert crosswalk_for_study(study) == REAL_CROSSWALK
 
 
 # --------------------------------------------------------------------------- #

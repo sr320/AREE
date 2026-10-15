@@ -2,7 +2,7 @@ import math
 
 import pandas as pd
 import pytest
-from conftest import harmonize_all_demo_studies
+from conftest import harmonize_all_demo_studies, oyster
 
 from harmonize.core import load_evidence_table
 from meta_analysis.effect_sizes import approximate_se
@@ -38,7 +38,7 @@ def test_dersimonian_laird_conflicting_studies_show_high_heterogeneity():
 
 def test_meta_analysis_on_demo_data_pools_hsp70_across_studies(isolated_reports):
     harmonize_all_demo_studies()
-    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    result = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
     hsp70 = result[result["feature_id_standardized"] == "LOC105333935"].iloc[0]
     assert hsp70["k_studies"] == 2
     assert hsp70["direction_consistency"] == 1.0
@@ -46,7 +46,7 @@ def test_meta_analysis_on_demo_data_pools_hsp70_across_studies(isolated_reports)
 
 def test_meta_analysis_flags_conflicting_direction_for_sod1(isolated_reports):
     harmonize_all_demo_studies()
-    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    result = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
     sod1 = result[result["feature_id_standardized"] == "LOC105331241"].iloc[0]
     assert sod1["k_studies"] == 2
     assert sod1["direction_consistency"] < 0.7
@@ -169,7 +169,7 @@ def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, m
 
 def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_reports):
     harmonize_all_demo_studies()
-    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    result = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
     hsp70 = result[result["feature_id_standardized"] == "LOC105333935"].iloc[0]
     assert hsp70["n_excluded_duplicate_mappings"] == 1
     assert hsp70["n_excluded_unpoolable"] == 0
@@ -213,10 +213,11 @@ def test_benjamini_hochberg_leaves_nan_out_of_the_family():
 def test_adjusted_p_is_computed_within_family_and_invariant_to_filters(isolated_reports):
     """The family is (phenotype, feature_type, simulated, species_taxid), which is
     exactly what the CLI can filter on, so the same feature gets the same adjusted
-    p whether the run covered one phenotype or every phenotype."""
+    p whether the run covered one phenotype or every phenotype. With two demo
+    species, one phenotype holds two families; the oyster one is checked here."""
     harmonize_all_demo_studies()
-    everything = run_meta_analysis(feature_type="gene")
-    one_phenotype = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    everything = oyster(run_meta_analysis(feature_type="gene"))
+    one_phenotype = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
 
     assert "adjusted_p_value" in everything.columns
     assert (everything["adjusted_p_value"] >= everything["p_value"] - 1e-12).all()

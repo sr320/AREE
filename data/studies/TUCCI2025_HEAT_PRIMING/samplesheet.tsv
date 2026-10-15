@@ -1,0 +1,41 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	treatment	thermal_stress	clam_id	library_layout	instrument_model	read_count
+Naive_HW_10	SRR29712776	SAMN42331788	Naive_HW_10	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_10	SINGLE	Illumina NovaSeq 6000	7168739
+Naive_HW_9	SRR29712777	SAMN42331787	Naive_HW_9	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_9	SINGLE	Illumina NovaSeq 6000	6960065
+Naive_HW_8	SRR29712778	SAMN42331786	Naive_HW_8	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_8	SINGLE	Illumina NovaSeq 6000	8423412
+Naive_HW_7	SRR29712779	SAMN42331785	Naive_HW_7	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_7	SINGLE	Illumina NovaSeq 6000	8574241
+Naive_HW_6	SRR29712780	SAMN42331784	Naive_HW_6	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_6	SINGLE	Illumina NovaSeq 6000	9691130
+Naive_HW_5	SRR29712781	SAMN42331783	Naive_HW_5	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_5	SINGLE	Illumina NovaSeq 6000	8244452
+Primed_noHW_10	SRR29712782	SAMN42331818	Primed_noHW_10	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_10	SINGLE	Illumina NovaSeq 6000	6709087
+Primed_noHW_9	SRR29712783	SAMN42331817	Primed_noHW_9	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_9	SINGLE	Illumina NovaSeq 6000	6822580
+Primed_noHW_8	SRR29712784	SAMN42331816	Primed_noHW_8	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_8	SINGLE	Illumina NovaSeq 6000	7104321
+Primed_noHW_7	SRR29712785	SAMN42331815	Primed_noHW_7	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_7	SINGLE	Illumina NovaSeq 6000	6571845
+Primed_noHW_6	SRR29712786	SAMN42331814	Primed_noHW_6	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_6	SINGLE	Illumina NovaSeq 6000	6692604
+Primed_noHW_5	SRR29712787	SAMN42331813	Primed_noHW_5	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_5	SINGLE	Illumina NovaSeq 6000	6741337
+Primed_noHW_4	SRR29712788	SAMN42331812	Primed_noHW_4	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_4	SINGLE	Illumina NovaSeq 6000	6968334
+Primed_noHW_3	SRR29712789	SAMN42331811	Primed_noHW_3	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_3	SINGLE	Illumina NovaSeq 6000	6757371
+Primed_noHW_2	SRR29712790	SAMN42331810	Primed_noHW_2	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_2	SINGLE	Illumina NovaSeq 6000	6727295
+Primed_noHW_1	SRR29712791	SAMN42331809	Primed_noHW_1	Primed_No_Heatwave	Primed	No Heatwave	Primed_noHW_1	SINGLE	Illumina NovaSeq 6000	5486885
+Naive_HW_4	SRR29712792	SAMN42331782	Naive_HW_4	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_4	SINGLE	Illumina NovaSeq 6000	11178944
+Naive_noHW_10	SRR29712793	SAMN42331808	Naive_noHW_10	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_10	SINGLE	Illumina NovaSeq 6000	6181284
+Naive_noHW_9	SRR29712794	SAMN42331807	Naive_noHW_9	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_9	SINGLE	Illumina NovaSeq 6000	7011997
+Naive_noHW_8	SRR29712795	SAMN42331806	Naive_noHW_8	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_8	SINGLE	Illumina NovaSeq 6000	7412689
+Naive_noHW_7	SRR29712796	SAMN42331805	Naive_noHW_7	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_7	SINGLE	Illumina NovaSeq 6000	6835926
+Naive_noHW_6	SRR29712797	SAMN42331804	Naive_noHW_6	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_6	SINGLE	Illumina NovaSeq 6000	6924763
+Naive_noHW_5	SRR29712798	SAMN42331803	Naive_noHW_5	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_5	SINGLE	Illumina NovaSeq 6000	6533480
+Naive_noHW_4	SRR29712799	SAMN42331802	Naive_noHW_4	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_4	SINGLE	Illumina NovaSeq 6000	6611829
+Naive_noHW_3	SRR29712800	SAMN42331801	Naive_noHW_3	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_3	SINGLE	Illumina NovaSeq 6000	6743976
+Naive_noHW_2	SRR29712801	SAMN42331800	Naive_noHW_2	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_2	SINGLE	Illumina NovaSeq 6000	6512644
+Naive_noHW_1	SRR29712802	SAMN42331799	Naive_noHW_1	Naïve_No_Heatwave	Naïve	No Heatwave	Naive_noHW_1	SINGLE	Illumina NovaSeq 6000	6100702
+Naive_HW_3	SRR29712803	SAMN42331781	Naive_HW_3	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_3	SINGLE	Illumina NovaSeq 6000	8793029
+Primed_HW_10	SRR29712804	SAMN42331798	Primed_HW_10	Primed_Heatwave	Primed	Heatwave	Primed_HW_10	SINGLE	Illumina NovaSeq 6000	6468236
+Primed_HW_9	SRR29712805	SAMN42331797	Primed_HW_9	Primed_Heatwave	Primed	Heatwave	Primed_HW_9	SINGLE	Illumina NovaSeq 6000	6348346
+Primed_HW_8	SRR29712806	SAMN42331796	Primed_HW_8	Primed_Heatwave	Primed	Heatwave	Primed_HW_8	SINGLE	Illumina NovaSeq 6000	6468392
+Primed_HW_7	SRR29712807	SAMN42331795	Primed_HW_7	Primed_Heatwave	Primed	Heatwave	Primed_HW_7	SINGLE	Illumina NovaSeq 6000	6356518
+Primed_HW_6	SRR29712808	SAMN42331794	Primed_HW_6	Primed_Heatwave	Primed	Heatwave	Primed_HW_6	SINGLE	Illumina NovaSeq 6000	5881714
+Primed_HW_5	SRR29712809	SAMN42331793	Primed_HW_5	Primed_Heatwave	Primed	Heatwave	Primed_HW_5	SINGLE	Illumina NovaSeq 6000	5750891
+Primed_HW_4	SRR29712810	SAMN42331792	Primed_HW_4	Primed_Heatwave	Primed	Heatwave	Primed_HW_4	SINGLE	Illumina NovaSeq 6000	6352796
+Primed_HW_3	SRR29712811	SAMN42331791	Primed_HW_3	Primed_Heatwave	Primed	Heatwave	Primed_HW_3	SINGLE	Illumina NovaSeq 6000	6570557
+Primed_HW_2	SRR29712812	SAMN42331790	Primed_HW_2	Primed_Heatwave	Primed	Heatwave	Primed_HW_2	SINGLE	Illumina NovaSeq 6000	6823321
+Primed_HW_1	SRR29712813	SAMN42331789	Primed_HW_1	Primed_Heatwave	Primed	Heatwave	Primed_HW_1	SINGLE	Illumina NovaSeq 6000	6815122
+Naive_HW_2	SRR29712814	SAMN42331780	Naive_HW_2	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_2	SINGLE	Illumina NovaSeq 6000	16456702
+Naive_HW_1	SRR29712815	SAMN42331779	Naive_HW_1	Naïve_Heatwave	Naïve	Heatwave	Naive_HW_1	SINGLE	Illumina NovaSeq 6000	9737886
