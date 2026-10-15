@@ -178,6 +178,7 @@ jobs:
             --treatment_level treatment \
             --viral_reference data/reference/pathogens/OsHV-1/NC_005881.2.fasta \
             --exclude_samples control2 \
+            --exclude_genes data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt \
             --outdir /tmp/aree-smoke/rnaseq-raw \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw
 

@@ -88,6 +88,7 @@ workflow {
     report_template = file("${projectDir}/assets/report_template.qmd")
     no_viral_qc     = file("${projectDir}/assets/NO_VIRAL_QC")
     no_deseq2_design = file("${projectDir}/assets/NO_DESEQ2_DESIGN")
+    no_exclude_genes = file("${projectDir}/assets/NO_EXCLUDE_GENES")
     collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
@@ -183,7 +184,10 @@ workflow {
             params.tag_seq as boolean,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
-            Channel.fromPath(params.sample_sheet, checkIfExists: true)
+            Channel.fromPath(params.sample_sheet, checkIfExists: true),
+            // Genes dropped before size factors (e.g. rRNA in total-RNA libraries).
+            params.exclude_genes ? Channel.fromPath(params.exclude_genes, checkIfExists: true).first()
+                                 : Channel.value(no_exclude_genes)
         )
 
         raw_de_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.results.map { sid, cid, tsv -> tsv }
