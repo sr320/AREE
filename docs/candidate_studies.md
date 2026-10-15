@@ -94,10 +94,10 @@ pooling would run on anything but simulated data.
 |---|---|---|---|---|---|
 | 4 | `PRJNA678408` | 10 WGBS | 5 diploid + 5 triploid | Desiccation + acute heat | Would be AREE's **first real methylation study**. But the intake converter does not handle region tables yet, and coordinate-based evidence is exposed to the assembly change described in [handling_genome_versions.md](handling_genome_versions.md). |
 | 5 | `PRJNA762441` | 18 RNA-seq | diploid/triploid × 3 timepoints, n=3 | Thermal stress, ploidy contrast | Clean design; ploidy is a useful resilience covariate. No linked publication confirmed. |
-| 6 | `PRJNA913164` | 72 | diploid/triploid, marine heatwave | Thermal tolerance | **Tag-seq (3′ counts), not standard RNA-seq.** Run it with `--tag_seq` (no length correction in Salmon or DESeq2; see `workflows/rnaseq/README.md`). Largest n on the list. No publication found; treat as unpublished data. |
+| 6 🟡 | `PRJNA913164` | 72 | diploid/triploid, marine heatwave | Thermal tolerance | **Tag-seq (3′ counts), not standard RNA-seq.** Run it with `--tag_seq` (no length correction in Salmon or DESeq2; see `workflows/rnaseq/README.md`). Largest n on the list. Registered as `GEORGE2023_HEATWAVE_PLOIDY` (#18): it **is** published, George et al. 2023, *Glob Chang Biol* ([10.1111/gcb.16880](https://doi.org/10.1111/gcb.16880)); the BioSamples carry no design, which comes from the authors' NCBI submission sheet. |
 | 7 ✅ | `PRJNA735889` | 76 RNA-seq (31 mislabelled AMPLICON) | 15 tanks, one per pH, × 5 oysters | OA "tipping point" | Registered as `LUTIER2022_OA_TIPPING`. **Do not filter on ENA library_strategy**: the AMPLICON runs are RNA-seq. One tank per pH, so fit on tanks, not oysters. |
-| 8 | `PRJNA1196326` | 6 RNA-seq | 2 groups × n=3 | Transgenerational OA | Very small, but transgenerational designs are directly relevant to breeding and rare in the public record. |
-| 9 | `PRJNA877226` | 6 RNA-seq | run labels blank in ENA | Vibrio × high temperature | Multi-stressor and cheap, but the deposited metadata does not describe groups — the design must be recovered from the paper before it is worth registering. |
+| 8 ❌ | `PRJNA1196326` | 6 RNA-seq | 2 groups × n=3 | Transgenerational OA | Registered as `IOCAS2024_OA_TRANSGEN` (#17) with `qc_status: failed`: each arm is one larval pool sequenced three times. See *Rejected* below. |
+| 9 ❌ | `PRJNA877226` | 6 RNA-seq | infected only, 12 h vs 48 h, n=3 | Vibrio × high temperature | Rejected: no control arm. See *Rejected* below. |
 
 ## Adjacent, but a different evidence type
 
@@ -347,7 +347,7 @@ The stress-relevant ones are mostly unreplicated:
 | `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Best ncRNA candidate.** Whole-transcriptome (miRNA + lncRNA-capable stranded RNA-seq) on breeding lines. The stressor/phenotype behind "HH vs CC" must be recovered from the paper. Probably growth or heat line, not confirmed. |
 | `PRJNA750516` | 2 miRNA + 6 lncRNA-labelled RNA | two groups (RZ_GH vs KTD_GL), **one sample alias each** | Skip: replicates are re-sequenced libraries of one sample. |
 | `PRJNA694837` | 6 miRNA + 6 RNA | BM vs OM mantle, n=3 | Probably shell colour/biomineralization. No stressor, so low priority. |
-| `PRJNA341808` | 3 "miRNA" + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | **Rejected 2026-10-14** (see *Rejected* below): the replicates are technical, and the "miRNA-Seq" control runs are mislabelled RNA-seq. |
+| `PRJNA341808` ❌ | 3 "miRNA" + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | **Rejected 2026-10-14** (see *Rejected* below): the replicates are technical, and the "miRNA-Seq" control runs are mislabelled RNA-seq. |
 | `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. |
 | `PRJNA266361`, `PRJNA259995`, `PRJNA232734` | 1–3 | miRNA stress/atlas, single pooled sample | Skip: unreplicated. |
 
@@ -423,6 +423,16 @@ far too small, so inverse-variance pooling would let it outweigh every real
 study it joins. Run `scripts/check_replicate_dispersion.py` on every
 `raw_reanalysis` study before harmonizing it.
 
+`PRJNA1196326` — *"Transcriptional acclimation following transgenerational
+exposure of oysters to ocean acidification"*, 6 RNA-seq runs (IOCAS).
+Registered as `IOCAS2024_OA_TRANSGEN` (#17) with `qc_status: failed`. It is
+the same failure as `PRJNA826964`, from the same institute: dispersion
+0.0008–0.0010 after a full-depth run, 42.6% of genes "DE", and an
+expressed-SNP screen showing each arm is **one larval pool** sequenced three
+times (within-arm allele-frequency difference 0.061 against 0.051 for one
+RNA). The two arms also descend from different parents, so parental pH is
+confounded with parental genotype.
+
 `PRJNA341808`: *C. gigas* D-hinged larvae, control / bacteria / heat /
 bacteria + heat, 3 Ion Torrent runs per group, 26.2 GB. **Rejected before
 download, 2026-10-14**, by `scripts/prescreen_replicates.py`. It is the
@@ -449,6 +459,42 @@ Two things the screen also settled:
   map to the transcriptome as well as the stress runs (55% vs 53–58%).
 - A genotype check could not have decided this case. Larval pools from one
   cross share parental genotypes, whether or not the pools are independent.
+
+An expressed-SNP screen run independently on 2026-10-13 (first ~2 M reads
+of the control and heat runs, 167 sites) agrees but cannot decide alone:
+runs within a group differ in allele frequency by 0.062 against 0.057
+expected from one RNA sample, and groups differ from each other by 0.146.
+That is what one RNA per group looks like, but large pools from one cross
+would look much the same, as noted above.
+
+`PRJNA694496` — Tan et al. 2021, *Front Physiol*
+([10.3389/fphys.2021.663023](https://doi.org/10.3389/fphys.2021.663023)),
+larvae of a thermotolerance-selected line vs a control line, 6 runs.
+Rejected because the design **cannot be recovered**. All six runs share one
+BioSample, whose tissue ("gill") also contradicts the experiment title
+("larva"). The run aliases are vendor IDs (`W056-01-T01`…`T06`), and the
+paper says only "three replicates for each group" without mapping runs to
+groups. Assigning groups would be a guess. The authors also note that their
+survival difference "may not fully reflect the thermotolerance" of the lines.
+
+`PRJNA877226` — *"RNA-seq of Pacific oyster infected with Vibrio pathogen
+under high temperature"*, 6 runs (Ocean University of China). The groups are
+recoverable after all: the BioSample titles give *V. alginolyticus*-infected
+gill at high temperature, **12 h vs 48 h**, n=3. But the deposit has **no
+uninfected control and no normal-temperature arm**. The run names (`C33-n`)
+match the 23 °C arm (`C23-n`) of the same lab's `PRJNA756710`
+(`LI2022_LOWSAL_VIBRIO`, #26). Using that study's 30 ppt libraries as a
+control would cross BioProjects and probably sequencing batches, so it is not
+done. A within-infection time contrast is not stress-vs-control evidence.
+
+**Two lessons from these rejections.** One BioSample per group, or a whole
+study under one BioSample, is the cheapest early warning of
+pseudo-replication. And replication can be checked before the full download:
+`scripts/prescreen_replicates.py` does it from a subsample. An expressed-SNP
+genotype check (`check_replicate_genotypes.py`, currently in sr320/AREE-co)
+complements it when libraries are single animals or small pools of unrelated
+animals. It cannot decide for large pools of siblings, which converge on
+their parents' allele frequencies whether or not they are independent.
 
 ## Sourcing notes
 
