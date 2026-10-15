@@ -1,0 +1,15 @@
+ID	salinity	timepoint	title_replicate	biosample_title
+AA1	30ppt	0h	1	post-infection 0h(replicate=biological replicate-1) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinity
+AA2	30ppt	0h	2	post-infection 0h(replicate=biological replicate-2) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinty
+AA3	10ppt	12h	1	post-infection 12h(replicate=biological replicate-1) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity
+AA4	30ppt	12h	1	post-infection 12h(replicate=biological replicate-1) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinty
+AA5	10ppt	12h	2	post-infection 12h(replicate=biological replicate-2) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity
+AA6	30ppt	12h	2	post-infection 12h(replicate=biological replicate-2) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinity
+AA7	30ppt	12h	3	post-infection 12h(replicate=biological replicate-3) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinty
+AA8	10ppt	12h	3	post-infection 12h(replicate=biological replicate-3) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity
+AA9	30ppt	48h	1	post-infection 48h(replicate=biological replicate-1) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinity
+AA10	10ppt	48h	1	post-infection 48h(replicate=biological replicate-1) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity
+AA11	30ppt	48h	2	post-infection 48h(replicate=biological replicate-2) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinity
+AA12	10ppt	48h	2	post-infection 48h(replicate=biological replicate-2) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity
+AA13	10ppt	48h	3	post-infection 48h(replicate=biological replicate-3) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity
+AA14	30ppt	48h	3	post-infection 48h(replicate=biological replicate-3) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at normal salinty
