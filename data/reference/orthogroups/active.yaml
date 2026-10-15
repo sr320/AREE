@@ -1,0 +1,3 @@
+# The orthogroup run harmonization attaches to evidence records.
+# See src/mappings/orthogroups.py and docs/identifier_mapping.md.
+run: orthofinder3.1.5_2026-10-13

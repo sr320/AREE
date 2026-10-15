@@ -270,7 +270,7 @@ HFS+ or APFS, which support the symlinks and permissions Nextflow relies on.
 
 | Location | Drive | Purpose |
 |---|---|---|
-| `/Volumes/Samsung T5/aree/work` | Samsung T5, SSD, ~450 MB/s | Nextflow work directory (`-profile workstation`) |
+| `/Volumes/ST5/aree/work` | Samsung T5 (volume `ST5`), SSD, ~450 MB/s | Nextflow work directory (`-profile workstation`) |
 | `/Volumes/blue-block/aree/raw/<STUDY_ID>/` | blue-block, HDD, 4 TB, ~140 MB/s | Raw FASTQs; `data/raw` is a symlink here |
 | `/Volumes/blue-block/aree/reference/<ASSEMBLY>/` | blue-block | Transcriptome, GTF, tx2gene, Salmon index; `data/reference/<ASSEMBLY>` is a symlink here |
 | `results/` | internal APFS | Published outputs, unchanged, so `aree harmonize` relative paths keep working |
@@ -286,6 +286,21 @@ ln -sfn /Volumes/blue-block/aree/reference/GCF_963853765.1 data/reference/GCF_96
 The `workstation` profile lives in `config/base.config`, so every assay
 workflow accepts it. Combine it with an executor profile
 (`-profile local,workstation`); it sets only `workDir`.
+
+**No path a tool sees may contain a space.** The SSD was mounted as
+`/Volumes/Samsung T5` until 2026-10-12, which broke three things:
+- Java split `NXF_TEMP` / `TMPDIR` on the space, so Nextflow failed before any
+  task started.
+- Trim Galore and Bismark (Perl) pass the working directory unquoted to the
+  shell, and resolve it to its physical path. So they failed even through a
+  space-free symlink (`sh: /Volumes/Samsung: Operation not permitted`).
+- Renaming the volume mid-run moved the publish directory out from under a
+  running job.
+
+Renaming the volume to `ST5` fixes the first two. Don't give a data volume a
+name with a space, and don't rename one while a run is publishing to it.
+Workflow manifests written before the rename still record
+`/Volumes/Samsung T5/...` as their `outdir`, which is where those runs wrote.
 
 ### Environment notes
 

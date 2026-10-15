@@ -206,7 +206,59 @@ prepare those tables by a documented script of your own for now.
 
 ## 7. Next steps
 
-For a `raw_reanalysis` study, check after the workflow runs and **before
+For a `raw_reanalysis` study, `aree fetch-samplesheet` (see
+[first_raw_reanalysis.md](first_raw_reanalysis.md)) writes
+`fastq_manifest.tsv` alongside the sample sheet, and the two always list the
+same runs:
+
+- Each run gets exactly one manifest row per mate: 1 for `SINGLE`, 2 for
+  `PAIRED`. Any other count is an error naming the runs. One exception: when
+  a paired run's ENA FASTQ also includes an unpaired `RUN.fastq.gz` beside
+  `RUN_1`/`RUN_2`, that file is left out and listed under
+  `unpaired_files_dropped` in `ena_provenance.json`.
+- URLs come from ENA's generated FASTQ (`fastq_ftp`) where it exists. Some
+  public runs have none, and only the submitter's own files (`submitted_ftp`).
+  When those are all FASTQ, they are used instead, with the submitter's MD5s
+  and sizes. The manifest's `source` column (`fastq_ftp` or `submitted_ftp`)
+  and `submitted_ftp_runs` in `ena_provenance.json` record which runs these
+  are. PRJEB105019's ERR15996548 is one example. Submitted files keep their
+  own names (e.g. `..._DNA_R1.fastq.gz`), so download them by
+  `run_accession` and `mate`, not by file name.
+- A run with neither (no ENA FASTQ, and submitted files that are BAM, CRAM
+  or missing) is an error naming the run, not a silent omission. Resolve it
+  with the submitter or ENA before going further. Do not hand-edit the
+  manifest.
+
+**Before downloading** a `raw_reanalysis` study, pre-screen its replicates on
+the first ~1 M reads of each library:
+
+```bash
+python scripts/prescreen_replicates.py --source ncbi \
+    --samplesheet data/studies/STUDY_ID/samplesheet.tsv \
+    --manifest data/studies/STUDY_ID/fastq_manifest.tsv \
+    --salmon-index data/reference/GCF_963853765.1/salmon_index \
+    --level CONTROL_LEVEL --level TREATMENT_LEVEL
+```
+
+It quantifies only those reads and applies the same dispersion statistic as
+the full check below, at about 1 GB and 10 minutes per study instead of tens
+of GB. `--source ncbi` uses `fastq-dump -X` (sra-tools, in
+`environment.yml`) and is usually much faster than ENA. Use `--source ena`
+to screen the exact files the manifest would download. It was calibrated on
+two studies with known outcomes (1 M reads per library; full-depth values in
+brackets):
+
+| Study | Pre-screen | Full depth | Verdict |
+|---|---|---|---|
+| `WANG2024_HEAT_GILL` | 0.0038 / 0.0029 | (0.0030 / 0.0009) | fail |
+| `LI2022_HEAT_PLOIDY` d_0 / d_f | 0.0191 / 0.0218 | (0.0139 / 0.0143) | pass |
+
+The subsample reads a little high, so a borderline study can pass the
+pre-screen and still fail at full depth. A pass is permission to download,
+not a substitute for the full check. A fail means: do not download the study
+as is, and record why in [candidate_studies.md](candidate_studies.md).
+
+Check after the workflow runs and **before
 harmonizing** that its replicates are independent animals:
 
 ```bash
@@ -218,10 +270,15 @@ python scripts/check_replicate_dispersion.py \
 It exits non-zero if any group's median gene dispersion falls below 0.005.
 Real *M. gigas* biological replicates sit around 0.03–0.05. A group far below
 that is behaving like technical replicates, and its DESeq2 standard errors
-are too small to pool. `IOCAS2022_OA_ENERGY` failed this check despite
-deposited metadata labelling every library a biological replicate; see
-[candidate_studies.md](candidate_studies.md). If a study fails, set
-`qc_status: failed`, record the evidence, and do not harmonize it.
+are too small to pool. `IOCAS2022_OA_ENERGY` and `WANG2024_HEAT_GILL` failed
+this check even though the deposited metadata labelled every library a
+biological replicate; see [candidate_studies.md](candidate_studies.md). If a
+study fails, set `qc_status: failed`, record the evidence, and do not
+harmonize it. For individually sequenced animals, comparing allele fractions
+at expressed SNPs can show *why* a group failed (one RNA source vs distinct
+animals). `data/studies/WANG2024_HEAT_GILL/genotype_check/` is a worked
+example. It cannot tell pools of larvae from one cross apart, since those
+share parental genotypes.
 
 Once a study is registered and has passed QC, harmonize its results into the shared evidence
 table — see [raw_vs_processed.md](raw_vs_processed.md) for which mode applies

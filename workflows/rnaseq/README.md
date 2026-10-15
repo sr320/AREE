@@ -123,6 +123,7 @@ evidence-record-level `quality_flags` from study/comparison metadata).
 | Standardized output | `STANDARDIZE_OUTPUT` validates/reshapes DESeq2 output | `STANDARDIZE_OUTPUT` validates/reshapes the provided table |
 | Sample exclusion | `--exclude_samples`, recorded in the manifest | n/a |
 | Covariates | `--covariates` (e.g. `family`), fitted design recorded in the manifest | n/a |
+| Gene exclusion | `--exclude_genes` (e.g. rRNA in total-RNA libraries), counts recorded in the manifest | n/a |
 | Viral read QC | optional, `--viral_reference` | n/a |
 
 Both modes converge on the same standardized TSV schema, written to
@@ -240,6 +241,104 @@ and a reference that differs from the challenge strain lowers counts in
 infected animals; it cannot put reads into an uninfected one. For OsHV-1,
 `config/CALLA2026_OSHV.config` points at RefSeq `NC_005881.2`
 (`data/reference/pathogens/OsHV-1/`, with a provenance sidecar).
+
+## Gene exclusion for total-RNA libraries (`raw_reanalysis` only)
+
+**`--exclude_genes`** takes a file of `gene_id`s, one per line, with `#`
+starting a comment. Those genes are removed from the tximport matrices before
+anything else is estimated: pseudo-bulk sums, size factors, dispersions and
+the contrast. The use it was written for is rRNA in libraries that were
+neither rRNA-depleted nor poly-A selected. In `ZHONG2025_PONV1_MORTALITY`
+(field metatranscriptomes), rRNA took 65–97% of gene counts, and its share
+differed between farm and wild animals.
+
+What it does and does not change was measured on that study. Three farm and
+three wild mantle libraries were run at 1 M read pairs each, with and without
+the rRNA list:
+
+- **Size factors are unchanged** (every ratio 1.00), and so are fold
+  changes for the other genes (r = 1.00). DESeq2's median-of-ratios takes
+  a median over thousands of genes, and the six rRNA genes Salmon reports
+  (it collapses the near-identical rRNA copies) cannot move it. Without the
+  option, normalization is not biased.
+- **rRNA genes stop appearing as results.** Four rRNA genes were in the
+  uncorrected result table (499 vs 496 genes at padj < 0.05). They would
+  otherwise reach the evidence table as "differentially expressed genes".
+- **The rRNA share per library is recorded** (here 73–97%). It is the
+  number to read when an arm's libraries look different.
+
+Use it for any total-RNA study. It is a cleanliness and QC step, not a
+correction to normalization.
+
+Build the list from the annotation the run uses, so the ids match `tx2gene`:
+
+```bash
+python scripts/list_genes_by_biotype.py \
+    --gtf data/reference/GCF_963853765.1/genomic.gtf --biotype rRNA \
+    --tx2gene data/reference/GCF_963853765.1/tx2gene.tsv \
+    --out data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt
+```
+
+The list for the current reference is committed:
+`data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt`, 68 genes
+with NCBI `gene_biotype "rRNA"`. Only those present in the quantification are
+dropped: Salmon's index collapses identical sequences, so many rRNA copies
+have no row of their own. The manifest's `n_excluded` counts the ones that
+did. A list that matches no quantified gene stops
+the run, so a list built for another annotation cannot silently do nothing.
+The manifest records the path under `parameters.exclude_genes`. Under
+`deseq2_design.exclude_genes` it records the file's name and MD5, how many
+genes were listed and dropped, and the min, median and max share of each
+library's counts they held. That share is QC worth reading: a large
+difference between arms means the arms' libraries differ in composition, not
+just in depth.
+
+Excluded genes get no result rows, so they never reach the evidence table.
+Use this for technical contaminants of the count matrix (rRNA,
+mitochondrial rRNA, spike-ins), never to remove genes because of their
+results.
+
+## Several comparisons of one study
+
+Run each registered comparison as its own `nextflow run`, one after another,
+from the same launch directory, with the same work directory, and with
+`-resume`. Give each run its own `--outdir`:
+
+```bash
+for c in starved_vs_fed_0hpc fed_oshv1_24hpc_vs_0hpc; do
+  nextflow -c config/DUPERRET2025_STARVE_RNASEQ.config run workflows/rnaseq \
+    -profile local,workstation -resume --comparison_id "$c" ... \
+    --outdir "results/rnaseq/DUPERRET2025_STARVE_RNASEQ/$c"
+done
+```
+
+The first run does all the per-library work. Later runs take FASTQC, fastp,
+`SALMON_INDEX`, `SALMON_QUANT`, `VIRAL_INDEX`, `VIRAL_QUANT` and MultiQC from
+the cache. They rerun only DESeq2, viral summary, standardization, manifest
+and report. The per-library processes read study-level params only (`reads`,
+`single_end`, `se_adapter`, `tag_seq`, the reference files), so a new
+`--comparison_id`, `--control_level`/`--treatment_level`, `--replicate_unit`,
+`--exclude_samples` or `--outdir` leaves their task hashes unchanged. A cached
+task's outputs are published to the new `--outdir` as well.
+`tests/test_rnaseq_resume_across_comparisons.py` checks this with two stub
+runs, paired and single end, in CI's Nextflow job.
+
+**Launch Nextflow with the `nextflow` launcher script**, e.g. from
+`conda activate aree` (`environment.yml`) or a current launcher from
+nextflow.io. Do not run `java -jar ~/.nextflow/framework/<ver>/nextflow-<ver>-one.jar`.
+The launcher passes `--add-opens` flags to the JVM. Without them, Nextflow
+cannot serialize task cache entries. The writes fail silently, every run
+reports `cached=0`, and every library is recomputed. `main.nf` checks for
+this at startup. It warns on a plain run and stops a `-resume` run.
+
+That happened with the three DUPERRET2025_STARVE_RNASEQ comparisons on
+2026-10-12. `-dump-hashes` showed the same FASTQC hash for a library in every
+comparison. The cache database held no entries, so Nextflow treated each
+existing task folder as foreign and moved to a new hash. That is why one
+library showed different task folders in different runs. Those folders are not
+in any cache. The first correctly launched run recomputes them once, and later
+comparisons reuse its tasks. Remove the old work directory only after that run
+has finished.
 
 ## Feeding output into the AREE CLI
 

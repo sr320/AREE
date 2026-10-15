@@ -1,0 +1,184 @@
+# RNA-seq of Duperret et al. 2025 (Sci Total Environ 994:180026): oysters held
+# at 30 C (non-permissive) or 23 C (permissive) for 16 days, then OsHV-1 µVar
+# cohabitation challenge. 30 C almost abolished POMS mortality, and that
+# survival was measured in the same tanks the libraries came from.
+#
+# ONE STUDY, TWO ENA PROJECTS, ONE SHARED CONTROL ARM. The paper deposits its
+# 30 C reads as PRJEB86646 and its 23 C reads as PRJEB86525. PRJEB86525 is also
+# the fed control of the starvation paper (Duperret et al. 2025, iScience), so
+# its 42 runs are already the control arm of DUPERRET2025_STARVE_RNASEQ. The two
+# papers describe one Ifremer DECICOMP mesocosm experiment started 25 Aug 2020,
+# with three arms: 23 C fed (code 3), 30 C fed (code 4) and 23 C starved
+# (code 5). They report identical 23 C mortality (F14R 75.5%, F11N 100%), and
+# library numbers interleave all three arms (e.g. 7-9 23 C, 10-12 30 C, 13-15
+# starved). Registered here as one study across both projects; the sample sheet
+# is two `aree fetch-samplesheet` runs concatenated unchanged (see
+# ena_provenance.json, which also lists the shared control runs).
+#
+# THE SHARED CONTROL MATTERS FOR POOLING. This study's primary comparison
+# (30 vs 23 C at 0 hpc) and DUPERRET2025_STARVE_RNASEQ's (starved vs fed at
+# 0 hpc) use the same 23 C libraries as reference, so their effect estimates
+# are correlated through that arm. They are separate treatments of one
+# experiment, not independent studies, and must not be pooled as if they were.
+#
+# NOT YET RUN. Single-end 75 bp, 106.1 GB; the 23 C reads are the same files
+# DUPERRET2025_STARVE_RNASEQ fetched.
+
+study_id: DUPERRET2025_HEAT_RNASEQ
+simulated: false
+
+accessions:
+  doi: "10.1016/j.scitotenv.2025.180026"
+  bioproject: "PRJEB86646"
+  geo: null
+  sra: null
+  ena: "PRJEB86646; PRJEB86525"
+  proteomexchange: null
+  other: null
+
+citation: "Duperret L, Valdivieso A, Kunselman E, Petton B, Morga B, de Lorgeril J, Pernet F, Degremont L, Faury N, Allienne JF, Pouzadoux J, Romatif O, Courtay G, Monaco CJ, Toulza E, Delisle L, Vidal-Dupiol J, Lagorce A, Mitta G (2025) Deciphering the molecular mechanisms of oyster resistance to Pacific Oyster Mortality Syndrome (POMS) disease induced by high temperatures. Science of the Total Environment 994:180026. https://doi.org/10.1016/j.scitotenv.2025.180026 (PMID 40669317; CC-BY; full text also at https://hal.science/hal-05338576). RNA-seq: ENA PRJEB86646 (30 C) and PRJEB86525 (23 C; also the control of AREE study DUPERRET2025_STARVE_RNASEQ), under the Ifremer DECICOMP umbrella BioProject PRJEB86647. 16S: PRJEB86594 (30 C), PRJEB86519 (23 C)."
+
+species: "Magallana gigas"
+strain_or_population: "Ifremer full-sib families F11N and F14R (POMS-susceptible), 3 months old at challenge (25 Aug 2020). A third family, H2D, shared the tanks and was scored for survival but not sequenced."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NextSeq 550, single-end 75 bp; NEBNext Ultra library prep (per the paper). 84 runs (42 at 30 C, 42 at 23 C), 106.1 GB FASTQ reported by ENA; 30 C runs 23.2-31.0 M reads."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ for all 84 runs are public in ENA: PRJEB86646 (30 C, 42 runs, public 2025-08-01) and PRJEB86525 (23 C, 42 runs, public 2025-08-01). The paper's 84 libraries are all deposited. Every run has an ENA-processed FASTQ (fastq_ftp). Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The 23 C reads for 0 and 24 hpc are already staged for DUPERRET2025_STARVE_RNASEQ (fetched from NCBI's SRA mirror; see that study's read_source.tsv)."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. 2 families (F11N, F14R) x 2 temperatures (23 C, code 3;
+# 30 C, code 4) x 7 times (0, 3, 6, 12, 24, 48, 72 hpc) x 3 = 84 runs, parsed
+# from experiment_title ('P_F14R_4_0_1' = F14R, 30 C, 0 hpc, replicate 1). The
+# parsed temperature matches the BioSample temperature attribute for all 84.
+#
+# THE SAMPLE UNIT IS A POOL FROM ONE TANK. Per the paper, six 400-L tanks
+# (three per temperature) each held all three families, and each sample is a
+# pool of 10 live oysters per tank and family. Replicates 1-3 are taken to be
+# the tanks (inferred; tanks are not named in the deposit). As in
+# DUPERRET2025_STARVE_RNASEQ, every comparison is fitted on pseudo-bulk tank
+# units, families summed (`--replicate_unit tank` across temperatures,
+# `tank_hpc` within a temperature over time), giving 3 vs 3. In that study,
+# residual expression showed no shared same-replicate signal between families,
+# so replicate n may not be tank n; the 3 vs 3 fit stays conservative either
+# way. Per-family runs are the sensitivity analysis.
+#
+# COMPARISONS follow the paper (temperature effect at baseline, and infection
+# response within a temperature). The 23 C infection contrast (24 vs 0 hpc) is
+# not registered again: it is DUPERRET2025_STARVE_RNASEQ's
+# fed_oshv1_24hpc_vs_0hpc, on the same libraries.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "heat30_vs_23c_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Water temperature raised 1 C per day to 30 C, then 16 days of acclimation at 30 C (fed ad libitum) before OsHV-1 µVar cohabitation challenge, versus 23 C (permissive) with the same feeding."
+    stressor_standardized: "temperature"
+    exposure_intensity: "30 C vs 23 C"
+    exposure_duration: "ramp (1 C/day) plus 16 d acclimation before challenge"
+    exposure_timing: "sampled at 0 hpc: end of acclimation, start of cohabitation, before infection"
+    control_condition: "23 C, fed ad libitum (code 3), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries, summed to 3 tank units; --replicate_unit tank). The same libraries are the control of DUPERRET2025_STARVE_RNASEQ."
+    treatment_condition: "30 C, fed ad libitum (code 4), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries, summed to 3 tank units; --replicate_unit tank)"
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_post_challenge (final mortality 23 C vs 30 C: F11N 100% vs 11.7%; F14R 75.5% vs 3.4%; H2D, not sequenced, 27.1% vs 1.4%)"
+    resilience_classification: "resilience"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "heat30_oshv1_24hpc_vs_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Cohabitation with OsHV-1 µVar-injected donor oysters at 30 C (seawater flow stopped for the first 96 hpc), after 16 days of acclimation at 30 C; 24 hpc compared with 0 hpc."
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: "cohabitation with injected donors (2.2 x 10^5 genome copies/µL suspension), at 30 C"
+    exposure_duration: "24 h post-cohabitation (after 16 d at 30 C)"
+    exposure_timing: "24 hpc"
+    control_condition: "30 C, 0 hpc, before infection (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    treatment_condition: "30 C, 24 hpc (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "final mortality at 30 C (F11N 11.7%, F14R 3.4%); viral load and transcription reported in the paper"
+    resilience_classification: "disease"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: false
+
+quality_flags:
+  - raw_data_available
+  - tank_level_replication
+  - low_replication
+
+limitations: >
+  (1) Not yet run. (2) Shared control: the 23 C arm is the same 42 libraries
+  as DUPERRET2025_STARVE_RNASEQ's fed arm, so this study's primary contrast
+  and that study's starved_vs_fed_0hpc share their reference group. Their
+  estimates are correlated and must not be pooled as independent studies.
+  (3) Replication is 3 tanks per temperature. Each library pools 10 oysters,
+  so between-oyster variance is averaged away. Both families share each
+  tank, so comparisons are fitted on pseudo-bulk tank units (3 vs 3).
+  Replicate = tank is inferred and was not supported by residual
+  correlation in DUPERRET2025_STARVE_RNASEQ. (4) 30 C for 16 days is itself
+  a strong physiological manipulation. The paper reports metabolic
+  reprogramming and raised baseline antiviral immunity, so most 0 hpc
+  differences will reflect the temperature response, not resistance markers
+  that would generalize to oysters at permissive temperature. The comparison
+  associates expression with a treatment that raised survival. (5) The two
+  papers describe the shared 23 C tanks differently: the temperature paper
+  has F11N, F14R and H2D in every tank with 204.4 g of F14R, while the diet
+  paper has F11N and F14R with 277.7 g of F14R. The deposited libraries are
+  the same, so this affects only how tank density is described. (6) Only the
+  two families with the most contrasting survival were sequenced (selection
+  on the outcome); H2D's survival is reported but has no expression data.
+  (7) In the infection contrast, time since tank set-up is confounded with
+  infection time, and it is `disease` evidence, not resilience. The paper
+  reports that 30 C prevented typical POMS development (its section 3.2),
+  so the 24 hpc infection response at 30 C may be small.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-14"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB86646 --study-id
+    DUPERRET2025_HEAT_RNASEQ`. The 23 C project PRJEB86525 is listed in
+    `accessions` because this study's control arm is drawn from it. It is
+    also listed by DUPERRET2025_STARVE_RNASEQ, deliberately: both papers
+    cite it as their control. Sample sheet and FASTQ manifest were generated
+    by running `aree fetch-samplesheet --bioproject <P> --study
+    DUPERRET2025_HEAT_RNASEQ --label-field experiment_title --label-pattern
+    'P_(?P<family>F1[14][NR])_(?P<treatment_code>[34])_(?P<hpc>\d+)_(?P<replicate>\d)'
+    --condition-attribute treatment_code --condition-attribute hpc
+    --attribute family --attribute replicate --attribute isolate --attribute
+    age --attribute temperature --attribute tissue_type --attribute
+    'experimental factor'` once for each project, then concatenating the
+    outputs unchanged and adding temp_c, tank and tank_hpc columns
+    (ena_provenance.json). Checks: the parsed temperature equals the BioSample
+    temperature for all 84 runs, and the 42 23 C runs are exactly
+    DUPERRET2025_STARVE_RNASEQ's fed (code 3) runs. Design, tanks, pooling,
+    survival values and accessions were read from the CC-BY publisher PDF
+    (HAL hal-05338576), 2026-10-14. The library-number interleaving was read
+    from ENA library_name for PRJEB86525, PRJEB86646 and PRJEB86618.
+    Comparisons were chosen before any result was computed;
+    heat30_vs_23c_0hpc is meta_analysis_primary. Europe PMC finds no paper
+    citing PRJEB86646 by accession (2026-10-14); the paper names it in its
+    data availability statement.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86646"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86647"
+    - "https://doi.org/10.1016/j.scitotenv.2025.180026"
+    - "https://hal.science/hal-05338576"
