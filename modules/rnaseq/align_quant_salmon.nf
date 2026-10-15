@@ -60,22 +60,26 @@ process SALMON_QUANT {
 
     script:
     // Salmon quant with GTF-based gene-level summarization via --geneMap.
-    // Paired-end by default; --single_end passes one FASTQ with -r.
+    // Paired-end or single-end by file count; a single file stages as a Path.
+    // Fragment GC-bias correction is applied to paired-end libraries only:
+    // single-end reads do not observe fragment length, which the model needs,
+    // and Salmon documents it as beta for single-end data.
+    //
     // --tag_seq is for 3' tag libraries (e.g. QuantSeq), which yield about one
     // read per transcript regardless of its length: effective-length
     // correction is switched off, and so is --gcBias, which models GC content
     // along whole fragments.
-    def reads_opt = params.single_end ? "-r ${reads[0]}" : "-1 ${reads[0]} -2 ${reads[1]}"
-    def bias_opt  = params.tag_seq ? '--noLengthCorrection' : '--gcBias'
+    def fq = reads instanceof Collection ? reads as List : [ reads ]
+    def input = fq.size() == 1 ? "-r ${fq[0]}" : "-1 ${fq[0]} -2 ${fq[1]}" + (params.tag_seq ? '' : ' --gcBias')
+    def length_opt = params.tag_seq ? '--noLengthCorrection' : ''
     """
     salmon quant \\
         -i ${salmon_index} \\
         -l A \\
-        ${reads_opt} \\
+        ${input} \\
         -p ${task.cpus} \\
         --geneMap ${gtf} \\
-        --validateMappings \\
-        ${bias_opt} \\
+        --validateMappings ${length_opt} \\
         -o ${sample_id}
 
     cat <<-END_VERSIONS > versions.yml

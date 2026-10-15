@@ -1,0 +1,77 @@
+{
+  "artifact": "mmerc_gene_id_crosswalk.tsv",
+  "artifact_sha256": "89dd154cf4511acbbb997041ad1e68e81297b764048ba9ef6884f0eff40896f1",
+  "builder": "src/mappings/build_crosswalk.py",
+  "builder_version": "1.0.0",
+  "date_generated": "2026-10-11",
+  "organism": "Mercenaria mercenaria (Venus mercenaria), Hard clam",
+  "ncbi_taxid": 6596,
+  "ncbi_reference_annotation_at_build": "GCF_021730395.1 (MADL_Memer_1), annotation release GCF_021730395.1-RS_2023_01",
+  "sources": [
+    {
+      "name": "NCBI Gene gene_info",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Invertebrates/All_Invertebrates.gene_info.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/mmerc_gene_info.tsv",
+      "sha256_filtered": "7db09c4a37aed9b536d68f64417d49c89dd39d1a14db116873a80b56e5721489",
+      "records": 45378
+    },
+    {
+      "name": "UniProtKB",
+      "url": "https://rest.uniprot.org/uniprotkb/stream?query=organism_id:6596&fields=accession,reviewed,protein_name,gene_names,gene_primary,xref_geneid,xref_refseq&format=tsv&compressed=true",
+      "local_copy": "data/reference/crosswalk/_sources/mmerc_uniprot.tsv",
+      "sha256": "bfce76214859a30444c030a3cf10bf065dfbc65f34d44fd9cd53f2d106dca3ad",
+      "entries_with_geneid_xref": 2,
+      "genes_linked": 2
+    },
+    {
+      "name": "NCBI Gene gene_history",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_history.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/mmerc_gene_history.tsv",
+      "sha256_filtered": "10104622170493549f9931598afc3e56e84b3b1074ecb425a3af44410a744980",
+      "remappable_retired_ids": 3656,
+      "discontinued_without_replacement": 9078
+    }
+  ],
+  "coverage": {
+    "genes_total": 45378,
+    "with_ensembl_xref": {
+      "n": 25520,
+      "pct": 56.24
+    },
+    "with_uniprot_accession": {
+      "n": 2,
+      "pct": 0.0
+    },
+    "with_multiple_uniprot_accessions": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "with_named_symbol": {
+      "n": 1081,
+      "pct": 2.38
+    },
+    "with_orthogroup": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "genes_by_type": {
+      "protein-coding": 38333,
+      "ncRNA": 5367,
+      "tRNA": 1065,
+      "pseudo": 458,
+      "snRNA": 81,
+      "snoRNA": 59,
+      "rRNA": 14,
+      "other": 1
+    },
+    "retired_gene_ids_remappable": 3656,
+    "retired_gene_ids_without_replacement": 9078
+  },
+  "known_limitations": [
+    "UniProt cross-references to NCBI GeneID are sparse for this organism; most TrEMBL entries carry no GeneID or RefSeq xref and therefore cannot be linked.",
+    "orthogroup_id is empty; cross-species evidence pooling requires an ortholog inference run that this builder does not perform.",
+    "Ensembl xrefs come from NCBI dbXrefs and reflect Ensembl Metazoa's assembly, which may differ from the current NCBI reference assembly.",
+    "gene_synonyms is emitted for curation and future symbol resolution but is not currently consulted by harmonize.identifiers.",
+    "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are labelled 'inferred' because the remap crosses an annotation version; GeneIDs discontinued without a replacement stay 'unresolved' by design."
+  ]
+}

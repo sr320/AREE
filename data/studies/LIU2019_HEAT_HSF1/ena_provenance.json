@@ -1,0 +1,51 @@
+{
+  "study_id": "LIU2019_HEAT_HSF1",
+  "bioproject": "PRJNA516762",
+  "date_generated": "2026-10-12",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA516762&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "treatment"
+  ],
+  "n_runs": 12,
+  "n_samples": 12,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "HS": 3,
+    "HS_RNAi": 3,
+    "RNAi": 3,
+    "control": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 40948854116,
+  "outputs": {
+    "data/studies/LIU2019_HEAT_HSF1/samplesheet.tsv": "863737966d8e476fe08a48f5a04ef8246200ce547c32507a8cdddc82839d9481",
+    "data/studies/LIU2019_HEAT_HSF1/fastq_manifest.tsv": "fd01ff72951f8c10189c40280ae243e8e38e0248bbc9372da15997a72eeb0183"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<treatment>control|HS&RNAi|HS|RNAi)-(?P<replicate>[1-3])$",
+    "labels": {
+      "SRR8485503": "HS&RNAi-2",
+      "SRR8485504": "HS&RNAi-3",
+      "SRR8485505": "RNAi-1",
+      "SRR8485506": "RNAi-2",
+      "SRR8485507": "HS-2",
+      "SRR8485508": "HS-3",
+      "SRR8485509": "control-3",
+      "SRR8485510": "HS-1",
+      "SRR8485511": "control-1",
+      "SRR8485512": "control-2",
+      "SRR8485513": "RNAi-3",
+      "SRR8485514": "HS&RNAi-1"
+    }
+  }
+}

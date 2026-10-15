@@ -146,15 +146,11 @@ awk -F'\t' 'NR>1 {print $4"  "$1"_"$2".fastq.gz"}' \
   data/studies/CALLA2026_OSHV/fastq_manifest.tsv > md5sums.txt
 md5sum -c md5sums.txt
 
-# 2. Reference transcriptome + annotation, and a transcript->gene map.
-BASE=https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/963/853/765/GCF_963853765.1_xbMagGiga1.1
-curl -O "$BASE/GCF_963853765.1_xbMagGiga1.1_rna.fna.gz"
-curl -O "$BASE/GCF_963853765.1_xbMagGiga1.1_genomic.gtf.gz"
-awk -F'\t' '$3=="transcript"{
-  if (match($9, /transcript_id "[^"]+"/)) tx=substr($9,RSTART+15,RLENGTH-16)
-  if (match($9, /GeneID:[0-9]+/))        g=substr($9,RSTART+7,RLENGTH-7)
-  if (tx && g) print tx"\t"g
-}' genomic.gtf | sort -u > tx2gene.tsv
+# 2. Reference transcriptome + annotation, and a transcript->gene map, verified
+#    against NCBI's MD5s and recorded in reference_provenance.json
+#    (docs/reference_bundles.md). The pilot used an equivalent curl/awk recipe;
+#    `fetch-reference` reproduces its tx2gene.tsv byte for byte.
+aree fetch-reference --assembly GCF_963853765.1
 
 # 3. Run one comparison. The `workstation` profile puts the work directory on
 #    the T5 SSD (see "Storage layout" below); never put it on exFAT.
@@ -167,7 +163,6 @@ nextflow run workflows/rnaseq -profile local,workstation \
 # 4. Harmonize the standardized output. --comparison is required: the workflow
 #    names its output for the stage that produced it, and a raw-mode study has
 #    no results_file to match a filename against.
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study CALLA2026_OSHV \
   --comparison midori_oshv1_france_vs_control \
   --input results/rnaseq/standardized/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv
@@ -275,7 +270,7 @@ HFS+ or APFS, which support the symlinks and permissions Nextflow relies on.
 
 | Location | Drive | Purpose |
 |---|---|---|
-| `/Volumes/Samsung T5/aree/work` | Samsung T5, SSD, ~450 MB/s | Nextflow work directory (`-profile workstation`) |
+| `/Volumes/ST5/aree/work` | Samsung T5 (volume `ST5`), SSD, ~450 MB/s | Nextflow work directory (`-profile workstation`) |
 | `/Volumes/blue-block/aree/raw/<STUDY_ID>/` | blue-block, HDD, 4 TB, ~140 MB/s | Raw FASTQs; `data/raw` is a symlink here |
 | `/Volumes/blue-block/aree/reference/<ASSEMBLY>/` | blue-block | Transcriptome, GTF, tx2gene, Salmon index; `data/reference/<ASSEMBLY>` is a symlink here |
 | `results/` | internal APFS | Published outputs, unchanged, so `aree harmonize` relative paths keep working |
@@ -291,6 +286,21 @@ ln -sfn /Volumes/blue-block/aree/reference/GCF_963853765.1 data/reference/GCF_96
 The `workstation` profile lives in `config/base.config`, so every assay
 workflow accepts it. Combine it with an executor profile
 (`-profile local,workstation`); it sets only `workDir`.
+
+**No path a tool sees may contain a space.** The SSD was mounted as
+`/Volumes/Samsung T5` until 2026-10-12, which broke three things:
+- Java split `NXF_TEMP` / `TMPDIR` on the space, so Nextflow failed before any
+  task started.
+- Trim Galore and Bismark (Perl) pass the working directory unquoted to the
+  shell, and resolve it to its physical path. So they failed even through a
+  space-free symlink (`sh: /Volumes/Samsung: Operation not permitted`).
+- Renaming the volume mid-run moved the publish directory out from under a
+  running job.
+
+Renaming the volume to `ST5` fixes the first two. Don't give a data volume a
+name with a space, and don't rename one while a run is publishing to it.
+Workflow manifests written before the rename still record
+`/Volumes/Samsung T5/...` as their `outdir`, which is where those runs wrote.
 
 ### Environment notes
 
@@ -313,12 +323,15 @@ workflow accepts it. Combine it with an executor profile
 Three comparisons have been run on all reads and committed, 11 libraries each
 (6 control, 5 challenged), with the same `-profile local` toolchain as the
 pilot, against `GCF_963853765.1` / `RS_2024_06`. Each committed workflow
-manifest records the input checksum and parameters. Its `software_versions`
-block lists the versions the workflow declares for its containers (Salmon
-1.10.3, DESeq2 1.42.0, tximport 1.30.0), not the Homebrew builds that actually
-ran — Salmon 2.6.0 (per each quant directory's `cmd_info.json`) and, at the
-2026-09-30 re-run, DESeq2 1.50.2 and tximport 1.38.2. Until the manifest
-records observed versions, treat that block as intent rather than record.
+manifest records the input checksum and parameters. In these committed
+manifests the `software_versions` block lists the versions the workflow
+declared for its containers (Salmon 1.10.3, DESeq2 1.42.0, tximport 1.30.0),
+not the Homebrew builds that actually ran — Salmon 2.6.0 (per each quant
+directory's `cmd_info.json`) and, at the 2026-09-30 re-run, DESeq2 1.50.2 and
+tximport 1.38.2. Treat that block as intent rather than record. Runs made after
+2026-10-11 build `software_versions` from each process's `versions.yml`
+(keyed by process name) and record `container_engine` (null for a native run),
+so a new manifest reports the tools that ran.
 
 The table below is the state before the DO_CT_4 exclusion. Re-run without
 DO_CT_4 on 2026-09-30, Midori × Australia has 30,482 genes, 5,473 at

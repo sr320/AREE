@@ -29,22 +29,38 @@ process EMIT_MANIFEST {
     val workflow_start_iso
     val extra_warnings
     path viral_summary   // VIRAL_SUMMARY JSON, or assets/NO_VIRAL_QC when viral QC was not run
+    path deseq2_design   // DESeq2 design JSON, or assets/NO_DESEQ2_DESIGN in processed mode
+    // Transcriptome, GTF, tx2gene and (for a fetched bundle) its
+    // reference_provenance.json; empty in processed mode.
+    path reference_files, stageAs: 'reference/*'
+    // Every upstream process's versions.yml (mixed + collected in main.nf),
+    // renamed on staging because they all share one file name.
+    path process_versions, stageAs: 'process_versions/versions_*.yml'
+    path collect_versions_py  // modules/shared/collect_versions.py
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
     path "versions.yml", emit: versions
 
     script:
+    // software_versions is built from the versions.yml each upstream process
+    // wrote, i.e. from the tools that actually ran, native or containerized.
+    // It used to be a hard-coded copy of the container tags, which misreported
+    // every native (-profile local) run.
+    //
     // extra_warnings is a Groovy list already rendered to a JSON array string
     // by the calling workflow (see main.nf), so it can be dropped straight
     // into the Python literal below without re-escaping.
     """
+    python3 ${collect_versions_py} software_versions.json process_versions/*.yml
+
     cat <<-'EOF' > emit_manifest.py
     #!/usr/bin/env python3
-    # Build the AREE RNA-seq workflow provenance manifest. Real hashlib-based
-    # sha256 checksum + real JSON emission. Not executed in this build.
+    # Build the AREE RNA-seq workflow provenance manifest.
     import hashlib
     import json
+    import os
+    import platform
 
     def sha256_of(path):
         h = hashlib.sha256()
@@ -67,6 +83,15 @@ process EMIT_MANIFEST {
     control_levels = _levels("${params.control_level ?: ''}")
     treatment_levels = _levels("${params.treatment_level ?: ''}")
     replicate_unit = "${params.replicate_unit ?: ''}".strip() or None
+    covariates = _levels("${params.covariates ?: ''}")
+
+    # The DESeq2 model actually fitted. It can differ from the covariates
+    # requested: a covariate constant within the contrast is dropped.
+    design_path = "${deseq2_design}"
+    deseq2_design = None
+    if design_path != "NO_DESEQ2_DESIGN":
+        with open(design_path) as fh:
+            deseq2_design = json.load(fh)
 
     viral_path = "${viral_summary}"
     viral = None
@@ -75,10 +100,58 @@ process EMIT_MANIFEST {
         with open(viral_path) as fh:
             viral = json.load(fh)
         warnings = warnings + viral.get("warnings", [])
+
+    with open("software_versions.json") as fh:
+        collected = json.load(fh)
+    software_versions = collected["software_versions"]
+    # This process's own interpreter; its versions.yml is written after the
+    # manifest, so it cannot be among the collected files.
+    software_versions["EMIT_MANIFEST"] = {"python": platform.python_version()}
+    warnings = warnings + collected["warnings"]
+    if deseq2_design and deseq2_design.get("covariates_dropped_constant"):
+        warnings.append(
+            "covariates_dropped_constant: " + ", ".join(deseq2_design["covariates_dropped_constant"])
+            + " had one level in this contrast and were not fitted")
     if excluded_samples:
         warnings.append(
             "samples_excluded_by_curation: " + ", ".join(excluded_samples)
             + " (see the study registry for the reason)")
+
+    # Reference files actually read, with checksums. When the bundle's
+    # reference_provenance.json was staged too, each file is compared with the
+    # checksum recorded when it was fetched, and the bundle's assembly with the
+    # one this run declares.
+    declared_assembly = "${params.rnaseq?.genome_assembly ?: ''}"
+    reference_files = []
+    bundle = None
+    if os.path.isdir("reference"):
+        names = sorted(os.listdir("reference"))
+        if "reference_provenance.json" in names:
+            with open(os.path.join("reference", "reference_provenance.json")) as fh:
+                bundle = json.load(fh)
+        recorded = {f["file"]: f["sha256"] for f in (bundle or {}).get("files", [])}
+        for name in names:
+            entry = {"name": name, "sha256": sha256_of(os.path.join("reference", name))}
+            if name in recorded:
+                entry["matches_bundle_provenance"] = entry["sha256"] == recorded[name]
+                if not entry["matches_bundle_provenance"]:
+                    warnings.append(
+                        "reference_file_differs_from_bundle: " + name
+                        + " does not match reference_provenance.json; re-run `aree fetch-reference --check`")
+            reference_files.append(entry)
+    if bundle is not None:
+        if declared_assembly and bundle.get("ncbi_assembly_accession") not in (declared_assembly, None):
+            warnings.append(
+                "reference_bundle_assembly_mismatch: bundle is " + str(bundle.get("ncbi_assembly_accession"))
+                + " but rnaseq.genome_assembly is " + declared_assembly)
+        if not bundle.get("annotation_release_matches_registry", True):
+            warnings.append(
+                "reference_bundle_annotation_release_unregistered: the bundle's GTF names a different "
+                "annotation release from the one registered for its assembly")
+    elif "${mode}" == "raw_reanalysis":
+        warnings.append(
+            "reference_bundle_provenance_missing: no reference_provenance.json beside the reference "
+            "files; fetch them with `aree fetch-reference` to record where they came from")
 
     manifest = {
         "workflow_name": "aree-rnaseq",
@@ -101,30 +174,45 @@ process EMIT_MANIFEST {
             "control_levels": control_levels,
             "treatment_levels": treatment_levels,
             "replicate_unit": replicate_unit,
-            # Library layout and type change what counts and lfcSE mean.
+            "covariates": covariates,
             "single_end": ${params.single_end ? 'True' : 'False'},
+            "se_adapter": "${params.se_adapter}" if ${params.single_end ? 'True' : 'False'} else None,
+            # 3' tag counting changes what a count (and so lfcSE) means.
             "tag_seq": ${params.tag_seq ? 'True' : 'False'},
             "viral_reference": "${params.viral_reference ?: ''}" or None,
+            # Genes dropped before size factors; counts and fractions are in deseq2_design.
+            "exclude_genes": "${params.exclude_genes ?: ''}" or None,
         },
-        "software_versions": {
-            # Static, representative versions matching containers/README.md
-            # image tags. These are NOT introspected from a running
-            # container in this build (no container runtime invoked here) --
-            # they are declared to match the pinned image tags.
-            "fastqc": "0.12.1",
-            "fastp": "0.23.4",
-            "salmon": "1.10.3",
-            "star": "2.7.11b",
-            "multiqc": "1.21",
-            "bioconductor_docker": "RELEASE_3_18",
-            "deseq2": "1.42.0",
-            "tximport": "1.30.0",
-            "quarto": "1.5.57",
-            "python": "3.11",
+        # The DESeq2 design as fitted (null in processed mode).
+        "deseq2_design": deseq2_design,
+        # Tools as reported by each process that ran, keyed by process name.
+        "software_versions": software_versions,
+        "software_versions_not_captured": {
+            "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/",
         },
+        # Null for a native run (-profile local). The images a container
+        # profile would pull are declared on each process in modules/rnaseq/;
+        # inside a container, software_versions reports that image's tools.
+        "container_engine": "${workflow.containerEngine ?: ''}" or None,
         "reference": {
             "genome_assembly": "${params.rnaseq?.genome_assembly ?: 'not_specified'}",
             "annotation_version": "${params.rnaseq?.annotation_version ?: 'not_specified'}",
+            "transcript_fasta": "${params.transcript_fasta ?: ''}" or None,
+            "gtf": "${params.gtf ?: ''}" or None,
+            "tx2gene": "${params.tx2gene ?: ''}" or None,
+            "salmon_index": "${params.salmon_index ?: ''}" or None,
+            # Checksums of the files above as staged for this run (empty in
+            # processed mode), and the bundle they came from, if fetched.
+            "files": reference_files,
+            "bundle": None if bundle is None else {
+                "bundle": bundle.get("bundle"),
+                "assembly_id": bundle.get("assembly_id"),
+                "ncbi_assembly_accession": bundle.get("ncbi_assembly_accession"),
+                "annotation_source": (bundle.get("gtf_header") or {}).get("annotation-source"),
+                "annotation_release_matches_registry": bundle.get("annotation_release_matches_registry"),
+                "date_generated": bundle.get("date_generated"),
+                "bundler_version": bundle.get("bundler_version"),
+            },
         },
         "workflow_start": "${workflow_start_iso}",
         "qc_metrics": {
@@ -157,9 +245,11 @@ process EMIT_MANIFEST {
     """
 
     stub:
+    // The stub still merges the collected versions.yml files so a -stub-run
+    // checks that every process's versions channel reaches the manifest.
     """
-    printf '{"study_id":"%s","comparison_id":"%s","mode":"%s","stub":true}\n' \
-        '${study_id}' '${comparison_id}' '${mode}' > ${study_id}_${comparison_id}_manifest.json
+    python3 ${collect_versions_py} software_versions.json process_versions/*.yml
+    python3 -c 'import json; v = json.load(open("software_versions.json")); json.dump({"study_id": "${study_id}", "comparison_id": "${comparison_id}", "mode": "${mode}", "stub": True, "software_versions": dict(v["software_versions"], EMIT_MANIFEST={}), "software_versions_not_captured": {"RENDER_REPORT": "runs after the manifest"}, "warnings": v["warnings"]}, open("${study_id}_${comparison_id}_manifest.json", "w"), indent=2)'
     echo '${task.process}:' > versions.yml
     """
 }

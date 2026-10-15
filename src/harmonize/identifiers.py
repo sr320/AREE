@@ -11,6 +11,7 @@ identifier and a mapping_confidence.
 from __future__ import annotations
 
 import os
+import warnings
 from dataclasses import dataclass
 from functools import lru_cache
 from numbers import Integral, Real
@@ -18,12 +19,21 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import MAPPINGS_DIR, load_json, load_yaml
+from common import (
+    MAPPINGS_DIR,
+    assembly_crosswalk_path,
+    load_json,
+    load_yaml,
+    resolve_assembly,
+)
 
 # The demo crosswalk is the default so that `make demo` and the test suite run
-# against self-contained synthetic data. Curating a real study requires pointing
-# at a real crosswalk built by src/mappings/build_crosswalk.py, either via the
-# AREE_CROSSWALK environment variable or `set_crosswalk_path()`.
+# against self-contained synthetic data. A real study resolves against the
+# crosswalk registered for its genome assembly in
+# data/reference/genome_assemblies.yaml (`identifier_crosswalk`), so studies of
+# different species in one run each use their own species' crosswalk. The
+# AREE_CROSSWALK environment variable overrides that for local experiments, and
+# only for a crosswalk built for the same taxon.
 #
 # These two files are deliberately NOT merged: the demo LOC numbers collide with
 # real NCBI GeneIDs while carrying different (fabricated) gene identities, so a
@@ -65,37 +75,106 @@ def active_crosswalk_path() -> Path:
     return DEMO_CROSSWALK_PATH
 
 
-def crosswalk_for_study(simulated: bool) -> Path:
+def crosswalk_taxid(crosswalk_path) -> int | None:
+    """The NCBI taxid a crosswalk was built for, from its provenance sidecar.
+
+    None for the demo crosswalk and for any crosswalk without provenance.
+    """
+    crosswalk_path = Path(crosswalk_path)
+    provenance = crosswalk_path.with_name(f"{crosswalk_path.stem}.provenance.json")
+    if not provenance.exists():
+        return None
+    taxid = load_json(provenance).get("ncbi_taxid")
+    return int(taxid) if taxid is not None else None
+
+
+def crosswalk_for_study(study: dict) -> Path:
     """The crosswalk a study must resolve against, decided by the study itself.
 
-    A simulated study resolves against the synthetic demo crosswalk; a real study
-    resolves against a real one. Letting a single global setting decide would
-    allow either half of that to be wrong — notably, harmonizing the demo studies
-    against the real crosswalk silently attaches real NCBI GeneIDs to fabricated
-    effect sizes, because the demo LOC numbers collide with real genes.
+    * A simulated study resolves against the synthetic demo crosswalk. Harmonizing
+      the demo studies against a real crosswalk would silently attach real NCBI
+      GeneIDs to fabricated effect sizes, because the demo LOC numbers collide
+      with real genes.
+    * A real study resolves against the crosswalk registered for its genome
+      assembly (`identifier_crosswalk` in data/reference/genome_assemblies.yaml).
+      The assembly, not the study's species, decides: identifiers come from the
+      annotation the reads were mapped to.
+    * $AREE_CROSSWALK overrides the registered crosswalk only if its provenance
+      shows it was built for the assembly's taxon. A process-wide setting that
+      could hand an oyster crosswalk to a mussel study is exactly what this
+      function exists to prevent.
 
-    A real study with no real crosswalk selected is an error rather than a
-    silent fallback to the demo crosswalk.
+    The crosswalk last selected with `set_crosswalk_path()` is deliberately not
+    consulted. It used to be, which meant the first real study harmonized in a
+    process decided the crosswalk for every later one.
+
+    A real study with no usable crosswalk is an error, never a silent fallback.
     """
-    if simulated:
+    if study.get("simulated", False):
         return DEMO_CROSSWALK_PATH
-    if _CROSSWALK_OVERRIDE is not None:
-        return _CROSSWALK_OVERRIDE
+
+    study_id = study.get("study_id", "<unknown>")
+    assembly = resolve_assembly(study.get("genome_assembly"))
+    if assembly is None:
+        raise ValueError(
+            f"study {study_id!r}: genome_assembly {study.get('genome_assembly')!r} is not "
+            "in data/reference/genome_assemblies.yaml, so AREE cannot tell which "
+            "crosswalk its identifiers belong to. Run `aree validate-study` first."
+        )
+    taxid = assembly.get("ncbi_taxid")
+    registered = assembly_crosswalk_path(assembly)
+
     env = os.environ.get(CROSSWALK_ENV_VAR)
     if env:
-        return Path(env)
-    raise FileNotFoundError(
-        "This study is not simulated, so it cannot be harmonized against the "
-        "synthetic demo crosswalk. Build a real crosswalk with `aree build-crosswalk` "
-        f"and select it via ${CROSSWALK_ENV_VAR}, e.g.\n"
-        "  export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
-    )
+        override = Path(env)
+        override_taxid = crosswalk_taxid(override)
+        if override_taxid is None:
+            raise ValueError(
+                f"${CROSSWALK_ENV_VAR}={env} has no provenance sidecar recording its taxid, "
+                f"so it cannot be checked against study {study_id!r} (taxid {taxid}). "
+                f"Unset ${CROSSWALK_ENV_VAR} to use the crosswalk registered for "
+                f"{assembly['assembly_id']!r}."
+            )
+        if override_taxid != taxid:
+            raise ValueError(
+                f"${CROSSWALK_ENV_VAR}={env} was built for taxid {override_taxid}, but "
+                f"study {study_id!r} is on {assembly['assembly_id']!r} (taxid {taxid}). "
+                f"Unset ${CROSSWALK_ENV_VAR}; each study's crosswalk is read from "
+                "data/reference/genome_assemblies.yaml."
+            )
+        if registered is not None and override.resolve() != registered.resolve():
+            warnings.warn(
+                f"${CROSSWALK_ENV_VAR} overrides the crosswalk registered for "
+                f"{assembly['assembly_id']!r} ({registered}) with {override}.",
+                stacklevel=2,
+            )
+        return override
+
+    if registered is None:
+        raise FileNotFoundError(
+            f"study {study_id!r} is not simulated, and no identifier crosswalk is "
+            f"registered for its assembly {assembly['assembly_id']!r} "
+            f"({assembly.get('species')}, taxid {taxid}). Build one with\n"
+            f"  aree build-crosswalk --taxid {taxid} --slug <short_name> "
+            f"--organism \"{assembly.get('species')}\"\n"
+            "and set `identifier_crosswalk` for this assembly in "
+            "data/reference/genome_assemblies.yaml."
+        )
+    if not registered.exists():
+        raise FileNotFoundError(
+            f"study {study_id!r}: the crosswalk registered for {assembly['assembly_id']!r} "
+            f"is missing: {registered}. Rebuild it with "
+            f"`aree build-crosswalk --taxid {taxid}`."
+        )
+    return registered
 
 
 def set_crosswalk_path(path) -> None:
     """Select the crosswalk to resolve against, clearing cached lookups.
 
-    Pass None to fall back to $AREE_CROSSWALK / the demo crosswalk.
+    Pass None to fall back to $AREE_CROSSWALK / the demo crosswalk. This sets the
+    crosswalk that `resolve_identifier` uses; it does not influence which
+    crosswalk `crosswalk_for_study` chooses for the next study.
     """
     global _CROSSWALK_OVERRIDE
     _CROSSWALK_OVERRIDE = Path(path) if path is not None else None
@@ -110,7 +189,7 @@ def _load_crosswalk(path_str: str) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(
             f"Identifier crosswalk not found: {path}. Build one with "
-            "`aree build-crosswalk`, or unset $AREE_CROSSWALK to use the demo crosswalk."
+            "`aree build-crosswalk`, or unset $AREE_CROSSWALK."
         )
     df = pd.read_csv(path, sep="\t", comment="#", dtype=str).fillna("")
     missing = {"ncbi_gene_id", "gene_symbol"} - set(df.columns)
@@ -263,6 +342,26 @@ def _ambiguous_map() -> dict:
 
 
 def resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
+    """Resolve an identifier against the active crosswalk, then attach its orthogroup.
+
+    Real crosswalks ship `orthogroup_id` empty (it is not NCBI data). When an
+    orthogroup run is active (data/reference/orthogroups/active.yaml), the
+    resolved GeneID's orthogroup is taken from that run instead. The synthetic
+    demo crosswalk keeps its own illustrative orthogroups and is never looked
+    up in a real run.
+    """
+    resolved = _resolve_identifier(raw_id, id_type)
+    if (resolved.orthogroup_id is None and resolved.feature_id_standardized is not None
+            and active_crosswalk_path() != DEMO_CROSSWALK_PATH):
+        from mappings.orthogroups import gene_orthogroup
+
+        og = gene_orthogroup(resolved.feature_id_standardized)
+        if og is not None:
+            return ResolvedIdentifier(resolved.feature_id_standardized, resolved.mapping_confidence, og)
+    return resolved
+
+
+def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
     """Resolve a raw feature identifier to a standardized id + mapping confidence.
 
     id_type must be one of: ncbi_gene_id, ensembl_gene_id, uniprot_accession,

@@ -1,0 +1,59 @@
+{
+  "study_id": "RUBIO2019_VIBRIO_SPAT",
+  "bioproject": "PRJNA515169",
+  "date_generated": "2026-10-12",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA515169&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "treatment"
+  ],
+  "n_runs": 18,
+  "n_samples": 18,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "Vcrass_J2_8": 3,
+    "Vcrass_J2_9": 3,
+    "Vtasma_LGP32": 3,
+    "Vtasma_LMG20012T": 3,
+    "anesthesis": 3,
+    "untreated": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 38416818213,
+  "outputs": {
+    "data/studies/RUBIO2019_VIBRIO_SPAT/samplesheet.tsv": "2e7ca36503a51619d6e55e65574fc66a3fe3c0bf496ba3bee3db61cb89f122a5",
+    "data/studies/RUBIO2019_VIBRIO_SPAT/fastq_manifest.tsv": "6b7fccd59afde4dab3ed5f11a4d1856c1f8991e7cde5f5396716093bec5c6166"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^RNAseq_(?P<treatment>untreated|anesthesis|Vcrass_J2-8|Vcrass_J2-9|Vtasma_LGP32|Vtasma_LMG20012T)_replicate(?P<experiment>[1-3])$",
+    "labels": {
+      "SRR8551076": "RNAseq_untreated_replicate1",
+      "SRR8551077": "RNAseq_untreated_replicate2",
+      "SRR8551078": "RNAseq_Vcrass_J2-8_replicate3",
+      "SRR8551079": "RNAseq_Vcrass_J2-9_replicate1",
+      "SRR8551080": "RNAseq_Vtasma_LGP32_replicate2",
+      "SRR8551081": "RNAseq_Vtasma_LGP32_replicate3",
+      "SRR8551082": "RNAseq_Vtasma_LMG20012T_replicate3",
+      "SRR8551083": "RNAseq_Vtasma_LGP32_replicate1",
+      "SRR8551084": "RNAseq_Vtasma_LMG20012T_replicate1",
+      "SRR8551085": "RNAseq_Vtasma_LMG20012T_replicate2",
+      "SRR8551086": "RNAseq_Vcrass_J2-9_replicate2",
+      "SRR8551087": "RNAseq_Vcrass_J2-9_replicate3",
+      "SRR8551088": "RNAseq_Vcrass_J2-8_replicate1",
+      "SRR8551089": "RNAseq_Vcrass_J2-8_replicate2",
+      "SRR8551090": "RNAseq_anesthesis_replicate2",
+      "SRR8551091": "RNAseq_anesthesis_replicate3",
+      "SRR8551092": "RNAseq_untreated_replicate3",
+      "SRR8551093": "RNAseq_anesthesis_replicate1"
+    }
+  }
+}

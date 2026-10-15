@@ -62,12 +62,12 @@ See [docs/installation.md](docs/installation.md) for details.
 # 1. Validate a study registration file
 aree validate-study registry/studies/GIGAS_HEAT01.yaml
 
-# 2. Register every demo study
-for f in registry/studies/GIGAS_*.yaml; do aree register-study "$f"; done
+# 2. Register every demo study (every study with simulated: true; six oyster, one mussel)
+for sid in $(aree study-ids --simulated); do aree register-study "registry/studies/$sid.yaml"; done
 aree list-studies
 
 # 3. Harmonize each study into the shared evidence table
-for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+for sid in $(aree study-ids --simulated); do
   aree harmonize --study "$sid"
 done
 
@@ -138,17 +138,20 @@ AREE/
 |---|---|
 | `aree validate-study <file>` | Validate a study YAML against schema + controlled vocabularies |
 | `aree register-study <file> [--update]` | Add (or update) a study in the registry |
-| `aree fetch-samplesheet --bioproject <acc> --study <id>` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata |
+| `aree fetch-samplesheet --bioproject <acc> --study <id> [--library-strategy RNA-Seq] [--design-table <tsv> --design-join <attr>]` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata; warns and shows per-strategy group sizes when a project mixes RNA-seq with, e.g., 16S amplicon runs; `--design-table` joins groups from an authors' table when the BioSamples do not carry them |
 | `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies` | List registered studies and their pipeline status |
+| `aree study-ids [--simulated \| --real]` | Print registered study_ids, one per line, read from `registry/studies/`; the demo list the Makefile and CI use |
 | `aree build-registry [--strict]` | Rebuild the (uncommitted) `registry/study_registry.csv` index from every study YAML |
 | `aree start-study --accession <acc> --study-id <id>` | Claim a study for this machine: branch `study/<acc>/<id>` in its own worktree, stub YAML + config, draft PR |
 | `aree check-study-scope --branch <b>` | Fail if a study branch changes files its study does not own (run by CI) |
 | `aree harmonize --study <id> [--input <file>]` | Harmonize a study (or one processed table) into the evidence table |
-| `aree meta-analyze [--phenotype <p>] [--feature-type <t>]` | Random-effects meta-analysis over the evidence table, with BH-adjusted p-values per phenotype / feature-type family |
+| `aree meta-analyze [--phenotype <p>] [--feature-type <t>] [--level gene\|orthogroup] [--include-multi-copy]` | Random-effects meta-analysis over the evidence table, with BH-adjusted p-values per phenotype / feature-type family; `--level orthogroup` pools species' gene-level estimates across species through single-copy orthogroups |
 | `aree build-evidence-cards [--phenotype <p>] [--feature-type <t>] [--max-adjusted-p <q>] [--all-cards]` | Rank every candidate into `reports/evidence_cards/candidates.tsv` and write an evidence card for each one with a BH-adjusted p ≤ `q` (default 0.05, pooled or in any contributing study) |
 | `aree top-candidates [--n <N>] [--candidates <path>] [--out <path>]` | Regroup an existing `candidates.tsv` by phenotype and write the top `N` (default 10) per phenotype, ranked by tier then score, to `reports/top_candidates_summary.md` |
-| `aree build-crosswalk [--taxid <n>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB |
+| `aree build-crosswalk --taxid <n> [--slug <s>]` | Build a real identifier crosswalk from NCBI Gene + UniProtKB for a registered species |
+| `aree fetch-reference --assembly <acc> [--genome] [--proteins] [--plan] [--check]` | Fetch, verify and record a RefSeq reference bundle (transcriptome, GTF, tx2gene, optional genome, optional one-protein-per-gene proteome) |
+| `aree build-orthogroups --orthofinder <path> [--threads N] [--activate]` | Infer orthogroups across every species with a crosswalk (OrthoFinder on RefSeq proteomes); writes `data/reference/orthogroups/<run_id>/` |
 | `aree build-dashboard [--out <path>]` | Summarize registry, pipeline, and findings state into `docs/dashboard/data.json` (plus the top candidates' evidence cards) for the Quarto dashboard page |
 
 ## Working with real data
@@ -157,11 +160,12 @@ The quick start above runs on **simulated** studies and a **synthetic** crosswal
 AREE also ships one **real** registered study — `HESSER2024_VCOR`, curated from the
 open-access supplementary tables of
 [Hesser et al. 2024](https://doi.org/10.3389/fimmu.2024.1380089) (Vibrio
-coralliilyticus challenge of *C. gigas* larvae). Harmonizing it requires the real
-crosswalk:
+coralliilyticus challenge of *C. gigas* larvae). Harmonizing it uses the real
+oyster crosswalk committed under `data/reference/crosswalk/`, which the study's
+genome assembly selects automatically (see
+[docs/identifier_mapping.md](docs/identifier_mapping.md)):
 
 ```bash
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 aree harmonize --study HESSER2024_VCOR
 ```
 

@@ -90,6 +90,21 @@ def list_studies_cmd():
     ))
 
 
+@main.command("study-ids")
+@click.option("--simulated", "which", flag_value="simulated", help="Only simulated (demo) studies.")
+@click.option("--real", "which", flag_value="real", help="Only real studies.")
+def study_ids_cmd(which):
+    """Print registered study_ids, one per line, read from registry/studies/.
+
+    `aree study-ids --simulated` is the demo study list the Makefile, CI and the
+    Pages build iterate over.
+    """
+    from common import study_ids
+
+    for sid in study_ids({"simulated": True, "real": False}.get(which)):
+        click.echo(sid)
+
+
 @main.command("build-registry")
 @click.option("--strict", is_flag=True, help="Exit non-zero if any study YAML fails validation.")
 def build_registry_cmd(strict):
@@ -199,6 +214,10 @@ def check_study_scope_cmd(branch, base):
                    "and the matched text becomes sample_id. Every run must match.")
 @click.option("--methylkit-levels", nargs=2, default=None, metavar="CONTROL TREATMENT",
               help="Also write methylkit_samplesheet.csv coding these two condition levels as 0 and 1.")
+@click.option("--library-strategy", "library_strategies", multiple=True,
+              help="Keep only runs with this ENA library_strategy (repeatable), e.g. RNA-Seq when a "
+                   "project also deposits 16S amplicon runs from the same animals. Check that the "
+                   "labels are right first: they are submitter-supplied and sometimes wrong.")
 @click.option("--design-table", default=None, type=click.Path(exists=True, dir_okay=False),
               help="TSV of design attributes, for projects whose BioSamples do not carry the design "
                    "(e.g. the authors' submission sheet, committed with the study). Its columns become "
@@ -211,8 +230,8 @@ def check_study_scope_cmd(branch, base):
 @click.option("--out", "out_dir", default=None, type=click.Path(),
               help="Output directory (default: data/studies/<study_id>/).")
 def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attributes,
-                          label_field, label_pattern, methylkit_levels, design_table, design_join,
-                          design_source, out_dir):
+                          label_field, label_pattern, methylkit_levels, library_strategies, design_table,
+                          design_join, design_source, out_dir):
     """Build a sample sheet + FASTQ manifest from a BioProject's deposited metadata.
 
     Downloads no sequence data. Reads ENA's run report and sample attributes and
@@ -229,6 +248,7 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             label_field=label_field,
             label_pattern=label_pattern,
             methylkit_levels=tuple(methylkit_levels) if methylkit_levels else None,
+            library_strategies=list(library_strategies) or None,
             design_table=Path(design_table) if design_table else None,
             design_join=design_join,
             design_source=design_source,
@@ -245,6 +265,19 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
     for group, n in report["group_sizes"].items():
         click.echo(f"    {group:28} n={n}")
 
+    by_strategy = report.get("group_sizes_by_strategy") or {}
+    if len(by_strategy) > 1:
+        click.echo(click.style(
+            "\nWARNING: this sheet mixes library strategies, so every group size above counts "
+            "runs of each. Per strategy:", fg="yellow"))
+        for strategy, groups in by_strategy.items():
+            click.echo(click.style(
+                f"    {strategy:10} " + ", ".join(f"{g} n={n}" for g, n in groups.items()), fg="yellow"))
+        click.echo(click.style(
+            "  If some runs are another assay (e.g. 16S amplicon from the same animals), re-run "
+            "with --library-strategy. Check layouts and read counts first: the label itself can "
+            "be wrong (LUTIER2022_OA_TIPPING's AMPLICON runs are RNA-seq).", fg="yellow"))
+
     smallest = report["min_group_size"]
     if smallest < 3:
         click.echo(click.style(
@@ -259,6 +292,16 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
             "from the paper or the submitter before treating them as biological replicates.",
             fg="yellow",
         ))
+    if report.get("submitted_ftp_runs"):
+        runs = report["submitted_ftp_runs"]
+        click.echo(click.style(
+            f"\nNOTE: ENA has no generated FASTQ for {len(runs)} run(s); the manifest uses the "
+            f"submitter's own FASTQ (source=submitted_ftp): {', '.join(runs)}. Their file names "
+            "and read headers are the submitter's, not ENA's.", fg="yellow"))
+    if report.get("unpaired_files_dropped"):
+        click.echo(click.style(
+            f"\nNOTE: {len(report['unpaired_files_dropped'])} paired run(s) also carry an unpaired "
+            "FASTQ, left out of the manifest and listed in ena_provenance.json.", fg="yellow"))
     if report.get("methylkit_samplesheet"):
         mk = report["methylkit_samplesheet"]
         click.echo(f"  methylKit  : {mk['control_level']}=0 (n={mk['n_control']}), "
@@ -339,8 +382,40 @@ def harmonize_cmd(study_id, input_path, comparison_id, date_generated):
 @main.command("meta-analyze")
 @click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
 @click.option("--feature-type", default=None, help="Feature type to filter on, e.g. gene, protein (default: all).")
-def meta_analyze_cmd(phenotype, feature_type):
+@click.option("--level", type=click.Choice(["gene", "orthogroup"]), default="gene", show_default=True,
+              help="gene: pool within each species. orthogroup: pool species' gene-level estimates "
+                   "across species through orthogroups (single-copy orthogroups only by default).")
+@click.option("--include-multi-copy", is_flag=True,
+              help="With --level orthogroup, also pool multi-copy orthogroups where each species has "
+                   "evidence for exactly one gene. Off by default: paralogs are not like for like.")
+def meta_analyze_cmd(phenotype, feature_type, level, include_multi_copy):
     """Run a random-effects meta-analysis over the harmonized evidence table."""
+    if level == "orthogroup":
+        from meta_analysis.run import write_orthogroup_meta_analysis
+
+        try:
+            result, _species, summary, out_path = write_orthogroup_meta_analysis(
+                phenotype, feature_type, include_multi_copy=include_multi_copy)
+        except (FileNotFoundError, ValueError) as exc:
+            click.echo(click.style(str(exc), fg="red"))
+            sys.exit(1)
+        click.echo(f"Orthogroup groups seen: {summary['orthogroup_groups']}; pooled across species: "
+                   f"{summary['pooled']}; one species only: {summary['single_species']}; set aside: "
+                   f"{summary['multi_copy_excluded']} multi-copy, {summary['paralogs_in_species_excluded']} "
+                   f"with paralogs in one species, {summary['not_in_active_run_excluded']} not in the "
+                   "active orthogroup run.")
+        if len(result) == 0:
+            click.echo("No orthogroup has gene-level estimates from two or more species.")
+            return
+        click.echo(tabulate(
+            result[["orthogroup_id", "copy_class", "phenotype", "n_species", "k_studies_by_species",
+                    "pooled_effect", "p_value", "adjusted_p_value", "i_squared_between_species",
+                    "meets_replication_gate"]].head(20),
+            headers="keys", showindex=False, floatfmt=".3g",
+        ))
+        click.echo(f"\nFull results ({len(result)} rows) written to {out_path}; per-species "
+                   "estimates beside it. meets_replication_gate: at least two species each with k >= 2.")
+        return
     try:
         result, out_path = write_meta_analysis(phenotype, feature_type)
     except FileNotFoundError as exc:
@@ -437,28 +512,219 @@ def build_dashboard_cmd(out_path):
     click.echo(click.style(f"Wrote dashboard data to {out_path}", fg="green"))
 
 
+@main.command("fetch-reference")
+@click.option("--assembly", "assembly", required=True,
+              help="Registered assembly: assembly_id or accession, e.g. GCF_965363235.1.")
+@click.option("--dest", default=None, type=click.Path(),
+              help="Bundle directory. Defaults to data/reference/<ACCESSION> (often a symlink "
+                   "to external storage; see docs/reference_bundles.md).")
+@click.option("--genome", "with_genome", is_flag=True,
+              help="Also fetch the genome FASTA (genomic.fna), needed for methylation.")
+@click.option("--proteins", "with_proteins", is_flag=True,
+              help="Also fetch the RefSeq proteins and feature table and write primary_proteins.faa "
+                   "(one protein per gene), the input to `aree build-orthogroups`.")
+@click.option("--plan", "plan_only", is_flag=True,
+              help="Only resolve the NCBI folder and checksums; download no sequence data.")
+@click.option("--check", "check_only", is_flag=True,
+              help="Verify an existing bundle against its reference_provenance.json.")
+def fetch_reference_cmd(assembly, dest, with_genome, with_proteins, plan_only, check_only):
+    """Fetch a RefSeq reference bundle (transcriptome, GTF, tx2gene) for raw reanalysis.
+
+    Every file is checked against NCBI's MD5s and recorded with SHA-256 in
+    reference_provenance.json, along with whether the GTF's annotation release
+    matches the registry and how many of its genes the species' crosswalk knows.
+    """
+    from intake.reference_bundle import (
+        ReferenceBundleError,
+        check_bundle,
+        default_bundle_dir,
+        fetch_bundle,
+        plan_bundle,
+    )
+
+    try:
+        if check_only:
+            from common import resolve_assembly
+
+            record = resolve_assembly(assembly)
+            if record is None:
+                raise ReferenceBundleError(f"{assembly!r} is not a registered assembly")
+            target = Path(dest) if dest else default_bundle_dir(record["ncbi_assembly_accession"])
+            problems = check_bundle(target)
+            for problem in problems:
+                click.echo(click.style(f"  - {problem}", fg="red"))
+            click.echo(click.style(f"FAIL: {target}", fg="red") if problems
+                       else click.style(f"OK: {target}", fg="green"))
+            sys.exit(1 if problems else 0)
+
+        if plan_only:
+            plan = plan_bundle(assembly, with_genome=with_genome, with_proteins=with_proteins)
+            click.echo(f"{plan['assembly']['assembly_id']}: {plan['base_url']}")
+            for f in plan["files"]:
+                click.echo(f"  {f['remote']}  md5 {f['ncbi_md5']}  -> {f['local']}")
+            return
+
+        prov = fetch_bundle(assembly, dest=Path(dest) if dest else None, with_genome=with_genome,
+                            with_proteins=with_proteins)
+    except (ReferenceBundleError, OSError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    click.echo(click.style(f"Bundle {prov['bundle']} for {prov['assembly_id']} ({prov['species']})",
+                           fg="green"))
+    click.echo(f"  tx2gene: {prov['tx2gene']['transcripts']} transcripts, "
+               f"{prov['tx2gene']['genes']} genes")
+    cov = prov["crosswalk_coverage"]
+    if cov.get("checked"):
+        colour = "green" if cov["pct"] >= 99 else "yellow"
+        click.echo(click.style(f"  genes in {cov['crosswalk']}: {cov['found_in_crosswalk']} "
+                               f"({cov['pct']}%)", fg=colour))
+    else:
+        click.echo(click.style("  no crosswalk registered for this assembly; gene IDs unchecked",
+                               fg="yellow"))
+    if prov.get("primary_proteome"):
+        pp = prov["primary_proteome"]
+        click.echo(f"  primary proteome: {pp['genes']} genes (one protein each)"
+                   + (f", {pp['crosswalk_coverage']['pct']}% in the crosswalk"
+                      if pp["crosswalk_coverage"].get("checked") else ""))
+    if not prov["annotation_release_matches_registry"]:
+        click.echo(click.style(
+            f"  WARNING: GTF annotation-source {prov['gtf_header'].get('annotation-source')!r} "
+            f"does not name the registered release {prov['registered_annotation_release']!r}. "
+            "Update genome_assemblies.yaml (and rebuild the crosswalk) before using it.",
+            fg="red"))
+        sys.exit(1)
+
+
+@main.command("build-orthogroups")
+@click.option("--orthofinder", "orthofinder_bin", default="orthofinder", show_default=True,
+              help="OrthoFinder executable; its directory is put first on PATH so its DIAMOND and "
+                   "MCL are used (e.g. ~/miniforge3/envs/orthofinder/bin/orthofinder).")
+@click.option("--threads", default=4, show_default=True, type=int, help="OrthoFinder -t and -a.")
+@click.option("--run-id", default=None,
+              help="Name of the run directory (default: orthofinder<version>_<date>).")
+@click.option("--work-dir", default=None, type=click.Path(),
+              help="Where proteomes are staged and OrthoFinder writes its intermediates "
+                   "(default: data/reference/orthogroups/_work/<run_id>, gitignored).")
+@click.option("--from-results", "from_results", default=None, type=click.Path(exists=True, file_okay=False),
+              help="Read an existing OrthoFinder Results_* directory instead of running OrthoFinder.")
+@click.option("--activate", is_flag=True,
+              help="Make this run the one harmonization attaches to evidence (active.yaml).")
+def build_orthogroups_cmd(orthofinder_bin, threads, run_id, work_dir, from_results, activate):
+    """Infer orthogroups across every species with a crosswalk (OrthoFinder on RefSeq proteomes).
+
+    Needs each species' primary proteome: `aree fetch-reference --assembly <acc> --proteins`.
+    Writes data/reference/orthogroups/<run_id>/ (gene_orthogroups.tsv, orthogroups.tsv,
+    provenance.json). See src/mappings/orthogroups.py.
+    """
+    from datetime import date as _date
+
+    from mappings import orthogroups as og
+
+    try:
+        version = og.orthofinder_version(orthofinder_bin)
+        run_id = run_id or f"orthofinder{version.split()[-1]}_{_date.today().isoformat()}"
+        work = Path(work_dir) if work_dir else og.ORTHOGROUPS_DIR / "_work" / run_id
+        species = og.run_species()
+        staged = og.stage_proteomes(species, work / "proteomes")
+        click.echo(f"Staged {len(staged)} proteomes: "
+                   + ", ".join(f"{s['slug']} ({s['proteins']})" for s in staged))
+        if from_results:
+            results, command = Path(from_results), None
+        else:
+            click.echo(f"Running {version} with {threads} threads (hours for this many proteomes)...")
+            results, command = og.run_orthofinder(work / "proteomes", orthofinder_bin, threads)
+        slug_taxid = {s["slug"]: s["ncbi_taxid"] for s in staged}
+        rows = og.parse_orthogroups(results, slug_taxid)
+        summary = og.summarize(rows, [s["ncbi_taxid"] for s in staged])
+        prov = og.write_run(og.ORTHOGROUPS_DIR / run_id, rows, summary, staged, version=version,
+                            command=command, results_dir=results)
+    except og.OrthogroupError as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+
+    click.echo(click.style(f"Wrote {og.ORTHOGROUPS_DIR / run_id}", fg="green"))
+    click.echo(f"  orthogroups: {prov['orthogroups']['total']} "
+               + ", ".join(f"{k} {v}" for k, v in prov["orthogroups"]["by_copy_class"].items()))
+    for slug, a in prov["per_species"].items():
+        click.echo(f"  {slug:7} {a['in_multi_species_orthogroups']}/{a['genes']} genes in "
+                   "orthogroups shared with another species")
+    if activate:
+        og.activate(run_id)
+        click.echo(f"Active orthogroup run: {run_id}")
+
+
 @main.command("build-crosswalk")
 @click.option("--taxid", default=29159, show_default=True, type=int,
-              help="NCBI taxonomy id to build the crosswalk for.")
-@click.option("--slug", default="mgigas", show_default=True,
-              help="Output filename prefix, e.g. 'mgigas' -> mgigas_gene_id_crosswalk.tsv.")
-@click.option("--organism", default="Magallana gigas (Crassostrea gigas), Pacific oyster",
-              show_default=False, help="Human-readable organism label recorded in provenance.")
+              help="NCBI taxonomy id to build the crosswalk for. Must be a registered species.")
+@click.option("--slug", default=None,
+              help="Output filename prefix, e.g. 'mgigas' -> mgigas_gene_id_crosswalk.tsv. "
+                   "Defaults to 'mgigas' for the Pacific oyster; required for any other species.")
+@click.option("--organism", default=None,
+              help="Human-readable organism label recorded in provenance. "
+                   "Defaults to the species vocabulary's name, synonyms and label.")
+@click.option("--assembly", default=None,
+              help="Reference annotation recorded in provenance (and on every evidence record "
+                   "as identifier_annotation_release). Defaults to the species' NCBI reference "
+                   "assembly in data/reference/genome_assemblies.yaml.")
 @click.option("--gene-info", "gene_info", default=None, type=click.Path(exists=True),
               help="Pre-downloaded taxid-filtered NCBI gene_info TSV.")
 @click.option("--uniprot", default=None, type=click.Path(exists=True),
               help="Pre-downloaded UniProt TSV export.")
 @click.option("--download", is_flag=True, help="Force re-download of reference sources.")
-def build_crosswalk_cmd(taxid, slug, organism, gene_info, uniprot, download):
+def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, download):
     """Build a real identifier crosswalk from NCBI Gene and UniProtKB.
 
     Downloads reference data from public sources (~230 MB streamed from NCBI) and
     writes a crosswalk plus a JSON provenance sidecar to data/reference/crosswalk/.
+    The species and its reference assembly must already be registered (see
+    docs/adding_a_species.md), so that provenance names the right annotation.
     """
+    from common import load_assemblies, load_vocab
+    from harmonize.identifiers import crosswalk_taxid
+    from mappings.build_crosswalk import CROSSWALK_DIR
+
+    def fail(message):
+        click.echo(click.style(message, fg="red"))
+        sys.exit(1)
+
+    term = next((t for t in load_vocab("species").values() if t["ncbi_taxid"] == taxid), None)
+    if term is None:
+        fail(f"taxid {taxid} is not in registry/controlled_vocabularies/species.yaml; "
+             "register the species first (docs/adding_a_species.md).")
+    reference = [a for a in load_assemblies().values()
+                 if a.get("ncbi_taxid") == taxid and a.get("is_ncbi_reference")]
+    if assembly is None:
+        if not reference:
+            fail(f"no NCBI reference assembly for taxid {taxid} in "
+                 "data/reference/genome_assemblies.yaml; register it, or pass --assembly.")
+        ref = reference[0]
+        assembly = (f"{ref['ncbi_assembly_accession']} ({ref['assembly_id']}), "
+                    f"annotation release {ref.get('annotation_release')}")
+    if organism is None:
+        synonyms = term.get("accepted_synonyms") or []
+        organism = term["scientific_name"]
+        if synonyms:
+            organism += f" ({', '.join(synonyms)})"
+        organism += f", {term['label']}"
+    if slug is None:
+        if taxid != 29159:
+            fail("--slug is required for any species other than the Pacific oyster, "
+                 "so its crosswalk cannot overwrite another species' file.")
+        slug = "mgigas"
+
+    # Never overwrite a crosswalk built for a different species.
+    existing = CROSSWALK_DIR / f"{slug}_gene_id_crosswalk.tsv"
+    if existing.exists():
+        existing_taxid = crosswalk_taxid(existing)
+        if existing_taxid is not None and existing_taxid != taxid:
+            fail(f"{existing} was built for taxid {existing_taxid}; choose a different --slug "
+                 f"for taxid {taxid}.")
+
     from mappings.build_crosswalk import build
 
     try:
-        path = build(taxid=taxid, organism=organism, gene_info_path=gene_info,
+        path = build(taxid=taxid, organism=organism, assembly=assembly, gene_info_path=gene_info,
                      uniprot_path=uniprot, download=download, slug=slug)
     except (RuntimeError, ValueError, FileNotFoundError) as exc:
         click.echo(click.style(str(exc), fg="red"))
@@ -468,8 +734,13 @@ def build_crosswalk_cmd(taxid, slug, organism, gene_info, uniprot, download):
     click.echo(click.style(f"Wrote {path}", fg="green"))
     click.echo(f"Provenance: {prov}")
     click.echo("")
-    click.echo("To harmonize real studies against it, set:")
-    click.echo(click.style(f"  export AREE_CROSSWALK={path}", fg="cyan"))
+    try:
+        shown = path.relative_to(REPO_ROOT)
+    except ValueError:
+        shown = path
+    click.echo("Real studies resolve against it once it is registered for this species'")
+    click.echo("assemblies in data/reference/genome_assemblies.yaml:")
+    click.echo(click.style(f"  identifier_crosswalk: \"{shown}\"", fg="cyan"))
 
 
 if __name__ == "__main__":

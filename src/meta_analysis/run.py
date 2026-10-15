@@ -337,6 +337,31 @@ def _parse_flags(value) -> list[str]:
     return []
 
 
+def write_orthogroup_meta_analysis(phenotype: str | None, feature_type: str | None,
+                                   include_multi_copy: bool = False):
+    """Cross-species meta-analysis through orthogroups (see meta_analysis/orthogroups.py).
+
+    Writes <label>_orthogroup_meta_analysis.tsv (one row per orthogroup,
+    phenotype and feature type) and <label>_orthogroup_species_estimates.tsv
+    (the per-species estimates behind each row). Returns
+    (results, species estimates, exclusion summary, results path).
+    """
+    from mappings.orthogroups import active_copy_classes
+
+    from .orthogroups import run_orthogroup_meta_analysis
+
+    gene_results = run_meta_analysis(phenotype, feature_type)
+    evidence = _load_evidence_for_pooling()
+    result, species, summary = run_orthogroup_meta_analysis(
+        gene_results, evidence, active_copy_classes(), include_multi_copy=include_multi_copy)
+    META_ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
+    label = f"{phenotype or 'all_phenotypes'}_{feature_type or 'all_features'}"
+    out_path = META_ANALYSIS_DIR / f"{label}_orthogroup_meta_analysis.tsv"
+    result.to_csv(out_path, sep="\t", index=False)
+    species.to_csv(META_ANALYSIS_DIR / f"{label}_orthogroup_species_estimates.tsv", sep="\t", index=False)
+    return result, species, summary, out_path
+
+
 def write_meta_analysis(phenotype: str | None, feature_type: str | None) -> pd.DataFrame | None:
     result = run_meta_analysis(phenotype, feature_type)
     META_ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)

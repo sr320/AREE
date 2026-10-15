@@ -28,9 +28,10 @@ dependencies:
   - openjdk=21
   - salmon
   - fastp
-  - fastqc
+  - fastqc=0.12.1   # the Java FastQC the workflow container pins; bioconda 0.13 on osx-arm64 is a different, incompatible tool
   - multiqc
   - samtools
+  - sra-tools   # fastq-dump -X for scripts/prescreen_replicates.py --source ncbi
   # R steps (DESeq2 / tximport / limma / methylKit) and reports
   - r-base
   - bioconductor-deseq2
