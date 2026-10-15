@@ -1,68 +1,167 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# VIBRIO ALGINOLYTICUS INFECTION TIME COURSE, GILL, WITH A PAIRED METHYLOME.
+# C. gigas gill at 0, 6 and 48 h after infection, n=3 per time point (Ocean
+# University of China; sampled 2020-10 at Laizhou). Joins AREE's Vibrio pool
+# (HESSER2024_VCOR, RUBIO2019_VIBRIO_SPAT, LI2022_LOWSAL_VIBRIO; and
+# ZWU2022_VIBRIO_TIMECOURSE, claimed on another branch).
+#
+# PAIRED WITH WGBS PRJNA1113357, likely the same nine samples. Both deposits
+# label their libraries with the same codes: RNA-seq "RNA-Seq of 0hg1 gill" ...
+# "48hg3 gill", WGBS "Bisulfite-Seq of 0hg1 gill" ... "48hg3 gill". So each
+# oyster probably has a transcriptome and a methylome, which would make this
+# AREE's first real RNA-seq + methylation pair on one contrast. The WGBS
+# deposit is in docs/candidate_studies.md (methylation Tier 2) and is not
+# registered here; register it as its own study when the methylation raw path
+# can run.
+#
+# Publication INFERRED: Li JA, He Y, Yang B, Mokrani A, Li Y, Tan C, Li Q, Liu S
+# (2024), Fish Shellfish Immunol 151:109705. Its abstract describes WGBS at
+# 0, 6 and 48 h after V. alginolyticus infection, integrated with the
+# transcriptome. Same institution (Liu Shikai, Li Qi), same design. The
+# abstract does not give the RNA-seq accession, and the paper is closed access.
+#
+# Registered 2026-10-15. Not yet reanalyzed.
 
 study_id: LI2024_VIBRIO_GILL
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1016/j.fsi.2024.109705"
   bioproject: "PRJNA830931"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR19046233-SRR19046241"
+  ena: "PRJNA830931"
   proteomexchange: null
-  other: null
+  other: "PMID:38885801; BioSamples SAMN27745117-SAMN27745125 (one per oyster); paired WGBS BioProject PRJNA1113357 (SAMN41450117-SAMN41450125, same library codes)"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Li JA, He Y, Yang B, Mokrani A, Li Y, Tan C, Li Q, Liu S (2024). Whole-genome DNA methylation profiling revealed epigenetic regulation of NF-kB signaling pathway involved in response to Vibrio alginolyticus infection in the Pacific oyster, Crassostrea gigas. Fish & Shellfish Immunology 151:109705. https://doi.org/10.1016/j.fsi.2024.109705 (PMID 38885801). Link to this RNA-seq deposit inferred."
+
+species: "Magallana gigas"
+strain_or_population: "Laizhou, Shandong, China (BioSample geo_loc_name China: Laizhou), collected 2020-10. Origin (farmed or wild), age and size are not stated in the deposit."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end 2x150 bp, 9 libraries, 20.1-27.8 M read pairs each; 28.7 GB FASTQ reported by ENA"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 9 runs are public in ENA/SRA under PRJNA830931 (registered 2022-04-22, first public 2026-04-23). No count matrix or DE table is deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. sample_alias is <0h|6h|48h>_replicate<1-3>, one
+# BioSample per oyster, all gill. BioSample 'replicate' reads e.g. "Gill
+# sample replicate 1 collected at 48h after infection". Condition levels are
+# 0h, 6h, 48h.
+#
+# TWO COMPARISONS, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-15):
+# each infected time point vs the 0 h baseline. Those are the paper's
+# contrasts and the only ones the design supports, since there are no
+# time-matched uninfected controls. meta_analysis_primary is 48 h: infection
+# is established by then, and the paper reports more differentially
+# methylated regions at 48 h than at 6 h (14,196 vs 11,502), which makes it
+# the stronger target for linking to the methylome.
+#
+# ON PHENOTYPE CLASSIFICATION. Infected vs baseline, with no survival or load
+# outcome per animal in the deposit, follows CALLA2026_OSHV and
+# HESSER2024_VCOR: disease_susceptibility, classified disease, direction
+# increase for infected relative to baseline.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "valginolyticus_48h_vs_0h"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
+    stressor_original: "Infection with Vibrio alginolyticus, gill sampled 48 h after infection (BioSample 'collected at 48h after infection'; Li et al. 2024). Dose and route not stated in the deposit or abstract."
+    stressor_standardized: "pathogen_challenge"
     exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+    exposure_duration: "48 h"
+    exposure_timing: "gill sampled 48 h after infection; baseline at 0 h"
+    control_condition: "Oysters at 0 h, before infection (sample-sheet level 0h; 0h_replicate1-3)"
+    treatment_condition: "Oysters 48 h after V. alginolyticus infection (sample-sheet level 48h; 48h_replicate1-3)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "valginolyticus_6h_vs_0h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Infection with Vibrio alginolyticus, gill sampled 6 h after infection (BioSample 'collected at 6h after infection'; Li et al. 2024). Dose and route not stated."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: "6 h"
+    exposure_timing: "gill sampled 6 h after infection; baseline at 0 h"
+    control_condition: "Oysters at 0 h, before infection (0h; 0h_replicate1-3)"
+    treatment_condition: "Oysters 6 h after V. alginolyticus infection (6h; 6h_replicate1-3)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    sample_size: 6
+    biological_replicates: 3
     results_file: null
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - low_replication
+
+limitations: >
+  (1) n = 3 oysters per time point. (2) The only control is the 0 h baseline:
+  there are no time-matched uninfected oysters, so infection is confounded
+  with time since handling and with whatever the infection procedure itself
+  does (injection or immersion; not stated). (3) Infection dose, route,
+  water temperature, and oyster age and size are not in the deposit or the
+  abstract. The paper is closed access. (4) The link between this deposit
+  and Li et al. 2024 is inferred from institution, design and the shared
+  library codes with the paper's WGBS deposit (PRJNA1113357). The paper's
+  integrated transcriptome may have been described elsewhere. (5) No
+  per-animal infection outcome (survival, bacterial load) is deposited, so
+  this is a disease-exposure contrast, not a resistance phenotype. (6) life_stage
+  'adult' is assumed. (7) Library selection is recorded as PCR, which most
+  likely means a standard PCR-amplified poly-A or rRNA-depleted library;
+  the chemistry is not stated.
 
 provenance:
   registered_by: "Steven Roberts"
   date_registered: "2026-10-15"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Found by the 2026-10-14 screen of NCBI SRA for M. gigas RNA-seq projects
+    absent from the registry and backlog. Claimed with `aree start-study`
+    (draft PR #61). Registered from live ENA metadata with `aree
+    fetch-samplesheet --bioproject PRJNA830931 --study LI2024_VIBRIO_GILL
+    --label-field sample_alias --label-pattern
+    '^(?P<timepoint>0h|6h|48h)_replicate(?P<replicate>[1-3])$'
+    --condition-attribute timepoint --attribute replicate --attribute tissue
+    --attribute collection_date --attribute geo_loc_name`. REPLICATION
+    CHECK: 9 runs, 9 distinct BioSamples. PUBLICATION: Europe PMC finds no
+    paper citing the accession. A PubMed search on V. alginolyticus, C.
+    gigas and transcriptome returned 5 papers. Only Li et al. 2024 (PMID
+    38885801) has the 0/6/48 h design and the Liu/Li group. Its WGBS
+    deposit PRJNA1113357 uses the same library codes (0hg1 ... 48hg3 gill)
+    as this deposit's experiment titles. PRE-SCREEN, PASSED (2026-10-15):
+    scripts/prescreen_replicates.py, 1 M read pairs per library from NCBI.
+    Median dispersion was 0h 0.167, 6h 0.046 and 48h 0.017, over
+    5,541-6,581 genes (prescreen_replicates.tsv). Salmon mapped 75.5-82.2%.
+    FLAG: the 0 h baseline is 3-10x more variable than the infected groups,
+    and higher than any group in the pre-screen calibration. That usually
+    means one animal differs from the other two. Check a PCA of the full run
+    before trusting the baseline. Exclude an animal only on independent
+    evidence (e.g. a baseline oyster already carrying Vibrio), never because
+    it weakens the contrast.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA830931"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA830931"
+    - "https://doi.org/10.1016/j.fsi.2024.109705"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1113357"

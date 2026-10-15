@@ -1,0 +1,10 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	timepoint	replicate	tissue	collection_date	geo_loc_name	library_layout	instrument_model	read_count
+48h_replicate3	SRR19046233	SAMN27745125	48h_replicate3	48h	48h	3	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	23833281
+48h_replicate2	SRR19046234	SAMN27745124	48h_replicate2	48h	48h	2	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	24908031
+48h_replicate1	SRR19046235	SAMN27745123	48h_replicate1	48h	48h	1	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	24688375
+6h_replicate3	SRR19046236	SAMN27745122	6h_replicate3	6h	6h	3	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	26870445
+6h_replicate2	SRR19046237	SAMN27745121	6h_replicate2	6h	6h	2	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	27803860
+6h_replicate1	SRR19046238	SAMN27745120	6h_replicate1	6h	6h	1	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	23644882
+0h_replicate3	SRR19046239	SAMN27745119	0h_replicate3	0h	0h	3	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	21636521
+0h_replicate2	SRR19046240	SAMN27745118	0h_replicate2	0h	0h	2	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	21634769
+0h_replicate1	SRR19046241	SAMN27745117	0h_replicate1	0h	0h	1	gill	2020-10	China: Laizhou	PAIRED	Illumina NovaSeq 6000	20078354
