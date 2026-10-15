@@ -1,0 +1,3 @@
+condition	reads_per_library	source	n_samples	samples	n_genes	median_dispersion	passes
+C	1000000	ncbi	3	2M-C,4M-C,6M-C	4174	0.02801	True
+HS	1000000	ncbi	3	2M-HS,4M-HS,6M-HS	4000	0.07545	True

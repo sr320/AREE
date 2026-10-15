@@ -1,6 +1,16 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# PAIRED ACUTE HEAT-SHOCK STUDY: mantle from the same three adult oysters
+# before and after a 1 h heat shock at 40 C (control 15 C). Roberts lab,
+# University of Washington (BioSample biomaterial provider Steven Roberts,
+# collected by Claire Olson, 2013). Each oyster is its own control, so the
+# comparison is fitted as ~ oyster + condition.
+#
+# No publication found (Europe PMC searches on the accession, on Olson CE and
+# on Roberts SB with heat shock and C. gigas, 2026-10-14). Treat as unpublished
+# data. The study_id names the institution and the deposit's registration year
+# (BioProject 2016, public 2017-03-24) because there is no first author to
+# name it after. Details missing from the deposit can come from lab records.
+#
+# Registered 2026-10-14. Not yet reanalyzed.
 
 study_id: UW2016_HEATSHOCK_MANTLE
 simulated: false
@@ -9,60 +19,120 @@ accessions:
   doi: null
   bioproject: "PRJNA316154"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR3286754, SRR3288136, SRR3288139, SRR3288141, SRR3288143, SRR3288145"
+  ena: "PRJNA316154"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN04577613-SAMN04577618 (one per oyster per time point)"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Unpublished. Roberts lab, University of Washington: Cgigas mantle before and after a 1 h heat shock at 40 C (BioProject PRJNA316154, 'Evaluation of transcriptomic profiles in pre- & post-heat shocked C.gigas mantle'; data collected by Claire Olson, 2013)."
+
+species: "Magallana gigas"
+strain_or_population: "Three adult oysters (individuals 2M, 4M, 6M), Washington, USA (BioSample geo_loc_name USA: Washington). Source population, age and size are not stated in the deposit."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, single-end 101 bp, 6 libraries, 18.8-28.9 M reads each; 10.4 GB FASTQ reported by ENA"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ for all 6 runs are public in ENA/SRA under PRJNA316154 (first public 2017-03-24). No count matrix or DE table is deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. sample_alias is <oyster>-<C|HS>: three individuals
+# (2M, 4M, 6M), each sampled as control (C) and after heat shock (HS).
+# BioSample attributes agree: individual 2M / 2MHS, temp 15C / 40C, time point
+# 0hr / 1hr, tissue mantle, dev stage adult. The BioProject description:
+# mantle sampled from each of three adult oysters; one week of recovery; then
+# a heat shock of 40 C for 1 h and a second mantle sample.
+#
+# ONE COMPARISON, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-14):
+# HS vs C, fitted as ~ oyster + condition (--covariates oyster). Pairing
+# removes animal-to-animal differences from the contrast. It leaves 2
+# residual degrees of freedom (6 libraries, 4 coefficients), so standard
+# errors rest on very little. It is meta_analysis_primary, as the study's
+# only comparison.
+#
+# ON PHENOTYPE CLASSIFICATION. Heat shock vs the same animal before it is an
+# exposure. No oyster was scored for tolerance or survival. Classified
+# exposure_only on thermal_tolerance, as LI2022_HEAT_PLOIDY is, so the
+# validator warning is expected.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
+  - comparison_id: "heat_shock_40c_1h_vs_control"
+    tissue: "mantle"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
+    stressor_original: "1 h heat shock at 40 C, one week after a first mantle biopsy at 15 C (BioProject description; BioSample temp 40C, time point 1hr)"
     stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
+    exposure_intensity: "40 C (control 15 C)"
+    exposure_duration: "1 h"
+    exposure_timing: "mantle sampled immediately after the 1 h heat shock (time point 1hr); control sample taken from the same oyster one week earlier"
+    control_condition: "Same oysters before heat shock, at 15 C (sample-sheet level C; 2M-C, 4M-C, 6M-C)"
+    treatment_condition: "Same oysters after 1 h at 40 C (sample-sheet level HS; 2M-HS, 4M-HS, 6M-HS)"
     phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+
+limitations: >
+  (1) Three oysters. With pairing, the model has 2 residual degrees of
+  freedom, so lfcSE is imprecise. (2) Heat shock is confounded with time and
+  handling: the control sample came first, then a week of recovery from
+  that biopsy, then the heat shock. Expression differences may include
+  wound repair at the biopsy site, a week in the holding system, or
+  seasonal drift, as well as the heat response. (3) The deposit's dates do
+  not match the description. Both the control and the heat-shock BioSamples
+  carry collection date 2013-03-19, although the description has them a
+  week apart. Check against lab records. (4) The exposure is acute and
+  extreme (40 C, 1 h, sampled immediately). It is a shock response and is
+  not dose-comparable to LI2022's 28 C prolonged exposure; the 12 h acute
+  arm of LI2022 is closer, but still differs in temperature, tissue (gill)
+  and sampling time. (5) Exposure only: no tolerance phenotype was
+  measured. (6) Single-end 101 bp HiSeq 2500 from 2013; source population,
+  age and sex are not stated. (7) Unpublished: the protocol beyond the
+  BioProject description is not documented publicly.
 
 provenance:
   registered_by: "Steven Roberts"
   date_registered: "2026-10-14"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Found by a fresh screen of NCBI SRA for every M. gigas RNA-seq run
+    (2026-10-14; 3,369 runs, 164 BioProjects, 89 not yet registered,
+    claimed or listed in docs/candidate_studies.md). Claimed with `aree
+    start-study` (draft PR #59). Registered from live ENA metadata with
+    `aree fetch-samplesheet --bioproject PRJNA316154 --study
+    UW2016_HEATSHOCK_MANTLE --label-field sample_alias --label-pattern
+    '^(?P<oyster>[246]M)-(?P<treatment>C|HS)$' --condition-attribute
+    treatment --attribute oyster --attribute tissue --attribute
+    collection_date --attribute geo_loc_name --attribute isolation_source`.
+    REPLICATION CHECK: 6 runs, 6 distinct BioSamples, 3 individuals x 2 time
+    points; experiment titles 'control - replicate N of 3' and '1hr heat
+    shock @ 40C - replicate N of 3'. ENA reports single-end HiSeq 2500,
+    101 bp. Each arm is three different animals despite the pairing, so
+    the dispersion check applies as usual. PRE-SCREEN, PASSED (2026-10-14):
+    scripts/prescreen_replicates.py (PR #54), 1 M reads per library from
+    NCBI. Median dispersion was C 0.0280 and HS 0.0755, over 4,000-4,174
+    genes (prescreen_replicates.tsv), consistent with distinct animals.
+    Salmon mapped 46.8-73.0% of the subsampled reads. 6M-HS (SRR3288143) is
+    lowest at 46.8%; check it in the full run.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA316154"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA316154"
