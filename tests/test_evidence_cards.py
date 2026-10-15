@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
-from conftest import harmonize_all_demo_studies
+from conftest import harmonize_all_demo_studies, oyster_card
 
 from harmonize.core import load_evidence_table
 from prioritize.rank import EvidenceIndex, add_partition_columns, build_candidates
@@ -30,7 +30,7 @@ def test_build_evidence_cards_generates_files(isolated_reports):
 def test_evidence_card_flags_conflicting_direction(isolated_reports):
     harmonize_all_demo_studies()
     index = build_evidence_cards(phenotype="larval_viability", feature_type="gene")
-    sod1_entry = next(e for e in index if e["feature_id_standardized"] == "LOC105331241")
+    sod1_entry = oyster_card(index, "LOC105331241")
     content = Path(sod1_entry["card_file"]).read_text()
     assert "Conflicting direction" in content
 
@@ -145,7 +145,7 @@ def test_conflicting_candidate_keeps_its_card_via_study_level_significance(isola
     them reported adjusted p = 0.03, so the conflict is surfaced on a card."""
     harmonize_all_demo_studies()
     index = build_evidence_cards(phenotype="larval_viability", feature_type="gene")
-    sod1 = next(e for e in index if e["feature_id_standardized"] == "LOC105331241")
+    sod1 = oyster_card(index, "LOC105331241")
     assert sod1["adjusted_p_value"] > 0.05
     assert Path(sod1["card_file"]).exists()
 

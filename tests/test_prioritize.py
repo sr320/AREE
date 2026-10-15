@@ -1,5 +1,5 @@
 import pandas as pd
-from conftest import harmonize_all_demo_studies
+from conftest import harmonize_all_demo_studies, oyster
 
 from harmonize.core import load_evidence_table
 from meta_analysis.run import run_meta_analysis
@@ -50,7 +50,7 @@ def test_high_priority_gate_blocks_low_direction_consistency_even_with_two_studi
     evidence_df = load_evidence_table()
     candidates = build_candidates(meta_df, evidence_df)
 
-    sod1 = candidates[candidates["feature_id_standardized"] == "LOC105331241"].iloc[0]
+    sod1 = oyster(candidates)[oyster(candidates)["feature_id_standardized"] == "LOC105331241"].iloc[0]
     assert sod1["k_studies"] == 2
     assert sod1["tier"] != "high_priority_cross_study", (
         "sod1 has 2 studies but conflicting direction and must not be promoted to high_priority"

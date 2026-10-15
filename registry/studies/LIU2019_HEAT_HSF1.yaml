@@ -1,0 +1,127 @@
+# Acute heat shock (35 C, 2 h) in gill of 7-month-old M. gigas. Chosen
+# 2026-10-12 because its six control and heat runs were already staged and
+# MD5-verified on this machine (from an earlier pass in sr320/AREE-co), so it
+# could use idle CPU while every other queued study waited on slow ENA
+# downloads; not in candidate_studies.md.
+#
+# Source: Liu et al. 2019, BMC Genomics (open access, PMC6688261). The paper
+# is about HSF1 (RNAi knockdown); AREE uses only its direct heat-shock vs
+# control contrast, which the paper also reports (group 2 vs group 1).
+#
+# REPLICATION. "15 individuals of each group (three replicates of five
+# individuals) were selected for RNA-seq": three pooled libraries per group,
+# five oysters each. Two caveats from the methods: (1) the animals were
+# selected "according to the analysis of HSF1 expression" (qRT-PCR) before
+# sequencing, so the sequenced oysters are not a random draw from the heated
+# group; (2) tanks are not described, and each treatment group appears to
+# have been held as one group, so the treatment may not be replicated at the
+# container level. Both limit the weight this study should carry.
+
+study_id: LIU2019_HEAT_HSF1
+simulated: false
+
+accessions:
+  doi: "10.1186/s12864-019-6003-8"
+  bioproject: "PRJNA516762"
+  geo: null
+  sra: "SRP181984; runs used SRR8485507-SRR8485512"
+  ena: "PRJNA516762"
+  proteomexchange: null
+  other: "PMID 31395030; PMC6688261"
+
+citation: "Liu Y, Li L, Huang B, Wang W, Zhang G (2019). RNAi based transcriptome suggests genes potentially regulated by HSF1 in the Pacific oyster Crassostrea gigas under thermal stress. BMC Genomics 20:639. https://doi.org/10.1186/s12864-019-6003-8"
+
+species: "Magallana gigas"
+strain_or_population: "7-month-old cultured oysters (58.6 ± 1.3 mm, 23.4 ± 1.6 g); acclimated 1 week at 12 ± 1 C. Population per the deposit's isolation_source."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq X Ten, paired-end 150 bp, NEBNext Ultra (12 libraries deposited; the 6 control and heat-shock libraries used, 22.2-31.9 M read pairs)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 12 runs are public in ENA/SRA under PRJNA516762. Groups are in the sample alias (control-n, HS-n, RNAi-n, HS&RNAi-n). Only the six control and HS runs are staged and used. Sequence data are not committed."
+
+# QC PASSED WITH WARNINGS, 2026-10-12 (full-depth run of the 6 libraries).
+# - Dispersion was borderline: median within-group dispersion 0.0077 (HS) and
+#   0.00494 (control), the latter just under the 0.005 screening floor of
+#   scripts/check_replicate_dispersion.py. That floor is calibrated on
+#   single-animal libraries; each library here pools five oysters, which by
+#   itself cuts dispersion about fivefold (real single-animal replicates sit
+#   at 0.03-0.05, so ~0.006-0.01 is expected for pools of five).
+# - The genotype check settles it: an expressed-SNP comparison (3,244 sites)
+#   finds pools within a group differ in allele frequency by 0.188, against
+#   0.054 expected for one RNA sample sequenced twice, and exactly as much as
+#   pools from different groups (0.187). Every pool is different animals
+#   (replicate_genotype_check.txt). Compare IOCAS2024_OA_TRANSGEN, which
+#   failed with 0.061 against 0.051.
+# - No pseudo-replication symptoms: 111 of 28,333 genes at padj < 0.05 (not
+#   ~40%), median lfcSE 0.19 for genes with baseMean > 100. Heat shock
+#   protein 68 (LOC117680673) is among the most significant heat-induced genes
+#   (log2FC 4.4).
+# - Warnings: the HSF1-based selection of sequenced animals and the unknown
+#   container structure (see the header).
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# One comparison, prespecified 2026-10-12 before any result: heat shock vs
+# untreated control. The RNAi and RNAi + heat groups test HSF1 regulation (a
+# knockdown, i.e. mechanism) and are not used. stress_response: no tolerance
+# outcome was measured for these animals.
+comparisons:
+  - comparison_id: "heat_35c_2h_vs_control"
+    tissue: "gill"
+    life_stage: "juvenile"
+    stressor_original: "heat shock in seawater at 35 ± 0.7 °C for 2 h (group 2, 'HS'), vs untreated control (group 1) after 1 week at 12 ± 1 °C (Liu et al. 2019)"
+    stressor_standardized: "temperature"
+    exposure_intensity: "35 C seawater vs 12 C acclimation"
+    exposure_duration: "2 h"
+    exposure_timing: "acute heat shock; gill sampling time after heat shock as in the paper's protocol (heat at 46 h, sampling at 48 h for the RNAi experiment)"
+    control_condition: "untreated control, 3 pooled libraries x 5 oysters (control-1..3)"
+    treatment_condition: "35 C heat shock for 2 h, 3 pooled libraries x 5 oysters (HS-1..3)"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 6
+    biological_replicates: 3
+    meta_analysis_primary: true
+    results_file: "data/studies/LIU2019_HEAT_HSF1/LIU2019_HEAT_HSF1_heat_35c_2h_vs_control_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+
+limitations: >
+  (1) Sequenced oysters were selected by HSF1 qRT-PCR expression, not at
+  random. (2) Container structure is not described; each treatment group may
+  have been one container, so oysters (and pools) may not be independent
+  replicates of the heat treatment. (3) Each library pools five oysters; n =
+  3 libraries per group. (4) 7-month-old oysters are recorded as juvenile.
+  (5) Acute 2 h shock at 35 C; no tolerance outcome measured.
+
+provenance:
+  registered_by: "sr320"
+  date_registered: "2026-10-12"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA516762 --study-id
+    LIU2019_HEAT_HSF1` (draft PR sr320/AREE#37). Sample sheet from live ENA
+    metadata with `aree fetch-samplesheet --label-field sample_alias` (pattern
+    in config/LIU2019_HEAT_HSF1.config): 12 runs, 3 per group. The six control
+    and HS FASTQs were already on the omics drive from an earlier sr320/AREE-co
+    pass; all 12 files matched ENA's MD5s on 2026-10-12 before use. Replication
+    and the HSF1-based selection of sequenced animals read from the paper's
+    methods (PMC6688261). An earlier reanalysis in sr320/AREE-co reported 99 of
+    22,397 genes at FDR < 0.05 for this contrast.
+    Run 2026-10-12 (Nextflow 26.04.7, native -profile local,workstation, 24/24
+    tasks): Salmon mapping 77.7-79.8%, library type IU. Harmonized: 28,333
+    evidence records.
+  source_links:
+    - "https://doi.org/10.1186/s12864-019-6003-8"
+    - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6688261/"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA516762"

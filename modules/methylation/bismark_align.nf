@@ -25,7 +25,13 @@ process BISMARK_GENOME_PREPARATION {
     // aligner backend. Not executed here.
     """
     mkdir -p bismark_genome
-    cp ${genome_fasta} bismark_genome/
+    # Bismark only recognises .fa / .fasta (optionally .gz). NCBI genomes are
+    # .fna, which it silently skips ("does not contain any sequence files"),
+    # so copy under a name it accepts.
+    case "${genome_fasta}" in
+        *.gz) cp ${genome_fasta} bismark_genome/genome.fa.gz ;;
+        *)    cp ${genome_fasta} bismark_genome/genome.fa ;;
+    esac
     bismark_genome_preparation --bowtie2 bismark_genome
 
     cat <<-END_VERSIONS > versions.yml
@@ -62,8 +68,13 @@ process BISMARK_ALIGN {
         -2 ${read2} \\
         --bowtie2 \\
         --multicore ${Math.max((task.cpus / 3) as int, 1)} \\
-        --basename ${sample_id}_bismark_bt2 \\
+        ${params.methylation?.bismark_align_args ?: ''} \\
         -o .
+
+    # Bismark 0.24 refuses --basename together with --multicore, so outputs
+    # are named after read 1; rename them to the names declared above.
+    mv *_bismark_bt2_pe.bam ${sample_id}_bismark_bt2_pe.bam
+    mv *_bismark_bt2_PE_report.txt ${sample_id}_bismark_bt2_PE_report.txt
 
     cat <<-END_VERSIONS > versions.yml
     ${task.process}:

@@ -323,8 +323,9 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
 def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     """Copy one evidence card next to the dashboard so the site can link to it.
 
-    Returns the site-relative page path (without extension, as Quarto links it),
-    or None when the candidate has no rendered card.
+    Returns the page path relative to the home page (index.qmd), which loads
+    data.json from one directory below it, so the link includes that directory
+    (e.g. ``dashboard/cards/<card>.html``). None when the candidate has no card.
     """
     if not card_file or cards_dir is None or (isinstance(card_file, float) and pd.isna(card_file)):
         return None
@@ -347,7 +348,7 @@ def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     dest.write_text(
         f'---\ntitle: "{title}"\nsidebar: false\nbread-crumbs: false\n---\n\n{body}\n'
     )
-    return f"{cards_dir.name}/{src.stem}.html"
+    return f"{cards_dir.parent.name}/{cards_dir.name}/{src.stem}.html"
 
 
 def _pool_summary() -> list[dict]:

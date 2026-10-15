@@ -12,14 +12,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import REPORTS_DIR, load_vocab
+from common import REPORTS_DIR, load_vocab, species_term_for_taxid
 from prioritize.rank import TIER_ORDER
 
 DEFAULT_CANDIDATES_PATH = REPORTS_DIR / "evidence_cards" / "candidates.tsv"
 DEFAULT_OUT_PATH = REPORTS_DIR / "top_candidates_summary.md"
 
 SUMMARY_COLUMNS = [
-    "rank", "feature_id_standardized", "feature_type", "tier", "evidence_class",
+    "rank", "feature_id_standardized", "species", "feature_type", "tier", "evidence_class",
     "score", "k_studies", "total_sample_size", "direction_consistency",
     "adjusted_p_value", "context_replication", "n_supporting_layers",
     "mapping_confidences", "simulated", "card_file",
@@ -46,6 +46,11 @@ def top_candidates_by_phenotype(candidates: pd.DataFrame, n: int = 10) -> dict:
         phenotype: group.head(n).reset_index(drop=True)
         for phenotype, group in ranked.groupby("phenotype", sort=False)
     }
+
+
+def _species_name(taxid) -> str:
+    term = species_term_for_taxid(taxid)
+    return term["scientific_name"] if term else f"taxid {taxid}"
 
 
 def _phenotype_label(phenotype: str, vocab: dict) -> str:
@@ -106,6 +111,9 @@ def build_top_candidates_summary(
         table["card_file"] = table["card_file"].fillna("").apply(
             lambda p: Path(p).name if p else "(no significant signal — not rendered)"
         )
+        # One phenotype can hold candidates from several species, and the same
+        # feature ID may appear once per species; name the species on every row.
+        table["species"] = table["species_taxid"].map(_species_name)
         table = table[SUMMARY_COLUMNS]
         lines.append(table.to_markdown(index=False, floatfmt=".3g"))
         lines.append("")

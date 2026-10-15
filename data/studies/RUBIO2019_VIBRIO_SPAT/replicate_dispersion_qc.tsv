@@ -1,0 +1,6 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+Vcrass_J2_8	3	RNAseq_Vcrass_J2-8_replicate1,RNAseq_Vcrass_J2-8_replicate2,RNAseq_Vcrass_J2-8_replicate3	7114	0.00576	True
+Vcrass_J2_9	3	RNAseq_Vcrass_J2-9_replicate1,RNAseq_Vcrass_J2-9_replicate2,RNAseq_Vcrass_J2-9_replicate3	7097	0.00351	False
+Vtasma_LGP32	3	RNAseq_Vtasma_LGP32_replicate1,RNAseq_Vtasma_LGP32_replicate2,RNAseq_Vtasma_LGP32_replicate3	7061	0.00453	False
+Vtasma_LMG20012T	3	RNAseq_Vtasma_LMG20012T_replicate1,RNAseq_Vtasma_LMG20012T_replicate2,RNAseq_Vtasma_LMG20012T_replicate3	7138	0.00638	True
+anesthesis	3	RNAseq_anesthesis_replicate1,RNAseq_anesthesis_replicate2,RNAseq_anesthesis_replicate3	7312	0.01882	True
