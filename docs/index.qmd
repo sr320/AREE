@@ -133,7 +133,7 @@ html`<div class="kpi-grid">
     measure a resilience outcome; the rest measure disease, stress response, or exposure alone.`);
   if (topPhens.length === 1 && relevance(topPhens[0]) !== "resilience")
     caveats.push(`The top-ranked candidates all come from the <em>${lc(phen(topPhens[0]))}</em> pool, so they describe the response to ${relevance(topPhens[0]) === "disease" ? "infection" : "the stressor"},
-      not resistance to it.`);
+      not resistance to it; each pool's own top candidates are listed below.`);
   if (k.n_candidates_real_multi_omics === 0)
     caveats.push(`The multi-omics tier is empty because no non-RNA-seq study has been harmonized yet.`);
   caveats.push(`A candidate here is an association across the available evidence, not a validated biomarker.`);
@@ -171,8 +171,8 @@ html`<p>Ranked by tier, then score${topPhen ? html`, all for <em>${topPhen}</em>
 ```
 
 ```{ojs}
-Inputs.table(data.candidates.top_real, {
-  columns: ["feature_id_standardized", "gene_description", ...(topPhen ? [] : ["phenotype_label"]),
+candidateTable = (rows, {showPhenotype = false, maxRows = 15} = {}) => Inputs.table(rows, {
+  columns: ["feature_id_standardized", "gene_description", ...(showPhenotype ? ["phenotype_label"] : []),
             "tier", "k_studies", "pooled_effect", "adjusted_p_value"],
   header: {feature_id_standardized: "Gene", gene_description: "Description", phenotype_label: "Phenotype",
            tier: "Tier", k_studies: "Studies", pooled_effect: "log2FC", adjusted_p_value: "Adj. p"},
@@ -183,8 +183,31 @@ Inputs.table(data.candidates.top_real, {
     pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
     adjusted_p_value: fmtP
   },
-  rows: 15, layout: "auto"
+  rows: maxRows, layout: "auto"
 })
+```
+
+```{ojs}
+candidateTable(data.candidates.top_real, {showPhenotype: !topPhen})
+```
+
+### Top candidates per pool
+
+```{ojs}
+{
+  // The overall list above is dominated by the pool with the most studies, so each
+  // cross-study pool also shows its own best candidates.
+  const byPhen = data.candidates.top_real_by_phenotype ?? {};
+  const pools = data.pools
+    .filter(p => !p.simulated && p.feature_type === "gene" && p.max_k >= 2 && byPhen[p.phenotype]?.length)
+    .sort((a, b) => b.studies.length - a.studies.length || a.phenotype.localeCompare(b.phenotype));
+  if (!pools.length) return html`<p>No cross-study pool has ranked candidates yet.</p>`;
+  return html`${pools.map(p => html`
+    <h4>${phen(p.phenotype)}</h4>
+    <p class="dash-meta">${p.studies.length} studies (${p.studies.join(", ")}); top ${byPhen[p.phenotype].length}
+      by tier, then score.</p>
+    ${candidateTable(byPhen[p.phenotype], {maxRows: byPhen[p.phenotype].length})}`)}`;
+}
 ```
 
 ## Studies
