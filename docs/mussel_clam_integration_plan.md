@@ -2,8 +2,8 @@
 
 **Status, 2026-10-13:** WP0 to WP4 are implemented. WP5 has its backlog and a
 first study (TUCCI2025_HEAT_PRIMING, Manila clam, reanalyzed). WP6 has its
-orthogroup run; orthogroup-level meta-analysis and cross-species candidates
-are not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
+orthogroup run and orthogroup-level meta-analysis; cross-species candidates
+and the dashboard gate are not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
 species-by-species and then across species through orthology.
@@ -466,8 +466,20 @@ k ≥ 2 per taxon.
   protein" genes fall into 285 orthogroups, the largest holding 17-23 copies
   in each mussel against 3 in the oyster.
 
-Still to build: orthogroup-level meta-analysis, the cross-species candidate
-category, evidence cards that show both species, and the dashboard gate. The
+**Orthogroup-level meta-analysis: done, 2026-10-14.** `aree meta-analyze
+--level orthogroup` pools each species' gene-level estimate across species
+through orthogroups (two-stage DerSimonian-Laird), reports between-species
+Q, I-squared and tau-squared, per-species estimates and study counts, and a
+`meets_replication_gate` flag (two or more species with k >= 2 each).
+Multi-copy orthogroups are set aside by default, as are orthogroups missing
+from the active run. On the demo, 8 orthogroups pool oyster with mussel
+(larval viability), none past the gate; on all committed real evidence
+(465,531 oyster records), nothing pools across species yet, correctly.
+Building it found that the demo's illustrative orthogroup IDs collide with
+real OrthoFinder IDs, so simulated evidence never consults the run (tested).
+
+Still to build: the cross-species candidate category, evidence cards that
+show both species, and the dashboard gate. The
 OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only
 mode) and only its `Orthogroups.tsv` is used; hierarchical orthogroups are a
 possible refinement.

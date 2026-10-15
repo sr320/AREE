@@ -382,8 +382,40 @@ def harmonize_cmd(study_id, input_path, comparison_id, date_generated):
 @main.command("meta-analyze")
 @click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
 @click.option("--feature-type", default=None, help="Feature type to filter on, e.g. gene, protein (default: all).")
-def meta_analyze_cmd(phenotype, feature_type):
+@click.option("--level", type=click.Choice(["gene", "orthogroup"]), default="gene", show_default=True,
+              help="gene: pool within each species. orthogroup: pool species' gene-level estimates "
+                   "across species through orthogroups (single-copy orthogroups only by default).")
+@click.option("--include-multi-copy", is_flag=True,
+              help="With --level orthogroup, also pool multi-copy orthogroups where each species has "
+                   "evidence for exactly one gene. Off by default: paralogs are not like for like.")
+def meta_analyze_cmd(phenotype, feature_type, level, include_multi_copy):
     """Run a random-effects meta-analysis over the harmonized evidence table."""
+    if level == "orthogroup":
+        from meta_analysis.run import write_orthogroup_meta_analysis
+
+        try:
+            result, _species, summary, out_path = write_orthogroup_meta_analysis(
+                phenotype, feature_type, include_multi_copy=include_multi_copy)
+        except (FileNotFoundError, ValueError) as exc:
+            click.echo(click.style(str(exc), fg="red"))
+            sys.exit(1)
+        click.echo(f"Orthogroup groups seen: {summary['orthogroup_groups']}; pooled across species: "
+                   f"{summary['pooled']}; one species only: {summary['single_species']}; set aside: "
+                   f"{summary['multi_copy_excluded']} multi-copy, {summary['paralogs_in_species_excluded']} "
+                   f"with paralogs in one species, {summary['not_in_active_run_excluded']} not in the "
+                   "active orthogroup run.")
+        if len(result) == 0:
+            click.echo("No orthogroup has gene-level estimates from two or more species.")
+            return
+        click.echo(tabulate(
+            result[["orthogroup_id", "copy_class", "phenotype", "n_species", "k_studies_by_species",
+                    "pooled_effect", "p_value", "adjusted_p_value", "i_squared_between_species",
+                    "meets_replication_gate"]].head(20),
+            headers="keys", showindex=False, floatfmt=".3g",
+        ))
+        click.echo(f"\nFull results ({len(result)} rows) written to {out_path}; per-species "
+                   "estimates beside it. meets_replication_gate: at least two species each with k >= 2.")
+        return
     try:
         result, out_path = write_meta_analysis(phenotype, feature_type)
     except FileNotFoundError as exc:
