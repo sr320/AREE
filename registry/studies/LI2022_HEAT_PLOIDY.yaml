@@ -1,0 +1,313 @@
+# FIRST REAL THERMAL RNA-SEQ STUDY REGISTERED IN AREE. Thermal evidence until
+# now was simulated (GIGAS_HEAT01) or methylation that has not been run yet
+# (CIBNOR2021_HEAT_RRSS).
+#
+# Registered from deposited metadata and the publication abstract. The
+# publication is INFERRED, not confirmed. Li, Jiang & Li 2022 (Aquaculture
+# 555:738219) is closed access, and Europe PMC finds no full text that cites
+# PRJNA762441. The match rests on four things that agree: (a) the BioProject
+# submitter is Kunyin Jiang, Ocean University of China, the paper's second
+# author, and the last author (Qi Li) is at the same institution; (b) the
+# BioProject title and description ("transcriptomic response of triploid and
+# diploid C. gigas to thermal stress") match the abstract; (c) the deposit
+# has diploid and triploid gill libraries at three sampling points, and the
+# abstract describes acute and prolonged heat stress in both ploidies;
+# (d) the deposit went public 2021-11-05 and the paper came out in June 2022.
+# Confirm the accession against the paper's data availability statement
+# before any result is harmonized.
+#
+# Registered 2026-10-10. REANALYZED 2026-10-10 at full depth for the primary
+# comparison only (diploid prolonged heat vs baseline, 3 vs 3): 849 of 25,823
+# genes have padj < 0.05 (431 up, 418 down), every one with a real lfcSE.
+# The paper reports 418 DEGs for this contrast from its own pipeline.
+# Replicates pass the dispersion check (median 0.014 in both groups,
+# data/studies/LI2022_HEAT_PLOIDY/replicate_dispersion_qc.tsv).
+# Diploid acute 12 h vs baseline, run 2026-10-11: 2,522 of 26,155 genes at
+# padj < 0.05 (1,202 up, 1,320 down); the paper reports 779. d_12 median
+# dispersion 0.022. Triploid prolonged heat vs baseline, run 2026-10-11:
+# 2,209 of 26,545 genes at padj < 0.05 (1,417 up, 792 down); the paper
+# reports 483. t_f median dispersion 0.0095 is a borderline pass (see
+# curation_notes). Triploid acute 12 h vs baseline, run 2026-10-11: 971 of
+# 27,039 genes at padj < 0.05 (568 up, 403 down); the paper reports 396.
+# All four comparisons are run and harmonized. AREE finds more DEGs than the
+# paper in every comparison, but the ordering by ploidy matches the paper's:
+# acute heat diploid > triploid (2,522 vs 971; paper 779 vs 396), prolonged
+# heat triploid > diploid (2,209 vs 849; paper 483 vs 418).
+# qc_status is passed_with_warnings: n = 3, borderline t_f dispersion, and
+# exposure details still unread (see limitations).
+
+study_id: LI2022_HEAT_PLOIDY
+simulated: false
+
+accessions:
+  doi: "10.1016/j.aquaculture.2022.738219"
+  bioproject: "PRJNA762441"
+  geo: null
+  sra: "SRP336611 (SRR15851229-SRR15851246)"
+  ena: "PRJNA762441"
+  proteomexchange: null
+  other: "BioSamples SAMN21393613-SAMN21393630 (one per library)"
+
+citation: "Li Y, Jiang K, Li Q (2022). Comparative transcriptomic analyses reveal differences in the responses of diploid and triploid Pacific oysters (Crassostrea gigas) to thermal stress. Aquaculture 555:738219. https://doi.org/10.1016/j.aquaculture.2022.738219"
+
+species: "Magallana gigas"
+strain_or_population: "Cultured diploid and triploid oysters, Qingdao, China (BioSample isolate 'cultured', geo_loc_name China:Qingdao). How the triploids were produced, and whether the diploids and triploids share parents, is not stated in the deposit or the abstract."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2000 (as deposited), paired-end 2x150 bp RNA-seq, 18 libraries, 21.5-27.1 M read pairs each; 54.7 GB FASTQ reported by ENA"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 18 runs are public in ENA/SRA under PRJNA762441 (first public 2021-11-05). No count matrix or differential-expression table is deposited, and the paper is closed access, so its supplementary tables were not checked. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. Each BioSample carries one sample_alias,
+# A<time><ploidy>_<rep>: time 0, 12 or f; ploidy d (diploid) or t (triploid);
+# replicate 1-3. That gives 6 groups x n=3, all gill, collected 2020-12. The
+# BioSample isolation_source numbers oysters 1-9 within each ploidy
+# ("diploid Crassostrea gigas1" ... "9"), three per time point. So each
+# library is a different animal, as expected when gill is sampled lethally.
+# This is a deposit-level check only; replicate dispersion is checked after
+# quantification.
+#
+# READING OF THE TIME CODES. This is inferred from the abstract, not stated
+# in the deposit: 0 = before heat (baseline), 12 = 12 h of acute heat stress,
+# f = final sampling after prolonged heat stress at 28 C. The acute
+# temperature, the length of the prolonged exposure, the acclimation
+# temperature and the ramp are not in the abstract or the deposit. They are
+# left null until the methods are read.
+#
+# FOUR COMPARISONS, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-10).
+# Each one is heat vs the same ploidy's time-0 baseline, mirroring the
+# paper's per-ploidy DEG counts (779 / 396 acute, 418 / 483 prolonged,
+# diploid / triploid). The primary comparison for pooling is DIPLOID
+# PROLONGED heat vs baseline. Reasons: diploids are the reference population
+# that other thermal studies use; 28 C is the only exposure level the
+# abstract states; and prolonged heat is where the paper measured survival.
+# A ploidy x heat interaction would be the more interesting contrast, but
+# the workflow fits pairwise contrasts only. It is noted under limitations,
+# not registered.
+#
+# ON PHENOTYPE CLASSIFICATION. The paper reports that triploid survival was
+# lower than diploid survival after prolonged heat at 28 C. That is a
+# ploidy-level measurement, made on animals other than the sequenced ones.
+# Every registered comparison is heat vs baseline within a single ploidy: an
+# exposure, with no tolerant vs sensitive animals contrasted. They are
+# classified exposure_only on the thermal_tolerance axis, as LUTIER2022 and
+# IOCAS2022 are. This overrides the ontology default of `resilience`, so the
+# validator warning is expected.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "diploid_prolonged_heat_vs_baseline"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Prolonged heat stress at 28 C (Li et al. 2022 abstract); deposited sample_alias time code 'f'. Exposure length and acclimation temperature not stated in the deposit or abstract."
+    stressor_standardized: "temperature"
+    exposure_intensity: "28 C (control/acclimation temperature not stated)"
+    exposure_duration: null
+    exposure_timing: "final sampling of the prolonged exposure (time code 'f'); baseline sampled at time 0"
+    control_condition: "Diploid oysters at time 0, before heat stress (sample-sheet level d_0; A0d_1-3)"
+    treatment_condition: "Diploid oysters after prolonged heat stress at 28 C (sample-sheet level d_f; Afd_1-3)"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_diploid_prolonged_heat_vs_baseline_dge_standardized.tsv"
+    meta_analysis_primary: true
+
+  - comparison_id: "diploid_acute_heat_12h_vs_baseline"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Acute heat stress, sampled at 12 h (Li et al. 2022 abstract; deposited time code '12'). Temperature not stated in the deposit or abstract."
+    stressor_standardized: "temperature"
+    exposure_intensity: null
+    exposure_duration: "12 h (inferred from time code '12')"
+    exposure_timing: "12 h after the start of acute heat stress; baseline sampled at time 0"
+    control_condition: "Diploid oysters at time 0, before heat stress (d_0; A0d_1-3)"
+    treatment_condition: "Diploid oysters after 12 h acute heat stress (d_12; A12d_1-3)"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_diploid_acute_heat_12h_vs_baseline_dge_standardized.tsv"
+
+  - comparison_id: "triploid_prolonged_heat_vs_baseline"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Prolonged heat stress at 28 C (Li et al. 2022 abstract); deposited time code 'f'. Exposure length not stated."
+    stressor_standardized: "temperature"
+    exposure_intensity: "28 C (control/acclimation temperature not stated)"
+    exposure_duration: null
+    exposure_timing: "final sampling of the prolonged exposure (time code 'f'); baseline sampled at time 0"
+    control_condition: "Triploid oysters at time 0, before heat stress (t_0; A0t_1-3)"
+    treatment_condition: "Triploid oysters after prolonged heat stress at 28 C (t_f; Aft_1-3)"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_triploid_prolonged_heat_vs_baseline_dge_standardized.tsv"
+
+  - comparison_id: "triploid_acute_heat_12h_vs_baseline"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Acute heat stress, sampled at 12 h (Li et al. 2022 abstract; deposited time code '12'). Temperature not stated."
+    stressor_standardized: "temperature"
+    exposure_intensity: null
+    exposure_duration: "12 h (inferred from time code '12')"
+    exposure_timing: "12 h after the start of acute heat stress; baseline sampled at time 0"
+    control_condition: "Triploid oysters at time 0, before heat stress (t_0; A0t_1-3)"
+    treatment_condition: "Triploid oysters after 12 h acute heat stress (t_12; A12t_1-3)"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_triploid_acute_heat_12h_vs_baseline_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+
+limitations: >
+  (1) n = 3 oysters per group. DESeq2 dispersion estimates rest on 2 residual
+  degrees of freedom per group, so standard errors are imprecise. (2) The
+  control is a time-0 baseline, not a time-matched control. Heat is therefore
+  confounded with time in the experiment (handling, feeding, days in the
+  system), most of all for the prolonged comparison. (3) The exposure is only
+  partly described. The abstract gives 28 C for the prolonged stress, but not
+  its duration, the acute-stress temperature, the acclimation temperature or
+  the ramp. Until the methods are read, effect sizes here are not
+  dose-comparable to other thermal studies. (4) The reading of the time codes
+  (0 = baseline, 12 = 12 h acute, f = end of prolonged) is inferred from the
+  abstract. (5) The link to Li et al. 2022 is inferred from submitter,
+  institution, title, design and dates. No full text citing PRJNA762441 was
+  found. (6) Exposure only: the sequenced oysters were not scored for their
+  own tolerance. The paper's survival result (triploid below diploid under
+  prolonged 28 C) applies to ploidy groups, not to these 18 animals. (7) The
+  more informative contrast for breeding is the ploidy x heat interaction
+  (does triploid gill respond differently?). It is not registered, because
+  the workflow fits pairwise contrasts. A triploid-vs-diploid contrast at one
+  time point would mix baseline ploidy differences into the heat response.
+  (8) life_stage 'adult' is an assumption: age and size are not in the
+  deposit or the abstract. (9) Triploid production method (chemical vs
+  tetraploid cross) and parentage are not stated. Diploids and triploids may
+  differ in genetic background as well as in ploidy. (10) Gill only, one
+  cohort, one site (Qingdao). (11) Triploid gill tissue carries three
+  genome copies. Library preparation normalizes total RNA, so per-copy dosage
+  effects are not identifiable from these data.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-10"
+  curation_notes: >
+    Registered from live ENA metadata for PRJNA762441 with
+    `aree fetch-samplesheet --bioproject PRJNA762441 --study
+    LI2022_HEAT_PLOIDY --label-field sample_alias --label-pattern
+    '^A(?P<timepoint>0|12|f)(?P<ploidy>d|t)_(?P<replicate>[1-3])$'
+    --condition-attribute ploidy --condition-attribute timepoint --attribute
+    replicate --attribute 'isolation source' --attribute tissue --attribute
+    'collection date' --attribute 'geo loc name'`. Condition levels are
+    <ploidy>_<time>, e.g. d_0, t_f. REPLICATION CHECK: 18 distinct
+    sample_alias values and 18 distinct BioSamples. isolation_source numbers
+    9 oysters per ploidy, three per time point, which fits lethal gill
+    sampling of separate animals. ENA reports all 18 runs as RNA-Seq /
+    TRANSCRIPTOMIC / PAIRED, HiSeq 2000, 21.5-27.1 M read pairs. Run
+    scripts/check_replicate_dispersion.py after quantification, as for every
+    raw_reanalysis study. Distinct BioSamples do not prove distinct animals
+    (IOCAS2022_OA_ENERGY). PUBLICATION: PubMed search returned nothing.
+    Europe PMC (AGRICOLA record IND607730474) found Li Y, Jiang K, Li Q,
+    "Comparative transcriptomic analyses reveal differences in the responses
+    of diploid and triploid Pacific oysters (Crassostrea gigas) to thermal
+    stress", Aquaculture 555. Crossref gives DOI
+    10.1016/j.aquaculture.2022.738219, article 738219, June 2022. Unpaywall
+    reports it closed access. Exposure details were taken from the abstract
+    only. A related paper, Li Y, Xu C, Li Q (2022) Aquaculture Research,
+    "Physiological and gene expression responses of diploid and triploid
+    Pacific oyster (Crassostrea gigas) to heat", may describe the same
+    challenge. It was not checked. TO DO BEFORE REANALYSIS: read the methods
+    (UW library access) for acute temperature, prolonged duration,
+    acclimation temperature, oyster age/size and triploid production; confirm
+    the data availability statement names PRJNA762441; update
+    exposure_intensity, exposure_duration and life_stage.
+    REANALYSIS (Pori, 2026-10-10): the 12 libraries of the primary
+    comparison were downloaded from ENA over HTTPS and all 24 FASTQ files
+    matched ENA's MD5s. Three files reached full size with a wrong MD5 after
+    connections dropped mid-transfer and were resumed; they were discarded
+    and fetched again. ENA throttled 10 parallel connections (HTTP 403, then
+    refused connections) and the download was finished with 2-4 parallel connections. Run with
+    -profile local,workstation, native tools from environment.yml, no
+    container, plus a machine-local resource override for 8 GB RAM (task
+    cpus/memory only, which does not change results). The reads glob was
+    pointed at a folder holding only the comparison's 6 libraries. Nextflow
+    26.04.7: 23 tasks completed, 1 cached, status OK, 28 min. Versions that
+    actually ran: FastQC 0.12.1, fastp 1.4.0, Salmon 2.8.0, MultiQC 1.35,
+    R 4.5.3, DESeq2 1.50.2, tximport 1.38.2, Quarto 1.9.38. The workflow
+    manifest's software_versions lists the declared container versions
+    instead (docs/implementation_status.md). Salmon index built in-workflow
+    (k=31, transcriptome only) from GCF_963853765.1 rna.fna. Salmon mapped
+    82.2-85.5% of read pairs (21.4-25.5 M pairs per library); library type
+    IU, i.e. unstranded. REPLICATE DISPERSION: median 0.0138 (d_0) and
+    0.0143 (d_f) over 5,446-5,536 well-expressed genes. That passes the
+    0.005 threshold and is ten times IOCAS2022_OA_ENERGY's
+    technical-replicate values, but lower than the 0.03-0.05 seen in
+    CALLA2026_OSHV and LUTIER2022_OA_TIPPING. Gill from one cultured
+    cohort may simply vary less than whole spat or juveniles; it is noted,
+    not treated as a failure. Harmonized locally against the committed
+    crosswalk: 25,823 evidence records, all mapping_confidence exact.
+    DIPLOID ACUTE 12 H (Pori, 2026-10-11): all 6 d_12 FASTQ files matched
+    ENA's MD5s (SRR15851232_2 needed a second download after a full-size
+    MD5 mismatch). The first run was correct in content but mislabelled:
+    config/LI2022_HEAT_PLOIDY.config set rnaseq.comparison_id to the
+    primary comparison, and the workflow reads that before --comparison_id,
+    so every output carried the primary's name. Nothing was renamed by
+    hand. The config now leaves rnaseq.comparison_id null and sets the
+    default as a top-level param, the results were deleted, and the run
+    was repeated with -resume (11 tasks run, 12 cached: FastQC, fastp and
+    Salmon). Manifest records control d_0, treatment d_12. The committed
+    primary result is unaffected: its id and levels matched. Salmon mapped
+    81.0-81.4% of read pairs (23.0-24.3 M pairs), unstranded. d_12 median
+    dispersion 0.0225.
+    TRIPLOID PROLONGED (Pori, 2026-10-11): all 12 FASTQ files matched ENA's
+    MD5s. Run with the corrected config and the saved Salmon index: 23
+    tasks, status OK, 32 min; manifest records control t_0, treatment t_f.
+    Salmon mapped 81.4-85.0% of read pairs (22.7-27.0 M pairs), unstranded.
+    DISPERSION: t_0 0.0202, t_f 0.0095. t_f passes the 0.005 threshold and
+    is about 6x IOCAS2022_OA_ENERGY's technical-replicate range, but it is
+    the lowest group in this study and under 2x the threshold. It is
+    treated as a borderline pass: the three t_f libraries are distinct
+    BioSamples (triploid oysters 7-9) and nothing else points to technical
+    replication. A reviewer should weigh it, especially before pooling the
+    triploid comparisons. DESCRIPTIVE, NOT A REGISTERED TEST: genome-wide,
+    log2 fold changes for prolonged heat barely correlate between ploidies
+    (r = 0.05, 25,000+ shared genes). Of the 232 genes at padj < 0.05 in
+    both, 219 change in the same direction.
+    TRIPLOID ACUTE 12 H (Pori, 2026-10-11): all 36 study FASTQ files are now
+    downloaded and MD5-verified. 23 tasks, status OK, 33 min; manifest
+    records control t_0, treatment t_12. Salmon mapped 81.1-81.9% of read
+    pairs (21.6-25.4 M pairs), unstranded. t_12 median dispersion 0.0295.
+    Descriptive: acute-heat fold changes correlate weakly between ploidies
+    (r = 0.17). Of the 447 genes at padj < 0.05 in both, 445 change in the
+    same direction. Final dispersion table (all six groups) is in
+    replicate_dispersion_qc.tsv.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA762441"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA762441"
+    - "https://doi.org/10.1016/j.aquaculture.2022.738219"

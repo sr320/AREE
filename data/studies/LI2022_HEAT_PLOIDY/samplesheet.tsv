@@ -1,0 +1,19 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	ploidy	timepoint	replicate	isolation_source	tissue	collection_date	geo_loc_name	library_layout	instrument_model	read_count
+A12t_1	SRR15851229	SAMN21393622	A12t_1	t_12	t	12	1	triploid Crassostrea gigas4	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	24029755
+A12d_3	SRR15851230	SAMN21393621	A12d_3	d_12	d	12	3	diploid Crassostrea gigas6	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	23719558
+A12d_2	SRR15851231	SAMN21393620	A12d_2	d_12	d	12	2	diploid Crassostrea gigas5	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	23129890
+A12d_1	SRR15851232	SAMN21393619	A12d_1	d_12	d	12	1	diploid Crassostrea gigas4	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	24403475
+A0t_3	SRR15851233	SAMN21393618	A0t_3	t_0	t	0	3	triploid Crassostrea gigas3	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	27130290
+A0t_2	SRR15851234	SAMN21393617	A0t_2	t_0	t	0	2	triploid Crassostrea gigas2	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	27047253
+A0t_1	SRR15851235	SAMN21393616	A0t_1	t_0	t	0	1	triploid Crassostrea gigas1	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	25224224
+A0d_3	SRR15851236	SAMN21393615	A0d_3	d_0	d	0	3	diploid Crassostrea gigas3	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	25660372
+Aft_3	SRR15851237	SAMN21393630	Aft_3	t_f	t	f	3	triploid Crassostrea gigas9	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	23143143
+Aft_2	SRR15851238	SAMN21393629	Aft_2	t_f	t	f	2	triploid Crassostrea gigas8	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	22782858
+Aft_1	SRR15851239	SAMN21393628	Aft_1	t_f	t	f	1	triploid Crassostrea gigas7	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	23887513
+Afd_3	SRR15851240	SAMN21393627	Afd_3	d_f	d	f	3	diploid Crassostrea gigas9	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	22963607
+Afd_2	SRR15851241	SAMN21393626	Afd_2	d_f	d	f	2	diploid Crassostrea gigas8	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	23920976
+Afd_1	SRR15851242	SAMN21393625	Afd_1	d_f	d	f	1	diploid Crassostrea gigas7	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	21549960
+A12t_3	SRR15851243	SAMN21393624	A12t_3	t_12	t	12	3	triploid Crassostrea gigas6	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	25533582
+A12t_2	SRR15851244	SAMN21393623	A12t_2	t_12	t	12	2	triploid Crassostrea gigas5	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	21731961
+A0d_2	SRR15851245	SAMN21393614	A0d_2	d_0	d	0	2	diploid Crassostrea gigas2	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	25230033
+A0d_1	SRR15851246	SAMN21393613	A0d_1	d_0	d	0	1	diploid Crassostrea gigas1	Gills	2020-12	China:Qingdao	PAIRED	Illumina HiSeq 2000	22828777
