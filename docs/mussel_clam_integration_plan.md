@@ -474,7 +474,8 @@ Q, I-squared and tau-squared, per-species estimates and study counts, and a
 Multi-copy orthogroups are set aside by default, as are orthogroups missing
 from the active run. On the demo, 8 orthogroups pool oyster with mussel
 (larval viability), none past the gate; on all committed real evidence
-(465,531 oyster records), nothing pools across species yet, correctly.
+(465,531 oyster records), nothing pooled across species yet, correctly, until
+the first clam study merged (see below).
 Building it found that the demo's illustrative orthogroup IDs collide with
 real OrthoFinder IDs, so simulated evidence never consults the run (tested).
 
@@ -486,7 +487,18 @@ build-cross-species-cards` tiers each orthogroup row behind five named gates
 weighted score and a between-species I-squared penalty. Each card shows every
 species' estimate side by side, the pooled estimate, the orthogroup run and
 the gates failed. Single-species cards now name their orthogroup. On the
-demo: 5 emerging, 1 discordant, 2 unsupported, none convergent.
+demo: 5 emerging, 3 unsupported, none convergent.
+
+First real cross-species rows, 2026-10-16, after TUCCI2025_HEAT_PRIMING
+merged: oyster and Manila clam thermal-tolerance evidence pools through 5,681
+single-copy orthogroups, giving 64 emerging, 6 discordant and 5,611
+unsupported rows, none convergent, with 603 cards. Real data changed two
+rules. "Discordant" now requires species that are each significant at gene
+level and disagree in sign: 2,880 of 2,886 sign disagreements involved a
+non-significant species, which is noise, not a reversal. Quality is now
+judged per species, because the union of flags across species always
+exceeded the limit. PERUZZA2023_HEATWAVE (claimed, PR #64) is the second clam
+study, the one that can bring the clam to k = 2.
 
 Still to build: the dashboard gate. The
 OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only

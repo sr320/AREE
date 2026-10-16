@@ -56,12 +56,14 @@ TIER_STATEMENT = {
         "conserved association."
     ),
     "cross_species_discordant": (
-        "The species' estimates **disagree in sign**. This is shown, not dropped: it may be a real "
-        "difference between species, or a difference between the studies (stressor, tissue, life "
-        "stage, phenotype definition). The per-species table is the place to tell which."
+        "Species that are each significant at gene level **disagree in sign**. This is shown, not "
+        "dropped: it may be a real difference between species, or a difference between the studies "
+        "(stressor, tissue, life stage, phenotype definition). The per-species table is the place to "
+        "tell which."
     ),
     "cross_species_unsupported": (
-        "The species agree in sign, but pooled across species the estimate is not significant."
+        "Pooled across species the estimate is not significant, or the species disagree in sign only "
+        "because at least one of them is not significant on its own. Neither is cross-species support."
     ),
 }
 
@@ -225,8 +227,8 @@ def card_markdown(candidate: dict, species_rows: list[dict], phenotype_label: st
     if failed:
         L.append(f"- Convergence gates failed: {_join([f'{g} ({GATE_EXPLANATION[g]})' for g in failed])}")
     if tier == "cross_species_discordant":
-        L.append("- ⚠️ **Species disagree in direction.** Compare each species' confidence interval: an "
-                 "interval spanning zero is noise around no effect, not a reversal.")
+        L.append("- ⚠️ **Species disagree in direction**, and each disagreeing species is significant "
+                 "on its own. Check the designs below before reading it as a species difference.")
     L.append("")
     L.append("## Limitations")
     L.append("- Association, not mechanism, in every species shown.")

@@ -19,16 +19,17 @@ Tiers, strongest first:
     one other gate fails. Usually the replication gate: one species rests on a
     single study. ``gates_failed`` names each failed gate.
 ``cross_species_discordant``
-    The species' estimates disagree in sign. Surfaced, not dropped: an ortholog
+    At least two species are each significant at gene level (adjusted
+    p <= 0.05) and disagree in sign. Surfaced, not dropped: an ortholog
     responding in opposite directions in two species is a finding about the
     biology, or about the studies, and either way a reader must see it.
 ``cross_species_unsupported``
-    Species agree in sign but the pooled estimate is not significant.
+    Everything else: the pooled estimate is not significant, or the species
+    disagree in sign only because at least one of them is noise around zero.
 
-Agreement in sign is judged on point estimates, as at gene level, so a
-near-zero estimate of opposite sign makes a row discordant. The card shows
-each species' estimate and confidence interval so a reader can tell a real
-reversal from noise around zero.
+The direction gate itself is judged on point estimates, as at gene level, so
+any sign disagreement fails it and is named in ``gates_failed``. Only a
+disagreement between significant species is called discordant.
 """
 from __future__ import annotations
 
@@ -106,7 +107,10 @@ def compute_components(row: dict, species: pd.DataFrame, relevance: str) -> dict
     """0-1 component scores for one orthogroup row. Pure: same inputs, same output."""
     k = pd.to_numeric(species["k_studies"], errors="coerce").fillna(0)
     mapping = {m for v in species.get("mapping_confidences", []) for m in _split(v)}
-    flags = {f for v in species.get("quality_flags_union", []) for f in _split(v)}
+    # Quality is judged per species, on that species' own gene-level flags: a
+    # union across species grows with every study added and would fail the
+    # gate however good each species' evidence was. The weakest species decides.
+    per_species_flags = [len(set(_split(v))) for v in species.get("quality_flags_union", [])]
     n = pd.to_numeric(species.get("total_sample_size", pd.Series(dtype=float)), errors="coerce").fillna(0)
     i2 = row.get("i_squared_between_species")
     return {
@@ -119,7 +123,7 @@ def compute_components(row: dict, species: pd.DataFrame, relevance: str) -> dict
         "phenotype_relevance_score": PHENOTYPE_RELEVANCE_SCORE.get(relevance, 0.1),
         "orthology_score": ORTHOLOGY_SCORE.get(row["copy_class"], 0.0),
         "mapping_confidence_score": min((MAPPING_CONFIDENCE_SCORE.get(m, 0.0) for m in mapping), default=0.0),
-        "quality_score": _clip01(1 - len(flags) / 5.0),
+        "quality_score": min((_clip01(1 - n / 5.0) for n in per_species_flags), default=1.0),
         "heterogeneity_penalty": _clip01((i2 if i2 == i2 and i2 is not None else 0.0) / 100.0),
     }
 
@@ -128,6 +132,13 @@ def cross_species_score(components: dict) -> float:
     positive = sum(WEIGHTS[name] * components[name] for name in WEIGHTS)
     penalty = HETEROGENEITY_PENALTY_WEIGHT * components.get("heterogeneity_penalty", 0.0)
     return round(max(0.0, min(100.0, positive - penalty)), 2)
+
+
+def significant_signs(species: pd.DataFrame, max_adjusted_p: float = CONVERGENCE_MAX_ADJUSTED_P) -> set[int]:
+    """Signs of the species estimates that are significant at gene level."""
+    q = pd.to_numeric(species.get("adjusted_p_value", pd.Series(dtype=float)), errors="coerce")
+    effects = pd.to_numeric(species["pooled_effect"], errors="coerce")
+    return {1 if e > 0 else -1 for e, qq in zip(effects, q) if qq == qq and qq <= max_adjusted_p and e != 0}
 
 
 def gates_failed(row: dict, components: dict) -> list[str]:
@@ -146,12 +157,17 @@ def gates_failed(row: dict, components: dict) -> list[str]:
     return failed
 
 
-def tier_for(failed: list[str]) -> str:
+def tier_for(failed: list[str], significant_discordance: bool) -> str:
+    """Discordant requires species that are each significant at gene level and
+    disagree in sign. A sign disagreement involving a non-significant species
+    is noise around zero: on the first real oyster-clam pool, 2,880 of 2,886
+    sign disagreements were of that kind, and labelling them "discordant"
+    would bury the 6 real reversals."""
     if not failed:
         return "cross_species_convergence"
-    if "direction" in failed:
+    if significant_discordance:
         return "cross_species_discordant"
-    if "significance" in failed:
+    if "direction" in failed or "significance" in failed:
         return "cross_species_unsupported"
     return "cross_species_emerging"
 
@@ -177,9 +193,12 @@ def build_cross_species_candidates(
         relevance = _relevance(row, species, classification_by_id)
         components = compute_components(row, species, relevance)
         failed = gates_failed(row, components)
+        signs = significant_signs(species)
         rows.append({
             **row,
-            "tier": tier_for(failed),
+            "tier": tier_for(failed, len(signs) > 1),
+            "n_species_significant": int((pd.to_numeric(species["adjusted_p_value"], errors="coerce")
+                                          <= CONVERGENCE_MAX_ADJUSTED_P).sum()),
             "score": cross_species_score(components),
             "gates_failed": "|".join(failed),
             "evidence_class": EVIDENCE_CLASS_BY_RELEVANCE.get(relevance, "exposure_only"),

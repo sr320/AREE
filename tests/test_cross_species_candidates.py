@@ -169,3 +169,21 @@ def test_orthology_score_reflects_copy_class(copy_class, expected):
     species = pd.DataFrame({"k_studies": [2, 2], "total_sample_size": [10, 10],
                             "mapping_confidences": ["exact", "exact"], "quality_flags_union": ["", ""]})
     assert compute_components(row, species, "resilience")["orthology_score"] == expected
+
+
+def test_sign_disagreement_with_a_non_significant_species_is_unsupported_not_discordant():
+    """Two null estimates disagree in sign half the time; that is not a reversal."""
+    ranked, _, _ = _rank(_gene("101", OYSTER, 1.5, 0.2, k=2, p=1e-6), _gene("201", MUSSEL, -0.1, 0.5, k=2, p=0.8))
+    row = ranked.iloc[0]
+    assert row["tier"] == "cross_species_unsupported"
+    assert "direction" in row["gates_failed"].split("|") and row["n_species_significant"] == 1
+
+
+def test_quality_is_judged_per_species_not_on_the_union():
+    """Each species carries two flags (four distinct in all): every species passes on its own."""
+    a = _gene("101", OYSTER, 1.2, 0.2, k=2, p=1e-4) | {"quality_flags_union": "low_replication|single_timepoint"}
+    b = _gene("201", MUSSEL, 0.9, 0.25, k=2, p=1e-3) | {"quality_flags_union": "tank_level_replication|unbalanced_design"}
+    ranked, _, _ = _rank(a, b)
+    row = ranked.iloc[0]
+    assert row["component_quality_score"] == pytest.approx(0.6)
+    assert row["tier"] == "cross_species_convergence"

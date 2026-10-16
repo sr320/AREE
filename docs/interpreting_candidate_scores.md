@@ -230,7 +230,7 @@ fails:
 | `direction` | every species' estimate has the same sign |
 | `significance` | the pooled cross-species BH-adjusted p ≤ 0.05 |
 | `phenotype_relevance` | the weakest evidence class across all species' contributing records is more than exposure-only |
-| `quality` | quality flags across contributing records are within the gene-level limit |
+| `quality` | each species' own quality flags are within the gene-level limit (the weakest species decides) |
 
 The tiers:
 
@@ -238,12 +238,15 @@ The tiers:
 |---|---|
 | `cross_species_convergence` | every gate passes |
 | `cross_species_emerging` | species agree in sign and the pooled estimate is significant, but another gate fails, usually replication |
-| `cross_species_discordant` | species' estimates disagree in sign; shown, never dropped |
-| `cross_species_unsupported` | species agree in sign but the pooled estimate is not significant |
+| `cross_species_discordant` | species that are each significant at gene level disagree in sign; shown, never dropped |
+| `cross_species_unsupported` | the pooled estimate is not significant, or species disagree in sign only because one of them is noise |
 
-Sign agreement is judged on point estimates, so a near-zero estimate of the
-opposite sign makes a row discordant. Each card prints every species'
-confidence interval so a reader can tell a reversal from noise around zero.
+The direction gate is judged on point estimates, so any sign disagreement
+fails it. Only a disagreement between species that are each significant at
+gene level is called discordant. Two null estimates disagree in sign about
+half the time: on the first real oyster-clam pool, 2,880 of 2,886 sign
+disagreements involved a non-significant species, and only 6 were reversals
+between significant ones.
 
 The cross-species score uses its own weights, which sum to 100:
 
@@ -258,7 +261,7 @@ The cross-species score uses its own weights, which sum to 100:
 | `orthology_score` | 8 | copy class: `single_copy_all` 1.0, `single_copy` and `demo_crosswalk` 0.9, `multi_copy` 0.3 |
 | `sample_size_score` | 5 | total biological replicates across species |
 | `mapping_confidence_score` | 4 | worst identifier mapping behind any species' estimate |
-| `quality_score` | 3 | quality flags across all contributing records |
+| `quality_score` | 3 | the weakest species' own gene-level quality (`1 - n_flags/5`) |
 
 Between-species I² is subtracted as a penalty of up to 15 points. The
 smallest per-species study count carries the most weight because a
@@ -274,9 +277,18 @@ confounded. Agreement across species shows an association recurs in
 orthologous genes. It does not show the genes do the same thing in each
 species.
 
-On the demo, oyster and mussel larval studies give five emerging rows, one
-discordant row and two unsupported rows. None converges, because the demo
-mussel has one study per gene.
+On the demo, oyster and mussel larval studies give five emerging rows and
+three unsupported rows. None converges, because the demo mussel has one study
+per gene. The demo's one sign disagreement involves a non-significant mussel
+estimate, so it is unsupported, not discordant.
+
+On real data (2026-10-16), the three harmonized oyster thermal-tolerance studies and TUCCI2025_HEAT_PRIMING pool through 5,681 single-copy orthogroups: 64 emerging, 6 discordant, 5,611 unsupported, none convergent. Every emerging row fails three gates:
+replication (one clam study), phenotype relevance (the clam comparison is
+exposure-only), and quality (each species' own flags exceed the gene-level
+limit, as they do for its single-species candidates). The 6 discordant rows
+are oyster genes with small significant effects against clam genes with large
+significant effects of opposite sign. The two studies differ in stressor
+timing, so they are leads to check, not established species differences.
 
 ## Related documentation
 
