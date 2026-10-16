@@ -1,0 +1,73 @@
+isolate	ploidy	treatment	authors_description
+D54	diploid	control	diploid, control
+D55	diploid	control	diploid, control
+D56	diploid	control	diploid, control
+D57	diploid	control	diploid, control
+D58	diploid	control	diploid, control
+D59	diploid	control	diploid, control
+M41	diploid	single_stressor	diploid, single stressor
+M42	diploid	single_stressor	diploid, single stressor
+M43	diploid	single_stressor	diploid, single stressor
+M44	diploid	single_stressor	diploid, single stressor
+M45	diploid	control	diploid, control
+M46	diploid	control	diploid, control
+M47	diploid	single_stressor	diploid, single stressor
+M48	diploid	control	diploid, control
+M49	diploid	control	diploid, control
+M89	diploid	control	diploid, control
+M90	diploid	control	diploid, control
+N41	diploid	single_stressor	diploid, single stressor
+N42	diploid	single_stressor	diploid, single stressor
+N43	diploid	single_stressor	diploid, single stressor
+N44	diploid	single_stressor	diploid, single stressor
+N45	diploid	single_stressor	diploid, single stressor
+N46	diploid	single_stressor	diploid, single stressor
+N47	diploid	single_stressor	diploid, single stressor
+N48	diploid	multiple_stressor	diploid, multiple stressor
+N49	diploid	multiple_stressor	diploid, multiple stressor
+N50	diploid	multiple_stressor	diploid, multiple stressor
+N51	diploid	multiple_stressor	diploid, multiple stressor
+N52	diploid	multiple_stressor	diploid, multiple stressor
+N53	diploid	multiple_stressor	diploid, multiple stressor
+N54	diploid	multiple_stressor	diploid, multiple stressor
+N55	diploid	multiple_stressor	diploid, multiple stressor
+N56	diploid	multiple_stressor	diploid, multiple stressor
+N57	diploid	multiple_stressor	diploid, multiple stressor
+N58	diploid	multiple_stressor	diploid, multiple stressor
+N59	diploid	multiple_stressor	diploid, multiple stressor
+R41	triploid	single_stressor	triploid, single stressor
+R42	triploid	single_stressor	triploid, single stressor
+R43	triploid	single_stressor	triploid, single stressor
+R46	triploid	single_stressor	triploid, single stressor
+R47	triploid	single_stressor	triploid, single stressor
+R48	triploid	single_stressor	triploid, single stressor
+R50	triploid	single_stressor	triploid, single stressor
+R51	triploid	multiple_stressor	triploid, multiple stressor
+R52	triploid	multiple_stressor	triploid, multiple stressor
+R53	triploid	multiple_stressor	triploid, multiple stressor
+R54	triploid	multiple_stressor	triploid, multiple stressor
+R55	triploid	multiple_stressor	triploid, multiple stressor
+R56	triploid	multiple_stressor	triploid, multiple stressor
+R57	triploid	multiple_stressor	triploid, multiple stressor
+R58	triploid	multiple_stressor	triploid, multiple stressor
+R59	triploid	multiple_stressor	triploid, multiple stressor
+R60	triploid	multiple_stressor	triploid, multiple stressor
+R61	triploid	multiple_stressor	triploid, multiple stressor
+R62	triploid	multiple_stressor	triploid, multiple stressor
+R78	triploid	single_stressor	triploid, single stressor
+T55	triploid	control	triploid, control
+T56	triploid	control	triploid, control
+T57	triploid	control	triploid, control
+T58	triploid	control	triploid, control
+T59	triploid	control	triploid, control
+T60	triploid	control	triploid, control
+T61	triploid	control	triploid, control
+T62	triploid	control	triploid, control
+X41	triploid	single_stressor	triploid, single stressor
+X42	triploid	single_stressor	triploid, single stressor
+X43	triploid	single_stressor	triploid, single stressor
+X44	triploid	single_stressor	triploid, single stressor
+X45	triploid	control	triploid, control
+X46	triploid	control	triploid, control
+X47	triploid	control	triploid, control
+X48	triploid	control	triploid, control

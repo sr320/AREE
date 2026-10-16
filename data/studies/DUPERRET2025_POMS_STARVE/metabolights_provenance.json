@@ -1,0 +1,157 @@
+{
+  "study_id": "DUPERRET2025_POMS_STARVE",
+  "accession": "MTBLS13313",
+  "repository": "MetaboLights",
+  "license": "CC0 1.0 Universal",
+  "date_retrieved": "2026-10-11",
+  "generated_by": "inline curation script (registration of DUPERRET2025_POMS_STARVE); logic recorded in the study YAML curation_notes",
+  "source_base_url": "https://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public/MTBLS13313/",
+  "input_sha256": {
+    "i_Investigation.txt": "ef96368f9f2a59c1d9af1ff09150a3d17facf66c4a98281dc4c5980d3b83b59f",
+    "s_MTBLS13313.txt": "dd030114fb9e628e7bed3c3242a5f5bfc43c2cb30af26615374378bb29b68a66",
+    "a_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling.txt": "b835b1508677e122ba46a8909ee58ee491fa8e873f97b6657221300541b1dd31",
+    "a_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-1.txt": "d8892fa6c0151f9771a0434975694ea6980afe74e570703b29fe942b6b453d82",
+    "a_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-2.txt": "9fea34d83e5213c4d65ea76e767744554670bd401eaebb6a215aec2d49f13838",
+    "a_MTBLS13313_GC-MS_positive__metabolite_profiling.txt": "b8a7c613c88581f7ef8be5a03a986edcc81b4f3f069baf7a97738e10da12ba75",
+    "m_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling_v2_maf.tsv": "d8c1de2eec8353efa7ad30b1a11f576d91e2bd1e2c83a488e603ede3393f8930",
+    "m_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-1_v2_maf.tsv": "1af0de215e9420a107cf37708db2f1323b07c8f1d4ed8d2b2d07a9e4db883281",
+    "m_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-2_v2_maf.tsv": "96e5b0fc62823c09b2cd1ff747cac6d6cec053b42093fea59cd1fa5f8978df48",
+    "m_MTBLS13313_GC-MS_positive__metabolite_profiling_v2_maf.tsv": "9c54de734eefcd314df2b86f13afd39a06e3ee97b76d2806ea7927dd2634cb55"
+  },
+  "n_samples": 48,
+  "group_sizes": {
+    "fed": 24,
+    "starved": 24
+  },
+  "group_sizes_by_family_timepoint": {
+    "F11N_fed_0hpc": 3,
+    "F11N_fed_12hpc": 3,
+    "F11N_fed_3hpc": 3,
+    "F11N_fed_6hpc": 3,
+    "F11N_starved_0hpc": 3,
+    "F11N_starved_12hpc": 3,
+    "F11N_starved_3hpc": 3,
+    "F11N_starved_6hpc": 3,
+    "F14R_fed_0hpc": 3,
+    "F14R_fed_12hpc": 3,
+    "F14R_fed_3hpc": 3,
+    "F14R_fed_6hpc": 3,
+    "F14R_starved_0hpc": 3,
+    "F14R_starved_12hpc": 3,
+    "F14R_starved_3hpc": 3,
+    "F14R_starved_6hpc": 3
+  },
+  "platforms": {
+    "GM": {
+      "assay_file": "a_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling.txt",
+      "n_raw_files": 48
+    },
+    "NUCs": {
+      "assay_file": "a_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-1.txt",
+      "n_raw_files": 48
+    },
+    "PUFAs": {
+      "assay_file": "a_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-2.txt",
+      "n_raw_files": 48
+    },
+    "TCA": {
+      "assay_file": "a_MTBLS13313_GC-MS_positive__metabolite_profiling.txt",
+      "n_raw_files": 48
+    }
+  },
+  "maf_checks": {
+    "GM": {
+      "file": "m_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling_v2_maf.tsv",
+      "n_features": 111,
+      "n_sample_columns": 48,
+      "n_sample_columns_in_samplesheet": 48,
+      "n_abundance_values": 0,
+      "n_database_identifiers": 0,
+      "n_reliability_levels": 0
+    },
+    "NUCs": {
+      "file": "m_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-1_v2_maf.tsv",
+      "n_features": 21,
+      "n_sample_columns": 48,
+      "n_sample_columns_in_samplesheet": 48,
+      "n_abundance_values": 0,
+      "n_database_identifiers": 0,
+      "n_reliability_levels": 0
+    },
+    "PUFAs": {
+      "file": "m_MTBLS13313_LC-MS_alternating_reverse-phase_metabolite_profiling-2_v2_maf.tsv",
+      "n_features": 183,
+      "n_sample_columns": 48,
+      "n_sample_columns_in_samplesheet": 48,
+      "n_abundance_values": 0,
+      "n_database_identifiers": 0,
+      "n_reliability_levels": 0
+    },
+    "TCA": {
+      "file": "m_MTBLS13313_GC-MS_positive__metabolite_profiling_v2_maf.tsv",
+      "n_features": 13,
+      "n_sample_columns": 48,
+      "n_sample_columns_in_samplesheet": 48,
+      "n_abundance_values": 0,
+      "n_database_identifiers": 0,
+      "n_reliability_levels": 0
+    }
+  },
+  "ms_batches_by_diet": {
+    "GM": {
+      "key": "acquisition_date",
+      "starved": [
+        "2024-05-31"
+      ],
+      "fed": [
+        "2023-12-05",
+        "2023-12-08"
+      ],
+      "diet_batches_overlap": false
+    },
+    "NUCs": {
+      "key": "acquisition_date",
+      "starved": [
+        "2024-06-05"
+      ],
+      "fed": [
+        "2024-02-08",
+        "2024-02-15"
+      ],
+      "diet_batches_overlap": false
+    },
+    "PUFAs": {
+      "key": "acquisition_date",
+      "starved": [
+        "2024-05-15"
+      ],
+      "fed": [
+        "2024-01-17",
+        "2024-01-22"
+      ],
+      "diet_batches_overlap": false
+    },
+    "TCA": {
+      "key": "raw_file_run_index",
+      "starved": [
+        149,
+        173
+      ],
+      "fed": [
+        35,
+        100
+      ],
+      "diet_batches_overlap": false
+    }
+  },
+  "linked_datasets": {
+    "PRJEB86618": "RNA-seq, starved condition (same experiment; Duperret et al. 2025 data availability)",
+    "PRJEB86525": "RNA-seq, fed condition",
+    "PRJEB86589": "16S amplicon, starved",
+    "PRJEB86519": "16S amplicon, fed",
+    "PRJEB86647": "DECICOMP umbrella BioProject"
+  },
+  "outputs": {
+    "data/studies/DUPERRET2025_POMS_STARVE/samplesheet.tsv": "13548bad01e89b4fe22b778cf87bd56553cc05748581dfee60d021ff3e5f3696"
+  }
+}

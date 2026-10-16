@@ -1,0 +1,77 @@
+{
+  "artifact": "mcali_gene_id_crosswalk.tsv",
+  "artifact_sha256": "77c8a0bf0476a117b31b4b60fe86d6ab49d313053a6ae181c678207c89c5cf08",
+  "builder": "src/mappings/build_crosswalk.py",
+  "builder_version": "1.0.0",
+  "date_generated": "2026-10-11",
+  "organism": "Mytilus californianus, California mussel",
+  "ncbi_taxid": 6549,
+  "ncbi_reference_annotation_at_build": "GCF_021869535.1 (xbMytCali1.0.p), annotation release NCBI Mytilus californianus Annotation Release 100",
+  "sources": [
+    {
+      "name": "NCBI Gene gene_info",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Invertebrates/All_Invertebrates.gene_info.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/mcali_gene_info.tsv",
+      "sha256_filtered": "bc030907fe50c9fcb364890fed3e1e5cb5a3a727bca7d5d844ad47a46ab579a9",
+      "records": 41309
+    },
+    {
+      "name": "UniProtKB",
+      "url": "https://rest.uniprot.org/uniprotkb/stream?query=organism_id:6549&fields=accession,reviewed,protein_name,gene_names,gene_primary,xref_geneid,xref_refseq&format=tsv&compressed=true",
+      "local_copy": "data/reference/crosswalk/_sources/mcali_uniprot.tsv",
+      "sha256": "07413203c53f4565133c797bbdb61e6552f78c3304a5e48559a294d285a7a3dd",
+      "entries_with_geneid_xref": 7,
+      "genes_linked": 7
+    },
+    {
+      "name": "NCBI Gene gene_history",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_history.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/mcali_gene_history.tsv",
+      "sha256_filtered": "bbb0c13a74d389eba136e6e2f9d99d6568d245f65143e3f285c817878aa51926",
+      "remappable_retired_ids": 0,
+      "discontinued_without_replacement": 0
+    }
+  ],
+  "coverage": {
+    "genes_total": 41309,
+    "with_ensembl_xref": {
+      "n": 22704,
+      "pct": 54.96
+    },
+    "with_uniprot_accession": {
+      "n": 7,
+      "pct": 0.02
+    },
+    "with_multiple_uniprot_accessions": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "with_named_symbol": {
+      "n": 3877,
+      "pct": 9.39
+    },
+    "with_orthogroup": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "genes_by_type": {
+      "protein-coding": 26257,
+      "ncRNA": 9806,
+      "tRNA": 3864,
+      "pseudo": 642,
+      "rRNA": 436,
+      "snRNA": 191,
+      "snoRNA": 112,
+      "other": 1
+    },
+    "retired_gene_ids_remappable": 0,
+    "retired_gene_ids_without_replacement": 0
+  },
+  "known_limitations": [
+    "UniProt cross-references to NCBI GeneID are sparse for this organism; most TrEMBL entries carry no GeneID or RefSeq xref and therefore cannot be linked.",
+    "orthogroup_id is empty; cross-species evidence pooling requires an ortholog inference run that this builder does not perform.",
+    "Ensembl xrefs come from NCBI dbXrefs and reflect Ensembl Metazoa's assembly, which may differ from the current NCBI reference assembly.",
+    "gene_synonyms is emitted for curation and future symbol resolution but is not currently consulted by harmonize.identifiers.",
+    "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are labelled 'inferred' because the remap crosses an annotation version; GeneIDs discontinued without a replacement stay 'unresolved' by design."
+  ]
+}

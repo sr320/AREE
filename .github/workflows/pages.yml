@@ -51,16 +51,16 @@ jobs:
 
       - name: Harmonize simulated demo studies (demo crosswalk)
         run: |
-          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+          for sid in $(aree study-ids --simulated); do
             aree harmonize --study "$sid"
           done
 
       # Every committed results_file of every real study that has not failed QC,
       # one comparison at a time, read from the registry. A newly merged study
       # appears without editing this file; a qc_status: failed study never does.
-      - name: Harmonize real studies (real crosswalk)
-        env:
-          AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+      # Each study resolves against the crosswalk registered for its genome
+      # assembly, so a study of a new species needs no edit here either.
+      - name: Harmonize real studies (each against its own species' crosswalk)
         run: python scripts/harmonize_committed_results.py
 
       - name: Meta-analyze, rank, and summarize

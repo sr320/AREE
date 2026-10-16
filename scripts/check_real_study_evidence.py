@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from common import STUDIES_DIR, load_yaml, resolve_species
+
 EVIDENCE_TABLE = Path("reports/evidence/evidence_table.tsv")
 
 EXPECTED_RECORDS = 351
@@ -73,9 +75,13 @@ def main() -> int:
     elif "xbMagGiga1.1" not in next(iter(releases)):
         failures.append(f"unexpected annotation release: {next(iter(releases))}")
 
-    if set(real["species_taxid"].dropna().unique()) != {29159}:
+    # Every record must carry the taxid of the species the study registered, not
+    # a fixed one: this check must keep working once other species are pooled.
+    expected_taxid = resolve_species(load_yaml(STUDIES_DIR / f"{args.study}.yaml")["species"]).ncbi_taxid
+    if set(real["species_taxid"].dropna().astype(int).unique()) != {expected_taxid}:
         failures.append(
-            f"species_taxid should be 29159, got {sorted(set(real['species_taxid'].dropna()))}"
+            f"species_taxid should be {expected_taxid}, got "
+            f"{sorted(set(real['species_taxid'].dropna()))}"
         )
 
     if failures:

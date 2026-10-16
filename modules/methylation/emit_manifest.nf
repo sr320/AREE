@@ -35,6 +35,10 @@ process EMIT_MANIFEST {
     val warnings_list        // list of warning strings (e.g. raw QC not independently verified)
     val workflow_version
     val run_start_iso
+    // Every upstream process's versions.yml (mixed + collected in main.nf),
+    // renamed on staging because they all share one file name.
+    path process_versions, stageAs: 'process_versions/versions_*.yml'
+    path collect_versions_py  // modules/shared/collect_versions.py
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
@@ -43,11 +47,17 @@ process EMIT_MANIFEST {
     script:
     def qcFilesArg = qc_metrics_files instanceof List ? qc_metrics_files.join(',') : "${qc_metrics_files}"
     def warningsArg = warnings_list instanceof List ? warnings_list.join('|') : "${warnings_list}"
+    // software_versions is built from the versions.yml each upstream process
+    // wrote, i.e. from the tools that actually ran, native or containerized.
+    // It used to be a hard-coded copy of the container tags.
     """
+    python3 ${collect_versions_py} software_versions.json process_versions/*.yml
+
     cat <<-'EOF_PY' > emit_manifest.py
     import hashlib
     import json
     import os
+    import platform
     import sys
 
     def sha256_of(path):
@@ -101,15 +111,13 @@ process EMIT_MANIFEST {
             "as null, not estimated or fabricated."
         )
 
-    software_versions = {
-        "fastqc": "0.12.1",
-        "trim_galore": "0.6.10",
-        "bismark": "0.24.2",
-        "bioconductor_methylkit": "1.28.0",  # as shipped in bioconductor_docker:RELEASE_3_18
-        "bioconductor_genomicranges": "1.54.1",  # as shipped in bioconductor_docker:RELEASE_3_18
-        "python": "3.11",
-        "note": "Versions reflect the pinned container tags in containers/README.md, not a verified installed environment (no container was pulled/run in this build).",
-    }
+    with open("software_versions.json") as fh:
+        collected = json.load(fh)
+    software_versions = collected["software_versions"]
+    # This process's own interpreter; its versions.yml is written after the
+    # manifest, so it cannot be among the collected files.
+    software_versions["EMIT_MANIFEST"] = {"python": platform.python_version()}
+    warnings = list(warnings) + collected["warnings"]
 
     if mode == "processed_results_harmonization":
         warnings = list(warnings) + [
@@ -129,7 +137,14 @@ process EMIT_MANIFEST {
         "generated_by": f"automated:aree-methylation@{workflow_version}",
         "parameters": json.loads('${params_dump}'),
         "input_checksums": input_checksums,
+        # Tools as reported by each process that ran, keyed by process name.
         "software_versions": software_versions,
+        "software_versions_not_captured": {
+            "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to methylation/report/",
+        },
+        # Null for a native run (-profile local); the images a container
+        # profile would pull are declared on each process in modules/methylation/.
+        "container_engine": "${workflow.containerEngine ?: ''}" or None,
         "qc_metrics": qc_metrics,
         "warnings": warnings,
         "output_schema": [

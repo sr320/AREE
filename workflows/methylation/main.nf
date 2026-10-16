@@ -28,6 +28,7 @@ include { BISMARK_DEDUPLICATE }             from '../../modules/methylation/bism
 include { BISMARK_METHYLATION_EXTRACTOR }   from '../../modules/methylation/bismark_methylation_extractor.nf'
 include { COVERAGE_FILTER }                 from '../../modules/methylation/coverage_filter.nf'
 include { DMR_METHYLKIT }                   from '../../modules/methylation/dmr_methylkit.nf'
+include { DMR_POOLED_TILES }                from '../../modules/methylation/dmr_pooled_tiles.nf'
 include { ANNOTATE_REGIONS }                from '../../modules/methylation/annotate_regions.nf'
 include { STANDARDIZE_OUTPUT }              from '../../modules/methylation/standardize_output.nf'
 include { EMIT_MANIFEST }                   from '../../modules/methylation/emit_manifest.nf'
@@ -46,6 +47,13 @@ def paramsAsJson() {
         dmr_mode             : params.methylation?.dmr_mode,
         tile_size            : params.methylation?.tile_size,
         tile_step            : params.methylation?.tile_step,
+        dmr_engine           : params.methylation?.dmr_engine ?: 'methylkit',
+        unit_min_coverage    : params.methylation?.unit_min_coverage,
+        tile_min_cpgs        : params.methylation?.tile_min_cpgs,
+        replicate_unit       : params.methylation?.replicate_unit ?: null,
+        design_sheet         : params.methylation?.design_sheet ?: null,
+        bismark_align_args   : params.methylation?.bismark_align_args ?: '',
+        extractor_args       : params.methylation?.extractor_args ?: '',
         promoter_upstream_bp : params.methylation?.promoter_upstream_bp,
         genome_assembly      : params.genome_assembly,
     ]
@@ -58,6 +66,7 @@ workflow {
     def comparison_id = params.methylation.comparison_id
     def run_start_iso = workflow.start.toString()
     def report_template = file("${projectDir}/assets/report_template.qmd")
+    def collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
 
@@ -115,7 +124,38 @@ workflow {
             tuple(study_id, comparison_id, cx_reports, sample_ids, treatments)
         }
 
-        dmr_result_ch = DMR_METHYLKIT(
+        // Family-level (or other unit-level) replication: the design sheet
+        // maps each library to its unit. Without replicate_unit the step is
+        // unchanged and fits libraries as independent.
+        def replicate_unit = params.methylation.replicate_unit ?: ''
+        if (replicate_unit && !params.methylation.design_sheet) {
+            error "methylation.replicate_unit '${replicate_unit}' needs methylation.design_sheet naming a TSV with that column"
+        }
+        design_sheet_ch = replicate_unit
+            ? Channel.fromPath(params.methylation.design_sheet, checkIfExists: true).first()
+            : Channel.value(file("${projectDir}/assets/NO_DESIGN_SHEET"))
+
+        def dmr_engine = params.methylation.dmr_engine ?: 'methylkit'
+        if (!(dmr_engine in ['methylkit', 'limma', 'dss'])) {
+            error "methylation.dmr_engine must be 'methylkit', 'limma' or 'dss', got '${dmr_engine}'"
+        }
+        dmr_result_ch = dmr_engine in ['limma', 'dss']
+          ? DMR_POOLED_TILES(
+            dmr_ch.map { it[0] },
+            dmr_ch.map { it[1] },
+            dmr_ch.map { it[2] },
+            dmr_ch.map { it[3] },
+            dmr_ch.map { it[4] },
+            params.methylation.unit_min_coverage,
+            params.methylation.qvalue_cutoff,
+            params.methylation.meth_diff_cutoff,
+            params.methylation.tile_size,
+            params.methylation.tile_min_cpgs,
+            replicate_unit,
+            design_sheet_ch,
+            dmr_engine
+          )
+          : DMR_METHYLKIT(
             dmr_ch.map { it[0] },
             dmr_ch.map { it[1] },
             dmr_ch.map { it[2] },
@@ -126,7 +166,9 @@ workflow {
             params.methylation.meth_diff_cutoff,
             params.methylation.dmr_mode,
             params.methylation.tile_size,
-            params.methylation.tile_step
+            params.methylation.tile_step,
+            replicate_unit,
+            design_sheet_ch
         )
 
         annotated_ch = ANNOTATE_REGIONS(
@@ -151,6 +193,22 @@ workflow {
 
         warnings_ch = Channel.value([])
 
+        // Each process's versions.yml, merged by EMIT_MANIFEST into the
+        // manifest's software_versions. A process added to this DAG must add
+        // its .out.versions here too (tests/test_workflow_versions.py checks).
+        versions_ch = FASTQC.out.versions
+            .mix(TRIM_GALORE.out.versions)
+            .mix(BISMARK_GENOME_PREPARATION.out.versions)
+            .mix(BISMARK_ALIGN.out.versions)
+            .mix(BISMARK_DEDUPLICATE.out.versions)
+            .mix(BISMARK_METHYLATION_EXTRACTOR.out.versions)
+            .mix(COVERAGE_FILTER.out.versions)
+            // Only the DMR process that ran has outputs; the ternary reads that one.
+            .mix(dmr_engine in ['limma', 'dss'] ? DMR_POOLED_TILES.out.versions : DMR_METHYLKIT.out.versions)
+            .mix(ANNOTATE_REGIONS.out.versions)
+            .mix(STANDARDIZE_OUTPUT.out.versions)
+            .collect()
+
         manifest_ch = EMIT_MANIFEST(
             study_id,
             comparison_id,
@@ -160,7 +218,9 @@ workflow {
             paramsAsJson(),
             warnings_ch,
             workflow.manifest.version ?: '0.1.0-scaffold',
-            run_start_iso
+            run_start_iso,
+            versions_ch,
+            collect_versions_py
         )
 
         RENDER_REPORT(
@@ -196,6 +256,8 @@ workflow {
             'verified by AREE.'
         ])
 
+        versions_ch = STANDARDIZE_OUTPUT.out.versions.collect()
+
         manifest_ch = EMIT_MANIFEST(
             study_id,
             comparison_id,
@@ -205,7 +267,9 @@ workflow {
             paramsAsJson(),
             warnings_ch,
             workflow.manifest.version ?: '0.1.0-scaffold',
-            run_start_iso
+            run_start_iso,
+            versions_ch,
+            collect_versions_py
         )
 
         RENDER_REPORT(

@@ -1,0 +1,284 @@
+{
+  "study_id": "DUPERRET2025_HEAT_RNASEQ",
+  "bioproject": "PRJEB86646",
+  "bioproject_note": "Primary (claimed) project, matching accessions.bioproject. This sample sheet merges every project in `bioprojects`; schema_validate checks this single key.",
+  "bioprojects": [
+    "PRJEB86646",
+    "PRJEB86525"
+  ],
+  "date_generated": "2026-10-14",
+  "generated_by": "src/intake/ena_samplesheet.py (aree fetch-samplesheet), run once per BioProject with identical options, then concatenated unchanged",
+  "fetch_samplesheet_options": {
+    "label_field": "experiment_title",
+    "label_pattern": "P_(?P<family>F1[14][NR])_(?P<treatment_code>[34])_(?P<hpc>\\d+)_(?P<replicate>\\d)",
+    "condition_attributes": [
+      "treatment_code",
+      "hpc"
+    ],
+    "attributes": [
+      "family",
+      "replicate",
+      "isolate",
+      "age",
+      "temperature",
+      "tissue_type",
+      "experimental factor"
+    ]
+  },
+  "condition_codes": {
+    "treatment_code": {
+      "3": "23 C, fed ad libitum (control)",
+      "4": "30 C, fed ad libitum"
+    },
+    "condition": "<treatment_code>_<hpc>"
+  },
+  "derived_columns": {
+    "temp_c": "treatment_code mapped (3 = 23, 4 = 30); equals the BioSample temperature attribute for every run",
+    "tank": "<temp>C_t<replicate>. Replicate n is inferred to be tank n of that temperature (paper: 3 tanks per temperature, each holding all families; the deposit does not name tanks).",
+    "tank_hpc": "<tank>_<hpc>hpc, for within-temperature time contrasts (same tank in both arms)."
+  },
+  "shared_control_arm": {
+    "runs": [
+      "ERR14687865",
+      "ERR14687866",
+      "ERR14687867",
+      "ERR14687868",
+      "ERR14687869",
+      "ERR14687870",
+      "ERR14687871",
+      "ERR14687872",
+      "ERR14687873",
+      "ERR14687874",
+      "ERR14687875",
+      "ERR14687876",
+      "ERR14687877",
+      "ERR14687878",
+      "ERR14687879",
+      "ERR14687880",
+      "ERR14687881",
+      "ERR14687882",
+      "ERR14687883",
+      "ERR14687884",
+      "ERR14687885",
+      "ERR14687886",
+      "ERR14687887",
+      "ERR14687888",
+      "ERR14687889",
+      "ERR14687890",
+      "ERR14687891",
+      "ERR14687892",
+      "ERR14687893",
+      "ERR14687894",
+      "ERR14687895",
+      "ERR14687896",
+      "ERR14687897",
+      "ERR14687898",
+      "ERR14687899",
+      "ERR14687900",
+      "ERR14687901",
+      "ERR14687902",
+      "ERR14687903",
+      "ERR14687904",
+      "ERR14687905",
+      "ERR14687906"
+    ],
+    "also_in_study": "DUPERRET2025_STARVE_RNASEQ",
+    "note": "The 42 PRJEB86525 (23 C fed) runs are the control arm of both this study and DUPERRET2025_STARVE_RNASEQ; both Duperret et al. 2025 papers cite PRJEB86525 as their control."
+  },
+  "n_runs": 84,
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "3_0": 6,
+    "3_3": 6,
+    "3_6": 6,
+    "3_12": 6,
+    "3_24": 6,
+    "3_48": 6,
+    "3_72": 6,
+    "4_0": 6,
+    "4_3": 6,
+    "4_6": 6,
+    "4_12": 6,
+    "4_24": 6,
+    "4_48": 6,
+    "4_72": 6
+  },
+  "per_project_provenance": {
+    "PRJEB86646": {
+      "study_id": "DUPERRET2025_HEAT_RNASEQ",
+      "bioproject": "PRJEB86646",
+      "date_generated": "2026-10-14",
+      "generated_by": "src/intake/ena_samplesheet.py",
+      "queries": {
+        "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB86646&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format,experiment_title",
+        "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+      },
+      "condition_attributes": [
+        "treatment_code",
+        "hpc"
+      ],
+      "n_runs": 42,
+      "n_samples": 42,
+      "library_strategies": [
+        "RNA-Seq"
+      ],
+      "library_layouts": [
+        "SINGLE"
+      ],
+      "group_sizes": {
+        "4_0": 6,
+        "4_12": 6,
+        "4_24": 6,
+        "4_3": 6,
+        "4_48": 6,
+        "4_6": 6,
+        "4_72": 6
+      },
+      "min_group_size": 6,
+      "total_fastq_bytes": 53417612965,
+      "fastq_sources": {
+        "fastq_ftp": 42,
+        "submitted_ftp": 0
+      },
+      "run_labels": {
+        "field": "experiment_title",
+        "pattern": "P_(?P<family>F1[14][NR])_(?P<treatment_code>[34])_(?P<hpc>\\d+)_(?P<replicate>\\d)",
+        "labels": {
+          "ERR14694101": "P_F14R_4_0_1",
+          "ERR14694102": "P_F14R_4_0_2",
+          "ERR14694103": "P_F14R_4_0_3",
+          "ERR14694104": "P_F14R_4_3_1",
+          "ERR14694105": "P_F14R_4_3_2",
+          "ERR14694106": "P_F14R_4_3_3",
+          "ERR14694107": "P_F14R_4_6_1",
+          "ERR14694108": "P_F14R_4_6_2",
+          "ERR14694109": "P_F14R_4_6_3",
+          "ERR14694110": "P_F14R_4_12_1",
+          "ERR14694111": "P_F14R_4_12_2",
+          "ERR14694112": "P_F14R_4_12_3",
+          "ERR14694113": "P_F14R_4_24_1",
+          "ERR14694114": "P_F14R_4_24_2",
+          "ERR14694115": "P_F14R_4_24_3",
+          "ERR14694116": "P_F14R_4_48_1",
+          "ERR14694117": "P_F14R_4_48_2",
+          "ERR14694118": "P_F14R_4_48_3",
+          "ERR14694119": "P_F14R_4_72_1",
+          "ERR14694120": "P_F14R_4_72_2",
+          "ERR14694121": "P_F14R_4_72_3",
+          "ERR14694122": "P_F11N_4_0_1",
+          "ERR14694123": "P_F11N_4_0_2",
+          "ERR14694124": "P_F11N_4_0_3",
+          "ERR14694125": "P_F11N_4_3_2",
+          "ERR14694126": "P_F11N_4_3_1",
+          "ERR14694127": "P_F11N_4_3_3",
+          "ERR14694128": "P_F11N_4_6_1",
+          "ERR14694129": "P_F11N_4_6_2",
+          "ERR14694130": "P_F11N_4_6_3",
+          "ERR14694131": "P_F11N_4_12_1",
+          "ERR14694132": "P_F11N_4_12_2",
+          "ERR14694133": "P_F11N_4_12_3",
+          "ERR14694134": "P_F11N_4_24_1",
+          "ERR14694135": "P_F11N_4_24_2",
+          "ERR14694136": "P_F11N_4_24_3",
+          "ERR14694137": "P_F11N_4_48_1",
+          "ERR14694138": "P_F11N_4_48_2",
+          "ERR14694139": "P_F11N_4_48_3",
+          "ERR14694140": "P_F11N_4_72_1",
+          "ERR14694141": "P_F11N_4_72_2",
+          "ERR14694142": "P_F11N_4_72_3"
+        }
+      }
+    },
+    "PRJEB86525": {
+      "study_id": "DUPERRET2025_HEAT_RNASEQ",
+      "bioproject": "PRJEB86525",
+      "date_generated": "2026-10-14",
+      "generated_by": "src/intake/ena_samplesheet.py",
+      "queries": {
+        "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB86525&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format,experiment_title",
+        "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+      },
+      "condition_attributes": [
+        "treatment_code",
+        "hpc"
+      ],
+      "n_runs": 42,
+      "n_samples": 42,
+      "library_strategies": [
+        "RNA-Seq"
+      ],
+      "library_layouts": [
+        "SINGLE"
+      ],
+      "group_sizes": {
+        "3_0": 6,
+        "3_12": 6,
+        "3_24": 6,
+        "3_3": 6,
+        "3_48": 6,
+        "3_6": 6,
+        "3_72": 6
+      },
+      "min_group_size": 6,
+      "total_fastq_bytes": 52662666553,
+      "fastq_sources": {
+        "fastq_ftp": 42,
+        "submitted_ftp": 0
+      },
+      "run_labels": {
+        "field": "experiment_title",
+        "pattern": "P_(?P<family>F1[14][NR])_(?P<treatment_code>[34])_(?P<hpc>\\d+)_(?P<replicate>\\d)",
+        "labels": {
+          "ERR14687865": "P_F11N_3_0_1",
+          "ERR14687866": "P_F11N_3_0_2",
+          "ERR14687867": "P_F11N_3_0_3",
+          "ERR14687868": "P_F11N_3_3_1",
+          "ERR14687869": "P_F11N_3_3_2",
+          "ERR14687870": "P_F11N_3_3_3",
+          "ERR14687871": "P_F11N_3_6_1",
+          "ERR14687872": "P_F11N_3_6_2",
+          "ERR14687873": "P_F11N_3_6_3",
+          "ERR14687874": "P_F11N_3_12_1",
+          "ERR14687875": "P_F11N_3_12_2",
+          "ERR14687876": "P_F11N_3_12_3",
+          "ERR14687877": "P_F11N_3_24_1",
+          "ERR14687878": "P_F11N_3_24_2",
+          "ERR14687879": "P_F11N_3_24_3",
+          "ERR14687880": "P_F11N_3_48_1",
+          "ERR14687881": "P_F11N_3_48_2",
+          "ERR14687882": "P_F11N_3_48_3",
+          "ERR14687883": "P_F11N_3_72_1",
+          "ERR14687884": "P_F11N_3_72_2",
+          "ERR14687885": "P_F11N_3_72_3",
+          "ERR14687886": "P_F14R_3_3_1",
+          "ERR14687887": "P_F14R_3_3_2",
+          "ERR14687888": "P_F14R_3_3_3",
+          "ERR14687889": "P_F14R_3_6_1",
+          "ERR14687890": "P_F14R_3_6_2",
+          "ERR14687891": "P_F14R_3_6_3",
+          "ERR14687892": "P_F14R_3_12_1",
+          "ERR14687893": "P_F14R_3_12_2",
+          "ERR14687894": "P_F14R_3_12_3",
+          "ERR14687895": "P_F14R_3_24_1",
+          "ERR14687896": "P_F14R_3_24_2",
+          "ERR14687897": "P_F14R_3_24_3",
+          "ERR14687898": "P_F14R_3_0_1",
+          "ERR14687899": "P_F14R_3_48_1",
+          "ERR14687900": "P_F14R_3_48_2",
+          "ERR14687901": "P_F14R_3_48_3",
+          "ERR14687902": "P_F14R_3_0_2",
+          "ERR14687903": "P_F14R_3_0_3",
+          "ERR14687904": "P_F14R_3_72_1",
+          "ERR14687905": "P_F14R_3_72_2",
+          "ERR14687906": "P_F14R_3_72_3"
+        }
+      }
+    }
+  },
+  "outputs": {
+    "data/studies/DUPERRET2025_HEAT_RNASEQ/samplesheet.tsv": "6c81098f2a4d4b28e6d8aa64b8f2dec5aa8db5c775675f0b2e63a65ef6f50983",
+    "data/studies/DUPERRET2025_HEAT_RNASEQ/fastq_manifest.tsv": "f8ba068c075610a078fdd09bb8104622164051dabdd9127cb6225b42bd3af490"
+  }
+}

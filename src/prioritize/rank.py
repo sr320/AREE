@@ -234,6 +234,8 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         relevance = conservative_relevance(meta_dict["phenotype"], classifications)
 
         meta_dict["n_supporting_layers"] = n_supporting_layers
+        orthogroups = (sorted(subset["orthogroup_id"].dropna().astype(str).unique())
+                       if "orthogroup_id" in subset.columns else [])
         components = compute_components(meta_dict, mapping_confidences, quality_flags, relevance)
         score = candidate_score(components)
 
@@ -265,6 +267,7 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             "pooled_stressors": "|".join(pooled_stressors(meta_dict)),
             "is_high_priority": is_high_priority,
             "is_multi_omics_convergence": is_multi_omics,
+            "orthogroup_id": "|".join(orthogroups),
             "molecular_layer": own_layer,
             "n_supporting_layers": n_supporting_layers,
             "supporting_layers": "|".join(sorted(supporting)),

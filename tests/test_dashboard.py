@@ -17,6 +17,11 @@ REQUIRED_TOP_LEVEL = {
 }
 
 
+def dashboard_tier_order():
+    from prioritize.rank import TIER_ORDER
+    return TIER_ORDER
+
+
 def _point_at_reports(monkeypatch, reports_dir):
     monkeypatch.setattr(dashboard, "EVIDENCE_TABLE", reports_dir / "evidence" / "evidence_table.tsv")
     monkeypatch.setattr(dashboard, "CANDIDATES_TABLE", reports_dir / "evidence_cards" / "candidates.tsv")
@@ -41,6 +46,7 @@ def test_builder_reports_missing_outputs_instead_of_failing(tmp_path, monkeypatc
     assert data["kpis"]["n_studies_real"] >= 1
     assert data["kpis"]["n_evidence_records_real"] == 0
     assert data["candidates"]["top_real"] == []
+    assert data["candidates"]["top_real_by_phenotype"] == {}
     assert all(not c["harmonized"] for c in data["comparisons"])
     # Nothing fabricated: no cards were copied when there were none to copy.
     assert not (out.parent / "cards").exists()
@@ -70,6 +76,18 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     assert kpis["n_candidates_real_high_priority"] == 0
     assert all(r["simulated"] for r in data["candidates"]["top_simulated"])
     assert data["candidates"]["top_real"] == []
+    assert data["candidates"]["top_real_by_phenotype"] == {}
+
+    # Each phenotype gets its own short list, so a pool that never reaches the
+    # overall top list still shows its best candidates, in ranked order.
+    by_phen = data["candidates"]["top_simulated_by_phenotype"]
+    assert {"thermal_tolerance", "larval_viability"} <= set(by_phen)
+    tier_rank = {t: i for i, t in enumerate(dashboard_tier_order())}
+    for phen, rows in by_phen.items():
+        assert 0 < len(rows) <= dashboard.TOP_N_PER_PHENOTYPE
+        assert all(r["phenotype"] == phen and r["simulated"] for r in rows)
+        keys = [(tier_rank[r["tier"]], -r["score"]) for r in rows]
+        assert keys == sorted(keys)
 
     by_study = {r["study_id"]: r for r in data["evidence"]["by_study"]}
     assert set(ALL_DEMO_STUDY_IDS) <= set(by_study)
@@ -90,11 +108,13 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     assert kpis["n_real_pools_k2plus"] == 0
 
     # Cards for the top simulated candidates were copied beside the JSON with
-    # Quarto front matter, and the JSON links to them by site-relative path.
+    # Quarto front matter, and the JSON links to them by a path relative to the
+    # home page, which sits one directory above data.json.
     linked = [r["card_page"] for r in data["candidates"]["top_simulated"] if r["card_page"]]
     assert linked
     for page in linked:
-        card = out.parent / page.replace(".html", ".md")
+        assert page.startswith(f"{out.parent.name}/cards/")
+        card = out.parent.parent / page.replace(".html", ".md")
         assert card.exists()
         text = card.read_text()
         assert text.startswith("---\ntitle:")

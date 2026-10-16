@@ -1,5 +1,5 @@
 """End-to-end smoke test: the full demo pipeline (validate -> register -> harmonize ->
-meta-analyze -> build-evidence-cards) must run successfully on all 6 demo studies."""
+meta-analyze -> build-evidence-cards) must run successfully on every simulated demo study."""
 from click.testing import CliRunner
 from conftest import ALL_DEMO_STUDY_IDS
 
@@ -70,6 +70,39 @@ def test_harmonize_accepts_an_explicit_comparison(tmp_path):
     assert set(df["comparison_id"]) == {"acute_heat_vs_control"}
     # lfcSE survives the handoff — this is what makes a raw-reanalysis study poolable.
     assert df["standard_error"].notna().all()
+
+
+def test_metabolomics_handoff_carries_standard_error_and_method(tmp_path):
+    """The metabolomics raw mode writes lfcSE and a per-row analysis_method;
+    both must reach the evidence record. A processed table without them (the
+    demo's) keeps the old defaults."""
+    import pandas as pd
+
+    from harmonize.core import harmonize_processed_table
+
+    out = tmp_path / "GIGAS_GROW06_hypoxia_vs_control_metabolite_features_standardized.tsv"
+    pd.DataFrame({
+        "feature_id": ["GM_alanine", "GM_glycine"],
+        "putative_metabolite_name": ["alanine", "glycine"],
+        "annotation_confidence_level": [1, 1],
+        "metabolite_class": ["amino_acid", "amino_acid"],
+        "log2FC": [1.98, -1.61],
+        "pvalue": [3e-10, 5e-9],
+        "padj": [3e-9, 2e-8],
+        "lfcSE": [0.032, 0.041],
+        "analysis_method": ["targeted_MS_limma_moderated_t"] * 2,
+    }).to_csv(out, sep="\t", index=False)
+    df = harmonize_processed_table("GIGAS_GROW06", out, date_generated="2026-01-01",
+                                   comparison_id="hypoxia_vs_control")
+    assert df["standard_error"].tolist() == [0.032, 0.041]
+    assert set(df["analysis_method"]) == {"targeted_MS_limma_moderated_t"}
+
+    legacy = out.with_name("legacy.tsv")
+    pd.read_csv(out, sep="\t").drop(columns=["lfcSE", "analysis_method"]).to_csv(legacy, sep="\t", index=False)
+    df = harmonize_processed_table("GIGAS_GROW06", legacy, date_generated="2026-01-01",
+                                   comparison_id="hypoxia_vs_control")
+    assert df["standard_error"].isna().all()
+    assert set(df["analysis_method"]) == {"untargeted_LCMS"}
 
 
 def test_harmonize_rejects_an_unknown_comparison(tmp_path):

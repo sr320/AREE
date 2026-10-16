@@ -145,7 +145,7 @@ was run.
 
 ```bash
 aree build-crosswalk                       # once; ~380 MB streamed from NCBI
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+# The study's genome assembly selects this crosswalk; no environment variable needed.
 
 # The published spreadsheet -> the two result tables AREE harmonizes.
 aree intake-supplementary data/studies/HESSER2024_VCOR/intake.yaml --check

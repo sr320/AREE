@@ -74,6 +74,75 @@ test should generate a small synthetic bisulfite-converted FASTQ pair (e.g.
 via `Sherman` or a hand-rolled converter) plus a toy genome/GTF, per the
 roadmap in `docs/roadmap.md`.
 
+#### Alignment and extraction options
+
+`methylation.bismark_align_args` and `methylation.extractor_args` are
+passed to `bismark` and `bismark_methylation_extractor` as written, and
+recorded in the manifest. Both are empty by default. Bismark's default
+`--score_min L,0,-0.2` is strict for a genome as heterozygous as
+*M. gigas*. On 50,000 trimmed pairs from `CIBNOR2021_HEAT_RRSS`, the
+default mapped 15.5% of pairs uniquely, and `--score_min L,0,-0.6` mapped
+53.9%. Non-directional mode and a larger insert limit made no difference.
+Use `extractor_args` for M-bias trimming (e.g. `--ignore_r2 N`) after
+checking the M-bias plot.
+
+#### Replication unit (`methylation.replicate_unit`)
+
+When the phenotype or treatment belongs to a group of libraries, such as a
+breeding family or a tank, the libraries in a group are not independent
+replicates of it. Set `methylation.replicate_unit` to the design-sheet
+column that names the group, and `methylation.design_sheet` to a TSV with
+that column plus `run_accession` or `sample_id`:
+
+```
+methylation.replicate_unit = 'family'
+methylation.design_sheet   = 'data/studies/<STUDY_ID>/samplesheet.tsv'
+```
+
+`DMR_METHYLKIT` then sums each unit's methylated and unmethylated counts per
+region after `unite`, and tests the units with methylKit's McCullagh-Nelder
+overdispersion correction and an F test (`overdispersion = "MN"`,
+`test = "F"`), so the error comes from unit-to-unit variation. Each unit must
+lie wholly in one arm, and each arm needs at least two units. Without
+`replicate_unit` the step is unchanged.
+
+On synthetic data with family-to-family variation and no true class effect
+(4 families × 3 libraries, 380 null and 20 true regions), testing the 12
+libraries as independent called 162 of 380 null regions significant; testing
+the 4 families called none. With 2 families per arm the test has very little
+power: the true regions ranked near the top but none reached q < 0.05. Where
+a region's estimated overdispersion falls below 1, methylKit resets it to 1,
+so a few null regions can still get small q-values; the `meth_diff_cutoff`
+filter is the second guard.
+
+#### DMR engines (`methylation.dmr_engine`)
+
+- `methylkit` (default): `DMR_METHYLKIT`, as above.
+- `limma` and `dss`: `DMR_POOLED_TILES` (`modules/methylation/dmr_pooled_tiles.nf`).
+  It merges the two strands of each CpG, pools libraries by `replicate_unit`,
+  and keeps CpGs with at least `unit_min_coverage` reads in **every unit**
+  (coverage is applied after pooling, so set `min_coverage` low, e.g. 1). It
+  sums them into `tile_size` tiles with at least `tile_min_cpgs` CpGs, then
+  tests treatment units against control units.
+  - `limma`: a moderated t on per-unit M-values (the logit of methylation),
+    with variance shrunk across tiles by empirical Bayes. Recommended when
+    there are only a few units per arm.
+  - `dss`: `DSS::DMLtest`, a beta-binomial model with shrunken dispersion
+    and a Wald test.
+
+Why `limma` is recommended for few units: on synthetic data with 2 vs 2
+families, real family-to-family variation and 20 true regions among 400
+tiles:
+
+| Test | True regions found | False positives (of 380) |
+|---|---|---|
+| methylKit (families, MN + F) | 0 | 0 |
+| DSS (families) | 17 | 57 |
+| limma (families) | 4 | 1 |
+
+limma's null p-values were calibrated (5.0% below 0.05). DSS's Wald test
+has no small-sample correction, so it is overconfident at 2 vs 2.
+
 ### `processed_results_harmonization`
 
 For studies where only a processed DMR/DML table is publicly available (the
@@ -155,10 +224,12 @@ is intentionally propagated to `quality_flags` at the evidence-record level
 downstream, not hidden.
 
 A separate `versions.yml` (nf-core-style `process: {tool: version}` mapping)
-is emitted by every process, using the actual CLI's own `--version` output
-where the tool is genuinely installed in its declared container (not
-hardcoded, unlike the manifest's `software_versions` block, which is
-necessarily hardcoded since no container was pulled in this build).
+is emitted by every process from the tool's own `--version` output, whether
+the tool runs natively or in its declared container. `main.nf` collects them
+into `EMIT_MANIFEST`, which merges them (`modules/shared/collect_versions.py`)
+into the manifest's `software_versions`, so the manifest reports what ran.
+`RENDER_REPORT` runs after the manifest and is listed under
+`software_versions_not_captured`.
 
 ## Containers
 

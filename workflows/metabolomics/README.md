@@ -1,11 +1,12 @@
 # AREE metabolomics workflow
 
-STATUS: **`processed_results_harmonization` mode is executed, verified, and
-covered by current-version CI; the raw feature-table path is not.** It did not
-run before 2026-08-28; see `../../docs/first_raw_reanalysis.md` for the defects
-that prevented it. No container has been pulled. The raw branch contains real
-script logic, but no raw feature-table fixture or real raw study has exercised
-it.
+STATUS: **both modes execute.** `processed_results_harmonization` is verified
+against the bundled demo. `raw_reanalysis` runs natively (`-profile local`) on
+the simulated targeted-panel fixture in `tests/fixtures/metabolomics_raw/`
+(checked in CI by `scripts/check_metabolomics_raw_smoke.py`) and on the real
+targeted panel of `DUPERRET2025_POMS_STARVE`. No container has been pulled.
+See `../../docs/first_raw_reanalysis.md` for the defects that kept the
+processed path from running before 2026-08-28.
 
 This implements Layer 2.D ("Metabolomics") of the AREE reanalysis workflows
 described in `CLAUDE.md`: metabolite feature table intake, annotation
@@ -94,8 +95,40 @@ given file — this mirrors the rnaseq/proteomics workflows and
 | raw_reanalysis | `--metabolomics.metabolite_annotation_map` (optional) | TSV: `feature_id`, `putative_metabolite_name`, `annotation_confidence_level`. Used to fill in confidence levels not already present in the feature table. |
 | raw_reanalysis | `--metabolomics.metabolite_class_map` (optional) | TSV: `putative_metabolite_name`, `metabolite_class`[, `pathway`]. See "Metabolite class/pathway crosswalk" below. |
 | raw_reanalysis | `--metabolomics.qc_cv_threshold` | Coefficient-of-variation threshold for the pooled-QC-sample QC metric (default `0.30`). |
+| raw_reanalysis | `--metabolomics.normalization` | `tic` (default), `median` or `internal_standard`; see "Targeted panels" below. |
+| raw_reanalysis | `--metabolomics.detection_limit` | Values at or below this become missing (below detection), not intensities. Default `null`. |
+| raw_reanalysis | `--metabolomics.replicate_unit` | Sample-sheet column (e.g. `tank`) whose units are the replicates; log2 values are averaged per unit before limma. Default `null`. |
+| raw_reanalysis | `--metabolomics.min_detected_per_arm` | Test a feature only if detected in at least this many replicates per arm (default `2`). |
+| raw_reanalysis | `--metabolomics.acquisition` | `untargeted` (default) or `targeted`; written to each row's `analysis_method`. |
 | processed_results_harmonization | `--metabolomics.processed_results` | Already-shaped differential feature table (see target schema below), or a close variant `STANDARDIZE_OUTPUT` can coerce (tolerated header synonyms are listed in `modules/metabolomics/standardize_output.nf`). |
 | both | `--metabolomics.study_id`, `--metabolomics.comparison_id` | Identifiers threaded into every output filename and the provenance manifest. |
+
+## Targeted panels
+
+A targeted MRM/SIM panel differs from an untargeted feature table in ways the
+default TIC path ignores, so `raw_reanalysis` has options for it:
+
+- **Platforms.** An optional `platform` column in the feature table (e.g. one
+  value per LC or GC method) makes every normalization run within a platform,
+  so panels on different instruments are never scaled against each other.
+- **Internal standards.** Rows with `is_internal_standard` true are used by
+  `--metabolomics.normalization internal_standard` (each sample's mean log2
+  standard area, per platform, is subtracted) and are never tested.
+  `median` centres each sample on its median detected metabolite instead.
+- **Detection limit.** Vendor exports often write a placeholder such as
+  `0.0001` below the limit of detection. `--metabolomics.detection_limit`
+  turns those into missing values. Features detected in fewer than
+  `--metabolomics.min_detected_per_arm` replicates of either arm are not
+  tested, and `<study>_<comparison>_missingness.tsv` (in
+  `differential_abundance/`) lists every feature with its detection counts
+  and status, so nothing disappears silently.
+- **Replicate units.** `--metabolomics.replicate_unit` averages samples that
+  share a unit (e.g. two families pooled from one tank) before the fit, the
+  metabolomics counterpart of the RNA-seq and methylation option. A unit may
+  not sit in both arms.
+
+Raw mode also writes `lfcSE` (limma's posterior standard error) and
+`analysis_method`, which `aree harmonize` carries into the evidence table.
 
 ## Metabolite class/pathway crosswalk
 
@@ -123,6 +156,9 @@ tab-separated, with exactly these columns (matching
 ```
 feature_id  putative_metabolite_name  annotation_confidence_level  metabolite_class  log2FC  pvalue  padj
 ```
+
+plus, when the input has them (raw mode always does), `lfcSE` and
+`analysis_method`.
 
 `annotation_confidence_level` uses a simplified Metabolomics Standards
 Initiative (MSI)-style 1-4 scale:

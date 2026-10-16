@@ -25,7 +25,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from common import REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_vocab
+from common import REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_vocab, registered_crosswalks
 
 EVIDENCE_TABLE = REPORTS_DIR / "evidence" / "evidence_table.tsv"
 CANDIDATES_TABLE = REPORTS_DIR / "evidence_cards" / "candidates.tsv"
@@ -33,7 +33,11 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 MANIFESTS_DIR = REPORTS_DIR / "manifests"
 TOP_CANDIDATES_MD = REPORTS_DIR / "top_candidates_summary.md"
 IMPLEMENTATION_STATUS_MD = REPO_ROOT / "docs" / "implementation_status.md"
-REAL_CROSSWALK = REPO_ROOT / "data" / "reference" / "crosswalk" / "mgigas_gene_id_crosswalk.tsv"
+
+
+def _built_crosswalks() -> list[Path]:
+    """Every real crosswalk registered in genome_assemblies.yaml that exists here."""
+    return [entry["path"] for entry in registered_crosswalks() if entry["path"].exists()]
 TESTS_DIR = REPO_ROOT / "tests"
 DEFAULT_OUT_PATH = REPO_ROOT / "docs" / "dashboard" / "data.json"
 CARDS_SUBDIR = "cards"  # evidence cards for the top candidates, copied beside data.json
@@ -41,6 +45,9 @@ REPO_URL = "https://github.com/sr320/AREE"
 
 SIGNIFICANCE_THRESHOLD = 0.05
 TOP_N_CANDIDATES = 15
+# The overall top list is dominated by whichever pool has the most studies, so
+# each phenotype also gets its own short list.
+TOP_N_PER_PHENOTYPE = 5
 
 
 # --------------------------------------------------------------------------- #
@@ -234,29 +241,35 @@ def _evidence_summary(evidence: pd.DataFrame) -> dict:
 
 
 def _gene_annotations(gene_ids: list[str]) -> dict[str, dict]:
-    """Symbol and description for real NCBI GeneIDs, from the committed crosswalk."""
-    if not REAL_CROSSWALK.exists() or not gene_ids:
+    """Symbol and description for real NCBI GeneIDs, from the committed crosswalks.
+
+    NCBI GeneIDs are unique across all taxa, so the crosswalks of every
+    registered species can be searched together without ambiguity.
+    """
+    crosswalks = _built_crosswalks()
+    if not crosswalks or not gene_ids:
         return {}
     wanted = set(map(str, gene_ids))
     out: dict[str, dict] = {}
-    for chunk in pd.read_csv(REAL_CROSSWALK, sep="\t", comment="#", dtype=str,
-                             chunksize=20000):
-        hit = chunk[chunk["ncbi_gene_id"].isin(wanted)]
-        for _, row in hit.iterrows():
-            out[row["ncbi_gene_id"]] = {
-                "gene_symbol": row.get("gene_symbol") or "",
-                "gene_description": row.get("gene_description") or "",
-                "gene_type": row.get("gene_type") or "",
-            }
-        if len(out) >= len(wanted):
-            break
+    for crosswalk in crosswalks:
+        for chunk in pd.read_csv(crosswalk, sep="\t", comment="#", dtype=str,
+                                 chunksize=20000):
+            hit = chunk[chunk["ncbi_gene_id"].isin(wanted)]
+            for _, row in hit.iterrows():
+                out[row["ncbi_gene_id"]] = {
+                    "gene_symbol": row.get("gene_symbol") or "",
+                    "gene_description": row.get("gene_description") or "",
+                    "gene_type": row.get("gene_type") or "",
+                }
+            if len(out) >= len(wanted):
+                return out
     return out
 
 
 def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) -> dict:
     if not CANDIDATES_TABLE.exists():
         return {"by_tier": [], "by_evidence_class": [], "top_real": [], "top_simulated": [],
-                "n_total": 0}
+                "top_real_by_phenotype": {}, "top_simulated_by_phenotype": {}, "n_total": 0}
     df = pd.read_csv(CANDIDATES_TABLE, sep="\t", low_memory=False)
     df["simulated"] = df["simulated"].map(_bool)
     by_tier = [
@@ -280,8 +293,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
             "n_supporting_layers", "mapping_confidences", "simulated", "card_file"]
     cols = [c for c in cols if c in ranked.columns]
 
-    def _top(frame: pd.DataFrame) -> list[dict]:
-        rows = frame.head(TOP_N_CANDIDATES)[cols].to_dict(orient="records")
+    def _top(frame: pd.DataFrame, n: int = TOP_N_CANDIDATES) -> list[dict]:
+        rows = frame.head(n)[cols].to_dict(orient="records")
         for r in rows:
             r["feature_id_standardized"] = str(r["feature_id_standardized"])
             r["phenotype_label"] = phenotype_labels.get(r.get("phenotype"), r.get("phenotype"))
@@ -292,11 +305,18 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
 
     top_real = _top(ranked[~ranked["simulated"]])
     top_sim = _top(ranked[ranked["simulated"]])
-    for r in top_real + top_sim:
+    # Ranked order is kept within each phenotype, so head() is that phenotype's top.
+    by_phen_real = {phen: _top(grp, TOP_N_PER_PHENOTYPE)
+                    for phen, grp in ranked[~ranked["simulated"]].groupby("phenotype", sort=True)}
+    by_phen_sim = {phen: _top(grp, TOP_N_PER_PHENOTYPE)
+                   for phen, grp in ranked[ranked["simulated"]].groupby("phenotype", sort=True)}
+    all_real = top_real + [r for rows in by_phen_real.values() for r in rows]
+    all_rows = all_real + top_sim + [r for rows in by_phen_sim.values() for r in rows]
+    for r in all_rows:
         r["card_page"] = _publish_card(r.pop("card_file", None), cards_dir)
-    ann = _gene_annotations([r["feature_id_standardized"] for r in top_real
+    ann = _gene_annotations([r["feature_id_standardized"] for r in all_real
                              if r.get("feature_type") == "gene"])
-    for r in top_real:
+    for r in all_real:
         r.update(ann.get(r["feature_id_standardized"], {}))
 
     return {
@@ -304,6 +324,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
         "by_evidence_class": by_class,
         "top_real": top_real,
         "top_simulated": top_sim,
+        "top_real_by_phenotype": by_phen_real,
+        "top_simulated_by_phenotype": by_phen_sim,
         "n_total": int(len(df)),
         "n_real": int((~df["simulated"]).sum()),
         "n_simulated": int(df["simulated"].sum()),
@@ -313,8 +335,9 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
 def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     """Copy one evidence card next to the dashboard so the site can link to it.
 
-    Returns the site-relative page path (without extension, as Quarto links it),
-    or None when the candidate has no rendered card.
+    Returns the page path relative to the home page (index.qmd), which loads
+    data.json from one directory below it, so the link includes that directory
+    (e.g. ``dashboard/cards/<card>.html``). None when the candidate has no card.
     """
     if not card_file or cards_dir is None or (isinstance(card_file, float) and pd.isna(card_file)):
         return None
@@ -337,7 +360,7 @@ def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     dest.write_text(
         f'---\ntitle: "{title}"\nsidebar: false\nbread-crumbs: false\n---\n\n{body}\n'
     )
-    return f"{cards_dir.name}/{src.stem}.html"
+    return f"{cards_dir.parent.name}/{cards_dir.name}/{src.stem}.html"
 
 
 def _pool_summary() -> list[dict]:
@@ -348,7 +371,10 @@ def _pool_summary() -> list[dict]:
     seen = set()
     # A per-phenotype run and the all-phenotypes run describe the same pools;
     # read the specific files first so `seen` credits each pool to one of them.
-    paths = sorted(META_ANALYSIS_DIR.glob("*_meta_analysis.tsv"),
+    # Orthogroup-level (cross-species) results share the suffix but not the
+    # columns; they are summarized separately, not as gene-level pools.
+    paths = sorted((p for p in META_ANALYSIS_DIR.glob("*_meta_analysis.tsv")
+                    if not p.name.endswith("_orthogroup_meta_analysis.tsv")),
                    key=lambda p: (p.name.startswith("all_phenotypes"), p.name))
     for path in paths:
         df = pd.read_csv(path, sep="\t", low_memory=False)
@@ -514,8 +540,19 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
             "meta_analysis": META_ANALYSIS_DIR.exists() and any(META_ANALYSIS_DIR.glob("*.tsv")),
             "candidates": CANDIDATES_TABLE.exists(),
             "top_candidates_summary": TOP_CANDIDATES_MD.exists(),
-            "real_crosswalk": REAL_CROSSWALK.exists(),
+            "real_crosswalk": bool(_built_crosswalks()),
         },
+        "crosswalks": [
+            {
+                "species": entry["species"],
+                "ncbi_taxid": entry["ncbi_taxid"],
+                "path": str(entry["path"].relative_to(REPO_ROOT))
+                if entry["path"].is_relative_to(REPO_ROOT) else str(entry["path"]),
+                "assemblies": entry["assemblies"],
+                "built": entry["path"].exists(),
+            }
+            for entry in registered_crosswalks()
+        ],
         "kpis": kpis,
         "studies": study_rows,
         "comparisons": comparison_rows,

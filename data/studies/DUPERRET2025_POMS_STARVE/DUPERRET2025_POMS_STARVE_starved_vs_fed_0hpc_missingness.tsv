@@ -1,0 +1,311 @@
+feature_id	putative_metabolite_name	annotation_confidence_level	platform	n_replicates_control	n_detected_control	n_replicates_treatment	n_detected_treatment	status
+GM:2-Aminobutyric acid	2-Aminobutyric acid	2	GM	3	3	3	3	tested
+GM:2-Ketoglutaric acid	2-Ketoglutaric acid	2	GM	3	0	3	0	not_detected
+GM:Taurine	Taurine	2	GM	3	3	3	3	tested
+GM:3-Hydroxy-D_L-Kynurenine	3-Hydroxy-D_L-Kynurenine	2	GM	3	3	3	2	tested
+GM:4-Aminobutyric acid	4-Aminobutyric acid	2	GM	3	3	3	3	tested
+GM:4-Hydroxyproline	4-Hydroxyproline	2	GM	3	3	3	3	tested
+GM:5-Glutamylcysteine	5-Glutamylcysteine	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Acetylcarnitine	Acetylcarnitine	2	GM	3	3	3	3	tested
+GM:Acetylcholine	Acetylcholine	2	GM	3	3	3	3	tested
+GM:Aconitic acid	Aconitic acid	2	GM	3	0	3	0	not_detected
+GM:Adenine	Adenine	2	GM	3	3	3	3	tested
+GM:Adenosine 3',5'-cyclic monophosphate	Adenosine 3',5'-cyclic monophosphate	2	GM	3	3	3	3	tested
+GM:Adenosine monophosphate	Adenosine monophosphate	2	GM	3	3	3	3	tested
+GM:Adenosine	Adenosine	2	GM	3	3	3	3	tested
+GM:Adenylsuccinic acid	Adenylsuccinic acid	2	GM	3	3	3	3	tested
+GM:Alanine	Alanine	2	GM	3	3	3	3	tested
+GM:Allantoin	Allantoin	2	GM	3	0	3	0	not_detected
+GM:Anthranilic Acid	Anthranilic Acid	2	GM	3	3	3	3	tested
+GM:Arginine	Arginine	2	GM	3	3	3	3	tested
+GM:Argininosuccinic acid	Argininosuccinic acid	2	GM	3	3	3	3	tested
+GM:Asparagine	Asparagine	2	GM	3	3	3	3	tested
+GM:Aspartic acid	Aspartic acid	2	GM	3	3	3	3	tested
+GM:Asymmetric dimethylarginine	Asymmetric dimethylarginine	2	GM	3	3	3	3	tested
+GM:Carnitine	Carnitine	2	GM	3	3	3	3	tested
+GM:Carnosine	Carnosine	2	GM	3	1	3	1	detected_too_rarely_in_both_arms
+GM:Cholic Acid (CA)	Cholic Acid (CA)	2	GM	3	0	3	0	not_detected
+GM:Choline	Choline	2	GM	3	3	3	3	tested
+GM:Citicoline	Citicoline	2	GM	3	3	3	3	tested
+GM:Citric Acid	Citric Acid	2	GM	3	3	3	3	tested
+GM:Citrulline	Citrulline	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Creatine	Creatine	2	GM	3	3	3	3	tested
+GM:Creatinine	Creatinine	2	GM	3	3	3	3	tested
+GM:Cystathionine	Cystathionine	2	GM	3	3	3	3	tested
+GM:Cysteamine	Cysteamine	2	GM	3	0	3	0	not_detected
+GM:Cysteine	Cysteine	2	GM	3	3	3	3	tested
+GM:Cystine	Cystine	2	GM	3	3	3	3	tested
+GM:Cytidine 3',5'-cyclic monophosphate	Cytidine 3',5'-cyclic monophosphate	2	GM	3	0	3	0	not_detected
+GM:Cytidine monophosphate	Cytidine monophosphate	2	GM	3	3	3	3	tested
+GM:Cytidine	Cytidine	2	GM	3	3	3	3	tested
+GM:Cytosine	Cytosine	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Dimethylglycine	Dimethylglycine	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Dopa	Dopa	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Dopamine	Dopamine	2	GM	3	3	3	3	tested
+GM:Epinephrine	Epinephrine	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:FAD	FAD	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:FMN	FMN	2	GM	3	0	3	0	not_detected
+GM:Fumaric Acid	Fumaric Acid	2	GM	3	3	3	3	tested
+GM:Glutamic acid	Glutamic acid	2	GM	3	3	3	3	tested
+GM:Glutamine	Glutamine	2	GM	3	3	3	3	tested
+GM:Glutathione oxidazed	Glutathione oxidazed	2	GM	3	3	3	3	tested
+GM:Glutathione reduced	Glutathione reduced	2	GM	3	3	3	3	tested
+GM:Glycine	Glycine	2	GM	3	3	3	3	tested
+GM:Guanine	Guanine	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Guanosine 3',5'-cyclic monophosphate	Guanosine 3',5'-cyclic monophosphate	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Guanosine monophosphate	Guanosine monophosphate	2	GM	3	3	3	3	tested
+GM:Guanosine	Guanosine	2	GM	3	3	3	3	tested
+GM:Histamine	Histamine	2	GM	3	3	3	3	tested
+GM:Histidine	Histidine	2	GM	3	3	3	3	tested
+GM:Homocysteine	Homocysteine	2	GM	3	0	3	0	not_detected
+GM:Homocystine	Homocystine	2	GM	3	0	3	2	detected_too_rarely_in_control
+GM:Hypoxanthine	Hypoxanthine	2	GM	3	3	3	3	tested
+GM:Inosine	Inosine	2	GM	3	3	3	3	tested
+GM:Isocitric Acid	Isocitric Acid	2	GM	3	0	3	0	not_detected
+GM:Isoleucine	Isoleucine	2	GM	3	3	3	3	tested
+GM:Kynurenic Acid	Kynurenic Acid	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Kynurenine	Kynurenine	2	GM	3	3	3	3	tested
+GM:Lactic Acid	Lactic Acid	2	GM	3	3	3	3	tested
+GM:Leucine	Leucine	2	GM	3	3	3	3	tested
+GM:L-Hydroorotic Acid	L-Hydroorotic Acid	2	GM	3	0	3	0	not_detected
+GM:Lysine	Lysine	2	GM	3	3	3	3	tested
+GM:Malic Acid	Malic Acid	2	GM	3	3	3	3	tested
+GM:Methionine sulfone	Methionine sulfone	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Methionine sulfoxide	Methionine sulfoxide	2	GM	3	3	3	3	tested
+GM:Methionine	Methionine	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:NAD	NAD	2	GM	3	3	3	3	tested
+GM:Niacinamide	Niacinamide	2	GM	3	3	3	3	tested
+GM:Nicotinic acid	Nicotinic acid	2	GM	3	3	3	3	tested
+GM:Norepinephrine	Norepinephrine	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+GM:Ophthalmic acid	Ophthalmic acid	2	GM	3	3	3	3	tested
+GM:Ornitine	Ornitine	2	GM	3	3	3	3	tested
+GM:Orotic Acid Pos	Orotic Acid Pos	2	GM	3	0	3	0	not_detected
+GM:Pantothenic acid	Pantothenic acid	2	GM	3	3	3	3	tested
+GM:Phenylalanine	Phenylalanine	2	GM	3	3	3	3	tested
+GM:Picolinic Acid	Picolinic Acid	2	GM	3	0	3	0	not_detected
+GM:Proline	Proline	2	GM	3	3	3	3	tested
+GM:S-Adenosylhomocysteine	S-Adenosylhomocysteine	2	GM	3	3	3	3	tested
+GM:S-Adenosylmethionine	S-Adenosylmethionine	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Serine	Serine	2	GM	3	3	3	3	tested
+GM:Serotonin	Serotonin	2	GM	3	3	3	3	tested
+GM:Spermidine	Spermidine	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Spermine	Spermine	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Succinic acid	Succinic acid	2	GM	3	3	3	3	tested
+GM:Symmetric dimethylarginine	Symmetric dimethylarginine	2	GM	3	3	3	3	tested
+GM:Threonine	Threonine	2	GM	3	3	3	3	tested
+GM:Thymidine	Thymidine	2	GM	3	3	3	3	tested
+GM:Thymine	Thymine	2	GM	3	0	3	3	detected_too_rarely_in_control
+GM:Tryptophan	Tryptophan	2	GM	3	3	3	3	tested
+GM:Tyrosine	Tyrosine	2	GM	3	3	3	3	tested
+GM:Uracil	Uracil	2	GM	3	3	3	3	tested
+GM:Uric acid	Uric acid	2	GM	3	3	3	3	tested
+GM:Uridine	Uridine	2	GM	3	3	3	3	tested
+GM:Valine	Valine	2	GM	3	3	3	3	tested
+GM:Xanthine	Xanthine	2	GM	3	3	3	0	detected_too_rarely_in_treatment
+NUCs:ADP	ADP	2	NUCs	3	3	3	3	tested
+NUCs:AMP	AMP	2	NUCs	3	3	3	3	tested
+NUCs:Ap3A_Mono	Ap3A_Mono	2	NUCs	3	0	3	0	not_detected
+NUCs:Ap3A	Ap3A	2	NUCs	3	0	3	0	not_detected
+NUCs:Ap4A	Ap4A	2	NUCs	3	0	3	0	not_detected
+NUCs:ATP	ATP	2	NUCs	3	3	3	3	tested
+NUCs:CDP	CDP	2	NUCs	3	0	3	0	not_detected
+NUCs:cGAMP	cGAMP	2	NUCs	3	0	3	0	not_detected
+NUCs:CMP	CMP	2	NUCs	3	0	3	0	not_detected
+NUCs:CTP	CTP	2	NUCs	3	0	3	0	not_detected
+NUCs:dUMP	dUMP	2	NUCs	3	0	3	0	not_detected
+NUCs:GDP	GDP	2	NUCs	3	3	3	3	tested
+NUCs:GMP	GMP	2	NUCs	3	3	3	3	tested
+NUCs:GTP	GTP	2	NUCs	3	3	3	3	tested
+NUCs:TDP	TDP	2	NUCs	3	0	3	0	not_detected
+NUCs:TMP	TMP	2	NUCs	3	3	3	3	tested
+NUCs:TTP	TTP	2	NUCs	3	0	3	0	not_detected
+NUCs:UDP	UDP	2	NUCs	3	3	3	3	tested
+NUCs:UMP	UMP	2	NUCs	3	3	3	3	tested
+NUCs:UTP	UTP	2	NUCs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:10,17-DiHDoHE	10,17-DiHDoHE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:10-HDoHE	10-HDoHE	2	PUFAs	3	3	3	3	tested
+PUFAs:11,12-DHET	11,12-DHET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11,12-EET	11,12-EET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11,12-EET-EA	11,12-EET-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11-beta-13,14-dihydro-15-keto-PGF2a	11-beta-13,14-dihydro-15-keto-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11-beta-PGF2a	11-beta-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11-dehydro-TXB2	11-dehydro-TXB2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11-HDoHE	11-HDoHE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:11-HETE	11-HETE	2	PUFAs	3	3	3	3	tested
+PUFAs:11-trans-LTC4	11-trans-LTC4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:11-trans-LTE4	11-trans-LTE4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:12,13-DiHOME	12,13-DiHOME	2	PUFAs	3	0	3	0	not_detected
+PUFAs:12,13-EpOME	12,13-EpOME	2	PUFAs	3	0	3	0	not_detected
+PUFAs:12-HEPE	12-HEPE	2	PUFAs	3	3	3	3	tested
+PUFAs:12-HETE	12-HETE	2	PUFAs	3	3	3	3	tested
+PUFAs:12-HHT	12-HHT	2	PUFAs	3	0	3	0	not_detected
+PUFAs:12-HpEPE	12-HpEPE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:12-HpETE	12-HpETE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:12-KETE	12-KETE	2	PUFAs	3	3	3	2	tested
+PUFAs:12-keto-LTB4	12-keto-LTB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto PGJ2	13,14-dihydro-15-keto PGJ2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-PGD2	13,14-dihydro-15-keto-PGD2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-PGE2	13,14-dihydro-15-keto-PGE2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-PGF2a	13,14-dihydro-15-keto-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-tetranor-PGD2	13,14-dihydro-15-keto-tetranor-PGD2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-tetranor-PGE2	13,14-dihydro-15-keto-tetranor-PGE2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-tetranor-PGF1a	13,14-dihydro-15-keto-tetranor-PGF1a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13,14-dihydro-15-keto-tetranor-PGF1b	13,14-dihydro-15-keto-tetranor-PGF1b	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13-HDoHE	13-HDoHE	2	PUFAs	3	3	3	2	tested
+PUFAs:13-HODE	13-HODE	2	PUFAs	3	3	3	3	tested
+PUFAs:13-HOTrE	13-HOTrE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:13-HpODE	13-HpODE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:13-KODE	13-KODE	2	PUFAs	3	3	3	3	tested
+PUFAs:14,15-DHET	14,15-DHET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:14,15-DiHETE	14,15-DiHETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:14,15-EET	14,15-EET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:14,15-EET-EA	14,15-EET-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:14,15-LTC4	14,15-LTC4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:14,15-LTE4	14,15-LTE4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:14-HDoHE	14-HDoHE	2	PUFAs	3	3	3	3	tested
+PUFAs:15-deoxy-delta-12,14-PGJ2	15-deoxy-delta-12,14-PGJ2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-HEDE	15-HEDE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-HEPE	15-HEPE	2	PUFAs	3	3	3	3	tested
+PUFAs:15-HETE	15-HETE	2	PUFAs	3	3	3	3	tested
+PUFAs:15-HETE-d8-not present in the mix	15-HETE-d8-not present in the mix	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-HETrE	15-HETrE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-HpEPE	15-HpEPE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-HpETE	15-HpETE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:15-KEDE	15-KEDE	2	PUFAs	3	0	3	3	detected_too_rarely_in_control
+PUFAs:15-keto-PGE2	15-keto-PGE2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-keto-PGF2a	15-keto-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:16-HDoHE	16-HDoHE	2	PUFAs	3	3	3	3	tested
+PUFAs:16-HETE	16-HETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:17,18-DiHETE	17,18-DiHETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:17,18-EpETE	17,18-EpETE	2	PUFAs	3	3	3	3	tested
+PUFAs:17-HDoHE	17-HDoHE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:17-HETE	17-HETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:18-carboxy-dinor-LTB4	18-carboxy-dinor-LTB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:18-HEPE	18-HEPE	2	PUFAs	3	3	3	3	tested
+PUFAs:18-HETE	18-HETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:19-HETE	19-HETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:1a1b-dihomo-PGF2a	1a1b-dihomo-PGF2a	2	PUFAs	3	0	3	3	detected_too_rarely_in_control
+PUFAs:2,3-dinor-8-iso-PGF2a	2,3-dinor-8-iso-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:20-carboxy-AA	20-carboxy-AA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:20-carboxy-LTB4	20-carboxy-LTB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:20-HDoHE	20-HDoHE	2	PUFAs	3	3	3	3	tested
+PUFAs:20-HETE	20-HETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:20-hydroxy-LTB4	20-hydroxy-LTB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:20-hydroxy-PGE2	20-hydroxy-PGE2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:20-hydroxy-PGF2a	20-hydroxy-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:4-HDoHE	4-HDoHE	2	PUFAs	3	3	3	1	detected_too_rarely_in_treatment
+PUFAs:5,15-DiHETE	5,15-DiHETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5,6-DHET	5,6-DHET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5,6-DHET-lactone	5,6-DHET-lactone	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5,6-DiHETE	5,6-DiHETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5,6-EET	5,6-EET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5,6-EET-EA	5,6-EET-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5-HEPE	5-HEPE	2	PUFAs	3	3	3	3	tested
+PUFAs:5-HETE	5-HETE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:5-HETE-d8	5-HETE-d8	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5-HpEPE	5-HpEPE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5-HpETE	5-HpETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5-iPF2a-VI	5-iPF2a-VI	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5-KETE	5-KETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5S,14R-LXB4	5S,14R-LXB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5S,6R-LXA4	5S,6R-LXA4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:5S,6S-LXA4	5S,6S-LXA4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:6,15-diketo-13,14-dihydro-PGF1a	6,15-diketo-13,14-dihydro-PGF1a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:6-keto-PGF1a	6-keto-PGF1a	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:6-trans-LTB4	6-trans-LTB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:7,17-hydroxy-DPA	7,17-hydroxy-DPA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:7-HDoHE	7-HDoHE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:8,12-iso-iPF2a-VI-1,5-lactone	8,12-iso-iPF2a-VI-1,5-lactone	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8,15-DiHETE	8,15-DiHETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8,9-DHET	8,9-DHET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8,9-EET	8,9-EET	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8,9-EET-EA	8,9-EET-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-HDoHE	8-HDoHE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-HETE	8-HETE	2	PUFAs	3	3	3	3	tested
+PUFAs:8-iso-13,14-dihydro-15-keto-PGF2a	8-iso-13,14-dihydro-15-keto-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-15(R)-PGF2a	8-iso-15(R)-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-15-keto-PGF2a	8-iso-15-keto-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-PGA1	8-iso-PGA1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-PGA2	8-iso-PGA2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-PGE1	8-iso-PGE1	2	PUFAs	3	0	3	1	detected_too_rarely_in_both_arms
+PUFAs:8-iso-PGE2	8-iso-PGE2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-PGF1a	8-iso-PGF1a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-PGF2a	8-iso-PGF2a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:8-iso-PGF3a	8-iso-PGF3a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:9,10-DiHOME	9,10-DiHOME	2	PUFAs	3	0	3	0	not_detected
+PUFAs:9,10-EpOME	9,10-EpOME	2	PUFAs	3	0	3	0	not_detected
+PUFAs:9-HETE	9-HETE	2	PUFAs	3	0	3	0	not_detected
+PUFAs:9-HODE	9-HODE	2	PUFAs	3	3	3	3	tested
+PUFAs:9-HOTrE	9-HOTrE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:9-HpODE	9-HpODE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:9-KODE	9-KODE	2	PUFAs	3	3	3	2	tested
+PUFAs:AA	AA	2	PUFAs	3	3	3	3	tested
+PUFAs:AA-d8	AA-d8	2	PUFAs	3	0	3	0	not_detected
+PUFAs:15-KETE	15-KETE	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:PGH2	PGH2	2	PUFAs	3	3	3	3	tested
+PUFAs:Adrenic Acid	Adrenic Acid	2	PUFAs	3	0	3	0	not_detected
+PUFAs:AEA	AEA	2	PUFAs	3	3	3	3	tested
+PUFAs:Azelaoyl-PAF	Azelaoyl-PAF	2	PUFAs	3	0	3	2	detected_too_rarely_in_control
+PUFAs:PGI2	PGI2	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:DHA-d5	DHA-d5	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Dihomo-gamma-Linoleic Acid	Dihomo-gamma-Linoleic Acid	2	PUFAs	3	0	3	0	not_detected
+PUFAs:DHA	DHA	2	PUFAs	3	3	3	3	tested
+PUFAs:Docosapentaenoic Acid	Docosapentaenoic Acid	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Eicosapentaenoic Acid	Eicosapentaenoic Acid	2	PUFAs	3	3	3	3	tested
+PUFAs:EPA-d5	EPA-d5	2	PUFAs	3	0	3	0	not_detected
+PUFAs:iPF2a-IV	iPF2a-IV	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Linoleic Acid	Linoleic Acid	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Linolenic Acid	Linolenic Acid	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LTB4	LTB4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LTB4-EA	LTB4-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LTC4	LTC4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LTC4-d5	LTC4-d5	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LTD4	LTD4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LTE4	LTE4	2	PUFAs	3	0	3	3	detected_too_rarely_in_control
+PUFAs:LTF4	LTF4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:LXA5	LXA5	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Lyso-PAF	Lyso-PAF	2	PUFAs	3	3	3	3	tested
+PUFAs:Maresin1	Maresin1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:N-acetyl-LTE4	N-acetyl-LTE4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:OEA	OEA	2	PUFAs	3	3	3	2	tested
+PUFAs:PAF	PAF	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGA1	PGA1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGA2	PGA2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGB2	PGB2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGD1	PGD1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGD2	PGD2	2	PUFAs	3	3	3	3	tested
+PUFAs:PGD2-EA	PGD2-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGD3	PGD3	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGE1	PGE1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGE1-EA	PGE1-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGE2	PGE2	2	PUFAs	3	3	3	3	tested
+PUFAs:PGE2-d4	PGE2-d4	2	PUFAs	3	3	3	3	tested
+PUFAs:PGE2-EA	PGE2-EA	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGE3	PGE3	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGF2a	PGF2a	2	PUFAs	3	3	3	3	tested
+PUFAs:PGF2a-d4	PGF2a-d4	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGF2a-EA	PGF2a-EA	2	PUFAs	3	3	3	0	detected_too_rarely_in_treatment
+PUFAs:PGF3a	PGF3a	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGJ2	PGJ2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:PGK2	PGK2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Resolvin D1	Resolvin D1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Resolvin D2	Resolvin D2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:Stearidonic Acid	Stearidonic Acid	2	PUFAs	3	3	3	3	tested
+PUFAs:tetranor-PGDM	tetranor-PGDM	2	PUFAs	3	0	3	0	not_detected
+PUFAs:tetranor-PGEM	tetranor-PGEM	2	PUFAs	3	0	3	0	not_detected
+PUFAs:tetranor-PGEM-d6	tetranor-PGEM-d6	2	PUFAs	3	0	3	0	not_detected
+PUFAs:tetranor-PGFM	tetranor-PGFM	2	PUFAs	3	0	3	0	not_detected
+PUFAs:TXB1	TXB1	2	PUFAs	3	0	3	0	not_detected
+PUFAs:TXB2	TXB2	2	PUFAs	3	0	3	0	not_detected
+PUFAs:TXB3	TXB3	2	PUFAs	3	0	3	0	not_detected
+TCA:Alpha-ketoglutaric acid	Alpha-ketoglutaric acid	2	TCA	3	3	3	3	tested
+TCA:Aspartic acid	Aspartic acid	2	TCA	3	3	3	3	tested
+TCA:Citric acid	Citric acid	2	TCA	3	3	3	3	tested
+TCA:Fumaric acid	Fumaric acid	2	TCA	3	3	3	3	tested
+TCA:Glutamic acid	Glutamic acid	2	TCA	3	3	3	3	tested
+TCA:L-proline	L-proline	2	TCA	3	3	3	3	tested
+TCA:L-serine 1 	L-serine 1	2	TCA	3	3	3	3	tested
+TCA:Malic acid	Malic acid	2	TCA	3	3	3	3	tested
+TCA:Succinic acid	Succinic acid	2	TCA	3	3	3	3	tested
+TCA:Threonine	Threonine	2	TCA	3	3	3	3	tested
+TCA:Valine	Valine	2	TCA	3	3	3	3	tested

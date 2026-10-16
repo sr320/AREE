@@ -1,4 +1,4 @@
-version: "0.1.0"
+version: "0.2.0"
 terms:
   - id: gill
     label: Gill
@@ -18,3 +18,12 @@ terms:
     label: Whole animal (juvenile/spat, pooled)
   - id: mixed_tissue
     label: Mixed/pooled tissue
+  # Added 2026-10-11 for mussels and clams (docs/mussel_clam_integration_plan.md).
+  - id: hemocytes
+    label: Hemocytes (circulating cells pelleted from hemolymph)
+  - id: foot
+    label: Foot
+  - id: byssal_gland
+    label: Byssal gland (mussel foot tissue secreting byssal threads)
+  - id: siphon
+    label: Siphon

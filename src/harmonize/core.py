@@ -74,9 +74,11 @@ def _harmonize_comparison(
     if not results_path.exists():
         raise FileNotFoundError(f"results file not found: {results_path}")
 
-    # The study decides which crosswalk it resolves against, so that simulated and
-    # real studies can coexist in one evidence table without cross-contamination.
-    set_crosswalk_path(crosswalk_for_study(bool(study.get("simulated", False))))
+    # The study decides which crosswalk it resolves against (its assembly's, or the
+    # demo crosswalk if simulated), so that simulated and real studies, and real
+    # studies of different species, coexist in one evidence table without
+    # resolving against each other's identifiers.
+    set_crosswalk_path(crosswalk_for_study(study))
 
     evidence_df = harmonizer(
         study, comparison, results_path,
@@ -109,6 +111,12 @@ def _crosswalk_ref() -> dict:
     return ref
 
 
+def _orthogroup_ref() -> dict | None:
+    from mappings.orthogroups import active_run_ref
+
+    return active_run_ref()
+
+
 def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evidence_df: pd.DataFrame, date_generated: str) -> Path:
     MANIFESTS_DIR.mkdir(parents=True, exist_ok=True)
     manifest = {
@@ -126,6 +134,9 @@ def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evide
             # Record the crosswalk that was actually used, with its checksum. A
             # hardcoded path here silently misreported provenance for real studies.
             "identifier_crosswalk": _crosswalk_ref(),
+            # The orthogroup run that orthogroup_id came from (null: none
+            # active, or a simulated study on the demo crosswalk).
+            "orthogroups": None if study.get("simulated") else _orthogroup_ref(),
         },
         "software_versions": {"aree-harmonize": WORKFLOW_VERSION},
         "workflow_version": WORKFLOW_VERSION,
