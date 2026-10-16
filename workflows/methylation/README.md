@@ -176,7 +176,7 @@ which is clearly labeled simulated data.
 ## Standardized output schema
 
 `STANDARDIZE_OUTPUT` emits `<study_id>_<comparison_id>_dmr_standardized.tsv`
-with exactly these tab-separated columns, matching
+with these tab-separated columns (the last three optional), matching
 `data/demo/methylation/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_demo.tsv` and
 what `src/harmonize/methylation.py` expects:
 
@@ -191,6 +191,12 @@ what `src/harmonize/methylation.py` expects:
 | `meth_diff_percent` | signed methylation difference, treatment − control |
 | `qvalue` | multiple-testing-adjusted p-value from methylKit (or as supplied in processed mode) |
 | `direction` | `hyper` \| `hypo`, derived from the sign of `meth_diff_percent` when not directly supplied |
+| `pvalue` | *optional*: unadjusted p-value. Written when the DMR step supplies it (`limma` / `dss` engines); methylKit does not |
+| `se_meth_diff_percent` | *optional*: standard error of `meth_diff_percent`. For `limma`, abs(diff / moderated t), so diff / se reproduces limma's statistic |
+| `analysis_method` | *optional*: e.g. `limma_pooled_tiles`; the harmonizer uses it as the evidence `analysis_method` (default `methylKit`) |
+
+Without `pvalue` and `se_meth_diff_percent`, harmonized methylation
+evidence has no standard error and cannot enter inverse-variance pooling.
 
 The only rows genuinely dropped by `STANDARDIZE_OUTPUT` are ones missing
 `chrom`/`start`/`end` entirely (no genomic coordinates at all) — that count
