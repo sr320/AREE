@@ -130,6 +130,16 @@ filter is the second guard.
   - `dss`: `DSS::DMLtest`, a beta-binomial model with shrunken dispersion
     and a Wald test.
 
+Units (`methylation.dmr_features`), for `limma` and `dss`:
+- `tiles` (default): `tile_size` windows genome-wide.
+- `genes`: one unit per gene, pooling every CpG in the gene body and its
+  `promoter_upstream_bp` promoter (strand-aware). CpGs outside every gene
+  window fall into intergenic tiles. Each gene then gives one record, so
+  harmonized methylation evidence links one-to-one to RNA-seq genes; with
+  `tiles`, many tiles share a gene and meta-analysis refuses to pool them
+  (identifier collision). `ANNOTATE_REGIONS` keeps the gene and context these
+  units arrive with.
+
 Why `limma` is recommended for few units: on synthetic data with 2 vs 2
 families, real family-to-family variation and 20 true regions among 400
 tiles:
