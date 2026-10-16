@@ -140,6 +140,7 @@ jobs:
             any::jsonlite
             any::knitr
             any::rmarkdown
+            bioc::limma
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
@@ -220,6 +221,24 @@ jobs:
           test "$(ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R1.fastq.gz | wc -l)" -eq 4
           ! ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R2.fastq.gz 2>/dev/null
 
+      # A real (not stub) run: normalization, the detection filter, tank
+      # units and limma all execute on the simulated targeted-panel fixture.
+      - name: Run the metabolomics raw DAG on a targeted-panel fixture
+        run: |
+          nextflow run workflows/metabolomics -profile local \
+            --mode raw_reanalysis \
+            --metabolomics.raw_feature_table tests/fixtures/metabolomics_raw/features.tsv \
+            --metabolomics.sample_sheet tests/fixtures/metabolomics_raw/samplesheet.tsv \
+            --metabolomics.study_id CI_METAB \
+            --metabolomics.comparison_id treatment_vs_control \
+            --metabolomics.normalization internal_standard \
+            --metabolomics.detection_limit 0.001 \
+            --metabolomics.replicate_unit tank \
+            --metabolomics.acquisition targeted \
+            --outdir /tmp/aree-smoke/metabolomics-raw \
+            -work-dir /tmp/aree-smoke/work-metabolomics-raw
+          python scripts/check_metabolomics_raw_smoke.py /tmp/aree-smoke/metabolomics-raw
+
       # Two stub runs differing only in comparison params, paired and single
       # end: the second must take FASTQC, fastp, Salmon and viral quant from
       # the -resume cache. Skipped in the Python job, which has no Nextflow.
@@ -258,6 +277,9 @@ jobs:
           python scripts/check_manifest_versions.py \
             /tmp/aree-smoke/rnaseq-raw/rnaseq/manifests/CI_RNASEQ_treatment_vs_control_manifest.json \
             /tmp/aree-smoke/work-rnaseq-raw
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/metabolomics-raw/metabolomics/manifest/CI_METAB_treatment_vs_control_manifest.json \
+            /tmp/aree-smoke/work-metabolomics-raw
 
   schema-validation:
     name: JSON schema sanity

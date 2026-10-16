@@ -45,6 +45,10 @@ def harmonize_metabolomics(
         standardized = r.get("putative_metabolite_name") if confidence != "unresolved" else None
 
         effect_size = float(r["log2FC"]) if pd.notna(r.get("log2FC")) else None
+        standard_error = float(r["lfcSE"]) if pd.notna(r.get("lfcSE")) else None
+        # The workflow's raw mode writes the method per row; a processed table
+        # without the column falls back to the caller's default.
+        method = r.get("analysis_method") if pd.notna(r.get("analysis_method")) else analysis_method
         direction = molecular_direction_from_effect(effect_size)
 
         quality_flags = compute_quality_flags(study, comparison, confidence)
@@ -52,7 +56,7 @@ def harmonize_metabolomics(
             quality_flags = sorted(set(quality_flags) | {"identifier_mapping_uncertain"})
 
         rows.append({
-            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], raw_id, analysis_method),
+            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], raw_id, method),
             "study_id": study["study_id"],
             "comparison_id": comparison["comparison_id"],
             "simulated": bool(study.get("simulated", False)),
@@ -65,7 +69,7 @@ def harmonize_metabolomics(
             "molecular_direction": direction,
             "effect_size": effect_size,
             "effect_size_type": "log2FoldChange",
-            "standard_error": None,
+            "standard_error": standard_error,
             "ci_lower": None,
             "ci_upper": None,
             "p_value": float(r["pvalue"]) if pd.notna(r.get("pvalue")) else None,
@@ -77,7 +81,7 @@ def harmonize_metabolomics(
             "phenotype": comparison["phenotype"],
             "phenotype_direction": comparison["phenotype_direction"],
             "resilience_classification": comparison.get("resilience_classification"),
-            "analysis_method": analysis_method,
+            "analysis_method": method,
             "mapping_confidence": confidence,
             "quality_flags": quality_flags,
             "source_file": source_ref,
