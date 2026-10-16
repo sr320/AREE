@@ -140,7 +140,14 @@ jobs:
             any::jsonlite
             any::knitr
             any::rmarkdown
-            bioc::limma
+
+      # Not through setup-r-dependencies: pak cannot solve bioc::limma there
+      # (limma suggests vsn, which imports limma). Hard dependencies only.
+      - name: Install limma
+        run: |
+          Rscript -e 'install.packages("BiocManager", repos = "https://cloud.r-project.org")' \
+                  -e 'BiocManager::install("limma", update = FALSE, ask = FALSE, dependencies = c("Depends", "Imports", "LinkingTo"))' \
+                  -e 'stopifnot(requireNamespace("limma", quietly = TRUE)); cat("limma", as.character(packageVersion("limma")), "\n")'
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
