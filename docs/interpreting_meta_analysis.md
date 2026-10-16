@@ -192,9 +192,15 @@ How to read a row:
 - `adjusted_p_value` is Benjamini-Hochberg within each phenotype, feature type
   and origin family of orthogroup-level tests.
 
-As of 2026-10-14, the only cross-species rows come from the demo: oyster and
-mussel larval studies sharing demo orthogroups, none past the gate. Real
-cross-species rows need real evidence from a second species on `main`.
+The first real cross-species rows came on 2026-10-16, once the first real
+clam study reached `main`: oyster and Manila clam thermal-tolerance evidence
+pools through 5,681 single-copy orthogroups (4,890 multi-copy orthogroups set
+aside). None is past the gate, because the clam has one study. The demo adds
+oyster and mussel larval rows sharing demo orthogroups, also below the gate.
+
+`aree build-cross-species-cards` tiers these rows and writes a card for each
+one that shows every species side by side; see
+[interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates).
 
 ## Related documentation
 

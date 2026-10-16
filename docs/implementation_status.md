@@ -76,8 +76,11 @@ worth less than one that says what it got wrong.
 - Cross-species pooling. Orthogroups exist (OrthoFinder run
   `orthofinder3.1.5_2026-10-13`, attached to evidence at harmonization) and
   orthogroup-level meta-analysis exists (`aree meta-analyze --level
-  orthogroup`), but cross-species candidates, their evidence cards and the
-  dashboard gate are not built; see WP6 in mussel_clam_integration_plan.md.
+  orthogroup`), as do cross-species candidates and their evidence cards
+  (`aree build-cross-species-cards`). On real data the oyster and the first
+  Manila clam study pool through 5,681 single-copy orthogroups, none past the
+  replication gate yet (one clam study). The dashboard gate is not built; see
+  WP6 in mussel_clam_integration_plan.md.
 - Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
   cross-references to NCBI GeneID — most likely by mapping RefSeq protein
   accessions through the NCBI annotation rather than relying on UniProt xrefs.
