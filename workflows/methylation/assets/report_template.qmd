@@ -108,10 +108,22 @@ n_no_gene <- sum(is.na(dmr$gene_id) | trimws(as.character(dmr$gene_id)) == "")
 cat(n_no_gene, "of", nrow(dmr), "regions have no gene_id (kept as intergenic/unresolved).\n")
 ```
 
-## Full standardized region table
+## Standardized region table
 
-```{r full-table}
-knitr::kable(dmr)
+```{r full-table, results='asis'}
+# A whole-genome tile table (319,088 rows for CIBNOR2021_HEAT_RRSS) embedded
+# in a self-contained HTML page exhausts Quarto's 8 GB JavaScript heap, so
+# large tables are cut to the regions with the smallest q-values. The full
+# table is the standardized TSV in the run outputs.
+max_rows <- 500
+if (nrow(dmr) > max_rows) {
+    cat(sprintf("Showing the %d regions with the smallest q-values of %s. The full table is `%s`.\n\n",
+                max_rows, format(nrow(dmr), big.mark = ","), basename(params$standardized_table)))
+    shown <- head(dmr[order(dmr$qvalue), , drop = FALSE], max_rows)
+} else {
+    shown <- dmr
+}
+print(knitr::kable(shown, row.names = FALSE))
 ```
 
 ## Provenance
