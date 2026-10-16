@@ -202,11 +202,17 @@ candidateTable(data.candidates.top_real, {showPhenotype: !topPhen})
     .filter(p => !p.simulated && p.feature_type === "gene" && p.max_k >= 2 && byPhen[p.phenotype]?.length)
     .sort((a, b) => b.studies.length - a.studies.length || a.phenotype.localeCompare(b.phenotype));
   if (!pools.length) return html`<p>No cross-study pool has ranked candidates yet.</p>`;
-  return html`${pools.map(p => html`
+  // A pool whose list is exactly the head of the overall table gets a pointer, not a repeat.
+  const key = (r) => `${r.phenotype}|${r.feature_id_standardized}`;
+  const overallHead = (rows) => rows.every((r, i) => key(r) === key(data.candidates.top_real[i] ?? {}));
+  return html`${pools.map(p => {
+    const rows = byPhen[p.phenotype];
+    return html`
     <h4>${phen(p.phenotype)}</h4>
-    <p class="dash-meta">${p.studies.length} studies (${p.studies.join(", ")}); top ${byPhen[p.phenotype].length}
-      by tier, then score.</p>
-    ${candidateTable(byPhen[p.phenotype], {maxRows: byPhen[p.phenotype].length})}`)}`;
+    <p class="dash-meta">${p.studies.length} studies (${p.studies.join(", ")}); top ${rows.length}
+      by tier, then score${overallHead(rows) ? `: the same as the first ${rows.length} rows of the overall table above.` : "."}</p>
+    ${overallHead(rows) ? "" : candidateTable(rows, {maxRows: rows.length})}`;
+  })}`;
 }
 ```
 
