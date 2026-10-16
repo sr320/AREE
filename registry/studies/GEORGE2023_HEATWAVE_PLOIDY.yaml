@@ -55,7 +55,7 @@ data_availability:
 # - Agrees with the authors: of their published within-ploidy DEG lists
 #   (DEG_lists/*-sig-genes-apeglm-pval-only.csv, padj < 0.05, matched by
 #   GeneID), 88.4% (diploid 30 C), 96.4% (triploid 30 C), 96.9% (diploid
-#   30 C + 44 C) and 97.2% (triploid 30 C + 44 C) change in the same direction
+#   30 C + 44 C) and 97.3% (triploid 30 C + 44 C) change in the same direction
 #   here, and 99.3-99.8% of those also significant here.
 # - Warnings: Salmon mapping to the annotated transcriptome is 20.8-50.1%
 #   (median 38.4%), normal for 3' tags (UTR reads past annotated ends) but low
@@ -256,20 +256,30 @@ provenance:
     a 16 GB / 8-core Mac, work dir on an HFS+ external drive, with
     --single_end --tag_seq): all 72 FASTQ verified against ENA MD5s (18 needed
     re-download); first comparison 222/222 tasks, the other three reuse its
-    Salmon quantifications (-resume). DE at padj < 0.05: diploid 30 C 3,081
-    of 25,329 genes; triploid 30 C 2,254 of 24,898; diploid 30 C + 44 C 1,688
-    of 25,058; triploid 30 C + 44 C 1,614 of 24,956. Fold changes correlate
+    Salmon quantifications (-resume). Fold changes correlate
     r = 0.24 (30 C) and 0.22 (30 C + 44 C) between ploidies across all genes,
-    the ploidy-specific response the paper reports. Harmonized 2026-10-11:
-    100,241 evidence records, identifier mapping 100% exact (quantified
-    against the crosswalk's own annotation). A first attempt at the three
+    the ploidy-specific response the paper reports. A first attempt at the three
     non-primary comparisons was discarded unharmonized: the config then set
     params.rnaseq.comparison_id, which overrides --comparison_id, so all four
     runs wrote under the primary's name; the manifest's recorded arms showed
-    it. Fixed by leaving rnaseq.comparison_id null. The workflow manifest's
-    software_versions block reports container pins, not the Homebrew tools
-    this native run used (Salmon 2.3.4, fastp 1.3.6, MultiQC 1.9); see
-    process_versions.yml.
+    it. Fixed by leaving rnaseq.comparison_id null.
+    RERUN ON MAIN, 2026-10-15. The 2026-10-11 run used this branch's own
+    single-end code, in which fastp auto-detected the single-end adapter. main
+    then took a different single-end implementation (#25) that trims an
+    explicit adapter (--se_adapter, default Illumina TruSeq read 1), so the
+    committed results could not be reproduced from main. All four comparisons
+    were rerun on main (Nextflow 26.04.7, native; FastQC and the Salmon index
+    reused from cache, fastp, Salmon quant and DESeq2 rerun) and the committed
+    tables, manifests and reports replaced. The change is negligible: per
+    library a few reads differ (e.g. SRR22817776: 2 of 1.67 M mapped reads, 91
+    of ~60,000 transcripts); fold changes correlate r = 0.998-0.999 with the
+    first run; and DE counts move by 2-8 genes. DE at padj < 0.05 now: diploid
+    30 C 3,076 of 25,332 genes; triploid 30 C 2,258 of 24,898; diploid 30 C +
+    44 C 1,696 of 25,062; triploid 30 C + 44 C 1,621 of 24,953. Replicate
+    dispersion is unchanged. Harmonized 2026-10-15: 100,245 evidence records,
+    identifier mapping 100% exact. The manifests now record se_adapter and the
+    tools that actually ran (Salmon 2.3.4, fastp 1.3.6, MultiQC 1.9; #19), so
+    the separate process_versions.yml file is removed.
   source_links:
     - "https://doi.org/10.1111/gcb.16880"
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA913164"

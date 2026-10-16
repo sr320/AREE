@@ -7,7 +7,7 @@
   "input_files": [
     {
       "name": "GEORGE2023_HEATWAVE_PLOIDY_triploid_30c_vs_control_20c_dge_standardized.tsv",
-      "sha256": "ffc24a68108ddce31f0dd7dbfcaedab076b13e2371920765cceda94eaabf1d24"
+      "sha256": "36715d13acd638ccc65a1a79ec1bf5e52977d2a8078677a4d419ebacb08d7097"
     }
   ],
   "parameters": {
@@ -32,27 +32,81 @@
       "triploid_single_stressor"
     ],
     "replicate_unit": null,
+    "covariates": [],
     "single_end": true,
+    "se_adapter": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
     "tag_seq": true,
-    "viral_reference": null
+    "viral_reference": null,
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": true,
+    "length_model": "none: counts without length offsets (tag_seq)",
+    "exclude_genes": null,
+    "n_libraries_or_units": 21,
+    "residual_df": 19
   },
   "software_versions": {
-    "fastqc": "0.12.1",
-    "fastp": "0.23.4",
-    "salmon": "1.10.3",
-    "star": "2.7.11b",
-    "multiqc": "1.21",
-    "bioconductor_docker": "RELEASE_3_18",
-    "deseq2": "1.42.0",
-    "tximport": "1.30.0",
-    "quarto": "1.5.57",
-    "python": "3.11"
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.42.1",
+      "bioconductor-tximport": "1.30.0",
+      "r-base": "4.3.2"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.9"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6"
+    }
   },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
   "reference": {
     "genome_assembly": "GCF_963853765.1",
-    "annotation_version": "GCF_963853765.1-RS_2024_06"
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386"
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "170cae75beb05c1afd9b7b3dbed4bdeb4225c16f9aab757ccc00c2b449092d18"
+      }
+    ],
+    "bundle": null
   },
-  "workflow_start": "2026-10-11T08:46:01.410039-07:00",
+  "workflow_start": "2026-10-15T07:29:37.905960-07:00",
   "qc_metrics": {
     "mean_reads_per_sample": null,
     "mean_mapping_rate_percent": null,
@@ -61,6 +115,7 @@
   },
   "viral_load": null,
   "warnings": [
-    "samples_excluded_by_curation: D54, N56, X44, R53, M43, N54, X42, T62 (see the study registry for the reason)"
+    "samples_excluded_by_curation: D54, N56, X44, R53, M43, N54, X42, T62 (see the study registry for the reason)",
+    "reference_bundle_provenance_missing: no reference_provenance.json beside the reference files; fetch them with `aree fetch-reference` to record where they came from"
   ]
 }

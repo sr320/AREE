@@ -167,3 +167,13 @@ def test_standardized_tables_carry_standard_errors(study):
         assert len(rows) > 20000
         assert all(r["lfcSE"] not in ("", "NA") for r in rows[:1000])
         assert sum(r["pvalue"] not in ("", "NA") for r in rows) > 0.95 * len(rows)
+
+
+def test_outputs_come_from_mains_single_end_path(study):
+    """The committed results must be reproducible from main: main's
+    single-end fastp trims an explicit adapter, recorded in each manifest."""
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        params = json.loads((STUDY_DIR / f"GEORGE2023_HEATWAVE_PLOIDY_{cid}_workflow_manifest.json").read_text())["parameters"]
+        assert params["se_adapter"] == "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+    assert not (STUDY_DIR / "process_versions.yml").exists()
