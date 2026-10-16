@@ -195,10 +195,14 @@ process DMR_POOLED_TILES {
         tt <- topTable(fit, coef = 2, number = Inf, sort.by = "none")
         df_prior <- fit\$df.prior
         diff <- rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE])
-        # treatment minus control, as for methylKit's meth.diff. diff.se is the
-        # SE on the methylation-difference scale implied by limma's moderated
-        # t, so that diff / se reproduces the test statistic when pooled.
-        res <- data.table(diff = diff, diff.se = ifelse(tt\$t != 0, abs(diff / tt\$t), NA_real_),
+        # treatment minus control, as for methylKit's meth.diff. diff.se is
+        # chosen so that a normal (Wald) test of diff / se - which is what
+        # inverse-variance meta-analysis applies - reproduces limma's own
+        # p-value. Using |diff / t| instead would drop limma's small-sample df:
+        # at 2 vs 2 units (df ~4), a moderated t of 10 is p ~3e-4 but a z of 10
+        # is p ~1e-23 (CIBNOR2021_HEAT_RRSS, first rebuild).
+        zq <- qnorm(1 - tt\$P.Value / 2)
+        res <- data.table(diff = diff, diff.se = ifelse(zq > 0, abs(diff) / zq, NA_real_),
                           pval = tt\$P.Value, fdr = tt\$adj.P.Val)
     } else {
         suppressPackageStartupMessages({ library(DSS); library(bsseq) })
