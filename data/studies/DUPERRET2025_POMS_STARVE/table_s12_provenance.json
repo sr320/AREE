@@ -1,0 +1,66 @@
+{
+  "study_id": "DUPERRET2025_POMS_STARVE",
+  "date_generated": "2026-10-16",
+  "converter": "data/studies/DUPERRET2025_POMS_STARVE/build_feature_table.py",
+  "source": {
+    "description": "Table S12. Raw metabolomic data: General Metabolites, Nucleotides, PUFAs and Krebs cycle (peak areas)",
+    "file": "mmc13.xlsx",
+    "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12803857/supplementaryFiles",
+    "article": "https://doi.org/10.1016/j.isci.2025.114333 (PMC12803857)",
+    "license": "CC BY-NC-ND 4.0: not redistributed; fetched and checksum-verified by this script",
+    "sha256": "451eb13e2da9db56ac984ee432632af2ced6ef9fc483183c62ba38c7c7f9c61d"
+  },
+  "outputs_sha256": {
+    "DUPERRET2025_POMS_STARVE_features.tsv": "50d484845bb175015205ff70cb5c488a628ee15efa249a2c3f6d6351f2dd2850",
+    "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_samplesheet.tsv": "54c3d1973e47f1915ada7a64874eb83d98dc8aca944f89f102f246596736c52c"
+  },
+  "n_samples": 48,
+  "n_features": 320,
+  "n_internal_standards": 10,
+  "internal_standards": [
+    "GM:2-Morpholinoethansulfonic Acid",
+    "NUCs:MES",
+    "PUFAs:12-HETE-d8",
+    "PUFAs:6-keto-PGF1a-d4",
+    "PUFAs:LTB4 d4",
+    "PUFAs:OEA-d4",
+    "PUFAs:PAF-d4",
+    "PUFAs:PGD2-d4",
+    "PUFAs:TXB2-d4",
+    "TCA:d27-Myristic acid"
+  ],
+  "n_metabolites_by_platform": {
+    "GM": 103,
+    "NUCs": 20,
+    "PUFAs": 176,
+    "TCA": 11
+  },
+  "n_metabolite_values_at_or_below_0.001": 8519,
+  "n_metabolite_values": 14880,
+  "blank_cells": {
+    "PUFAs:TXB3": [
+      "F11N-3-12-1",
+      "F11N-3-12-2",
+      "F11N-3-12-3"
+    ]
+  },
+  "annotation_confidence_level": 2,
+  "comparison": {
+    "comparison_id": "starved_vs_fed_0hpc",
+    "samples": [
+      "F14R-5-0-1",
+      "F14R-5-0-2",
+      "F14R-5-0-3",
+      "F11N-5-0-1",
+      "F11N-5-0-2",
+      "F11N-5-0-3",
+      "F14R-3-0-1",
+      "F14R-3-0-2",
+      "F14R-3-0-3",
+      "F11N-3-0-1",
+      "F11N-3-0-2",
+      "F11N-3-0-3"
+    ],
+    "replicate_unit": "tank (= <diet>_t<replicate>; inferred, as in DUPERRET2025_STARVE_RNASEQ)"
+  }
+}

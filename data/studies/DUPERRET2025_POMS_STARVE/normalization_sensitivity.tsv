@@ -1,0 +1,123 @@
+feature_id	platform	putative_metabolite_name	log2FC_internal_standard	padj_internal_standard	log2FC_median	padj_median	same_direction	significant_under_both
+GM:2-Aminobutyric acid	GM	2-Aminobutyric acid	-0.1695	0.6656	-1.2974	0.002359	True	False
+GM:3-Hydroxy-D_L-Kynurenine	GM	3-Hydroxy-D_L-Kynurenine	0.8087	0.3178	-0.6937	0.05426	False	False
+GM:4-Aminobutyric acid	GM	4-Aminobutyric acid	3.2121	0.0002672	2.0842	0.00159	True	True
+GM:4-Hydroxyproline	GM	4-Hydroxyproline	-0.2872	0.4767	-1.4151	0.003795	True	False
+GM:Acetylcarnitine	GM	Acetylcarnitine	1.5724	0.007338	0.4445	0.2125	True	False
+GM:Acetylcholine	GM	Acetylcholine	1.142	0.03282	0.014	0.9581	True	False
+GM:Adenine	GM	Adenine	2.9409	0.003061	1.5263	0.0006788	True	True
+GM:Adenosine	GM	Adenosine	3.9301	0.0006878	2.8022	5.911e-05	True	True
+GM:Adenosine 3',5'-cyclic monophosphate	GM	Adenosine 3',5'-cyclic monophosphate	2.2532	0.001305	1.1253	0.002838	True	True
+GM:Adenosine monophosphate	GM	Adenosine monophosphate	1.0761	0.1939	-0.0518	0.9053	False	False
+GM:Adenylsuccinic acid	GM	Adenylsuccinic acid	3.2524	0.002356	2.1245	0.0009323	True	True
+GM:Alanine	GM	Alanine	-0.5879	0.2037	-1.7159	0.0004136	True	False
+GM:Anthranilic Acid	GM	Anthranilic Acid	0.2752	0.7355	-1.1578	0.002503	False	False
+GM:Arginine	GM	Arginine	-0.3433	0.4577	-1.4713	0.0006788	True	False
+GM:Argininosuccinic acid	GM	Argininosuccinic acid	-0.0057	0.9867	-1.1336	0.02855	True	False
+GM:Asparagine	GM	Asparagine	-1.0305	0.03612	-2.1584	0.0002201	True	True
+GM:Aspartic acid	GM	Aspartic acid	0.7605	0.04802	-0.3674	0.3233	False	False
+GM:Asymmetric dimethylarginine	GM	Asymmetric dimethylarginine	0.7212	0.236	-0.4068	0.1687	False	False
+GM:Carnitine	GM	Carnitine	1.2417	0.01346	0.1137	0.7184	True	False
+GM:Choline	GM	Choline	0.7579	0.1405	-0.37	0.1829	False	False
+GM:Citicoline	GM	Citicoline	0.0101	0.9867	-1.1178	0.001663	False	False
+GM:Citric Acid	GM	Citric Acid	1.3876	0.05346	0.2597	0.6697	True	False
+GM:Creatine	GM	Creatine	1.979	0.0292	0.7022	0.2686	True	False
+GM:Creatinine	GM	Creatinine	2.6473	0.02328	1.5193	0.04486	True	True
+GM:Cystathionine	GM	Cystathionine	-1.1807	0.01351	-2.3086	0.003081	True	True
+GM:Cysteine	GM	Cysteine	1.1841	0.04625	0.0561	0.8308	True	False
+GM:Cystine	GM	Cystine	-0.693	0.1881	-1.821	0.0001832	True	False
+GM:Cytidine	GM	Cytidine	1.3368	0.01573	0.2088	0.4348	True	False
+GM:Cytidine monophosphate	GM	Cytidine monophosphate	-0.175	0.5743	-1.303	0.007266	True	False
+GM:Dopamine	GM	Dopamine	-0.2097	0.5743	-1.3377	0.006122	True	False
+GM:Fumaric Acid	GM	Fumaric Acid	-2.8054	0.0005171	-3.6466	0.0002068	True	True
+GM:Glutamic acid	GM	Glutamic acid	-3.4858	5.148e-05	-4.6138	5.47e-06	True	True
+GM:Glutamine	GM	Glutamine	-1.9414	0.003983	-3.0693	1.224e-05	True	True
+GM:Glutathione oxidazed	GM	Glutathione oxidazed	0.0384	0.9523	-1.0896	0.006015	False	False
+GM:Glutathione reduced	GM	Glutathione reduced	0.2793	0.4915	-0.8486	0.01586	False	False
+GM:Glycine	GM	Glycine	-0.0161	0.9735	-1.144	0.006065	True	False
+GM:Guanosine	GM	Guanosine	2.565	0.01529	1.4371	0.006752	True	True
+GM:Guanosine monophosphate	GM	Guanosine monophosphate	2.2082	0.02031	1.0803	0.01475	True	True
+GM:Histamine	GM	Histamine	3.882	0.001027	2.7541	0.0007512	True	True
+GM:Histidine	GM	Histidine	-1.7576	0.006077	-2.8856	5.461e-05	True	True
+GM:Hypoxanthine	GM	Hypoxanthine	1.7184	0.02251	0.5905	0.05026	True	False
+GM:Inosine	GM	Inosine	2.2857	0.02026	1.1577	0.0185	True	True
+GM:Isoleucine	GM	Isoleucine	1.0966	0.08408	-0.0314	0.9175	False	False
+GM:Kynurenine	GM	Kynurenine	1.0382	0.1749	-0.0898	0.8296	False	False
+GM:Lactic Acid	GM	Lactic Acid	0.9457	0.1205	-0.1822	0.5482	False	False
+GM:Leucine	GM	Leucine	0.7821	0.179	-0.3458	0.2125	False	False
+GM:Lysine	GM	Lysine	0.3222	0.4779	-0.8057	0.009134	False	False
+GM:Malic Acid	GM	Malic Acid	-0.1755	0.7257	-1.3034	0.06958	True	False
+GM:Methionine sulfoxide	GM	Methionine sulfoxide	-5.2431	4.681e-05	-6.371	3.484e-07	True	True
+GM:NAD	GM	NAD	1.8088	0.004371	0.6808	0.03828	True	True
+GM:Niacinamide	GM	Niacinamide	2.376	0.0007752	1.2481	0.002854	True	True
+GM:Nicotinic acid	GM	Nicotinic acid	1.3824	0.01487	0.2544	0.4505	True	False
+GM:Ophthalmic acid	GM	Ophthalmic acid	0.6798	0.2046	-0.4481	0.1207	False	False
+GM:Ornitine	GM	Ornitine	-0.7257	0.08408	-1.8537	0.0006788	True	False
+GM:Pantothenic acid	GM	Pantothenic acid	1.3579	0.05939	0.23	0.4348	True	False
+GM:Phenylalanine	GM	Phenylalanine	0.0878	0.9062	-1.0401	0.008355	False	False
+GM:Proline	GM	Proline	0.9764	0.04725	-0.1515	0.7058	False	False
+GM:S-Adenosylhomocysteine	GM	S-Adenosylhomocysteine	2.8535	0.008497	1.7256	0.001204	True	True
+GM:Serine	GM	Serine	-0.4318	0.2624	-1.5597	0.002533	True	False
+GM:Serotonin	GM	Serotonin	0.1186	0.7428	-1.0093	0.01079	False	False
+GM:Succinic acid	GM	Succinic acid	1.0978	0.2774	-0.0302	0.9581	False	False
+GM:Symmetric dimethylarginine	GM	Symmetric dimethylarginine	0.6611	0.2794	-0.4669	0.1186	False	False
+GM:Taurine	GM	Taurine	0.8794	0.02777	-0.2485	0.4618	False	False
+GM:Threonine	GM	Threonine	0.3334	0.4172	-0.7946	0.03049	False	False
+GM:Thymidine	GM	Thymidine	2.6593	0.01892	1.2446	0.03156	True	True
+GM:Tryptophan	GM	Tryptophan	-0.7199	0.2953	-1.8479	0.0005286	True	False
+GM:Tyrosine	GM	Tyrosine	1.1329	0.06704	0.005	0.9826	True	False
+GM:Uracil	GM	Uracil	0.478	0.436	-0.6499	0.1337	False	False
+GM:Uric acid	GM	Uric acid	1.9034	0.002356	0.7754	0.02834	True	True
+GM:Uridine	GM	Uridine	1.7107	0.01529	0.5827	0.05738	True	False
+GM:Valine	GM	Valine	0.4576	0.3891	-0.6704	0.02963	False	False
+NUCs:ADP	NUCs	ADP	-0.1444	0.6357	0.7103	0.02827	False	False
+NUCs:AMP	NUCs	AMP	-0.2351	0.6213	0.6196	0.05128	False	False
+NUCs:ATP	NUCs	ATP	-0.2339	0.6519	0.6208	0.3249	False	False
+NUCs:GDP	NUCs	GDP	2.5207	0.1533	3.3754	0.03602	True	False
+NUCs:GMP	NUCs	GMP	3.2063	0.002182	4.061	8.838e-05	True	True
+NUCs:GTP	NUCs	GTP	-0.8407	0.02251	-0.1504	0.7518	True	False
+NUCs:TMP	NUCs	TMP	-1.5941	0.02026	-0.7394	0.04483	True	True
+NUCs:UDP	NUCs	UDP	-1.0092	0.01178	-0.1545	0.5995	True	False
+NUCs:UMP	NUCs	UMP	-1.2041	0.09407	-0.3494	0.3692	True	False
+PUFAs:10-HDoHE	PUFAs	10-HDoHE	5.0126	1.335e-05	-2.2131	0.0002535	False	True
+PUFAs:11-HETE	PUFAs	11-HETE	6.1416	6.129e-06	-1.0842	0.009791	False	True
+PUFAs:12-HEPE	PUFAs	12-HEPE	6.6529	5.485e-06	-0.5729	0.05474	False	False
+PUFAs:12-HETE	PUFAs	12-HETE	6.179	6.129e-06	-1.0467	0.009262	False	True
+PUFAs:12-KETE	PUFAs	12-KETE	6.2555	0.00043	-1.2775	0.03875	False	True
+PUFAs:13-HDoHE	PUFAs	13-HDoHE	5.2333	0.0005135	-2.2078	0.001964	False	True
+PUFAs:13-HODE	PUFAs	13-HODE	7.1661	1.182e-05	-0.0596	0.903	False	False
+PUFAs:13-KODE	PUFAs	13-KODE	3.3531	0.2224	-1.1133	0.01495	False	False
+PUFAs:14-HDoHE	PUFAs	14-HDoHE	5.2134	2.572e-05	-2.0123	0.0005286	False	True
+PUFAs:15-HEPE	PUFAs	15-HEPE	4.3843	2.944e-05	-2.8414	0.0002372	False	True
+PUFAs:15-HETE	PUFAs	15-HETE	5.8035	5.485e-06	-1.4222	0.0009077	False	True
+PUFAs:16-HDoHE	PUFAs	16-HDoHE	4.4774	1.102e-05	-2.7483	5.461e-05	False	True
+PUFAs:17,18-EpETE	PUFAs	17,18-EpETE	-2.0962	0.0009696	-0.9524	0.005005	True	True
+PUFAs:18-HEPE	PUFAs	18-HEPE	5.1134	2.944e-05	-2.1124	0.001964	False	True
+PUFAs:20-HDoHE	PUFAs	20-HDoHE	5.2505	1.182e-05	-1.9139	0.001406	False	True
+PUFAs:5-HEPE	PUFAs	5-HEPE	5.7917	2.944e-05	-1.4935	0.004321	False	True
+PUFAs:8-HETE	PUFAs	8-HETE	6.2888	5.485e-06	-0.9369	0.008941	False	True
+PUFAs:9-HODE	PUFAs	9-HODE	6.8299	5.554e-06	-0.3958	0.1829	False	False
+PUFAs:9-KODE	PUFAs	9-KODE	3.3255	0.3456	-1.0463	0.02548	False	False
+PUFAs:AA	PUFAs	AA	10.7169	2.842e-07	3.4912	5.208e-06	True	True
+PUFAs:AEA	PUFAs	AEA	0.3672	0.702	1.4498	0.1475	True	False
+PUFAs:DHA	PUFAs	DHA	10.2676	2.842e-07	3.0419	1.224e-05	True	True
+PUFAs:Eicosapentaenoic Acid	PUFAs	Eicosapentaenoic Acid	9.8009	2.842e-07	2.5751	5.911e-05	True	True
+PUFAs:Lyso-PAF	PUFAs	Lyso-PAF	8.2218	5.485e-06	0.9961	0.03429	True	True
+PUFAs:OEA	PUFAs	OEA	3.8852	0.003061	4.7218	0.0005286	True	True
+PUFAs:PGD2	PUFAs	PGD2	7.8159	2.335e-05	0.5902	0.2873	True	False
+PUFAs:PGE2	PUFAs	PGE2	5.4335	0.1556	1.065	0.1829	True	False
+PUFAs:PGE2-d4	PUFAs	PGE2-d4	3.0832	3.506e-05	-4.1425	4.684e-06	False	True
+PUFAs:PGF2a	PUFAs	PGF2a	2.5656	0.4172	0.9564	0.1006	True	False
+PUFAs:PGH2	PUFAs	PGH2	5.3268	0.1701	0.9583	0.2561	True	False
+PUFAs:Stearidonic Acid	PUFAs	Stearidonic Acid	2.4785	0.0006053	-4.7472	4.684e-06	False	True
+TCA:Alpha-ketoglutaric acid	TCA	Alpha-ketoglutaric acid	1.7892	0.002686	0.8131	0.1475	True	False
+TCA:Aspartic acid	TCA	Aspartic acid	-0.7799	0.2182	-1.756	0.002256	True	False
+TCA:Citric acid	TCA	Citric acid	2.4815	0.01116	1.5053	0.03874	True	True
+TCA:Fumaric acid	TCA	Fumaric acid	1.7962	0.002527	0.8201	0.05309	True	False
+TCA:Glutamic acid	TCA	Glutamic acid	1.2333	0.02262	0.2571	0.491	True	False
+TCA:L-proline	TCA	L-proline	1.3141	0.02026	0.3379	0.4348	True	False
+TCA:L-serine 1 	TCA	L-serine 1	1.1781	0.1092	0.202	0.73	True	False
+TCA:Malic acid	TCA	Malic acid	1.4837	0.09075	0.5076	0.4788	True	False
+TCA:Succinic acid	TCA	Succinic acid	1.0387	0.1556	0.0626	0.9175	True	False
+TCA:Threonine	TCA	Threonine	-0.7918	0.236	-1.768	0.001111	True	False
+TCA:Valine	TCA	Valine	0.8985	0.08408	-0.0777	0.7695	False	False
