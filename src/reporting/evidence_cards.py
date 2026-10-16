@@ -239,12 +239,20 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     if term is not None:
         lines.append(f"- Species: *{term['scientific_name']}* ({term['label']})")
     lines.append(f"- Species taxid: `{candidate['species_taxid']}`")
-    lines.append(
-        "- Ortholog context: none assigned. This card pools evidence from one species "
-        "only; the same feature ID in another species has its own card and is never "
-        "pooled with this one. Cross-species comparison through orthogroups is not "
-        "yet implemented."
-    )
+    orthogroup = candidate.get("orthogroup_id")
+    if isinstance(orthogroup, str) and orthogroup:
+        lines.append(
+            f"- Ortholog context: orthogroup `{orthogroup}`. This card pools evidence from one "
+            "species only; evidence from another species is never pooled with this one. Where "
+            "another species has evidence for the same orthogroup, the cross-species estimate is "
+            "on its own card under `evidence_cards/cross_species/` (`aree build-cross-species-cards`)."
+        )
+    else:
+        lines.append(
+            "- Ortholog context: no orthogroup assigned. This card pools evidence from one species "
+            "only; evidence from another species is never pooled with this one, and this feature "
+            "cannot be compared across species until it is in an orthogroup."
+        )
     simulated = _partition_value(candidate["simulated"]) == "true"
     lines.append(f"- Data origin: `{'simulated' if simulated else 'real'}`")
     lines.append(f"- Mapping confidence across contributing studies: {candidate['mapping_confidences']}")

@@ -209,6 +209,75 @@ BH-adjusted p-values with the family size, and a forest-style table of
 per-study effect estimates with each study's own adjusted p, so a reviewer can
 see exactly which inputs drove the score rather than trusting a single number.
 
+## Cross-species candidates
+
+`aree build-cross-species-cards` tiers the orthogroup-level meta-analysis
+(see [interpreting_meta_analysis.md](interpreting_meta_analysis.md#cross-species-results---level-orthogroup)):
+one row per orthogroup, phenotype and feature type, pooling each species' own
+gene-level estimate. The rule is the same as for single-species candidates:
+**hard gates first, score second.** It writes, under
+`reports/evidence_cards/cross_species/`, a `candidates.tsv` with every row and
+its component breakdown, an `index.json`, and a card for each row whose pooled
+adjusted p, or any one species' gene-level adjusted p, is at or below
+`--max-adjusted-p`.
+
+The five convergence gates, each named in the `gates_failed` column when it
+fails:
+
+| Gate | Passes when |
+|---|---|
+| `replication` | at least two species each have k ≥ 2 studies of their own |
+| `direction` | every species' estimate has the same sign |
+| `significance` | the pooled cross-species BH-adjusted p ≤ 0.05 |
+| `phenotype_relevance` | the weakest evidence class across all species' contributing records is more than exposure-only |
+| `quality` | quality flags across contributing records are within the gene-level limit |
+
+The tiers:
+
+| Tier | Meaning |
+|---|---|
+| `cross_species_convergence` | every gate passes |
+| `cross_species_emerging` | species agree in sign and the pooled estimate is significant, but another gate fails, usually replication |
+| `cross_species_discordant` | species' estimates disagree in sign; shown, never dropped |
+| `cross_species_unsupported` | species agree in sign but the pooled estimate is not significant |
+
+Sign agreement is judged on point estimates, so a near-zero estimate of the
+opposite sign makes a row discordant. Each card prints every species'
+confidence interval so a reader can tell a reversal from noise around zero.
+
+The cross-species score uses its own weights, which sum to 100:
+
+| Component | Weight | What it measures |
+|---|---|---|
+| `per_species_replication_score` | 20 | the smallest per-species study count, saturating at 2 = 0.5 |
+| `n_species_score` | 15 | number of species, saturating at 2 = 0.5 |
+| `direction_consistency_score` | 15 | share of species agreeing with the majority sign |
+| `effect_magnitude_score` | 10 | absolute pooled cross-species effect |
+| `significance_score` | 10 | pooled BH-adjusted p, on the −log10 scale |
+| `phenotype_relevance_score` | 10 | weakest evidence class across all species' records |
+| `orthology_score` | 8 | copy class: `single_copy_all` 1.0, `single_copy` and `demo_crosswalk` 0.9, `multi_copy` 0.3 |
+| `sample_size_score` | 5 | total biological replicates across species |
+| `mapping_confidence_score` | 4 | worst identifier mapping behind any species' estimate |
+| `quality_score` | 3 | quality flags across all contributing records |
+
+Between-species I² is subtracted as a penalty of up to 15 points. The
+smallest per-species study count carries the most weight because a
+cross-species claim is only as strong as its weakest species.
+
+A cross-species card shows each species' gene, original identifiers, studies,
+tissue, life stage, stressor, sample size, effect with 95% CI and gene-level
+adjusted p side by side, then the pooled estimate and between-species
+heterogeneity. It names the orthogroup run, or says the orthogroup is the demo
+crosswalk's illustrative one. It also warns when the species' studies differ
+in stressor, tissue or life stage, because species and study design are then
+confounded. Agreement across species shows an association recurs in
+orthologous genes. It does not show the genes do the same thing in each
+species.
+
+On the demo, oyster and mussel larval studies give five emerging rows, one
+discordant row and two unsupported rows. None converges, because the demo
+mussel has one study per gene.
+
 ## Related documentation
 
 - [interpreting_meta_analysis.md](interpreting_meta_analysis.md)

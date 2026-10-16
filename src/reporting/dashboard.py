@@ -359,7 +359,10 @@ def _pool_summary() -> list[dict]:
     seen = set()
     # A per-phenotype run and the all-phenotypes run describe the same pools;
     # read the specific files first so `seen` credits each pool to one of them.
-    paths = sorted(META_ANALYSIS_DIR.glob("*_meta_analysis.tsv"),
+    # Orthogroup-level (cross-species) results share the suffix but not the
+    # columns; they are summarized separately, not as gene-level pools.
+    paths = sorted((p for p in META_ANALYSIS_DIR.glob("*_meta_analysis.tsv")
+                    if not p.name.endswith("_orthogroup_meta_analysis.tsv")),
                    key=lambda p: (p.name.startswith("all_phenotypes"), p.name))
     for path in paths:
         df = pd.read_csv(path, sep="\t", low_memory=False)

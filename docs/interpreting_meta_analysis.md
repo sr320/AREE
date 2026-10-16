@@ -196,6 +196,10 @@ As of 2026-10-14, the only cross-species rows come from the demo: oyster and
 mussel larval studies sharing demo orthogroups, none past the gate. Real
 cross-species rows need real evidence from a second species on `main`.
 
+`aree build-cross-species-cards` tiers these rows and writes a card for each
+one that shows every species side by side; see
+[interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates).
+
 ## Related documentation
 
 - [interpreting_candidate_scores.md](interpreting_candidate_scores.md)

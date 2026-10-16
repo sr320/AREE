@@ -2,8 +2,8 @@
 
 **Status, 2026-10-13:** WP0 to WP4 are implemented. WP5 has its backlog and a
 first study (TUCCI2025_HEAT_PRIMING, Manila clam, reanalyzed). WP6 has its
-orthogroup run and orthogroup-level meta-analysis; cross-species candidates
-and the dashboard gate are not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
+orthogroup run, orthogroup-level meta-analysis and cross-species candidates
+with their evidence cards; the dashboard gate is not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
 species-by-species and then across species through orthology.
@@ -442,7 +442,7 @@ k ≥ 2 per taxon.
 
 ### WP6. Cross-species orthology and pooling (the new science)
 
-**Status: orthogroups done, 2026-10-13; pooling not started.** What exists:
+**Status: orthogroups done, 2026-10-13; pooling and cross-species candidates done, 2026-10-14; dashboard gate not started.** What exists:
 
 - `aree fetch-reference --proteins` writes one protein per gene (the longest)
   for each species, keyed by NCBI GeneID; all seven reference assemblies have
@@ -478,8 +478,17 @@ from the active run. On the demo, 8 orthogroups pool oyster with mussel
 Building it found that the demo's illustrative orthogroup IDs collide with
 real OrthoFinder IDs, so simulated evidence never consults the run (tested).
 
-Still to build: the cross-species candidate category, evidence cards that
-show both species, and the dashboard gate. The
+**Cross-species candidates and cards: done, 2026-10-14.** `aree
+build-cross-species-cards` tiers each orthogroup row behind five named gates
+(replication, direction, significance, phenotype relevance, quality) into
+`cross_species_convergence`, `cross_species_emerging`,
+`cross_species_discordant` or `cross_species_unsupported`, with a transparent
+weighted score and a between-species I-squared penalty. Each card shows every
+species' estimate side by side, the pooled estimate, the orthogroup run and
+the gates failed. Single-species cards now name their orthogroup. On the
+demo: 5 emerging, 1 discordant, 2 unsupported, none convergent.
+
+Still to build: the dashboard gate. The
 OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only
 mode) and only its `Orthogroups.tsv` is used; hierarchical orthogroups are a
 possible refinement.
