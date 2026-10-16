@@ -151,10 +151,16 @@ process DMR_POOLED_TILES {
         fit <- eBayes(lmFit(mval, X))
         tt <- topTable(fit, coef = 2, number = Inf, sort.by = "none")
         df_prior <- fit\$df.prior
+        diff <- rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE])
         res <- data.table(
             chr  = tiles\$chr, pos = tiles\$start,
             # treatment minus control, as for methylKit's meth.diff
-            diff = rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE]),
+            diff = diff,
+            # SE on the methylation-difference scale implied by limma's
+            # moderated t, so that diff / se reproduces the test statistic
+            # when the effect is pooled across studies.
+            diff.se = ifelse(tt\$t != 0, abs(diff / tt\$t), NA_real_),
+            pval = tt\$P.Value,
             fdr  = tt\$adj.P.Val
         )
     } else {
@@ -172,6 +178,9 @@ process DMR_POOLED_TILES {
         end               = res\$pos + tile_size - 1L,
         meth_diff_percent = round(100 * res\$diff, 3),
         qvalue            = signif(res\$fdr, 4),
+        pvalue            = signif(res\$pval, 4),
+        se_meth_diff_percent = signif(100 * res\$diff.se, 4),
+        analysis_method   = ifelse(dmr_test == "limma", "limma_pooled_tiles", "DSS_pooled_tiles"),
         n_samples         = length(sample_ids),
         n_replicate_units = length(unit_levels),
         passes_significance_filter = !is.na(res\$fdr) & res\$fdr <= qvalue_cut &

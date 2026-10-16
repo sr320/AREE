@@ -40,6 +40,11 @@ process STANDARDIZE_OUTPUT {
         "region_id", "chrom", "start", "end", "gene_id",
         "annotation_context", "meth_diff_percent", "qvalue", "direction",
     ]
+    # Written only when the DMR table supplies them (DMR_POOLED_TILES does;
+    # methylKit does not), so a methylKit run's output is unchanged. Without a
+    # standard error and an unadjusted p-value, a methylation result cannot
+    # be pooled.
+    OPTIONAL_OUT_COLS = ["pvalue", "se_meth_diff_percent", "analysis_method"]
 
     def sniff_delimiter(path):
         with open(path, newline="") as fh:
@@ -92,7 +97,9 @@ process STANDARDIZE_OUTPUT {
         if direction not in ("hyper", "hypo"):
             direction = direction_from_diff(meth_diff)
 
+        extra = {c: r.get(c, "") for c in OPTIONAL_OUT_COLS if c in in_cols}
         out_rows.append({
+            **extra,
             "region_id": r.get("region_id", ""),
             "chrom": chrom,
             "start": start,
@@ -105,7 +112,8 @@ process STANDARDIZE_OUTPUT {
         })
 
     with open(out_path, "w", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=REQUIRED_OUT_COLS, delimiter="\\t")
+        out_cols = REQUIRED_OUT_COLS + [c for c in OPTIONAL_OUT_COLS if c in in_cols]
+        writer = csv.DictWriter(fh, fieldnames=out_cols, delimiter="\\t")
         writer.writeheader()
         writer.writerows(out_rows)
 
