@@ -1,0 +1,43 @@
+{
+  "study_id": "TUCCI2025_HEAT_PRIMING",
+  "bioproject": "PRJNA1132140",
+  "date_generated": "2026-10-13",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1132140&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "Treatment",
+    "Thermal stress"
+  ],
+  "n_runs": 40,
+  "n_samples": 40,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "Na\u00efve_Heatwave": 10,
+    "Na\u00efve_No_Heatwave": 10,
+    "Primed_Heatwave": 10,
+    "Primed_No_Heatwave": 10
+  },
+  "min_group_size": 10,
+  "total_fastq_bytes": 13799357777,
+  "outputs": {
+    "data/studies/TUCCI2025_HEAT_PRIMING/samplesheet.tsv": "5345cc441b47ff78697a496bd125685e1af95a491fcedf1a9ac931084ca927ae",
+    "data/studies/TUCCI2025_HEAT_PRIMING/fastq_manifest.tsv": "a1e2c0c9c767294567f3402d4da8996282ed85ecfeee29c0413a38c8f7fe474c"
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "AMPLICON": 40,
+      "RNA-Seq": 40
+    }
+  }
+}

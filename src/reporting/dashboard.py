@@ -45,6 +45,9 @@ REPO_URL = "https://github.com/sr320/AREE"
 
 SIGNIFICANCE_THRESHOLD = 0.05
 TOP_N_CANDIDATES = 15
+# The overall top list is dominated by whichever pool has the most studies, so
+# each phenotype also gets its own short list.
+TOP_N_PER_PHENOTYPE = 5
 
 
 # --------------------------------------------------------------------------- #
@@ -266,7 +269,7 @@ def _gene_annotations(gene_ids: list[str]) -> dict[str, dict]:
 def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) -> dict:
     if not CANDIDATES_TABLE.exists():
         return {"by_tier": [], "by_evidence_class": [], "top_real": [], "top_simulated": [],
-                "n_total": 0}
+                "top_real_by_phenotype": {}, "top_simulated_by_phenotype": {}, "n_total": 0}
     df = pd.read_csv(CANDIDATES_TABLE, sep="\t", low_memory=False)
     df["simulated"] = df["simulated"].map(_bool)
     by_tier = [
@@ -290,8 +293,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
             "n_supporting_layers", "mapping_confidences", "simulated", "card_file"]
     cols = [c for c in cols if c in ranked.columns]
 
-    def _top(frame: pd.DataFrame) -> list[dict]:
-        rows = frame.head(TOP_N_CANDIDATES)[cols].to_dict(orient="records")
+    def _top(frame: pd.DataFrame, n: int = TOP_N_CANDIDATES) -> list[dict]:
+        rows = frame.head(n)[cols].to_dict(orient="records")
         for r in rows:
             r["feature_id_standardized"] = str(r["feature_id_standardized"])
             r["phenotype_label"] = phenotype_labels.get(r.get("phenotype"), r.get("phenotype"))
@@ -302,11 +305,18 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
 
     top_real = _top(ranked[~ranked["simulated"]])
     top_sim = _top(ranked[ranked["simulated"]])
-    for r in top_real + top_sim:
+    # Ranked order is kept within each phenotype, so head() is that phenotype's top.
+    by_phen_real = {phen: _top(grp, TOP_N_PER_PHENOTYPE)
+                    for phen, grp in ranked[~ranked["simulated"]].groupby("phenotype", sort=True)}
+    by_phen_sim = {phen: _top(grp, TOP_N_PER_PHENOTYPE)
+                   for phen, grp in ranked[ranked["simulated"]].groupby("phenotype", sort=True)}
+    all_real = top_real + [r for rows in by_phen_real.values() for r in rows]
+    all_rows = all_real + top_sim + [r for rows in by_phen_sim.values() for r in rows]
+    for r in all_rows:
         r["card_page"] = _publish_card(r.pop("card_file", None), cards_dir)
-    ann = _gene_annotations([r["feature_id_standardized"] for r in top_real
+    ann = _gene_annotations([r["feature_id_standardized"] for r in all_real
                              if r.get("feature_type") == "gene"])
-    for r in top_real:
+    for r in all_real:
         r.update(ann.get(r["feature_id_standardized"], {}))
 
     return {
@@ -314,6 +324,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
         "by_evidence_class": by_class,
         "top_real": top_real,
         "top_simulated": top_sim,
+        "top_real_by_phenotype": by_phen_real,
+        "top_simulated_by_phenotype": by_phen_sim,
         "n_total": int(len(df)),
         "n_real": int((~df["simulated"]).sum()),
         "n_simulated": int(df["simulated"].sum()),
