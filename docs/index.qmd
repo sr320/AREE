@@ -47,8 +47,12 @@ missing = Object.entries(data.artifacts_present).filter(([, v]) => !v).map(([n])
 ```
 
 ```{ojs}
-html`<p class="dash-meta">Generated ${data.commit.date} from commit
-  <a href="${data.repo_url}/commit/${data.commit.sha}"><code>${data.commit.short}</code></a>.
+builtDate = data.generated_at?.slice(0, 10) ?? data.commit.date
+```
+
+```{ojs}
+html`<p class="dash-meta">Generated ${builtDate} (UTC) from commit
+  <a href="${data.repo_url}/commit/${data.commit.sha}"><code>${data.commit.short}</code></a>${data.commit.date && data.commit.date !== builtDate ? ` (committed ${data.commit.date})` : ""}.
   AREE turns public oyster omics datasets into comparable resilience-biomarker evidence
   (<a href="about.html">about the resource</a>). Every number is computed from the repository and the pipeline's outputs.
   Simulated demo studies are excluded from the numbers and tables below unless marked.</p>
