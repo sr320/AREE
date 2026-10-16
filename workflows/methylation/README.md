@@ -202,7 +202,7 @@ what `src/harmonize/methylation.py` expects:
 | `qvalue` | multiple-testing-adjusted p-value from methylKit (or as supplied in processed mode) |
 | `direction` | `hyper` \| `hypo`, derived from the sign of `meth_diff_percent` when not directly supplied |
 | `pvalue` | *optional*: unadjusted p-value. Written when the DMR step supplies it (`limma` / `dss` engines); methylKit does not |
-| `se_meth_diff_percent` | *optional*: standard error of `meth_diff_percent`. For `limma`, abs(diff / moderated t), so diff / se reproduces limma's statistic |
+| `se_meth_diff_percent` | *optional*: standard error of `meth_diff_percent`. For `limma`, abs(diff) / qnorm(1 - p/2), so a normal (Wald) test, which is what meta-analysis applies, reproduces limma's own p-value and keeps its small-sample df. Using abs(diff / t) instead gave p ~1e-23 where limma gave 3e-4 at 2 vs 2 units |
 | `analysis_method` | *optional*: e.g. `limma_pooled_tiles`; the harmonizer uses it as the evidence `analysis_method` (default `methylKit`) |
 
 Without `pvalue` and `se_meth_diff_percent`, harmonized methylation
