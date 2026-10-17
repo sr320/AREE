@@ -1,68 +1,151 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# Real proteomics study: gill of adult C. gigas injected with the ERK
+# inhibitor SCH772984 or sterile seawater, sampled before and after 12 h at
+# 37 C; DIA proteome (PRIDE PXD065668) and phosphoproteome (PXD065706).
+# Registered from both PRIDE projects and the open-access paper, Wang et al.
+# 2026, Commun Biol 9:844 (PMC13280272, CC BY-NC-ND 4.0).
+#
+# REGISTERED, NOT REANALYZED (2026-10-17, sr320). The design is replicated
+# (4 groups x 3 pools of 3 oysters) and comes with a strong phenotype, but
+# nothing reanalyzable was deposited in open form:
+#   - Quantification exists only as Spectronaut 18 .sne archives, a
+#     proprietary format with no open export in the deposit.
+#   - The paper's Supplementary Data 1 (proteome) and 2 (phosphoproteome)
+#     give per-pool intensities only for proteins/sites already called
+#     differentially abundant (P < 0.05 and fold change > 1.5 or < 0.75; 476
+#     up and 348 down for heat in the proteome). Testing those again would
+#     only restate the selection.
+#   - Protein IDs are the authors' own CGIg gene models on GCA_011032805.1,
+#     which AREE does not register and cannot map.
+#   - The 12 proteome runs were acquired in group blocks (seawater 0 h,
+#     seawater 12 h, inhibitor 0 h, inhibitor 12 h, three pools each;
+#     run_order.tsv), so every contrast is also a contrast of acquisition
+#     time.
+# The only route would be re-searching the 12 DIA .raw files (DIA-NN or
+# similar), which AREE does not do. qc_status and analysis_status
+# not_started; every results_file null.
+#
+# This is a pharmacological perturbation of one pathway: mechanism support for
+# thermal-tolerance candidates, not population evidence (candidate_studies.md,
+# P6).
 
 study_id: WANG2026_ERK_HEAT
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1038/s42003-026-10054-w"
   bioproject: null
   geo: null
   sra: null
   ena: null
-  proteomexchange: "PXD065668"
+  proteomexchange: "PXD065668; PXD065706"
   other: null
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Wang M, Wang C, Du M, Jiang Z, Chen J, Pang M, Zhang T, Cong R, Wang W, Zhang G, Li L (2026) A naturally synonymous mutation modulates an ERK-centered regulatory network to mediate thermotolerance divergence in Crassostrea oysters. Commun Biol 9:844. https://doi.org/10.1038/s42003-026-10054-w (PMID 42010022, PMC13280272, CC BY-NC-ND 4.0). Proteome: PRIDE PXD065668; phosphoproteome: PRIDE PXD065706 (both CC0)."
 
-assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+species: "Magallana gigas"
+strain_or_population: "Hatchery F1 (Laizhou, Shandong): eggs of 30 females pooled, split into 30 beakers and each fertilized by one of 30 males; grown out 4 months in the sea at Muping, then 400 adults moved to Qingdao and acclimated 2 weeks at 18 +/- 2 C."
+
+# Proteins are the authors' CGIg gene models on GCA_011032805.1, an assembly
+# AREE does not register; this records the annotation a mapping would target.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "raw_reanalysis"
+platform: "DIA LC-MS/MS on a Thermo Orbitrap Exploris 480 (MS2 at 15,000 resolution for the proteome, 45,000 for the phosphoproteome); Spectronaut 18, default search, 1% FDR at PSM, peptide and protein level. Phosphopeptide enrichment for PXD065706. Each sample is a pool of gill from 3 oysters."
 
 data_availability:
-  raw_data_available: false
+  raw_data_available: true
   processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  status: "available"
+  access_notes: "PRIDE PXD065668 and PXD065706 (CC0, PARTIAL submissions, public 2026-03-12): 12 .raw files each and one Spectronaut .sne archive each (3.7 and 6.4 GB, proprietary). Paper Supplementary Data 1-2 (CC BY-NC-ND) list only significant proteins/sites, with per-pool intensities; fetched and checksummed by build_provenance.py, not committed. Details in data/studies/WANG2026_ERK_HEAT/pride_provenance.json."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# TWO COMPARISONS, the paper's main contrasts, each 3 vs 3 pools (9 vs 9
+# oysters). heat_12h_vs_0h_seawater is the primary: the heat response
+# without the drug. sample_size counts pools.
+#
+# PHENOTYPE. ERK inhibition roughly doubled mortality under 42 C heat
+# (Kaplan-Meier, n = 100 per group, p < 0.01), lowered oxygen consumption at
+# 37 C by about a third (n = 8) and lowered SOD/CAT activity: thermal
+# tolerance decreases with the inhibitor. The heat-only contrast has no
+# survival endpoint of its own (37 C is sublethal), so it is exposure_only.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "heat_12h_vs_0h_seawater"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
+    stressor_original: "Sublethal heat stress, 37 C for 12 h, versus unheated (0 h), in oysters injected 12 h earlier with 100 uL sterile seawater (intramuscular, under MgCl2 anaesthesia); acclimation at 18 +/- 2 C."
     stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
+    exposure_intensity: "37 C vs 18 +/- 2 C acclimation"
+    exposure_duration: "12 h"
+    exposure_timing: "acute"
+    control_condition: "Seawater-injected, unheated: pools SW_0_1-3 (3 oysters each)"
+    treatment_condition: "Seawater-injected, 12 h at 37 C: pools SW_12_1-3 (3 oysters each)"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "no survival endpoint for this contrast; 37 C is sublethal"
+    resilience_classification: "exposure_only"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+  - comparison_id: "erk_inhibitor_vs_seawater_at_12h_heat"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "ERK inhibition: 100 uL of 1 uM SCH772984 injected intramuscularly 12 h before heat, versus sterile seawater; both groups then 12 h at 37 C."
+    stressor_standardized: "temperature"
+    exposure_intensity: "1 uM SCH772984 (100 uL) vs seawater, both at 37 C"
+    exposure_duration: "12 h inhibitor + 12 h heat"
+    exposure_timing: "acute"
+    control_condition: "Seawater-injected, 12 h at 37 C: pools SW_12_1-3"
+    treatment_condition: "SCH772984-injected, 12 h at 37 C: pools ERK_12_1-3"
     phenotype: "thermal_tolerance"
     phenotype_direction: "decrease"
-    phenotype_unit: null
+    phenotype_unit: "survival under 42 C heat about halved with the inhibitor after 15 h (Kaplan-Meier, n = 100 per group); oxygen consumption at 37 C lower (n = 8)"
     resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 6
+    biological_replicates: 3
     results_file: null
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - batch_confounded
+  - single_timepoint
+  - identifier_mapping_uncertain
+
+limitations: >
+  (1) No open quantification: only proprietary Spectronaut archives and
+  significance-filtered supplementary tables. (2) Proteome runs were acquired
+  in condition blocks, so every contrast is confounded with acquisition
+  order (batch_confounded). (3) Each sample is a pool of 3 oysters; tank or
+  container assignment is not reported. (4) Protein IDs are the authors' own
+  gene models on an assembly AREE does not register. (5) The inhibitor
+  contrast is a pharmacological perturbation of one pathway, mechanism
+  support rather than evidence about natural variation; the survival
+  phenotype comes from separate oysters at 42 C, not the proteomic pools
+  at 37 C.
 
 provenance:
-  registered_by: "sr320"
+  registered_by: sr320
   date_registered: "2026-10-17"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD065668 --study-id
+    WANG2026_ERK_HEAT` (branch study/PXD065668/WANG2026_ERK_HEAT); the
+    phosphoproteome PXD065706 is the same experiment and is registered here,
+    not separately. Registered from both PRIDE projects' records, the first
+    1 KB of each proteome .raw file (acquisition order) and the paper's
+    supplementary files, retrieved 2026-10-17 by build_provenance.py. Design,
+    pooling, thresholds and phenotype come from the open-access full text
+    (PMC13280272), Methods, Results and Fig. 2, read 2026-10-17. Decision
+    (2026-10-17, sr320): register only, for the reasons at the top of this
+    file. The heat contrast is flagged meta_analysis_primary; it has no
+    effect while results_file is null.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD065668"
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD065706"
+    - "https://doi.org/10.1038/s42003-026-10054-w"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC13280272/"
