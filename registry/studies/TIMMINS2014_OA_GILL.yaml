@@ -1,68 +1,214 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# Real proteomics study: adult Pacific oyster gill after 29 days at 2800 vs
+# 400 uatm pCO2, with and without a subsequent mechanical stress, shotgun
+# LC-MS/MS spectral counting. Registered from PRIDE PXD000835 and the
+# open-access paper, Timmins-Schiffman et al. 2014, BMC Genomics 15:951
+# (PMC4531390, CC BY 4.0), and reanalyzed 2026-10-17 from the paper's
+# per-oyster NSAF table. The first real proteomics study AREE has analyzed.
+#
+# DESIGN. One cohort (one March 2011 spawn of ~25 broodstock, Oyster Bay WA),
+# 6 oysters per 3.5 L chamber, 8 replicate chambers per pCO2 level, one CO2-
+# controlled treatment tank feeding each level's chambers (Friday Harbor OA
+# lab). After 29 days, oysters were sampled directly or after 5 min of
+# mechanical stress (salad-spinner centrifugation). Proteomics: 4 individual
+# oysters per pCO2 x stress group, gill, each run as 3 technical replicates
+# (48 runs). The paper does not say which chamber each sampled oyster came
+# from; if two came from one chamber they are not independent, so the
+# effective n may be below 4 (see limitations).
+#
+# WHICH COLUMN IS WHICH OYSTER. Table S3 (Additional file 4) labels oysters
+# "2800 1"..."400 MechS4"; PRIDE and Table S2 use oyster numbers. The authors'
+# SQLShare workflow on figshare (10.6084/m9.figshare.894323) gives the number
+# ranges per group (2-11 = 2800, 26-35 = 2800 + stress, 221-230 = 400,
+# 242-251 = 400 + stress). build_inputs.py checks the column -> oyster
+# assignment by data: each Table S3 column's per-protein deviations correlate
+# with exactly one oyster's Table S2 spectral counts (r 0.59-0.67, next best
+# <= 0.13). The "101B"/"103B" in run names is that same split (2800 vs 400),
+# not an MS batch.
+#
+# RUN ORDER (run_order.tsv, read from the .raw headers). All 48 runs were
+# acquired on one instrument from 21 to 26 Aug 2012. Technical replicate 1 of
+# every oyster ran in treatment blocks (all eight 400 uatm runs, then all
+# eight 2800); replicates 2 and 3 are interleaved. Rerunning the pCO2
+# comparison on an NSAF-equivalent matrix from replicates 2-3 only gives
+# log2FC r = 0.85 with the full analysis, 85% same sign, mean shift 0.02
+# (sensitivity.tsv), so the blocked replicate does not drive the result.
+#
+# REANALYSIS (2026-10-17). workflows/proteomics raw_reanalysis on the NSAF
+# matrix: input_scale linear (zeros = not detected), normalization none (NSAF
+# is normalized within each oyster), quantification spectral_count, limma,
+# a protein tested only if detected in >= 3 of 4 oysters in each arm; these
+# settings were fixed before any result was seen. 618-639 of 1,616 proteins
+# are testable per comparison. No protein reaches padj < 0.05 in any
+# comparison (one at padj < 0.1, mechanical stress at 2800 uatm), and the
+# share of p < 0.05 is 4-6%, close to the null. log2FC agrees with the
+# authors' fold changes (r = 0.81-0.83, 87-89% same sign). The paper's
+# 245-286 "differentially abundant" proteins per comparison are mostly
+# >= 2-fold differences in average NSAF, including proteins detected in
+# only some oysters; its own q-value test found 12 proteins across all three
+# comparisons. Median normalization changes nothing material (r = 1.00).
+# QC decision (2026-10-17, sr320): passed_with_warnings. The standardized
+# tables carry limma SEs, so the study contributes poolable (largely null)
+# OA evidence.
+#
+# The run used workflows/proteomics from PR #80 (commit e3f0d7f: raw-mode
+# options and lfcSE), which this study needs; it was not yet on main.
 
 study_id: TIMMINS2014_OA_GILL
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1186/1471-2164-15-951"
   bioproject: null
   geo: null
   sra: null
   ena: null
   proteomexchange: "PXD000835"
-  other: null
+  other: "figshare 10.6084/m9.figshare.894323 (SQLShare NSAF workflow)"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Timmins-Schiffman E, Coffey WD, Hua W, Nunn BL, Dickinson GH, Roberts SB (2014) Shotgun proteomics reveals physiological response to ocean acidification in Crassostrea gigas. BMC Genomics 15:951. https://doi.org/10.1186/1471-2164-15-951 (PMID 25362893, PMC4531390, CC BY 4.0). Proteomics: PRIDE PXD000835. NSAF workflow: Timmins-Schiffman E, Roberts SB (2014) SQLShare workflow for proteomics analysis, figshare 10.6084/m9.figshare.894323 (CC BY 4.0)."
 
-assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+species: "Magallana gigas"
+strain_or_population: "One cohort from a single March 2011 spawning of about 25 broodstock; adults (shell length 51 +/- 5 mm) collected from Oyster Bay, Washington, on 29 Dec 2011."
+
+# Spectra were searched against the oyster_v9 proteome (GigaDB
+# 10.5524/100030, CGI_ gene models). AREE maps those models to current NCBI
+# genes through the crosswalk's legacy_locus_tags (inferred); 1,107 of 1,616
+# proteins resolve. See docs/identifier_mapping.md.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "raw_reanalysis"
+platform: "Data-dependent LC-MS/MS on a Thermo LTQ Orbitrap XL (MS1 at 60,000 resolution, 6 CID MS/MS per cycle), 3 technical replicates per oyster; SEQUEST against the oyster_v9 proteome with a reversed decoy, PeptideProphet/ProteinProphet (probability >= 0.9, ~0.6% FDR); NSAF from spectral counts averaged over technical replicates (authors' SQLShare workflow)."
 
 data_availability:
-  raw_data_available: false
+  raw_data_available: true
   processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  status: "available"
+  access_notes: "PRIDE PXD000835 (public 2014-05-15, PARTIAL submission, EBI terms of use): 48 .raw files and 48 ProteinProphet .prot.txt files. The .prot.txt for run 20120821_101B_11_01 is truncated in PRIDE (42 KB vs ~5.7 MB); the full ProteinProphet output for every run is in the paper's Additional file 3 (Table S2). The per-oyster NSAF table the paper analysed is Additional file 4 (Table S3, CC BY 4.0), copied unchanged into data/studies/TIMMINS2014_OA_GILL/nsaf_matrix.tsv with columns renamed to oyster numbers by build_inputs.py. Checksums in inputs_provenance.json."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
+# ---------------------------------------------------------------------------
+# THREE COMPARISONS, the paper's three pairwise contrasts, each 4 vs 4
+# oysters. pco2_2800_vs_400 (no mechanical stress) is the primary, chosen
+# before any result was computed: it is the single-stressor OA contrast
+# comparable with other OA studies. The two mechanical-stress contrasts are
+# within-study and stay out of pooling.
+#
+# PHENOTYPE (pCO2). Measured on other oysters of the same treatments: shell
+# fracture toughness lower at 2800 than 400 uatm (Tukey p < 0.05, n = 5-7
+# shells); microhardness trend lower (n.s.); shell growth, glycogen, fatty
+# acids and acute heat-shock mortality not different. Recorded as
+# acidification_tolerance, decrease. No phenotype was measured for
+# mechanical stress, so those two are exposure_only.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "pco2_2800_vs_400"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
+    stressor_original: "29 days at 2800 uatm pCO2 (pH 7.29, calcite undersaturated) versus 400 uatm (pH 8.02) at 13 C in a flow-through system (CO2-stripped seawater with CO2 added back to set point in one treatment tank per level, feeding 8 replicate 3.5 L chambers of 6 oysters at 57.5 mL/min); sampled directly at day 29."
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "2800 vs 400 uatm pCO2 (pH 7.29 vs 8.02)"
+    exposure_duration: "29 d"
+    exposure_timing: "chronic, adults, winter (Jan-Feb 2012)"
+    control_condition: "400 uatm pCO2, sampled directly: oysters 221, 224, 227, 230"
+    treatment_condition: "2800 uatm pCO2, sampled directly: oysters 2, 5, 8, 11"
+    phenotype: "acidification_tolerance"
     phenotype_direction: "decrease"
-    phenotype_unit: null
+    phenotype_unit: "shell fracture toughness at the growing edge, lower at 2800 uatm (n = 5-7 shells per treatment); growth, glycogen, fatty acids and heat-shock mortality unchanged"
     resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
-    results_file: null
+    sample_size: 8
+    biological_replicates: 4
+    results_file: "data/studies/TIMMINS2014_OA_GILL/TIMMINS2014_OA_GILL_pco2_2800_vs_400_protein_abundance_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "mech_stress_vs_none_at_400"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Mechanical stimulation: centrifugation in a salad spinner (5 min, ~100 rpm) at the end of 29 days at 400 uatm pCO2, then sampled; versus sampled directly."
+    stressor_standardized: "handling_transport_stress"
+    exposure_intensity: "5 min centrifugation (~100 rpm)"
+    exposure_duration: "5 min, sampled immediately after"
+    exposure_timing: "acute, after 29 d at 400 uatm"
+    control_condition: "400 uatm, no mechanical stress: oysters 221, 224, 227, 230"
+    treatment_condition: "400 uatm + mechanical stress: oysters 242, 245, 248, 251"
+    phenotype: "recovery_following_stress"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "no phenotype measured for the mechanical stress"
+    resilience_classification: "exposure_only"
+    sample_size: 8
+    biological_replicates: 4
+    results_file: "data/studies/TIMMINS2014_OA_GILL/TIMMINS2014_OA_GILL_mech_stress_vs_none_at_400_protein_abundance_standardized.tsv"
+  - comparison_id: "mech_stress_vs_none_at_2800"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Mechanical stimulation: centrifugation in a salad spinner (5 min, ~100 rpm) at the end of 29 days at 2800 uatm pCO2, then sampled; versus sampled directly."
+    stressor_standardized: "handling_transport_stress"
+    exposure_intensity: "5 min centrifugation (~100 rpm)"
+    exposure_duration: "5 min, sampled immediately after"
+    exposure_timing: "acute, after 29 d at 2800 uatm"
+    control_condition: "2800 uatm, no mechanical stress: oysters 2, 5, 8, 11"
+    treatment_condition: "2800 uatm + mechanical stress: oysters 26, 29, 32, 35"
+    phenotype: "recovery_following_stress"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "no phenotype measured for the mechanical stress"
+    resilience_classification: "exposure_only"
+    sample_size: 8
+    biological_replicates: 4
+    results_file: "data/studies/TIMMINS2014_OA_GILL/TIMMINS2014_OA_GILL_mech_stress_vs_none_at_2800_protein_abundance_standardized.tsv"
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - identifier_mapping_uncertain
+
+limitations: >
+  (1) Four oysters per group, and the paper does not say which of the 8
+  chambers per pCO2 level each came from; oysters sharing a chamber would
+  not be independent. Each pCO2 level was also delivered from one treatment
+  tank, so level and water supply are confounded, as in most OA systems.
+  (2) Spectral counting (NSAF) from DDA is noisy for low-abundance proteins:
+  only 618-639 of 1,616 proteins are detected in >= 3 of 4 oysters per arm
+  and tested; the rest are listed with their detection status, not given a
+  fold change. (3) The reanalysis finds no protein at padj < 0.05 and a p-value
+  distribution close to the null. This is a low-power null, not evidence of
+  no effect, and it differs from the paper's fold-change-based list of
+  245-286 proteins per comparison. (4) Technical replicate 1 was acquired in
+  treatment blocks; the replicates 2-3 sensitivity (sensitivity.tsv) shows it
+  does not drive the result. (5) 509 of 1,616 oyster_v9 protein models have
+  no current NCBI gene (unresolved); resolved ones are inferred across an
+  annotation version. (6) The phenotype (shell fracture toughness) was
+  measured on different oysters of the same treatments, not the proteomic
+  ones; heat-shock mortality was unaffected. (7) One cohort, one season,
+  one 29-day time point.
 
 provenance:
-  registered_by: "sr320"
+  registered_by: sr320
   date_registered: "2026-10-17"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD000835 --study-id
+    TIMMINS2014_OA_GILL` (branch study/PXD000835/TIMMINS2014_OA_GILL).
+    Inputs built 2026-10-17 by build_inputs.py from the Europe PMC
+    supplementary files (Tables S2 and S3), the figshare SQLShare workflow
+    (md5-checked) and the first 1 KB of each PRIDE .raw file (acquisition
+    times); checksums in inputs_provenance.json. Design, phenotype and the
+    authors' statistics come from the open-access full text (PMC4531390),
+    read 2026-10-17. Workflow run on Hete with -profile local for each
+    comparison: --mode raw_reanalysis --proteomics.input_scale linear
+    --proteomics.normalization none --proteomics.quantification
+    spectral_count --proteomics.min_detected_per_arm 3
+    --proteomics.id_mapping_table data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv,
+    using workflows/proteomics at commit e3f0d7f (PR #80). Sensitivity
+    (sensitivity.py): the primary comparison rerun with median normalization,
+    and on a replicates-2-3 matrix with otherwise identical flags. pco2_2800_vs_400 flagged
+    meta_analysis_primary before any result was computed. Harmonized with
+    `aree harmonize` against the mgigas crosswalk v1.1.0 (PR #80). QC
+    decision (2026-10-17, sr320): passed_with_warnings. The registering
+    curator is the paper's senior author; the design facts the analysis
+    rests on are pinned by tests/test_timmins2014_study.py.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD000835"
+    - "https://doi.org/10.1186/1471-2164-15-951"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC4531390/"
+    - "https://doi.org/10.6084/m9.figshare.894323"
