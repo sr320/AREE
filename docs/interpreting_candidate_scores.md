@@ -31,6 +31,15 @@ positive components:
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
 
+Every quality flag counts the same in `quality_score`: `batch_confounded`
+(treatment fully confounded with a sequencing run, MS acquisition batch, or
+extraction batch) removes the same 0.2 as `low_replication`, and counts
+toward the `quality_score >= 0.4` high-priority gate the same way. Adding the
+term (2026-10-16) did not change any existing score, because no registered
+study declared it yet. Once a study declares it, every candidate with a
+record from that study loses 0.2 `quality_score` (0.4 points of the 0-100
+score) unless the flag was already in its union.
+
 ### Why the unbounded components saturate instead of clipping
 
 Every component whose input has no natural upper bound uses `v / (v + half)`,
