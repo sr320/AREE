@@ -132,7 +132,24 @@ Tier assignment, in order:
    qualifies, because every cross-layer overlap in the demo is
    cross-phenotype. The card still lists that adjacent evidence and marks
    each row with whether it counts.
-3. **`emerging`** — everything else: single-study support, or support that
+3. **`metabolite_linked_convergence`** — the candidate's own layer is
+   significant, and another layer carries a significant same-phenotype record
+   for a feature **linked** to it biochemically rather than by a shared ID: a
+   metabolite and a gene whose product KEGG annotates (by orthology) to
+   catalyse a reaction involving that metabolite (`enzyme`), or a transporter
+   (KEGG BRITE ko02000) curated as carrying it (`transporter`, always
+   `inferred`). Checked only if neither tier
+   above applies. This is a deliberately weaker, separately named kind of
+   convergence: it does not add to `n_supporting_layers` or to the score;
+   currency metabolites (ATP, NAD⁺, …) and hub compounds reaching more than
+   25 genes are never credited; and every link is `inferred` or
+   `one_to_many_ortholog`, never `exact`. The card lists each link's
+   compound, reaction, KO, confidence and source checksum, plus the
+   exclusions. Candidates carry `convergence_basis`
+   (`shared_identifier` / `metabolite_gene_link` / `none`), `linked_layers`,
+   `linked_features`, `link_confidences` and `link_table_status`. See
+   [metabolite_gene_links.md](metabolite_gene_links.md).
+4. **`emerging`** — everything else: single-study support, or support that
    fails one or more of the high-priority gates. Always labeled as requiring
    replication.
 
@@ -291,13 +308,24 @@ three unsupported rows. None converges, because the demo mussel has one study
 per gene. The demo's one sign disagreement involves a non-significant mussel
 estimate, so it is unsupported, not discordant.
 
-On real data (2026-10-16), the three harmonized oyster thermal-tolerance studies and TUCCI2025_HEAT_PRIMING pool through 5,681 single-copy orthogroups: 64 emerging, 6 discordant, 5,611 unsupported, none convergent. Every emerging row fails three gates:
-replication (one clam study), phenotype relevance (the clam comparison is
-exposure-only), and quality (each species' own flags exceed the gene-level
-limit, as they do for its single-species candidates). The 6 discordant rows
-are oyster genes with small significant effects against clam genes with large
-significant effects of opposite sign. The two studies differ in stressor
-timing, so they are leads to check, not established species differences.
+On real data (2026-10-17), the three harmonized oyster thermal-tolerance
+studies and the two Manila clam heat studies (TUCCI2025_HEAT_PRIMING,
+PERUZZA2023_HEATWAVE) pool through 5,975 single-copy orthogroups: 133
+emerging, 5,842 unsupported, none discordant or convergent. The replication
+gate is met in 5,633 rows. 131 emerging rows pass replication, direction and
+significance and fail only phenotype relevance (both clam comparisons are
+exposure-only) and quality (each species' own flags exceed the gene-level
+limit, as they do for its single-species candidates). With one clam study
+(2026-10-16) the same pool had 5,681 rows, 64 emerging and 6 discordant; the
+discordant rows did not survive the second clam study.
+
+**On the dashboard.** The home page shows cross-species tiers, rows and cards
+only for a phenotype past the WP6 gate: at least two species each with a
+within-species gene pool of k >= 2. A row for a gated phenotype is counted as
+withheld, not ranked. Every top single-species candidate also lists its
+orthologs in other species, the phenotypes they were tested under and how many
+of their records were significant. That lookup pools nothing, so it is shown
+whether or not the gate is open.
 
 ## Related documentation
 

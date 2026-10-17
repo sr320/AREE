@@ -5,6 +5,13 @@
 # that, so a typo or an undocumented assembly is caught at registration rather
 # than surfacing later as evidence that cannot be compared.
 #
+# `metabolite_gene_links` (optional) is the metabolite -> enzyme gene link table
+# that metabolomics evidence on this species is linked through for the
+# `metabolite_linked_convergence` tier. It is built locally by
+# `aree build-metabolite-links` and NOT committed (KEGG terms); until it is built,
+# real candidates report `link_table_status: not_built`. See
+# docs/metabolite_gene_links.md.
+#
 # `identifier_crosswalk` is the crosswalk that evidence from studies on this
 # assembly is standardized against (repo-relative path, or null if none has been
 # built yet). Harmonizing a real study reads it from here, so a mussel study and
@@ -34,6 +41,7 @@ assemblies:
     annotation_release: "GCF_963853765.1-RS_2024_06"
     annotation_release_date: "2024-06-20"
     identifier_crosswalk: "data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    metabolite_gene_links: "data/mappings/metabolite_gene_links_mgigas.tsv"
     verified: "2026-08-28"
     notes: >-
       Current NCBI reference genome for the Pacific oyster. AREE's identifier
@@ -52,6 +60,7 @@ assemblies:
     is_ncbi_reference: false
     annotation_release: null
     identifier_crosswalk: "data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    metabolite_gene_links: "data/mappings/metabolite_gene_links_mgigas.tsv"
     verified: "2026-08-28"
     notes: >-
       The assembly most C. gigas studies published before ~2024 were mapped

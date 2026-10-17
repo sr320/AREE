@@ -1,0 +1,6 @@
+study_id	comparison_id	annotation_context	n_regions
+CIBNOR2021_HEAT_RRSS	rr_vs_ss_day30_oscillating_heat	promoter	0
+CIBNOR2021_HEAT_RRSS	rr_vs_ss_day30_oscillating_heat	exon	0
+CIBNOR2021_HEAT_RRSS	rr_vs_ss_day30_oscillating_heat	intron	0
+CIBNOR2021_HEAT_RRSS	rr_vs_ss_day30_oscillating_heat	gene_body	31166
+CIBNOR2021_HEAT_RRSS	rr_vs_ss_day30_oscillating_heat	intergenic	101421

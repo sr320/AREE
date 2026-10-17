@@ -120,7 +120,21 @@ adjustment and each measured under the same phenotype, is assigned to a
 multi-omics convergence tier, with the specific cross-layer linkage shown
 explicitly; the link is shared gene identity, not a measured regulatory
 relationship, and evidence for the same feature under a different phenotype
-is displayed but not credited. All remaining candidates — including those with a strong effect
+is displayed but not credited. Because a metabolite cannot share a gene
+identifier, metabolomics evidence is linked to gene-level evidence
+biochemically instead: a curated metabolite name is mapped to KEGG compounds,
+then to the KEGG reactions in which the compound participates, the KEGG
+orthologs annotated to catalyse those reactions, and the *C. gigas* genes
+KEGG assigns to those orthologs (NCBI GeneIDs, checked against the
+RS_2024_06 crosswalk). Transporters are linked as well, through KEGG BRITE ko02000
+membership plus a curated transporter-to-substrate assignment, because
+ko02000 records no substrates; such links are always rated inferred.
+Currency cofactors and compounds linked to more than
+25 genes of one link type are excluded, and links are never assigned higher than
+one-to-many-ortholog confidence. A candidate whose own layer is significant
+and whose linked feature is significant in another layer under the same
+phenotype is placed in a separate metabolite-linked convergence tier, ranked
+below shared-identity convergence and not credited in the numeric score. All remaining candidates — including those with a strong effect
 in a single study — are assigned to an emerging tier and explicitly labeled
 as requiring independent replication. This gating structure is the
 mechanism by which the framework prevents a single study's statistical

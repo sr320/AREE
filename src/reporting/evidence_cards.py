@@ -26,8 +26,14 @@ import pandas as pd
 
 from common import REPORTS_DIR, load_vocab, species_term_for_taxid
 from harmonize.core import load_evidence_table
+from mappings.metabolite_links import (
+    LINK_TYPE_TRANSPORTER,
+    MAX_GENES_PER_COMPOUND,
+    links_for_partition,
+)
 from meta_analysis.run import run_meta_analysis
 from prioritize.rank import (
+    METABOLITE_LAYER,
     EvidenceIndex,
     _partition_value,
     add_partition_columns,
@@ -46,6 +52,11 @@ NEXT_STEP_BY_TIER = {
     "multi_omics_convergence": (
         "Investigate the regulatory link across molecular layers (e.g. paired methylation/expression "
         "measurement in the same individuals) before committing to validation."
+    ),
+    "metabolite_linked_convergence": (
+        "Measure the metabolite and the linked enzyme's transcript or activity in the same animals "
+        "and the same stressor before treating the link as biological; the current link is KEGG "
+        "reaction annotation transferred by orthology, not a measured relationship."
     ),
     "emerging": (
         "Requires replication in an independent study before further validation investment."
@@ -195,6 +206,140 @@ def _other_omics_context(index: EvidenceIndex, candidate: dict) -> list:
     return rows
 
 
+EXCLUSION_REASON_TEXT = {
+    "currency_metabolite": "currency metabolite (data/mappings/currency_metabolites.yaml); never used as a link",
+    "hub_compound": f"hub compound reaching more than {MAX_GENES_PER_COMPOUND} genes; not credited",
+    "no_reaction_in_table": "no enzyme or transporter link for this compound in the link table",
+}
+
+
+def _linked_omics_context(index: EvidenceIndex, candidate: dict) -> dict:
+    """Evidence reached through a metabolite <-> gene link, for the card.
+
+    Every linked record is shown, under any phenotype. A row counts toward
+    `metabolite_linked_convergence` only when its link is credited, it is for
+    this candidate's own phenotype, its study reported adjusted p <= 0.05, and
+    its layer is not already a shared-identifier supporting layer."""
+    table = links_for_partition(_partition_value(candidate["simulated"]),
+                                _partition_value(candidate["species_taxid"]))
+    is_metabolite = candidate.get("molecular_layer") == METABOLITE_LAYER
+    supporting = {x for x in str(candidate.get("supporting_layers") or "").split("|") if x}
+    rows = []
+    for record in index.linked_records(candidate).to_dict("records"):
+        link = record["_link"]
+        same_phenotype = record["phenotype"] == candidate["phenotype"]
+        significant = bool(record["_significant"])
+        rows.append({
+            "study_id": record["study_id"],
+            "layer": record["_layer"],
+            "linked_feature": index.linked_feature_id(link, is_metabolite),
+            "kegg_compound": link.kegg_compound,
+            "link_type": link.link_type,
+            "via": link.via,
+            "link_basis": link.link_basis,
+            "brite_family": link.brite_family,
+            "ko": link.ko,
+            "equation_side": link.equation_side,
+            "link_confidence": link.link_confidence,
+            "n_genes_for_compound": link.n_genes_for_compound,
+            "credited": link.credited,
+            "phenotype": record["phenotype"],
+            "stressor": record["stressor"],
+            "molecular_direction": record["molecular_direction"],
+            "effect_size": record["effect_size"],
+            "adjusted_p_value": record["adjusted_p_value"],
+            "same_phenotype": same_phenotype,
+            "significant": significant,
+            "counts": (link.credited and same_phenotype and significant
+                       and record["_layer"] not in supporting),
+        })
+    exclusions = (
+        [{"kegg_compound": e.kegg_compound, "reason": e.reason, "link_type": e.link_type}
+         for e in table.excluded_for_metabolite(candidate["feature_id_standardized"])]
+        if is_metabolite and table.available else []
+    )
+    return {"table": table, "rows": rows, "exclusions": exclusions, "is_metabolite": is_metabolite}
+
+
+def _linked_section(candidate: dict, linked: dict) -> list:
+    # A gene with no linked metabolite evidence gets no section: the table's
+    # status is reported on every metabolite card and in candidates.tsv instead.
+    if not linked["is_metabolite"] and not linked["rows"]:
+        return []
+    table = linked["table"]
+    lines = ["", "### Metabolite–gene links (biochemical; weaker than shared gene identity)"]
+    if not table.available:
+        lines.append(
+            f"No metabolite–gene link table for this partition (`{table.status}`). "
+            + ("Build it with `aree build-metabolite-links`; until then metabolomics evidence cannot "
+               "be linked to gene-level evidence for this species." if table.status == "not_built"
+               else "Links are only defined for species with a registered table.")
+        )
+        return lines
+    lines.append(
+        "These links come from KEGG annotation, not from measurement. An `enzyme` link means the "
+        "linked gene's product is *annotated* (by KEGG orthology transfer) to catalyse a reaction in "
+        "which the metabolite takes part. A link does not mean the gene regulates, or controls the level of, "
+        "the metabolite. KEGG writes reactions as reversible equations, so the side the compound is "
+        "on does not say whether it is consumed or produced. Linked layers do not add to this "
+        "candidate's score."
+    )
+    if any(r["link_type"] == LINK_TYPE_TRANSPORTER for r in linked["rows"]):
+        lines.append("")
+        lines.append(
+            "**Transporter links** are weaker still. KEGG BRITE ko02000 confirms only that the KO is a "
+            "transporter and names its family; it records no substrates, so the metabolite was assigned "
+            "to the transporter by AREE curation (`data/mappings/transporter_substrates.tsv`). "
+            "`ko_definition` means KEGG's KO definition names the compound; `substrate_class` means it "
+            "names only a class (e.g. monocarboxylic acids) and the compound is a curator's call from the "
+            "characterized human family members. Transporter links are always `inferred`, and a "
+            "transporter moves a metabolite between compartments rather than making or consuming it."
+        )
+    families = sorted({r["brite_family"] for r in linked["rows"] if r["brite_family"]})
+    if families:
+        lines.append("")
+        lines.append("Transporter families (KEGG BRITE ko02000): " + "; ".join(f"`{f}`" for f in families) + ".")
+    lines.append("")
+    lines.append(f"Link table: {table.label()}.")
+    stressors = {r["stressor"] for r in linked["rows"] if r["counts"]}
+    own_stressors = {x for x in str(candidate.get("pooled_stressors") or "").split("|") if x}
+    if stressors and own_stressors and not stressors <= own_stressors:
+        lines.append("")
+        lines.append(
+            f"⚠️ The linked support comes from a different stressor (`{'|'.join(sorted(stressors))}`) "
+            f"than this candidate's own evidence (`{'|'.join(sorted(own_stressors))}`). Same "
+            "phenotype, different exposure: treat as a hypothesis connecting two experiments."
+        )
+    if linked["rows"]:
+        lines.append("")
+        lines.append("Only rows marked **yes** in the last column count toward "
+                     "`metabolite_linked_convergence`:")
+        lines.append("| study | layer | linked feature | compound | link type | via | KO | side | basis | "
+                     "link confidence | genes for compound | credited | phenotype | stressor | direction | "
+                     "effect | adj. p | counts |")
+        lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        for r in linked["rows"]:
+            lines.append(
+                f"| {r['study_id']} | {r['layer']} | {r['linked_feature']} | {r['kegg_compound']} | "
+                f"{r['link_type']} | {r['via']} | {r['ko']} | {r['equation_side'] or '—'} | "
+                f"{r['link_basis']} | {r['link_confidence']} | "
+                f"{r['n_genes_for_compound']} | {'yes' if r['credited'] else 'no (hub)'} | {r['phenotype']} | "
+                f"{r['stressor']} | {r['molecular_direction']} | {_fmt(r['effect_size'], '.3f')} | "
+                f"{_fmt(r['adjusted_p_value'])} | {'**yes**' if r['counts'] else 'no'} |"
+            )
+    else:
+        lines.append("")
+        lines.append("No evidence in other layers for any feature linked to this one.")
+    if linked["exclusions"]:
+        lines.append("")
+        lines.append("Compounds this metabolite resolves to that contribute no credited link:")
+        for e in linked["exclusions"]:
+            scope = f" ({e['link_type']} links)" if e.get("link_type") else ""
+            lines.append(f"- `{e['kegg_compound']}`{scope}: "
+                         f"{EXCLUSION_REASON_TEXT.get(e['reason'], e['reason'])}")
+    return lines
+
+
 def has_significant_signal(candidate: dict, forest_points: list, max_adjusted_p: float) -> bool:
     """Does anything about this candidate clear the significance threshold?
 
@@ -212,7 +357,8 @@ def has_significant_signal(candidate: dict, forest_points: list, max_adjusted_p:
     )
 
 
-def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phenotype_label: str) -> str:
+def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phenotype_label: str,
+                   linked: dict | None = None) -> str:
     lines = []
     lines.append(f"# Evidence card: {candidate['feature_id_standardized']} — {phenotype_label}")
     lines.append("")
@@ -321,6 +467,17 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     else:
         lines.append("")
         lines.append("No evidence from other molecular layers for this standardized feature yet.")
+    if candidate.get("is_metabolite_linked_convergence"):
+        lines.append("")
+        lines.append(
+            "**How the layers were linked:** not by a shared identifier. Layer(s) "
+            f"{', '.join(f'`{x}`' for x in str(candidate.get('linked_layers')).split('|'))} were linked "
+            f"through metabolite–enzyme annotation ({candidate.get('linked_features')}; link confidence: "
+            f"{candidate.get('link_confidences')}). This is a weaker kind of convergence than shared gene "
+            "identity and is ranked below it."
+        )
+    if linked is not None:
+        lines.extend(_linked_section(candidate, linked))
     lines.append("")
     lines.append("## Limitations")
     lines.append(f"- Quality flags present across contributing evidence: {candidate['quality_flags_union'] or 'none recorded'}")
@@ -419,7 +576,8 @@ def build_evidence_cards_report(
         other_omics = _other_omics_context(index, candidate)
         phenotype_label = phenotype_vocab.get(candidate["phenotype"], {}).get("label", candidate["phenotype"])
         card_path = EVIDENCE_CARDS_DIR / f"{_card_slug(candidate)}.md"
-        card_path.write_text(_card_markdown(candidate, forest_points, other_omics, phenotype_label))
+        linked = _linked_omics_context(index, candidate)
+        card_path.write_text(_card_markdown(candidate, forest_points, other_omics, phenotype_label, linked))
         card_files.append(str(card_path))
         written.append({
             "feature_id_standardized": candidate["feature_id_standardized"],

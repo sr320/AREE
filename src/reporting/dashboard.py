@@ -25,10 +25,18 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from common import REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_vocab, registered_crosswalks
+from common import (
+    REPO_ROOT,
+    REPORTS_DIR,
+    STUDIES_DIR,
+    load_vocab,
+    registered_crosswalks,
+    species_term_for_taxid,
+)
 
 EVIDENCE_TABLE = REPORTS_DIR / "evidence" / "evidence_table.tsv"
 CANDIDATES_TABLE = REPORTS_DIR / "evidence_cards" / "candidates.tsv"
+CROSS_SPECIES_TABLE = REPORTS_DIR / "evidence_cards" / "cross_species" / "candidates.tsv"
 META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 MANIFESTS_DIR = REPORTS_DIR / "manifests"
 TOP_CANDIDATES_MD = REPORTS_DIR / "top_candidates_summary.md"
@@ -48,6 +56,10 @@ TOP_N_CANDIDATES = 15
 # The overall top list is dominated by whichever pool has the most studies, so
 # each phenotype also gets its own short list.
 TOP_N_PER_PHENOTYPE = 5
+TOP_N_CROSS_SPECIES = 15
+# WP6 dashboard gate: a phenotype's cross-species pooled results are shown only
+# once at least this many species each have a within-species pool with k >= 2.
+GATE_MIN_SPECIES_K2 = 2
 
 
 # --------------------------------------------------------------------------- #
@@ -290,13 +302,17 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
     cols = ["feature_id_standardized", "feature_type", "phenotype", "tier", "evidence_class",
             "context_replication", "score", "k_studies", "studies", "total_sample_size",
             "pooled_effect", "adjusted_p_value", "direction_consistency", "i_squared",
-            "n_supporting_layers", "mapping_confidences", "simulated", "card_file"]
+            "n_supporting_layers", "mapping_confidences", "simulated", "species_taxid",
+            "orthogroup_id", "card_file"]
     cols = [c for c in cols if c in ranked.columns]
 
     def _top(frame: pd.DataFrame, n: int = TOP_N_CANDIDATES) -> list[dict]:
         rows = frame.head(n)[cols].to_dict(orient="records")
         for r in rows:
             r["feature_id_standardized"] = str(r["feature_id_standardized"])
+            if "species_taxid" in r:
+                r["species_taxid"] = _taxid(r["species_taxid"])
+                r["species"] = _species_label(r["species_taxid"])
             r["phenotype_label"] = phenotype_labels.get(r.get("phenotype"), r.get("phenotype"))
             for k, v in list(r.items()):
                 if isinstance(v, float) and pd.isna(v):
@@ -332,6 +348,148 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
     }
 
 
+def _taxid(value):
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _species_label(taxid) -> str:
+    term = species_term_for_taxid(taxid) if taxid is not None else None
+    return term["scientific_name"] if term else ("unknown species" if taxid is None else f"taxid {taxid}")
+
+
+def cross_species_gate(pools: list[dict]) -> list[dict]:
+    """The WP6 dashboard gate, one row per phenotype and origin studied in two or more species.
+
+    docs/mussel_clam_integration_plan.md, WP6: no cross-species pooling is shown
+    until at least two species each have a within-species group with k >= 2 on
+    the same phenotype. Before that, the orthogroup view is a lookup ("where is
+    this oyster candidate's ortholog in mussels, and was it tested?"), not a
+    meta-analysis. Only gene-level pools count; a species' pool reaches k >= 2
+    when any of its genes was measured in two studies.
+    """
+    by_phenotype: dict[tuple, list[dict]] = {}
+    for p in pools:
+        if p["feature_type"] == "gene" and p.get("species_taxid") is not None:
+            by_phenotype.setdefault((p["phenotype"], p["simulated"]), []).append(p)
+    gate = []
+    for (phen, sim), ps in sorted(by_phenotype.items()):
+        if len({p["species_taxid"] for p in ps}) < 2:
+            continue
+        species = sorted(
+            ({"species_taxid": p["species_taxid"], "species": p["species"], "max_k": p["max_k"],
+              "studies": p["studies"]} for p in ps),
+            key=lambda d: (-d["max_k"], d["species"]))
+        n_k2 = sum(1 for d in species if d["max_k"] >= 2)
+        is_open = n_k2 >= GATE_MIN_SPECIES_K2
+        gate.append({
+            "phenotype": phen, "simulated": bool(sim), "species": species,
+            "n_species": len(species), "n_species_k2": n_k2, "open": is_open,
+            "reason": (f"{n_k2} species each have a within-species pool with k >= 2"
+                       if is_open else
+                       f"only {n_k2} of {len(species)} species has a within-species pool with k >= 2; "
+                       f"{GATE_MIN_SPECIES_K2} are needed"),
+        })
+    return gate
+
+
+CROSS_SPECIES_COLUMNS = [
+    "orthogroup_id", "phenotype", "feature_type", "copy_class", "tier", "evidence_class", "score",
+    "species_taxids", "genes", "k_studies_by_species", "pooled_effect", "ci_lower", "ci_upper",
+    "adjusted_p_value", "i_squared_between_species", "direction_consistency_species",
+    "meets_replication_gate", "gates_failed", "simulated", "card_file",
+]
+
+
+def _cross_species_summary(gate: list[dict], phenotype_labels: dict, cards_dir: Path | None = None) -> dict:
+    """Cross-species candidates, shown only for phenotypes past the gate.
+
+    Rows for a phenotype whose gate is closed are counted as withheld and never
+    ranked or linked: before the gate opens, a pooled cross-species estimate
+    rests on single-study species and the page offers the ortholog lookup
+    instead.
+    """
+    empty = {"available": CROSS_SPECIES_TABLE.exists(), "by_tier": [], "top_real": [],
+             "top_simulated": [], "withheld": [], "n_shown": 0, "n_withheld": 0}
+    if not CROSS_SPECIES_TABLE.exists():
+        return empty
+    df = pd.read_csv(CROSS_SPECIES_TABLE, sep="\t", low_memory=False, dtype={"species_taxids": str})
+    if not len(df):
+        return empty
+    df["simulated"] = df["simulated"].map(_bool)
+    open_keys = {(g["phenotype"], g["simulated"]) for g in gate if g["open"]}
+    keys = list(zip(df["phenotype"], df["simulated"]))
+    shown_mask = pd.Series([k in open_keys for k in keys], index=df.index)
+    shown, held = df[shown_mask], df[~shown_mask]
+
+    from prioritize.cross_species import TIER_ORDER as CROSS_TIERS
+
+    rank = {t: i for i, t in enumerate(CROSS_TIERS)}
+    shown = (shown.assign(_r=shown["tier"].map(rank).fillna(len(CROSS_TIERS)))
+             .sort_values(["_r", "score"], ascending=[True, False]))
+    cols = [c for c in CROSS_SPECIES_COLUMNS if c in shown.columns]
+
+    def _top(frame: pd.DataFrame) -> list[dict]:
+        rows = frame.head(TOP_N_CROSS_SPECIES)[cols].to_dict(orient="records")
+        for r in rows:
+            r["phenotype_label"] = phenotype_labels.get(r["phenotype"], r["phenotype"])
+            k_by = dict(pair.split(":", 1) for pair in str(r.get("k_studies_by_species") or "").split("|")
+                        if ":" in pair)
+            r["species_genes"] = [
+                {"species_taxid": _taxid(t), "species": _species_label(_taxid(t)), "gene": g,
+                 "k_studies": _taxid(k_by.get(t))}
+                for t, g in (pair.split(":", 1) for pair in str(r.get("genes") or "").split("|") if ":" in pair)]
+            for k, v in list(r.items()):
+                if isinstance(v, float) and pd.isna(v):
+                    r[k] = None
+            r["card_page"] = _publish_card(r.pop("card_file", None), cards_dir)
+        return rows
+
+    return {
+        "available": True,
+        "by_tier": [{"simulated": bool(s), "phenotype": ph, "tier": t, "n": int(n)}
+                    for (s, ph, t), n in shown.groupby(["simulated", "phenotype", "tier"]).size().items()],
+        "top_real": _top(shown[~shown["simulated"]]),
+        "top_simulated": _top(shown[shown["simulated"]]),
+        "withheld": [{"simulated": bool(s), "phenotype": ph, "n": int(n)}
+                     for (s, ph), n in held.groupby(["simulated", "phenotype"]).size().items()],
+        "n_shown": int(len(shown)),
+        "n_withheld": int(len(held)),
+    }
+
+
+def _attach_ortholog_lookup(rows: list[dict], evidence: pd.DataFrame) -> None:
+    """For each single-species candidate, the other species' genes in its orthogroup.
+
+    This is the lookup the gate always allows: where a candidate's ortholog sits
+    in another species, and whether that species tested it, under which
+    phenotypes. No estimate is pooled here.
+    """
+    if not rows or not len(evidence) or "orthogroup_id" not in evidence.columns:
+        for r in rows:
+            r["orthologs"] = []
+        return
+    wanted = {str(r.get("orthogroup_id")) for r in rows if r.get("orthogroup_id")}
+    ev = evidence[evidence["orthogroup_id"].astype(str).isin(wanted)]
+    adj = pd.to_numeric(ev.get("adjusted_p_value"), errors="coerce")
+    ev = ev.assign(_taxid=ev["species_taxid"].map(_taxid), _sig=adj <= SIGNIFICANCE_THRESHOLD)
+    index: dict[tuple, list[dict]] = {}
+    for (og, sim, taxid), grp in ev.groupby(["orthogroup_id", "simulated", "_taxid"], sort=True):
+        index.setdefault((str(og), bool(sim)), []).append({
+            "species_taxid": taxid, "species": _species_label(taxid),
+            "genes": sorted({str(g) for g in grp["feature_id_standardized"].dropna()}),
+            "phenotypes": sorted({str(p) for p in grp["phenotype"].dropna()}),
+            "studies": sorted({str(s) for s in grp["study_id"].dropna()}),
+            "n_significant_records": int(grp["_sig"].sum()),
+        })
+    for r in rows:
+        own = r.get("species_taxid")
+        r["orthologs"] = [o for o in index.get((str(r.get("orthogroup_id")), bool(r.get("simulated"))), [])
+                          if o["species_taxid"] != own]
+
+
 def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     """Copy one evidence card next to the dashboard so the site can link to it.
 
@@ -364,7 +522,11 @@ def _publish_card(card_file, cards_dir: Path | None) -> str | None:
 
 
 def _pool_summary() -> list[dict]:
-    """One row per (phenotype, feature_type, origin) pool actually formed."""
+    """One row per (phenotype, feature_type, origin, species) pool actually formed.
+
+    Gene-level pools never cross species, so a phenotype studied in two species
+    is two pools, each with its own study count. The WP6 gate reads them.
+    """
     pools = []
     if not META_ANALYSIS_DIR.exists():
         return pools
@@ -383,8 +545,12 @@ def _pool_summary() -> list[dict]:
         df["simulated"] = df["simulated"].map(_bool)
         adj = pd.to_numeric(df["adjusted_p_value"], errors="coerce")
         k = pd.to_numeric(df["k_studies"], errors="coerce").fillna(0)
-        for (phen, ftype, sim), grp in df.groupby(["phenotype", "feature_type", "simulated"]):
-            key = (phen, ftype, bool(sim))
+        if "species_taxid" not in df.columns:
+            df["species_taxid"] = None
+        df["_taxid"] = df["species_taxid"].map(_taxid)
+        for (phen, ftype, sim, taxid), grp in df.groupby(["phenotype", "feature_type", "simulated", "_taxid"],
+                                                         dropna=False):
+            key = (phen, ftype, bool(sim), taxid)
             if key in seen:
                 continue
             seen.add(key)
@@ -396,6 +562,8 @@ def _pool_summary() -> list[dict]:
                 "phenotype": phen,
                 "feature_type": ftype,
                 "simulated": bool(sim),
+                "species_taxid": taxid,
+                "species": _species_label(taxid),
                 "studies": sorted(studies),
                 "n_features": int(len(grp)),
                 "n_features_k2plus": int((k.loc[idx] >= 2).sum()),
@@ -498,6 +666,17 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
             stale.unlink()
     candidates = _candidate_summary(phenotype_labels, cards_dir=cards_dir)
     pools = _pool_summary()
+    gate = cross_species_gate(pools)
+    cross_species = _cross_species_summary(gate, phenotype_labels, cards_dir=cards_dir)
+    cross_species["gate"] = gate
+    seen_rows: dict[int, dict] = {}
+    for key in ("top_real", "top_simulated"):
+        for r in candidates[key]:
+            seen_rows[id(r)] = r
+    for rows in [*candidates["top_real_by_phenotype"].values(), *candidates["top_simulated_by_phenotype"].values()]:
+        for r in rows:
+            seen_rows[id(r)] = r
+    _attach_ortholog_lookup(list(seen_rows.values()), evidence)
 
     def _tier_count(simulated: bool, tier: str) -> int:
         return sum(r["n"] for r in candidates["by_tier"]
@@ -518,11 +697,14 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
         "n_evidence_records_simulated": int(evidence["simulated"].sum()) if len(evidence) else 0,
         "n_candidates_real_high_priority": _tier_count(False, "high_priority_cross_study"),
         "n_candidates_real_multi_omics": _tier_count(False, "multi_omics_convergence"),
+        "n_candidates_real_metabolite_linked": _tier_count(False, "metabolite_linked_convergence"),
         "n_candidates_real_emerging": _tier_count(False, "emerging"),
         "n_real_stressor_classes": len(real_stressors),
         "real_stressor_classes": real_stressors,
         "n_real_comparisons_with_resilience_phenotype": len(real_resilience_comparisons),
         "n_real_pools_k2plus": sum(1 for p in pools if not p["simulated"] and p["max_k"] >= 2),
+        "n_real_species_with_evidence": len({p["species_taxid"] for p in pools if not p["simulated"]}),
+        "n_real_phenotypes_cross_species_open": sum(1 for g in gate if not g["simulated"] and g["open"]),
     }
 
     head_sha = _git("rev-parse", "HEAD")
@@ -539,6 +721,7 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
             "evidence_table": EVIDENCE_TABLE.exists(),
             "meta_analysis": META_ANALYSIS_DIR.exists() and any(META_ANALYSIS_DIR.glob("*.tsv")),
             "candidates": CANDIDATES_TABLE.exists(),
+            "cross_species_candidates": CROSS_SPECIES_TABLE.exists(),
             "top_candidates_summary": TOP_CANDIDATES_MD.exists(),
             "real_crosswalk": bool(_built_crosswalks()),
         },
@@ -559,6 +742,7 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
         "evidence": _evidence_summary(evidence),
         "candidates": candidates,
         "pools": pools,
+        "cross_species": cross_species,
         "activity": _activity(),
         "tests": _test_summary(),
         "implementation_status": _implementation_status(),

@@ -1,6 +1,8 @@
 """Harmonize a protein abundance / differential-abundance table into evidence records."""
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 
 from .identifiers import resolve_identifier
@@ -12,6 +14,16 @@ from .schema import (
     source_file_ref,
     study_reference_fields,
 )
+
+# Gene-model IDs of an earlier assembly that NCBI keeps as LocusTag on current
+# genes: the 2012 oyster_v9 models (CGI_10001851), alone or as a ProteinProphet
+# protein group ("CGI_10000041,CGI_10008574").
+LEGACY_LOCUS_TAG_RE = re.compile(r"^CGI_\d+([,;]CGI_\d+)*$")
+
+
+def protein_id_type(raw_id) -> str:
+    """Which crosswalk route a protein identifier takes."""
+    return "legacy_locus_tag" if LEGACY_LOCUS_TAG_RE.match(str(raw_id).strip()) else "uniprot_accession"
 
 
 def harmonize_proteomics(
@@ -31,8 +43,12 @@ def harmonize_proteomics(
 
     for _, r in df.iterrows():
         raw_id = r["protein_accession"]
-        resolved = resolve_identifier(raw_id, "uniprot_accession")
+        resolved = resolve_identifier(raw_id, protein_id_type(raw_id))
         effect_size = float(r["log2FC"]) if pd.notna(r.get("log2FC")) else None
+        # Raw-mode workflow output carries limma's posterior SE; published
+        # tables usually do not, and nothing is imputed when they don't.
+        standard_error = float(r["lfcSE"]) if pd.notna(r.get("lfcSE")) else None
+        method = r.get("analysis_method") if pd.notna(r.get("analysis_method")) else analysis_method
         direction = molecular_direction_from_effect(effect_size)
 
         quality_flags = compute_quality_flags(study, comparison, resolved.mapping_confidence)
@@ -41,7 +57,7 @@ def harmonize_proteomics(
             quality_flags = sorted(set(quality_flags) | {"processed_only"})
 
         rows.append({
-            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], raw_id, analysis_method),
+            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], raw_id, method),
             "study_id": study["study_id"],
             "comparison_id": comparison["comparison_id"],
             "simulated": bool(study.get("simulated", False)),
@@ -54,7 +70,7 @@ def harmonize_proteomics(
             "molecular_direction": direction,
             "effect_size": effect_size,
             "effect_size_type": "log2FoldChange",
-            "standard_error": None,
+            "standard_error": standard_error,
             "ci_lower": None,
             "ci_upper": None,
             "p_value": float(r["pvalue"]) if pd.notna(r.get("pvalue")) else None,
@@ -66,7 +82,7 @@ def harmonize_proteomics(
             "phenotype": comparison["phenotype"],
             "phenotype_direction": comparison["phenotype_direction"],
             "resilience_classification": comparison.get("resilience_classification"),
-            "analysis_method": analysis_method,
+            "analysis_method": method,
             "mapping_confidence": resolved.mapping_confidence,
             "quality_flags": quality_flags,
             "source_file": source_ref,

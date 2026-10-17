@@ -1,0 +1,44 @@
+{
+  "study_id": "PERUZZA2023_HEATWAVE",
+  "bioproject": "PRJNA906528",
+  "date_generated": "2026-10-15",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA906528&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "temp"
+  ],
+  "n_runs": 40,
+  "n_samples": 40,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "20": 20,
+    "30": 20
+  },
+  "min_group_size": 20,
+  "total_fastq_bytes": 7900304210,
+  "fastq_sources": {
+    "fastq_ftp": 40,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/PERUZZA2023_HEATWAVE/samplesheet.tsv": "0429ae867bd0009cca418e848e7e1c65c61b32e27cd68e4437ef7ea7f53d598b",
+    "data/studies/PERUZZA2023_HEATWAVE/fastq_manifest.tsv": "f39a9869be0bd86fe04e89b1d479d632e958942551109fc5fb14229c25f3868d"
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "AMPLICON": 39,
+      "RNA-Seq": 40
+    }
+  }
+}

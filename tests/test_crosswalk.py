@@ -37,10 +37,10 @@ GENE_INFO_FIXTURE = "\t".join(
     [
         # named gene, single Ensembl xref
         "29159\t100\tCYTB\t-\tcob|cytb\tEnsembl:ENSMGIG00000000100\tMT\t-\tcytochrome b\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
-        # unnamed gene, two Ensembl xrefs
-        "29159\t200\tLOC200\t-\t-\tEnsembl:ENSMGIG00000000200|Ensembl:ENSMGIG00000000201\t1\t-\tuncharacterized LOC200\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
-        # no xrefs at all
-        "29159\t300\tLOC300\t-\t-\t-\t2\t-\tuncharacterized LOC300\tncRNA\t-\t-\t-\t-\t20240101\t-",
+        # unnamed gene, two Ensembl xrefs, a legacy (oyster_v9-style) locus tag
+        "29159\t200\tLOC200\tCGI_10000200\t-\tEnsembl:ENSMGIG00000000200|Ensembl:ENSMGIG00000000201\t1\t-\tuncharacterized LOC200\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
+        # no xrefs at all; a legacy locus tag
+        "29159\t300\tLOC300\tCGI_10000300\t-\t-\t2\t-\tuncharacterized LOC300\tncRNA\t-\t-\t-\t-\t20240101\t-",
         # a different taxid must be ignored
         "6565\t999\tOTHER\t-\t-\t-\t1\t-\twrong species\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
     ]
@@ -245,6 +245,29 @@ def test_unknown_identifiers_stay_unresolved(use_built_crosswalk):
 # --------------------------------------------------------------------------- #
 # Retired GeneIDs (studies run against an older annotation)
 # --------------------------------------------------------------------------- #
+
+
+def test_legacy_locus_tags_are_carried_into_the_crosswalk(built_crosswalk):
+    _, rows = built_crosswalk
+    tags = {r["ncbi_gene_id"]: r["legacy_locus_tags"] for r in rows}
+    assert tags == {"100": "", "200": "CGI_10000200", "300": "CGI_10000300"}
+
+
+def test_legacy_locus_tag_resolves_as_inferred(use_built_crosswalk):
+    resolved = resolve_identifier("CGI_10000200", "legacy_locus_tag")
+    assert resolved.feature_id_standardized == "200"
+    assert resolved.mapping_confidence == "inferred"
+
+
+def test_legacy_protein_group_resolves_only_when_members_agree(use_built_crosswalk):
+    assert resolve_identifier("CGI_10000200,CGI_10000200", "legacy_locus_tag").feature_id_standardized == "200"
+    for group in ("CGI_10000200,CGI_10000300", "CGI_10000200,CGI_99999999"):
+        resolved = resolve_identifier(group, "legacy_locus_tag")
+        assert resolved.feature_id_standardized is None and resolved.mapping_confidence == "unresolved"
+
+
+def test_unknown_legacy_locus_tag_stays_unresolved(use_built_crosswalk):
+    assert resolve_identifier("CGI_10099999", "legacy_locus_tag").mapping_confidence == "unresolved"
 
 
 def test_parse_gene_history_separates_replaced_from_dead(fixture_sources):

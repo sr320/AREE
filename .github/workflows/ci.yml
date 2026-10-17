@@ -49,9 +49,11 @@ jobs:
           done
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
+          aree build-cross-species-cards --feature-type gene
           aree top-candidates
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
+          test -f reports/evidence_cards/cross_species/candidates.tsv
           test -f reports/top_candidates_summary.md
 
   study-pr-scope:
@@ -246,6 +248,24 @@ jobs:
             -work-dir /tmp/aree-smoke/work-metabolomics-raw
           python scripts/check_metabolomics_raw_smoke.py /tmp/aree-smoke/metabolomics-raw
 
+      # A real run of the proteomics raw DAG on a spectral-count (NSAF-like)
+      # fixture: linear scale, zeros as not detected, the per-arm detection
+      # filter, sample-sheet subsetting and limma with lfcSE.
+      - name: Run the proteomics raw DAG on a spectral-count fixture
+        run: |
+          nextflow run workflows/proteomics -profile local \
+            --mode raw_reanalysis \
+            --proteomics.raw_abundance_matrix tests/fixtures/proteomics_raw/abundance_matrix.tsv \
+            --proteomics.sample_sheet tests/fixtures/proteomics_raw/samplesheet.tsv \
+            --proteomics.study_id CI_PROT \
+            --proteomics.comparison_id treatment_vs_control \
+            --proteomics.input_scale linear \
+            --proteomics.normalization none \
+            --proteomics.quantification spectral_count \
+            --outdir /tmp/aree-smoke/proteomics-raw \
+            -work-dir /tmp/aree-smoke/work-proteomics-raw
+          python scripts/check_proteomics_raw_smoke.py /tmp/aree-smoke/proteomics-raw
+
       # Two stub runs differing only in comparison params, paired and single
       # end: the second must take FASTQC, fastp, Salmon and viral quant from
       # the -resume cache. Skipped in the Python job, which has no Nextflow.
@@ -287,6 +307,9 @@ jobs:
           python scripts/check_manifest_versions.py \
             /tmp/aree-smoke/metabolomics-raw/metabolomics/manifest/CI_METAB_treatment_vs_control_manifest.json \
             /tmp/aree-smoke/work-metabolomics-raw
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/proteomics-raw/proteomics/manifest/CI_PROT_treatment_vs_control_manifest.json \
+            /tmp/aree-smoke/work-proteomics-raw
 
   schema-validation:
     name: JSON schema sanity

@@ -180,6 +180,7 @@ def set_crosswalk_path(path) -> None:
     _CROSSWALK_OVERRIDE = Path(path) if path is not None else None
     _load_crosswalk.cache_clear()
     _uniprot_index.cache_clear()
+    _legacy_locus_index.cache_clear()
     _retired_map.cache_clear()
 
 
@@ -230,6 +231,24 @@ def _uniprot_index(path_str: str) -> dict:
     # An accession attributed to more than one gene cannot be an exact match.
     for acc in collisions:
         index[acc] = -1
+    return index
+
+
+@lru_cache(maxsize=4)
+def _legacy_locus_index(path_str: str) -> dict:
+    """Map each legacy locus tag (NCBI LocusTag, e.g. CGI_10001851) to its row index.
+
+    Crosswalks built before builder v1.1.0 have no `legacy_locus_tags` column;
+    they simply resolve nothing through this route. A tag carried by more than
+    one gene maps to -1 and is treated as ambiguous.
+    """
+    df = _load_crosswalk(path_str)
+    index: dict = {}
+    if "legacy_locus_tags" not in df.columns:
+        return index
+    for pos, tags in enumerate(df["legacy_locus_tags"]):
+        for tag in (t for t in tags.split(";") if t):
+            index[tag] = -1 if tag in index and index[tag] != pos else pos
     return index
 
 
@@ -365,7 +384,7 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
     """Resolve a raw feature identifier to a standardized id + mapping confidence.
 
     id_type must be one of: ncbi_gene_id, ensembl_gene_id, uniprot_accession,
-    locus_id, gene_symbol.
+    locus_id, legacy_locus_tag, gene_symbol.
     """
     if raw_id is None or (isinstance(raw_id, float) and pd.isna(raw_id)):
         return ResolvedIdentifier(None, "unresolved", None)
@@ -385,6 +404,19 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
             )
         row = cw.iloc[pos]
         return ResolvedIdentifier(row["ncbi_gene_id"], "exact", row["orthogroup_id"] or None)
+
+    if id_type == "legacy_locus_tag":
+        # A legacy gene model (e.g. oyster_v9 CGI_ IDs) found in NCBI's LocusTag
+        # for a current gene. 'inferred', not 'exact': the link crosses an
+        # annotation version. A protein group naming several models resolves
+        # only if every model points at the same current gene.
+        index = _legacy_locus_index(str(active_crosswalk_path()))
+        tags = [t.strip() for t in str(raw_id).replace(";", ",").split(",") if t.strip()]
+        positions = {index.get(t) for t in tags}
+        if not tags or None in positions or -1 in positions or len(positions) != 1:
+            return ResolvedIdentifier(None, "unresolved", None)
+        row = cw.iloc[positions.pop()]
+        return ResolvedIdentifier(row["ncbi_gene_id"], "inferred", row["orthogroup_id"] or None)
 
     if id_type in STABLE_ID_COLUMNS:
         # `ncbi_gene_id` and `locus_id` are two spellings of the same thing:

@@ -1,5 +1,5 @@
 # AREE task runner. Run `make help` for the list.
-.PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard docs app clean
+.PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard docs app clean metabolite-links
 
 # Every simulated study in registry/studies/, so a new demo study needs no edit here.
 DEMO_STUDIES = $(shell aree study-ids --simulated)
@@ -12,6 +12,7 @@ help:
 	@echo "  lint         run ruff over src and tests"
 	@echo "  demo         run the full demo pipeline (register -> harmonize -> meta -> cards)"
 	@echo "  demo-clean   remove generated reports/ and the registry index, then run demo"
+	@echo "  metabolite-links  build the real C. gigas metabolite->gene link table from KEGG (git-ignored)"
 	@echo "  crosswalk    rebuild the real NCBI/UniProt identifier crosswalk (~380 MB download)"
 	@echo "  intake       regenerate the real study's result tables from the published source"
 	@echo "  intake-check verify the committed result tables still reproduce (no writes)"
@@ -46,6 +47,7 @@ meta:
 
 cards:
 	aree build-evidence-cards
+	aree build-cross-species-cards --feature-type gene
 	aree top-candidates
 
 demo: register harmonize meta cards
@@ -61,6 +63,9 @@ demo-clean: clean demo
 
 crosswalk:
 	aree build-crosswalk
+
+metabolite-links:
+	aree build-metabolite-links
 
 REAL_CROSSWALK := data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 REAL_INTAKE := data/studies/HESSER2024_VCOR/intake.yaml
