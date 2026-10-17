@@ -126,8 +126,11 @@ biochemically instead: a curated metabolite name is mapped to KEGG compounds,
 then to the KEGG reactions in which the compound participates, the KEGG
 orthologs annotated to catalyse those reactions, and the *C. gigas* genes
 KEGG assigns to those orthologs (NCBI GeneIDs, checked against the
-RS_2024_06 crosswalk). Currency cofactors and compounds linked to more than
-25 genes are excluded, and links are never assigned higher than
+RS_2024_06 crosswalk). Transporters are linked as well, through KEGG BRITE ko02000
+membership plus a curated transporter-to-substrate assignment, because
+ko02000 records no substrates; such links are always rated inferred.
+Currency cofactors and compounds linked to more than
+25 genes of one link type are excluded, and links are never assigned higher than
 one-to-many-ortholog confidence. A candidate whose own layer is significant
 and whose linked feature is significant in another layer under the same
 phenotype is placed in a separate metabolite-linked convergence tier, ranked

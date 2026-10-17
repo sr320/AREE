@@ -10,6 +10,18 @@ it can only be *linked* to genes biochemically:
       -> KEGG orthology     (the KO annotated to catalyse that reaction)
       -> crg gene           (KEGG's KO assignment for C. gigas = an NCBI GeneID)
 
+A second link type covers transport rather than catalysis:
+
+    reported metabolite name
+      -> KEGG compound
+      -> transporter KO    (curated: data/mappings/transporter_substrates.tsv,
+                            each KO verified as a member of KEGG BRITE ko02000)
+      -> crg gene
+
+ko02000 classifies transporters but records no substrate compounds, so the
+KO -> compound step for a transporter is curation, and a transporter link is
+always `inferred`.
+
 Every step is annotation, not measurement, so a link is never `exact` and never
 `one_to_one_ortholog` (see docs/metabolite_gene_links.md section 7). Currency
 metabolites (ATP, NAD+, H2O, ...) and hub compounds reaching more than
@@ -44,13 +56,23 @@ from common import (
 COMPOUND_MAP_PATH = MAPPINGS_DIR / "metabolite_compound_map.tsv"
 CURRENCY_PATH = MAPPINGS_DIR / "currency_metabolites.yaml"
 DEMO_LINKS_PATH = MAPPINGS_DIR / "metabolite_gene_links_demo.tsv"
+TRANSPORTER_SUBSTRATES_PATH = MAPPINGS_DIR / "transporter_substrates.tsv"
 
 # A compound annotated to more crg genes than this is a hub: crediting it would
 # turn "this metabolite changed" into "much of the metabolic genome is linked".
+# Counted per link type, so adding transporter links never removes the credit
+# of a compound's enzyme links (or the reverse).
 MAX_GENES_PER_COMPOUND = 25
 
+LINK_TYPE_ENZYME = "enzyme"
+LINK_TYPE_TRANSPORTER = "transporter"
+
+# kegg_reaction / equation_side are empty for transporter rows (transport has
+# no KEGG REACTION); brite_family is empty for enzyme rows. link_basis is
+# `kegg_reaction` for enzymes and the curated substrate_basis for transporters.
 LINK_COLUMNS = [
     "kegg_compound", "compound_name", "kegg_reaction", "equation_side", "ko", "ncbi_gene_id", "link_type",
+    "link_basis", "brite_family",
 ]
 
 # Link-table availability for a partition, as reported on every candidate.
@@ -106,10 +128,16 @@ class MetaboliteGeneLink:
     link_confidence: str
     credited: bool
     exclusion_reason: str | None = None
+    link_basis: str = "kegg_reaction"
+    brite_family: str = ""
+
+    @property
+    def via(self) -> str:
+        """The step between compound and KO: a reaction, or 'transport'."""
+        return self.kegg_reaction if self.link_type == LINK_TYPE_ENZYME else "transport"
 
     def describe(self) -> str:
-        return (f"{self.metabolite}→{self.ncbi_gene_id} via {self.kegg_compound}/"
-                f"{self.kegg_reaction}/{self.ko}")
+        return f"{self.metabolite}→{self.ncbi_gene_id} via {self.kegg_compound}/{self.via}/{self.ko}"
 
 
 @dataclass(frozen=True)
@@ -119,17 +147,24 @@ class CompoundExclusion:
     metabolite: str
     kegg_compound: str
     reason: str  # currency_metabolite | hub_compound | no_reaction_in_table
+    link_type: str | None = None  # set for hub_compound: the cap is per link type
 
 
-def link_confidence(match_basis: str, n_compounds_for_name: int, n_genes_for_compound: int) -> str:
+def link_confidence(match_basis: str, n_compounds_for_name: int, n_genes_for_compound: int,
+                    link_type: str = LINK_TYPE_ENZYME) -> str:
     """Mapping confidence of a metabolite -> gene link (never 'exact' or one-to-one).
 
-    A curator's judgement call on the name, or a name that resolves to more
-    than one compound (e.g. 'lactate' -> L- and D-lactate), is the weakest
-    rung, `inferred`. Otherwise a compound reaching several genes is
-    `one_to_many_ortholog`, and one reaching a single gene is still `inferred`:
-    the enzyme assignment is KEGG orthology transfer, not oyster biochemistry.
+    A transporter link is always `inferred`: its substrate is a curated
+    assignment (ko02000 records none), and the oyster ortholog's substrate
+    specificity is unmeasured. A curator's judgement call on the name, or a
+    name that resolves to more than one compound (e.g. 'lactate' -> L- and
+    D-lactate), is also `inferred`. Otherwise a compound reaching several genes
+    is `one_to_many_ortholog`, and one reaching a single gene is still
+    `inferred`: the enzyme assignment is KEGG orthology transfer, not oyster
+    biochemistry.
     """
+    if link_type != LINK_TYPE_ENZYME:
+        return "inferred"
     if match_basis == "curator_judgement" or n_compounds_for_name > 1:
         return "inferred"
     if n_genes_for_compound > 1:
@@ -182,6 +217,16 @@ class MetaboliteGeneLinks:
         return f"{rel} (sha256 {self.sha256[:12]}…, {self.source})"
 
 
+def _link_type(row: dict) -> str:
+    return row.get("link_type") or LINK_TYPE_ENZYME
+
+
+@lru_cache(maxsize=4)
+def load_transporter_substrates(path: Path = TRANSPORTER_SUBSTRATES_PATH) -> list:
+    """Curated transporter KO -> compound rows (see the file header)."""
+    return _read_tsv(path)
+
+
 def build_links(
     link_rows: list,
     compound_map: dict,
@@ -195,9 +240,9 @@ def build_links(
     rows_by_compound = defaultdict(list)
     for row in link_rows:
         rows_by_compound[row["kegg_compound"]].append(row)
-    genes_by_compound = {
-        cpd: {str(r["ncbi_gene_id"]) for r in rows} for cpd, rows in rows_by_compound.items()
-    }
+    genes_by_type = defaultdict(set)  # (compound, link_type) -> genes
+    for row in link_rows:
+        genes_by_type[(row["kegg_compound"], _link_type(row))].add(str(row["ncbi_gene_id"]))
 
     links, exclusions = [], []
     for metabolite, compounds in compound_map.items():
@@ -211,17 +256,20 @@ def build_links(
             if not rows:
                 exclusions.append(CompoundExclusion(metabolite, cpd, "no_reaction_in_table"))
                 continue
-            n_genes = len(genes_by_compound[cpd])
-            hub = n_genes > max_genes_per_compound
-            if hub:
-                exclusions.append(CompoundExclusion(metabolite, cpd, "hub_compound"))
-            confidence = link_confidence(compound["match_basis"], n_compounds, n_genes)
+            hubs = set()
+            for (hub_cpd, link_type), genes in sorted(genes_by_type.items()):
+                if hub_cpd == cpd and len(genes) > max_genes_per_compound:
+                    hubs.add(link_type)
+                    exclusions.append(CompoundExclusion(metabolite, cpd, "hub_compound", link_type))
             seen = set()
             for row in rows:
-                key = (row["kegg_reaction"], row["ko"], str(row["ncbi_gene_id"]))
+                link_type = _link_type(row)
+                key = (link_type, row["kegg_reaction"], row["ko"], str(row["ncbi_gene_id"]))
                 if key in seen:
                     continue
                 seen.add(key)
+                n_genes = len(genes_by_type[(cpd, link_type)])
+                hub = link_type in hubs
                 links.append(MetaboliteGeneLink(
                     metabolite=metabolite,
                     kegg_compound=cpd,
@@ -230,11 +278,13 @@ def build_links(
                     equation_side=row["equation_side"],
                     ko=row["ko"],
                     ncbi_gene_id=str(row["ncbi_gene_id"]),
-                    link_type=row.get("link_type") or "enzyme",
+                    link_type=link_type,
                     n_genes_for_compound=n_genes,
-                    link_confidence=confidence,
+                    link_confidence=link_confidence(compound["match_basis"], n_compounds, n_genes, link_type),
                     credited=not hub,
                     exclusion_reason="hub_compound" if hub else None,
+                    link_basis=row.get("link_basis") or "kegg_reaction",
+                    brite_family=row.get("brite_family") or "",
                 ))
     return links, exclusions
 
@@ -297,4 +347,5 @@ def clear_caches() -> None:
     """Forget loaded tables (after a rebuild, or in tests that swap files)."""
     load_compound_map.cache_clear()
     load_currency_compounds.cache_clear()
+    load_transporter_substrates.cache_clear()
     links_for_partition.cache_clear()

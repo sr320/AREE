@@ -136,7 +136,9 @@ Tier assignment, in order:
    significant, and another layer carries a significant same-phenotype record
    for a feature **linked** to it biochemically rather than by a shared ID: a
    metabolite and a gene whose product KEGG annotates (by orthology) to
-   catalyse a reaction involving that metabolite. Checked only if neither tier
+   catalyse a reaction involving that metabolite (`enzyme`), or a transporter
+   (KEGG BRITE ko02000) curated as carrying it (`transporter`, always
+   `inferred`). Checked only if neither tier
    above applies. This is a deliberately weaker, separately named kind of
    convergence: it does not add to `n_supporting_layers` or to the score;
    currency metabolites (ATP, NAD⁺, …) and hub compounds reaching more than

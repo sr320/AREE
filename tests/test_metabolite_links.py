@@ -19,7 +19,7 @@ from harmonize.core import load_evidence_table
 from mappings.build_metabolite_links import build, equation_side, parse_entries
 from prioritize.rank import TIER_ORDER, build_candidates
 
-LDH, SDHA = "LOC105342001", "LOC105342002"
+LDH, SDHA, GLUT1 = "LOC105342001", "LOC105342002", "LOC105342003"
 
 
 @pytest.fixture(autouse=True)
@@ -279,8 +279,23 @@ def test_demo_lactate_and_ldh_converge_by_link_only(isolated_reports):
     # sdha is linked to a significant succinate change, but is not significant itself.
     assert candidates.loc[SDHA, "tier"] == "emerging"
     assert candidates.loc["succinate", "tier"] == "emerging"
+    # glucose <-> simulated glut1 converge through a transporter link, not a reaction.
+    for feature in (GLUT1, "glucose"):
+        assert candidates.loc[feature, "tier"] == "metabolite_linked_convergence"
+        assert candidates.loc[feature, "linked_features"] == "glucose→LOC105342003 via C00031/transport/K07299"
+        assert candidates.loc[feature, "link_confidences"] == "inferred"
     assert candidates.loc["ATP", "tier"] == "emerging"
     assert not (candidates["tier"] == "multi_omics_convergence").any()
+
+
+def test_demo_link_examples_are_not_on_the_significance_boundary(isolated_reports):
+    """A demo convergence case that sits at adj. p = 0.05 would flip on a change
+    from <= to <, and silently stop demonstrating anything."""
+    harmonize_all_demo_studies()
+    evidence = oyster(load_evidence_table()).set_index("feature_id_standardized")
+    for feature in ("lactate", "glucose", LDH, GLUT1):
+        adjusted = float(evidence.loc[feature, "adjusted_p_value"])
+        assert adjusted <= 0.04, (feature, adjusted)
 
 
 def test_demo_cards_explain_the_link_and_its_exclusions(isolated_reports):
@@ -292,9 +307,17 @@ def test_demo_cards_explain_the_link_and_its_exclusions(isolated_reports):
     assert "not by a shared identifier" in lactate
     assert "Metabolite–gene links (biochemical; weaker than shared gene identity)" in lactate
     assert "metabolite_gene_links_demo.tsv (sha256 " in lactate
-    assert "| GIGAS_HEAT01 | transcriptomics | LOC105342001 | C00186 | R00703 | K00016 |" in lactate
+    assert ("| GIGAS_HEAT01 | transcriptomics | LOC105342001 | C00186 | enzyme | R00703 | K00016 | left | "
+            "kegg_reaction | inferred |") in lactate
+    assert "Transporter links" not in lactate  # the demo table has no transporter rows
     assert "different stressor" in lactate
-    assert "`C00256`: no reaction" in lactate
+    assert "`C00256`: no enzyme or transporter link" in lactate
+
+    glucose = cards[("glucose", 29159)]
+    assert "**Transporter links** are weaker still" in glucose
+    assert "SLC2: Facilitative GLUT transporter" in glucose
+    assert ("| GIGAS_HEAT01 | transcriptomics | LOC105342003 | C00031 | transporter | transport | K07299 | — | "
+            "ko_definition | inferred |") in glucose
 
     atp = cards[("ATP", 29159)]
     assert "`C00002`: currency metabolite" in atp
@@ -318,6 +341,44 @@ def test_equation_side():
     assert equation_side("C00031 <=> C00022", "C00186") is None
 
 
+def test_parse_brite_records_every_family_path():
+    from mappings.build_metabolite_links import parse_brite
+    families = parse_brite(FAKE_KO02000 + "ABC transporters\nB  Other\nC    K14388  SMCT again\n")
+    assert families["K14388"] == ("Solute carrier family (SLC) > SLC5: Sodium glucose cotransporter; "
+                                  "BC transporters > Other")
+    assert families["K08180"].endswith("SLC16: Monocarboxylate transporter")
+
+
+def test_transporter_links_are_always_inferred_and_capped_separately():
+    compound_map = {"glucose": [{"kegg_compound": "C00031", "match_basis": "exact_name"}]}
+    rows = [_row("C00031", f"E{i}", ko=f"K{i}") for i in range(3)]
+    rows += [{**_row("C00031", f"T{i}", reaction="", side=""), "link_type": "transporter",
+              "link_basis": "ko_definition", "brite_family": "SLC2"} for i in range(5)]
+    links, exclusions = ml.build_links(rows, compound_map, {}, max_genes_per_compound=4)
+
+    enzyme = [link for link in links if link.link_type == "enzyme"]
+    transport = [link for link in links if link.link_type == "transporter"]
+    # Five transporters exceed the cap; the three enzyme links keep their credit.
+    assert all(link.credited for link in enzyme)
+    assert {link.link_confidence for link in enzyme} == {"one_to_many_ortholog"}
+    assert not any(link.credited for link in transport)
+    assert {link.link_confidence for link in transport} == {"inferred"}
+    assert [(e.reason, e.link_type) for e in exclusions] == [("hub_compound", "transporter")]
+    assert transport[0].describe() == "glucose→T0 via C00031/transport/K1"
+
+
+def test_curated_transporter_rows_are_well_formed():
+    rows = ml.load_transporter_substrates()
+    curated_compounds = {c["kegg_compound"] for cs in ml.load_compound_map().values() for c in cs}
+    assert rows
+    for row in rows:
+        assert re.fullmatch(r"K\d{5}", row["ko"]), row
+        assert row["kegg_compound"] in curated_compounds, row
+        assert row["kegg_compound"] not in ml.load_currency_compounds(), row
+        assert row["substrate_basis"] in {"ko_definition", "substrate_class"}
+        assert row["human_ortholog"] and row["note"]
+
+
 def test_parse_entries_reads_first_value_per_entry():
     text = ("ENTRY       R00703                      Reaction\nNAME        (S)-lactate:NAD+ oxidoreductase\n"
             "EQUATION    C00186 + C00003 <=> C00022 + C00004 + C00080\n///\n"
@@ -328,10 +389,21 @@ def test_parse_entries_reads_first_value_per_entry():
     assert parsed["C00186"]["NAME"] == "(S)-Lactate;"
 
 
+FAKE_KO02000 = """+D
+!
+ASolute carrier family (SLC)
+B  SLC5: Sodium glucose cotransporter
+C    K14388  SLC5A8_12, SMCT; solute carrier family 5 (sodium-coupled monocarboxylate transporter), member 8/12
+B  SLC16: Monocarboxylate transporter
+C    K08180  SLC16A3; MFS transporter, MCT family, solute carrier family 16 (monocarboxylic acid transporters), member 3
+!
+"""
+
 FAKE_KEGG = {
     "info/kegg": "kegg\tKEGG (Kyoto Encyclopedia of Genes and Genomes)\n\tko          28,545  2026/10/16\n",
     "link/ko/crg": ("crg:1001\tko:K03778\ncrg:1002\tko:K03778\ncrg:9999\tko:K00234\n"
-                    "crg:tRNA-Arg\tko:K00234\ncrg:1003\tko:K00873\n"),
+                    "crg:tRNA-Arg\tko:K00234\ncrg:1003\tko:K00873\ncrg:1005\tko:K14388\n"),
+    "get/br:ko02000": FAKE_KO02000,
     "link/reaction/cpd:C00256": "cpd:C00256\trn:R00704\n",
     "link/reaction/cpd:C00042": "cpd:C00042\trn:R02164\n",
 }
@@ -359,15 +431,25 @@ def test_builder_writes_a_resolved_table_with_provenance(tmp_path):
     calls = []
     out = tmp_path / "links.tsv"
     # 9999 is a retired GeneID replaced by 1004; "tRNA-Arg" resolves to nothing.
-    resolver = ({"1001", "1002", "1003", "1004"}, {"9999": "1004"}, tmp_path / "crosswalk.tsv")
+    resolver = ({"1001", "1002", "1003", "1004", "1005"}, {"9999": "1004"}, tmp_path / "crosswalk.tsv")
     build(taxid=29159, out_path=out, fetch=_fake_fetch(calls), cache_dir=tmp_path / "cache",
           gene_resolver=resolver)
 
     table = pd.read_csv(out, sep="\t", comment="#", dtype=str)
     assert set(table.columns) == set(ml.LINK_COLUMNS)
-    assert set(zip(table["kegg_compound"], table["ncbi_gene_id"])) == {
+    enzyme = table[table["link_type"] == "enzyme"]
+    assert set(zip(enzyme["kegg_compound"], enzyme["ncbi_gene_id"])) == {
         ("C00256", "1001"), ("C00256", "1002"), ("C00042", "1004")}
-    assert set(table.loc[table["kegg_compound"] == "C00256", "equation_side"]) == {"left"}
+    assert set(enzyme.loc[enzyme["kegg_compound"] == "C00256", "equation_side"]) == {"left"}
+
+    # Transporter links: the curated SMCT row, for every curated compound it carries.
+    transport = table[table["link_type"] == "transporter"]
+    assert set(zip(transport["kegg_compound"], transport["ko"], transport["ncbi_gene_id"])) == {
+        ("C00186", "K14388", "1005"), ("C00256", "K14388", "1005"), ("C00022", "K14388", "1005")}
+    assert set(transport["link_basis"]) == {"substrate_class"}
+    assert set(transport["brite_family"]) == {
+        "Solute carrier family (SLC) > SLC5: Sodium glucose cotransporter"}
+    assert transport["kegg_reaction"].isna().all()
     # Currency compounds are never queried.
     assert "link/reaction/cpd:C00002" not in calls
 
@@ -378,6 +460,12 @@ def test_builder_writes_a_resolved_table_with_provenance(tmp_path):
     assert prov["unresolved_kegg_gene_ids"] == ["tRNA-Arg"]
     assert "C00002" in prov["currency_metabolites"]["skipped"]
     assert all(len(s["sha256"]) == 64 for s in prov["sources"])
+    transporters = prov["transporter_substrates"]
+    # Curated KOs absent from (this fake) ko02000 are rejected and listed, never silently used.
+    assert {"ko": "K07299", "kegg_compound": "C00031", "reason": "not in KEGG BRITE ko02000"} in \
+        transporters["rejected_not_in_ko02000"]
+    assert "K08180" in transporters["kos_without_crg_genes"]
+    assert prov["coverage"]["rows_by_link_type"]["transporter"] == 3
 
     # Offline rebuild from the cache reproduces the same table.
     out2 = tmp_path / "links2.tsv"
@@ -386,3 +474,35 @@ def test_builder_writes_a_resolved_table_with_provenance(tmp_path):
     body = [line for line in out.read_text().splitlines() if not line.startswith("#")]
     assert body == [line for line in out2.read_text().splitlines() if not line.startswith("#")]
     assert json.loads(ml.provenance_path(out2).read_text())["artifact_sha256"] == sha256_file(out2)
+
+
+def test_card_explains_a_transporter_link(monkeypatch):
+    from prioritize.rank import EvidenceIndex, add_partition_columns
+
+    transporter_row = {**_row("C00186", "GENE_MCT", reaction="", side="", ko="K08180"),
+                       "link_type": "transporter", "link_basis": "substrate_class",
+                       "brite_family": "Solute carrier family (SLC) > SLC16: Monocarboxylate transporter"}
+    links, exclusions = ml.build_links(
+        [transporter_row], {"lactate": [{"kegg_compound": "C00186", "match_basis": "exact_name"}]}, {})
+    table = ml.MetaboliteGeneLinks(path=Path("synthetic.tsv"), status=ml.STATUS_AVAILABLE,
+                                   sha256="0" * 64, source="test", links=links, exclusions=exclusions)
+    monkeypatch.setattr(rank, "links_for_partition", lambda simulated, taxid: table)
+    monkeypatch.setattr(evidence_cards, "links_for_partition", lambda simulated, taxid: table)
+
+    evidence = _evidence([
+        ("rna", "RNA", "GENE_MCT", "gene", "growth_under_stress", 0.01),
+        ("met", "MET", "lactate", "metabolite_feature", "growth_under_stress", 0.02),
+    ]).assign(stressor="hypoxia", molecular_direction="up", effect_size=1.0)
+    candidate = build_candidates(_candidate("lactate", "metabolite_feature", "met", "MET"), evidence).iloc[0]
+    candidate = candidate.to_dict()
+    assert candidate["tier"] == "metabolite_linked_convergence"
+    assert candidate["linked_features"] == "lactate→GENE_MCT via C00186/transport/K08180"
+    assert candidate["link_confidences"] == "inferred"
+
+    index = EvidenceIndex(add_partition_columns(evidence))
+    content = evidence_cards._card_markdown(
+        candidate, [], [], "Growth under stress", evidence_cards._linked_omics_context(index, candidate))
+    assert "**Transporter links** are weaker still" in content
+    assert "`Solute carrier family (SLC) > SLC16: Monocarboxylate transporter`" in content
+    assert "| MET |" not in content  # the candidate's own record is not a linked row
+    assert "| RNA | transcriptomics | GENE_MCT | C00186 | transporter | transport | K08180 | — | substrate_class | inferred |" in content
