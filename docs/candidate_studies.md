@@ -199,7 +199,7 @@ papers is the realistic route. The Roberts-lab projects make that easiest.
 |---|---|---|---|---|
 | P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | Harney et al. 2016, *J Proteomics* (PRIDE reference). Complete submission. |
 | P2 | `PXD015434` | early juveniles, temperature | Thermal | **Confirmed**: Crandall et al. 2022, *PeerJ*. |
-| P3 | `PXD013262` | seed, time × temperature | Thermal | **Confirmed**: Wanamaker et al. 2020, *BMC Genomics*. Together, P2 and P3 give thermal proteomics k=2, and both pair with M1/M3 for multi-omics convergence. |
+| P3 | `PXD013262` | seed, time × temperature | Thermal | **Registered, QC failed** as `WANAMAKER2020_HEAT_SEED` (2026-10-17): one silo per temperature, technical replicates only (see Rejected below). P2 is now the only thermal proteomics candidate, so thermal proteomics k=2 needs another study. |
 | P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. An OA protein layer alongside `LUTIER2022_OA_TIPPING` (RNA-seq) and M4/M5. |
 | P5 | `PXD011365` | gill mitochondria, hypoxia–reoxygenation | **Hypoxia tolerance** | Sokolov et al. 2019, *J Proteomics* (PRIDE reference). This is the only public omics dataset found for `hypoxia_tolerance`, which the RNA-seq screen flagged as empty. |
 | P6 | `PXD065668` / `PXD065706` | gill proteome + phosphoproteome, ERK inhibition | Thermotolerance divergence | **Confirmed**: Wang et al. 2026, *Commun Biol*. This is a pharmacological perturbation, so it is mechanism support, not population evidence. |
@@ -217,6 +217,14 @@ Immunol* covers salinity tolerance with multi-omics.
 protocol pools 10 oysters per timepoint per population, which leaves six
 pooled samples and no replicates. This is the proteomic version of
 `PRJNA623063` below.
+
+**Registered, QC failed:** `PXD013262` (P3, `WANAMAKER2020_HEAT_SEED`).
+The 26 runs are 13 pools in technical duplicate, and the authors' sample
+metadata on figshare puts every 23 °C pool in one silo and every 29 °C pool in
+another. Temperature is confounded with silo, and no replicate is biological.
+The paper's ASCA found no temperature effect (P = 0.19). The authors' code
+also mentions a second 23 °C silo that was never deposited. If those samples
+exist, re-screen.
 
 ## Non-coding RNA, chromatin, and metabolomics candidates
 
