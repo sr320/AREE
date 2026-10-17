@@ -112,13 +112,19 @@ def test_every_complex_has_at_least_two_members():
 
 
 def test_every_species_has_exactly_one_reference_assembly():
+    """One NCBI reference assembly per species, except a species NCBI has not
+    annotated (GFF-route crosswalk, WP7), which has none."""
+    from harmonize.identifiers import crosswalk_route
+
     species_taxids = {t["ncbi_taxid"] for t in load_vocab("species").values()}
+    gff_route = {e["ncbi_taxid"] for e in registered_crosswalks() if crosswalk_route(e["path"]) == "gff_homology"}
     reference = {}
     for record in load_assemblies().values():
         if record.get("is_ncbi_reference"):
             reference.setdefault(record["ncbi_taxid"], []).append(record["assembly_id"])
     for taxid in species_taxids:
-        assert len(reference.get(taxid, [])) == 1, f"taxid {taxid}: {reference.get(taxid)}"
+        expected = 0 if taxid in gff_route else 1
+        assert len(reference.get(taxid, [])) == expected, f"taxid {taxid}: {reference.get(taxid)}"
 
 
 def test_every_assembly_belongs_to_a_registered_species():
@@ -554,6 +560,6 @@ def test_no_gene_id_appears_in_two_species_crosswalks():
         if not entry["path"].exists():
             continue
         ids = pd.read_csv(entry["path"], sep="\t", comment="#", dtype=str, usecols=["ncbi_gene_id"])
-        for gid in ids["ncbi_gene_id"]:
+        for gid in ids["ncbi_gene_id"].dropna():  # a GFF-route crosswalk has no GeneIDs
             assert gid not in seen, f"GeneID {gid} in both {seen[gid]} and {entry['path'].name}"
             seen[gid] = entry["path"].name

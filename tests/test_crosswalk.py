@@ -388,14 +388,47 @@ def committed_crosswalk(request):
     return entry
 
 
+def _route(entry) -> str:
+    from harmonize.identifiers import crosswalk_route
+
+    return crosswalk_route(entry["path"])
+
+
 def test_real_crosswalk_gene_ids_are_unique_and_numeric(committed_crosswalk):
     import pandas as pd
 
+    if _route(committed_crosswalk) != "ncbi_gene":
+        pytest.skip("GFF-route crosswalk: see test_gff_route_crosswalk_invariants")
     df = pd.read_csv(committed_crosswalk["path"], sep="\t", comment="#", dtype=str)
     assert len(df) > 1000
     assert df["ncbi_gene_id"].is_unique
     assert df["ncbi_gene_id"].str.fullmatch(r"\d+").all()
     assert (df["locus_id"] == "LOC" + df["ncbi_gene_id"]).all()
+
+
+def test_gff_route_crosswalk_invariants(committed_crosswalk):
+    """Anchored on the authors' gene IDs; UniProt only from the recorded homology search."""
+    import pandas as pd
+
+    if _route(committed_crosswalk) != "gff_homology":
+        pytest.skip("NCBI-route crosswalk")
+    path = committed_crosswalk["path"]
+    df = pd.read_csv(path, sep="\t", comment="#", dtype=str).fillna("")
+    assert len(df) > 1000
+    assert df["gene_id"].is_unique and (df["gene_id"] != "").all()
+    assert df["ncbi_gene_id"].eq("").all() or df["ncbi_gene_id"].str.fullmatch(r"\d*").all()
+    assert set(df["uniprot_evidence"]) <= {"", "diamond_blastp"}
+    assert ((df["uniprot_accession"] != "") == (df["uniprot_evidence"] == "diamond_blastp")).all()
+    # A transcript or protein ID names exactly one gene.
+    for column in ("transcript_ids", "protein_ids"):
+        ids = [i for v in df[column] for i in v.split(";") if i]
+        assert len(ids) == len(set(ids)), column
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    assert prov["anchor_column"] == "gene_id"
+    thresholds = prov["homology_search"]["thresholds"]
+    assert thresholds["max_evalue"] <= 1e-5 and thresholds["min_identity_pct"] >= 25
+    assert {s["name"] for s in prov["sources"]} >= {"annotation_gff3", "annotation_proteins", "uniprot_database"}
+    assert all(len(s["sha256"]) == 64 for s in prov["sources"])
 
 
 def test_real_crosswalk_never_invents_orthogroups(committed_crosswalk):
@@ -424,10 +457,16 @@ def test_real_crosswalk_provenance_names_the_species_reference_annotation(commit
 
     path = committed_crosswalk["path"]
     prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
-    reference = [
-        a for a in load_assemblies().values()
-        if a["ncbi_taxid"] == committed_crosswalk["ncbi_taxid"] and a.get("is_ncbi_reference")
-    ]
+    if _route(committed_crosswalk) == "gff_homology":
+        # No NCBI reference annotation exists; the annotation named is the
+        # registered assembly whose crosswalk this is.
+        reference = [a for a in load_assemblies().values()
+                     if a["assembly_id"] in committed_crosswalk["assemblies"]]
+    else:
+        reference = [
+            a for a in load_assemblies().values()
+            if a["ncbi_taxid"] == committed_crosswalk["ncbi_taxid"] and a.get("is_ncbi_reference")
+        ]
     assert len(reference) == 1
     assert reference[0]["ncbi_assembly_accession"] in prov["ncbi_reference_annotation_at_build"]
 
@@ -435,6 +474,8 @@ def test_real_crosswalk_provenance_names_the_species_reference_annotation(commit
 def test_real_crosswalk_has_a_retired_gene_id_sidecar(committed_crosswalk):
     from harmonize.identifiers import retired_table_path
 
+    if _route(committed_crosswalk) != "ncbi_gene":
+        pytest.skip("retired GeneIDs exist only for NCBI-route crosswalks")
     sidecar = retired_table_path(committed_crosswalk["path"])
     assert sidecar is not None and sidecar.exists()
 

@@ -85,6 +85,9 @@ worth less than one that says what it got wrong.
   phenotypes past the WP6 gate (two species each with a pool of k >= 2;
   thermal tolerance so far) and an ortholog lookup for every top candidate;
   see WP6 in mussel_clam_integration_plan.md.
+- GFF-route crosswalks for genomes without NCBI Gene records (WP7): the builder
+  and *M. coruscus* (`mcoru`) exist; razor clam and geoduck need their authors'
+  annotation files, and GFF-route species are not yet in an orthogroup run.
 - Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
   cross-references to NCBI GeneID — most likely by mapping RefSeq protein
   accessions through the NCBI annotation rather than relying on UniProt xrefs.
