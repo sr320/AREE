@@ -52,6 +52,9 @@ process DMR_POOLED_TILES {
     val replicate_unit
     path design_sheet
     val dmr_test              // 'limma' or 'dss'
+    val feature_units         // 'tiles' or 'genes' (gene bodies + promoters; intergenic tiles)
+    path annotation_gtf
+    val promoter_upstream_bp
 
     output:
     path "${study_id}_${comparison_id}_dmr_raw.tsv", emit: dmr_table
@@ -75,6 +78,10 @@ process DMR_POOLED_TILES {
     meth_diff_cut <- as.numeric(${meth_diff_cutoff})
     tile_size     <- as.integer(${tile_size})
     tile_min_cpgs <- as.integer(${tile_min_cpgs})
+    feature_units <- "${feature_units}"
+    stopifnot(feature_units %in% c("tiles", "genes"))
+    annotation_gtf <- "${annotation_gtf}"
+    promoter_bp   <- as.integer(${promoter_upstream_bp})
     unit_col      <- trimws("${replicate_unit}")
     design_path   <- "${design_sheet}"
 
@@ -128,19 +135,55 @@ process DMR_POOLED_TILES {
     wide <- Reduce(function(a, b) merge(a, b, by = c("chr", "pos")), pooled)
     message(sprintf("CpGs at >= %dx in all %d units: %d", unit_min_cov, length(unit_levels), nrow(wide)))
 
-    wide[, tile := (pos - 1L) %/% tile_size]
     mcols <- paste0("m_", unit_levels); ucols <- paste0("u_", unit_levels)
-    tiles <- wide[, c(list(n_cpg = .N), lapply(.SD, sum)), by = .(chr, tile), .SDcols = c(mcols, ucols)]
-    tiles <- tiles[n_cpg >= tile_min_cpgs]
-    message(sprintf("tiles of %d bp with >= %d CpGs: %d", tile_size, tile_min_cpgs, nrow(tiles)))
-    if (nrow(tiles) == 0) stop("no tiles pass the coverage and CpG-count filters")
+    sum_by <- function(d, keys) d[, c(list(n_cpg = .N), lapply(.SD, sum)), by = keys, .SDcols = c(mcols, ucols)]
 
-    M   <- as.matrix(tiles[, ..mcols])
-    Cov <- M + as.matrix(tiles[, ..ucols])
+    if (feature_units == "genes") {
+        # Gene-body units: every CpG in a gene body or its promoter
+        # (promoter_bp upstream of the strand-aware start) counts toward that
+        # gene, so a gene contributes one estimate however many tiles it spans.
+        # CpGs outside every gene window fall back to tile_size tiles.
+        gtf <- fread(cmd = paste("grep -v '^#'", shQuote(annotation_gtf)), header = FALSE, sep = "\\t", quote = "",
+                     select = c(1, 3, 4, 5, 7, 9),
+                     col.names = c("chr", "type", "g_start", "g_end", "strand", "attr"))
+        gtf <- gtf[type == "gene"]
+        gtf[, gene_id := sub('.*gene_id "([^"]+)".*', "\\\\1", attr)]
+        gtf[, w_start := ifelse(strand == "-", g_start, pmax(1L, g_start - promoter_bp))]
+        gtf[, w_end   := ifelse(strand == "-", g_end + promoter_bp, g_end)]
+        win <- gtf[, .(chr, w_start, w_end, gene_id, g_start, g_end)]
+        setkey(win, chr, w_start, w_end)
+        cpg <- wide[, .(chr, s = pos, e = pos, row = .I)]
+        hits <- foverlaps(cpg, win, by.x = c("chr", "s", "e"), by.y = c("chr", "w_start", "w_end"),
+                          type = "within", nomatch = 0L)
+        genic_rows <- unique(hits\$row)
+        g <- sum_by(cbind(wide[hits\$row], gene_id = hits\$gene_id), "gene_id")
+        g <- merge(g, unique(win[, .(gene_id, chr, start = w_start, end = w_end)]), by = "gene_id")
+        g <- g[!duplicated(gene_id)]
+        g[, `:=`(annotation_context = "gene_body", unit_kind = "gene")]
+        inter <- wide[!seq_len(nrow(wide)) %in% genic_rows]
+        inter[, tile := (pos - 1L) %/% tile_size]
+        t <- sum_by(inter, c("chr", "tile"))
+        t[, `:=`(start = as.integer(tile * tile_size + 1L), end = as.integer((tile + 1L) * tile_size),
+                 gene_id = "", annotation_context = "intergenic", unit_kind = "tile")]
+        t[, tile := NULL]
+        units <- rbindlist(list(g, t), use.names = TRUE, fill = TRUE)
+        message(sprintf("gene-body units: %d genes; intergenic CpGs in %d tiles", nrow(g), nrow(t)))
+    } else {
+        wide[, tile := (pos - 1L) %/% tile_size]
+        units <- sum_by(wide, c("chr", "tile"))
+        units[, `:=`(start = as.integer(tile * tile_size + 1L), end = as.integer((tile + 1L) * tile_size),
+                     gene_id = NA_character_, annotation_context = NA_character_, unit_kind = "tile")]
+        units[, tile := NULL]
+    }
+    units <- units[n_cpg >= tile_min_cpgs]
+    message(sprintf("%s units with >= %d CpGs: %d", feature_units, tile_min_cpgs, nrow(units)))
+    if (nrow(units) == 0) stop("no units pass the coverage and CpG-count filters")
+
+    M   <- as.matrix(units[, ..mcols])
+    Cov <- M + as.matrix(units[, ..ucols])
     colnames(M) <- colnames(Cov) <- unit_levels
     treat_units   <- unit_levels[unit_trt == 1]
     control_units <- unit_levels[unit_trt == 0]
-    tiles[, start := as.integer(tile * tile_size + 1L)]
     df_prior <- NA_real_
 
     if (dmr_test == "limma") {
@@ -151,27 +194,41 @@ process DMR_POOLED_TILES {
         fit <- eBayes(lmFit(mval, X))
         tt <- topTable(fit, coef = 2, number = Inf, sort.by = "none")
         df_prior <- fit\$df.prior
-        res <- data.table(
-            chr  = tiles\$chr, pos = tiles\$start,
-            # treatment minus control, as for methylKit's meth.diff
-            diff = rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE]),
-            fdr  = tt\$adj.P.Val
-        )
+        diff <- rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE])
+        # treatment minus control, as for methylKit's meth.diff. diff.se is
+        # chosen so that a normal (Wald) test of diff / se - which is what
+        # inverse-variance meta-analysis applies - reproduces limma's own
+        # p-value. Using |diff / t| instead would drop limma's small-sample df:
+        # at 2 vs 2 units (df ~4), a moderated t of 10 is p ~3e-4 but a z of 10
+        # is p ~1e-23 (CIBNOR2021_HEAT_RRSS, first rebuild).
+        zq <- qnorm(1 - tt\$P.Value / 2)
+        res <- data.table(diff = diff, diff.se = ifelse(zq > 0, abs(diff) / zq, NA_real_),
+                          pval = tt\$P.Value, fdr = tt\$adj.P.Val)
     } else {
         suppressPackageStartupMessages({ library(DSS); library(bsseq) })
-        bs <- BSseq(chr = tiles\$chr, pos = tiles\$start, M = M, Cov = Cov, sampleNames = unit_levels)
-        # group1 = treatment, so diff = treatment - control.
+        # Index positions: overlapping genes can share a start, and DSS needs
+        # unique loci; results are mapped back by index.
+        idx <- seq_len(nrow(units))
+        bs <- BSseq(chr = rep("units", nrow(units)), pos = idx, M = M, Cov = Cov, sampleNames = unit_levels)
         dml <- as.data.table(DMLtest(bs, group1 = treat_units, group2 = control_units, smoothing = FALSE))
-        res <- dml[tiles[, .(chr, start)], on = .(chr, pos = start), nomatch = 0L]
+        res <- dml[match(idx, dml\$pos), .(diff, diff.se, pval, fdr)]
     }
 
+    label <- ifelse(units\$unit_kind == "gene", paste0("GENE_", units\$gene_id),
+                    paste0("TILE_", units\$chr, "_", units\$start))
     out <- data.frame(
-        region_id         = paste0("DMR_", seq_len(nrow(res))),
-        chrom             = res\$chr,
-        start             = res\$pos,
-        end               = res\$pos + tile_size - 1L,
+        region_id         = label,
+        chrom             = units\$chr,
+        start             = units\$start,
+        end               = units\$end,
+        gene_id           = ifelse(is.na(units\$gene_id), "", units\$gene_id),
+        annotation_context = ifelse(is.na(units\$annotation_context), "", units\$annotation_context),
+        n_cpg             = units\$n_cpg,
         meth_diff_percent = round(100 * res\$diff, 3),
         qvalue            = signif(res\$fdr, 4),
+        pvalue            = signif(res\$pval, 4),
+        se_meth_diff_percent = signif(100 * res\$diff.se, 4),
+        analysis_method   = paste0(ifelse(dmr_test == "limma", "limma", "DSS"), "_pooled_", feature_units),
         n_samples         = length(sample_ids),
         n_replicate_units = length(unit_levels),
         passes_significance_filter = !is.na(res\$fdr) & res\$fdr <= qvalue_cut &
@@ -187,7 +244,7 @@ process DMR_POOLED_TILES {
         n_samples             = length(sample_ids),
         n_candidate_regions   = nrow(out),
         n_significant_regions = sum(out\$passes_significance_filter),
-        dmr_mode              = "tile",
+        dmr_mode              = feature_units,
         tile_size             = tile_size,
         min_coverage          = unit_min_cov,
         qvalue_cutoff         = qvalue_cut,

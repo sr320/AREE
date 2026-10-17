@@ -50,8 +50,19 @@ The acceptance target for WP5 is at least one within-species pool with k ≥ 2
 and real standard errors for mussels and for clams. Three pools are within
 reach.
 
-### A. Manila clam, heat (k = 2) — curate first
+### A. Manila clam, heat (k = 2) — done
 
+> **Done 2026-10-17.** Both projects are reanalyzed and on `main`:
+> `TUCCI2025_HEAT_PRIMING` (PRJNA1132140, PR #41) and `PERUZZA2023_HEATWAVE`
+> (PRJNA906528, PR #64; Peruzza et al. 2023, *Mar Pollut Bull* 193:115192,
+> [10.1016/j.marpolbul.2023.115192](https://doi.org/10.1016/j.marpolbul.2023.115192)).
+> Both are QuantSeq 3′ Tag-seq (PRJNA906528's ENA label says PolyA; the paper
+> and the reads say otherwise), both are fitted on clams with
+> `tank_level_replication` (4 tanks per arm in PRJNA906528), and PRJNA906528
+> fits sex as a covariate. Independence confirmed: same hatchery (SATMAR), but
+> clams bought in February 2021 vs February 2022. Both pooled comparisons are
+> `exposure_only`, so this pool replicates a heat response, not tolerance.
+>
 > **Claimed 2026-10-12** as `TUCCI2025_HEAT_PRIMING` (PRJNA1132140, draft PR
 > #41), registered but **not runnable yet**. Reading the paper's methods found
 > three things the deposit does not show:
@@ -70,7 +81,7 @@ reach.
 | Project | Runs used | Design (from deposited metadata) | Publication | Size |
 |---|---|---|---|---|
 | `PRJNA1132140` | 40 RNA-seq, single-end, about 7 M reads | Primed vs naive × heatwave vs no heatwave, **n = 10 per group** | Tucci et al. 2025, *iScience* 28:113108, [10.1016/j.isci.2025.113108](https://doi.org/10.1016/j.isci.2025.113108) | 13.8 GB |
-| `PRJNA906528` | 40 RNA-seq, single-end, about 7 M reads | 30 °C vs 20 °C for 30 days, digestive gland, **n = 20 per group** | none found | 7.9 GB |
+| `PRJNA906528` | 40 RNA-seq, single-end, about 7 M reads | 30 °C vs 20 °C for 30 days, digestive gland, **n = 20 per group** | Peruzza et al. 2023, *Mar Pollut Bull* 193:115192, [10.1016/j.marpolbul.2023.115192](https://doi.org/10.1016/j.marpolbul.2023.115192) | 7.9 GB |
 
 Why first: the cheapest real pool in the screen (about 22 GB, small enough for
 an 8 GB workstation), large n, and a measured outcome. Tucci et al. report

@@ -197,14 +197,14 @@ papers is the realistic route. The Roberts-lab projects make that easiest.
 
 | # | Accession | Design | Context | Notes |
 |---|---|---|---|---|
-| P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | Harney et al. 2016, *J Proteomics* (PRIDE reference). Complete submission. |
-| P2 | `PXD015434` | early juveniles, temperature | Thermal | **Confirmed**: Crandall et al. 2022, *PeerJ*. |
-| P3 | `PXD013262` | seed, time × temperature | Thermal | **Confirmed**: Wanamaker et al. 2020, *BMC Genomics*. Together, P2 and P3 give thermal proteomics k=2, and both pair with M1/M3 for multi-omics convergence. |
-| P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. An OA protein layer alongside `LUTIER2022_OA_TIPPING` (RNA-seq) and M4/M5. |
-| P5 | `PXD011365` | gill mitochondria, hypoxia–reoxygenation | **Hypoxia tolerance** | Sokolov et al. 2019, *J Proteomics* (PRIDE reference). This is the only public omics dataset found for `hypoxia_tolerance`, which the RNA-seq screen flagged as empty. |
-| P6 | `PXD065668` / `PXD065706` | gill proteome + phosphoproteome, ERK inhibition | Thermotolerance divergence | **Confirmed**: Wang et al. 2026, *Commun Biol*. This is a pharmacological perturbation, so it is mechanism support, not population evidence. |
-| P7 | `PXD064651` | mucus, *Vibrio* infection, iTRAQ | Pathogen challenge | No publication. Partial submission. |
-| P8 | `PXD000905` | low vs high OsHV-1 load, 2-DE | Pathogen | Corporeau et al. 2014, *J Proteomics* (PRIDE reference). This is 2-DE spot data, so feature mapping will be weak. |
+| P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | **Registered, not harmonized** as `HARNEY2016_OA_WARM_LARVAE` (2026-10-17). The design is sound, but this is a 2-DE study with no deposited spot volumes or gel images; PRIDE holds only spot identifications. The paper reports 12 of ~650 spots, selected at P < 0.02, with no SE, and 9 of 11 accessions are now deleted from UniProtKB. Worth reanalyzing if the SameSpots data are ever released. |
+| P2 | `PXD015434` | early juveniles, temperature | Thermal | **Registered, QC failed** as `CRANDALL2022_HEAT_SEED` (2026-10-17): one silo per temperature, and the two silos differed beyond temperature (see Rejected below). |
+| P3 | `PXD013262` | seed, time × temperature | Thermal | **Registered, QC failed** as `WANAMAKER2020_HEAT_SEED` (2026-10-17): one silo per temperature, technical replicates only (see Rejected below). With P2 also failed, no public thermal proteomics study in this list is analyzable. |
+| P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Reanalyzed** as `TIMMINS2014_OA_GILL` (2026-10-17), the first real proteomics study in AREE. 4 individual oysters per pCO₂ × mechanical-stress group, from the paper's per-oyster NSAF table. Low-power null: 639 proteins testable, none at padj < 0.05. It gives an OA protein layer with SEs alongside `LUTIER2022_OA_TIPPING` (RNA-seq) and M4/M5. QC passed with warnings. |
+| P5 | `PXD011365` | gill mitochondria, hypoxia–reoxygenation | **Hypoxia tolerance** | **Registered, not reanalyzed** as `SOKOLOV2019_HYPOX_MITO` (2026-10-17). It is the only public omics dataset found for `hypoxia_tolerance`, but not usable as deposited: the phosphoproteome has no run-to-condition key; the total proteome is 3 oysters per condition, acquired in condition blocks; and the only quantitative files are Scaffold mzIdentML exports over oyster_v9 RefSeq IDs. Reopen if the authors supply the phospho key and per-oyster NSAF tables. |
+| P6 | `PXD065668` / `PXD065706` | gill proteome + phosphoproteome, ERK inhibition | Thermotolerance divergence | **Registered, not reanalyzed** as `WANG2026_ERK_HEAT` (2026-10-17). The quantification is only in proprietary Spectronaut `.sne` archives, and the paper's per-pool tables list only significant features. Proteins are the authors' own gene models, and the runs were acquired in condition blocks. Reopening needs a DIA re-search of the `.raw` files. It is a pharmacological perturbation, so mechanism support, not population evidence. |
+| P7 | `PXD064651` | mucus, *Vibrio* infection, iTRAQ | Pathogen challenge | **Registered, cannot be reanalyzed** as `JIN2025_VIBRIO_MUCUS` (2026-10-17). IBT 16-plex with no channel-to-sample key, no quantification table, and a Mascot search run without quantitation. The infected and control channels cannot be told apart. Unpublished. |
+| P8 | `PXD000905` | low vs high OsHV-1 load, 2-DE | Pathogen | **Registered, not harmonized** as `CORPOREAU2014_OSHV_LOAD` (2026-10-17). It is in the same situation as P1. PRIDE holds only identifications of the 25 excised spots; no spot volumes or gel images were deposited. The paper reports only average fold changes for those significant spots. |
 
 No PRIDE deposit was found for these papers, so they are processed-table only.
 Leprêtre et al. 2020, *Front Immunol* (OsHV-1 proteomics in two families with
@@ -217,6 +217,29 @@ Immunol* covers salinity tolerance with multi-omics.
 protocol pools 10 oysters per timepoint per population, which leaves six
 pooled samples and no replicates. This is the proteomic version of
 `PRJNA623063` below.
+
+**Registered, QC failed:** `PXD013262` (P3, `WANAMAKER2020_HEAT_SEED`).
+The 26 runs are 13 pools in technical duplicate, and the authors' sample
+metadata on figshare puts every 23 °C pool in one silo and every 29 °C pool in
+another. Temperature is confounded with silo, and no replicate is biological.
+The paper's ASCA found no temperature effect (P = 0.19). The authors' code
+also mentions a second 23 °C silo that was never deposited. If those samples
+exist, re-screen.
+
+**Registered, QC failed:** `PXD015434` (P2, `CRANDALL2022_HEAT_SEED`).
+The 16 runs are 4 pools × 4 DIA m/z-range injections. The pools come from
+two silos, the only 23 °C control and the 29 °C control, each sampled on two
+days. The hatchery notebook in the authors' Zenodo release shows the 23 °C silo
+started at 16–18 °C, set poorly and died out after a ciliate outbreak. The
+paper's survival contrast (0 % vs 86 %) is therefore confounded with that
+history, and no protein reaches adjusted P < 0.05. Both P2 and P3 come from
+the same Taylor Shellfish 23-vs-29 °C silo trials. Any further proteomics from
+that program is worth checking for silo replication before claiming it.
+
+2-DE studies (P1, P8) are a separate problem. PRIDE deposits for gel studies
+usually hold only identifications of excised spots, not spot volumes, so they
+cannot be requantified. Check for deposited gel images or a spot-volume table
+before claiming one.
 
 ## Non-coding RNA, chromatin, and metabolomics candidates
 

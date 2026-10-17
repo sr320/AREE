@@ -44,7 +44,7 @@ demo pipeline runs from the committed header-only registry).
 |---|---|---|---|
 | RNA-seq Nextflow workflow | `workflows/rnaseq/`, `modules/rnaseq/` | **Executed at full depth against real public FASTQ** on eight comparisons (three from PRJNA1329250, one from PRJNA593309, three from PRJNA826964 that failed QC, one from PRJNA735889): FASTQC → fastp → Salmon quant → MultiQC → DESeq2 → standardize → viral QC → manifest → report, 23,189–30,625 genes per comparison, every one with a real `lfcSE`. An arm can pool several condition levels, and `--replicate_unit` fits DESeq2 on pseudo-bulk units (e.g. tanks) where treatment was applied per unit; the manifest records both. The two 2026-09-30 CALLA2026 re-runs are the first to finish `OK`, with the report task in local scratch and the work directory off exFAT; every earlier full-depth run exited `ERR` at `RENDER_REPORT`. Processed mode runs end to end; CI also stub-runs the raw DAG | runs are native (`-profile local`, Homebrew tools), **not** inside the declared containers; manifests committed before 2026-10-11 list the declared container versions in `software_versions` (e.g. Salmon 1.10.3, DESeq2 1.42.0), not those that ran (Salmon 2.6.0, DESeq2 1.50.2, tximport 1.38.2); newer runs build it from each process's `versions.yml`, and CI checks the manifest against the work dir (`scripts/check_manifest_versions.py`); `qc_metrics` is still null; a non-stub run on the tiny CI fixtures fails in `SALMON_QUANT` under Salmon 2.6; the CI stub run validates wiring, not tools or biology |
 | Methylation Nextflow workflow | `workflows/methylation/`, `modules/methylation/` | parses and runs `processed_results_harmonization` end to end; real Bismark/methylKit command lines | raw path never run against bisulfite data; R scripts unexecuted |
-| Proteomics Nextflow workflow | `workflows/proteomics/`, `modules/proteomics/` | parses and runs `processed_results_harmonization` end to end; limma diff-abundance written | raw path not run; no raw abundance-matrix fixture |
+| Proteomics Nextflow workflow | `workflows/proteomics/`, `modules/proteomics/` | both modes run end to end in CI. Raw mode takes a wide protein x sample matrix (intensities or spectral counts/NSAF) with an explicit input scale, zeros as not detected, a per-arm detection filter and limma with posterior SE (`lfcSE`); CI runs it on a simulated spectral-count fixture (`tests/fixtures/proteomics_raw`) | no spectral search: "raw" starts from a quantified matrix, not .raw spectra |
 | Metabolomics Nextflow workflow | `workflows/metabolomics/`, `modules/metabolomics/` | runs `processed_results_harmonization` end to end; CI runs the raw path for real (not stubbed) on a simulated targeted-panel fixture: per-platform internal-standard normalization, detection limit, `--replicate_unit`, limma with `lfcSE`, missingness report, manifest and report | native only (`-profile local`), no container pulled; the untargeted TIC path has no real-data run |
 | Container images | `containers/README.md` | declared image tags per step | **no image has ever been pulled or built.** Every real execution used Homebrew-installed tools via `-profile local`, so the container specifications remain entirely unverified |
 
@@ -78,10 +78,13 @@ worth less than one that says what it got wrong.
   `orthofinder3.1.5_2026-10-13`, attached to evidence at harmonization) and
   orthogroup-level meta-analysis exists (`aree meta-analyze --level
   orthogroup`), as do cross-species candidates and their evidence cards
-  (`aree build-cross-species-cards`). On real data the oyster and the first
-  Manila clam study pool through 5,681 single-copy orthogroups, none past the
-  replication gate yet (one clam study). The dashboard gate is not built; see
-  WP6 in mussel_clam_integration_plan.md.
+  (`aree build-cross-species-cards`). On real data the oyster and two Manila
+  clam studies pool through 5,975 single-copy orthogroups, 5,633 past the
+  replication gate; none converges, because both clam comparisons are
+  exposure-only. The dashboard shows cross-species results only for
+  phenotypes past the WP6 gate (two species each with a pool of k >= 2;
+  thermal tolerance so far) and an ortholog lookup for every top candidate;
+  see WP6 in mussel_clam_integration_plan.md.
 - Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
   cross-references to NCBI GeneID — most likely by mapping RefSeq protein
   accessions through the NCBI annotation rather than relying on UniProt xrefs.
@@ -89,10 +92,10 @@ worth less than one that says what it got wrong.
   `resolve_identifier` so that legacy symbols from older publications resolve.
 - Additional species beyond *C. gigas* (schema already carries `species`; this
   is a data + reference addition, see [adding_a_species.md](adding_a_species.md)).
-- Real-data execution of the methylation and proteomics raw paths. RNA-seq
-  has tiny paired-FASTQ fixtures for a stubbed CI DAG test and metabolomics a
-  targeted-panel fixture CI runs for real; equivalent fixtures for methylation
-  and proteomics remain future work.
+- Real-data execution of the methylation raw path. RNA-seq has tiny
+  paired-FASTQ fixtures for a stubbed CI DAG test, and metabolomics and
+  proteomics have fixtures CI runs for real (a targeted panel; a spectral-count
+  matrix); an equivalent fixture for methylation remains future work.
 - Recording observed tool versions and parsed Salmon/MultiQC QC metrics in the
   RNA-seq manifest, instead of declared versions and null `qc_metrics`.
 - A covariance-aware within-study model, so a study can contribute more than

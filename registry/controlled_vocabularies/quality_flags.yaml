@@ -24,3 +24,5 @@ terms:
     label: Species assignment not confirmed by genotyping (required for species in a hybridizing complex, e.g. Mytilus edulis complex, unless species_identity.basis is genotyped)
   - id: reference_species_mismatch
     label: Reads were mapped to a related species' genome; gene identifiers belong to the reference species, not the study animal
+  - id: batch_confounded
+    label: Treatment contrast fully confounded with a processing batch (sequencing run, MS acquisition batch, extraction batch); treatment effect cannot be separated from batch

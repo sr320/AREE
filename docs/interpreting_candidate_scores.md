@@ -31,6 +31,15 @@ positive components:
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
 
+Every quality flag counts the same in `quality_score`: `batch_confounded`
+(treatment fully confounded with a sequencing run, MS acquisition batch, or
+extraction batch) removes the same 0.2 as `low_replication`, and counts
+toward the `quality_score >= 0.4` high-priority gate the same way. Adding the
+term (2026-10-16) did not change any existing score, because no registered
+study declared it yet. Once a study declares it, every candidate with a
+record from that study loses 0.2 `quality_score` (0.4 points of the 0-100
+score) unless the flag was already in its union.
+
 ### Why the unbounded components saturate instead of clipping
 
 Every component whose input has no natural upper bound uses `v / (v + half)`,
@@ -299,13 +308,24 @@ three unsupported rows. None converges, because the demo mussel has one study
 per gene. The demo's one sign disagreement involves a non-significant mussel
 estimate, so it is unsupported, not discordant.
 
-On real data (2026-10-16), the three harmonized oyster thermal-tolerance studies and TUCCI2025_HEAT_PRIMING pool through 5,681 single-copy orthogroups: 64 emerging, 6 discordant, 5,611 unsupported, none convergent. Every emerging row fails three gates:
-replication (one clam study), phenotype relevance (the clam comparison is
-exposure-only), and quality (each species' own flags exceed the gene-level
-limit, as they do for its single-species candidates). The 6 discordant rows
-are oyster genes with small significant effects against clam genes with large
-significant effects of opposite sign. The two studies differ in stressor
-timing, so they are leads to check, not established species differences.
+On real data (2026-10-17), the three harmonized oyster thermal-tolerance
+studies and the two Manila clam heat studies (TUCCI2025_HEAT_PRIMING,
+PERUZZA2023_HEATWAVE) pool through 5,975 single-copy orthogroups: 133
+emerging, 5,842 unsupported, none discordant or convergent. The replication
+gate is met in 5,633 rows. 131 emerging rows pass replication, direction and
+significance and fail only phenotype relevance (both clam comparisons are
+exposure-only) and quality (each species' own flags exceed the gene-level
+limit, as they do for its single-species candidates). With one clam study
+(2026-10-16) the same pool had 5,681 rows, 64 emerging and 6 discordant; the
+discordant rows did not survive the second clam study.
+
+**On the dashboard.** The home page shows cross-species tiers, rows and cards
+only for a phenotype past the WP6 gate: at least two species each with a
+within-species gene pool of k >= 2. A row for a gated phenotype is counted as
+withheld, not ranked. Every top single-species candidate also lists its
+orthologs in other species, the phenotypes they were tested under and how many
+of their records were significant. That lookup pools nothing, so it is shown
+whether or not the gate is open.
 
 ## Related documentation
 

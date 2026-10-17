@@ -1,16 +1,19 @@
-// Translate protein accessions (e.g. UniProt-style accessions) to gene
-// symbols (and, when available, other standardized identifiers) via a join
-// against an identifier crosswalk table.
+// Attach a gene symbol to each protein accession for the report and the
+// standardized table, by a join against an identifier crosswalk.
 //
-// STATUS: structurally complete DSL2 process with a real pandas merge/join
-// script. NOT executed against real data in this build. The default
-// `--id_mapping_table` points at the repository's illustrative demo
-// crosswalk (data/mappings/gene_id_crosswalk.tsv), which is explicitly
-// SYNTHETIC (see header of that file) and self-consistent only with
-// data/demo/* accessions — it is not a real UniProt idmapping resource. A
-// production run must supply a real crosswalk (e.g. exported from UniProt's
-// idmapping service or the oyster reference annotation) via
-// `--id_mapping_table`.
+// Two routes, whichever the crosswalk supports: UniProt accessions
+// (uniprot_accession) and, for crosswalks built with
+// src/mappings/build_crosswalk.py >= 1.1.0, legacy gene-model IDs such as the
+// oyster_v9 CGI_ models (legacy_locus_tags). A ProteinProphet protein group
+// ("CGI_1,CGI_2") is matched only if every member names the same gene.
+//
+// This is display annotation only. The identifier resolution that evidence
+// records carry (feature_id_standardized, mapping_confidence) is done later by
+// `aree harmonize` (src/harmonize/proteomics.py) against the study's
+// registered crosswalk. The default --proteomics.id_mapping_table is the
+// SYNTHETIC demo crosswalk; a real run passes the species crosswalk.
+//
+// STATUS: executed by the raw-mode CI smoke test (tests/fixtures/proteomics_raw).
 
 process ID_TRANSLATION {
     tag "${study_id}:${comparison_id}"
@@ -39,65 +42,51 @@ process ID_TRANSLATION {
 
     results = pd.read_csv("${diffabund_results}", sep="\\t")
     if "protein_accession" not in results.columns:
-        print("ERROR: differential abundance results missing 'protein_accession' column", file=sys.stderr)
-        sys.exit(1)
+        sys.exit("ERROR: differential abundance results missing 'protein_accession' column")
 
-    mapping = pd.read_csv("${id_mapping_table}", sep="\\t", comment="#")
-    required_map_cols = {"uniprot_accession", "gene_symbol"}
-    missing_map_cols = required_map_cols - set(mapping.columns)
-    if missing_map_cols:
-        print(
-            f"ERROR: id_mapping_table missing required columns {sorted(missing_map_cols)}; "
-            f"found columns: {list(mapping.columns)}",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    mapping = pd.read_csv("${id_mapping_table}", sep="\\t", comment="#", dtype=str).fillna("")
+    if "gene_symbol" not in mapping.columns:
+        sys.exit(f"ERROR: id_mapping_table has no gene_symbol column; found {list(mapping.columns)}")
 
-    mapping_small = mapping[["uniprot_accession", "gene_symbol"]].drop_duplicates()
+    # key -> set of symbols, from every route the crosswalk carries.
+    routes = {"uniprot_accession": "uniprot", "uniprot_accessions_all": "uniprot", "legacy_locus_tags": "legacy_locus_tag"}
+    symbol_of, route_of = {}, {}
+    for col, route in routes.items():
+        if col not in mapping.columns:
+            continue
+        for keys, sym in zip(mapping[col], mapping["gene_symbol"]):
+            for key in (k for k in keys.split(";") if k):
+                symbol_of.setdefault(key, set()).add(sym)
+                route_of[key] = route
 
-    # Flag any accession that maps to >1 distinct gene_symbol (many-to-one from
-    # the accession's perspective is fine; one-to-many from accession -> symbol
-    # is a mapping-confidence concern) before the join, so it is visible in the
-    # report even though the merge below will just take all matching rows.
-    dup_counts = mapping_small.groupby("uniprot_accession")["gene_symbol"].nunique()
-    ambiguous_accessions = sorted(dup_counts[dup_counts > 1].index.tolist())
+    def translate(acc):
+        members = [m.strip() for m in str(acc).replace(";", ",").split(",") if m.strip()]
+        found = [symbol_of.get(m) for m in members]
+        if not members or any(f is None for f in found):
+            return acc, "unresolved", None
+        symbols = set().union(*found)
+        if len(symbols) != 1:
+            return acc, "ambiguous", None
+        return symbols.pop(), "resolved", route_of[members[0]]
 
-    merged = results.merge(
-        mapping_small,
-        left_on="protein_accession",
-        right_on="uniprot_accession",
-        how="left",
-    )
-
-    unresolved_mask = merged["gene_symbol"].isna()
-    n_unresolved = int(unresolved_mask.sum())
-    if n_unresolved > 0:
-        print(f"WARNING: {n_unresolved} / {len(merged)} protein_accession values had no gene_symbol match")
-        # Preserve the row; downstream schema still needs a value, so fall back
-        # to the original accession as a placeholder gene_symbol and mark it.
-        merged.loc[unresolved_mask, "gene_symbol"] = merged.loc[unresolved_mask, "protein_accession"]
-
-    merged["id_mapping_confidence"] = "exact"
-    merged.loc[unresolved_mask, "id_mapping_confidence"] = "unresolved"
-    merged.loc[merged["protein_accession"].isin(ambiguous_accessions), "id_mapping_confidence"] = "one_to_many_ortholog"
-
-    merged = merged.drop(columns=["uniprot_accession"])
+    translated = results["protein_accession"].map(translate)
+    results["gene_symbol"] = [t[0] for t in translated]
+    results["id_translation_status"] = [t[1] for t in translated]
+    results["id_translation_route"] = [t[2] for t in translated]
 
     out_path = f"{study_id}_{comparison_id}_id_translated.tsv"
-    merged.to_csv(out_path, sep="\\t", index=False)
-
+    results.to_csv(out_path, sep="\\t", index=False)
     report = {
         "study_id": study_id,
         "comparison_id": comparison_id,
         "id_mapping_table": "${id_mapping_table}",
+        "routes_available": sorted({r for c, r in routes.items() if c in mapping.columns}),
         "n_input_rows": int(len(results)),
-        "n_unresolved": n_unresolved,
-        "n_ambiguous_accessions": len(ambiguous_accessions),
-        "ambiguous_accessions": ambiguous_accessions,
+        "n_by_status": {k: int(v) for k, v in results["id_translation_status"].value_counts().items()},
+        "note": "display annotation only; evidence-level identifier resolution is done by aree harmonize",
     }
     with open(f"{study_id}_{comparison_id}_id_translation_report.json", "w") as fh:
         json.dump(report, fh, indent=2)
-
     print(f"ID translation complete: {report}")
 
     with open("versions.yml", "w") as fh:

@@ -67,6 +67,7 @@ jobs:
         run: |
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
+          aree build-cross-species-cards --feature-type gene
           aree top-candidates
 
       - name: Build dashboard data

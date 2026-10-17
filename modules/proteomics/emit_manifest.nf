@@ -2,9 +2,11 @@
 // the proteomics workflow run, per docs/design.md section 4 (provenance
 // model) and section 7 (raw vs. processed modes).
 //
-// STATUS: structurally complete DSL2 process with a real Python script
-// (hashlib sha256 checksums, parameter dump, qc metrics read from upstream
-// JSON when available). NOT executed against real data in this build.
+// Records every params.proteomics value, sha256 of the workflow's input files
+// and of the standardized table, the missingness summary and (raw mode) the
+// limma QC.
+//
+// STATUS: runs in the demo CI (processed mode) and the raw-mode CI smoke test.
 //
 // Provenance note (docs/design.md section 4): this manifest documents
 // *infra-level* provenance (what ran, with what parameters/versions/inputs,
@@ -27,6 +29,8 @@ process EMIT_MANIFEST {
     val mode
     path standardized_table
     path missingness_summary_json_optional
+    path da_qc_optional, stageAs: 'da_qc/*'
+    path input_files, stageAs: 'input_files/*'
     val workflow_version
     val start_time_iso
     // Every upstream process's versions.yml (mixed + collected in main.nf),
@@ -83,6 +87,15 @@ process EMIT_MANIFEST {
 
     standardized_path = "${standardized_table}"
     checksum = sha256_of(standardized_path)
+    input_checksums = {
+        p.split("/", 1)[1]: sha256_of(p)
+        for p in sorted(glob.glob("input_files/*"))
+        if not p.endswith("NO_FILE")
+    }
+    da_qc = None
+    if not "${da_qc_optional}".endswith("NO_FILE"):
+        with open("${da_qc_optional}") as fh:
+            da_qc = json.load(fh)
 
     df = pd.read_csv(standardized_path, sep="\\t")
     n_proteins = int(len(df))
@@ -93,6 +106,7 @@ process EMIT_MANIFEST {
     qc_metrics = {
         "n_proteins": n_proteins,
         "mean_missingness_percent": mean_missingness,
+        "differential_abundance_qc": da_qc,
     }
 
     warnings = list(collected["warnings"])
@@ -136,9 +150,12 @@ process EMIT_MANIFEST {
                 "path": standardized_path,
                 "sha256": checksum,
             },
+            "input_files_sha256": input_checksums,
         },
         "parameters": {
             "mode": mode,
+            # Every params.proteomics value this run used, not just the mode.
+            "proteomics": json.loads(r'''${groovy.json.JsonOutput.toJson(params.proteomics)}'''),
         },
         # Tools as reported by each process that ran, keyed by process name.
         "software_versions": software_versions,
