@@ -518,6 +518,7 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
         "n_evidence_records_simulated": int(evidence["simulated"].sum()) if len(evidence) else 0,
         "n_candidates_real_high_priority": _tier_count(False, "high_priority_cross_study"),
         "n_candidates_real_multi_omics": _tier_count(False, "multi_omics_convergence"),
+        "n_candidates_real_metabolite_linked": _tier_count(False, "metabolite_linked_convergence"),
         "n_candidates_real_emerging": _tier_count(False, "emerging"),
         "n_real_stressor_classes": len(real_stressors),
         "real_stressor_classes": real_stressors,
