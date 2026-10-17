@@ -197,7 +197,7 @@ papers is the realistic route. The Roberts-lab projects make that easiest.
 
 | # | Accession | Design | Context | Notes |
 |---|---|---|---|---|
-| P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | Harney et al. 2016, *J Proteomics* (PRIDE reference). Complete submission. |
+| P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | **Registered, not harmonized** as `HARNEY2016_OA_WARM_LARVAE` (2026-10-17). The design is sound, but this is a 2-DE study with no deposited spot volumes or gel images; PRIDE holds only spot identifications. The paper reports 12 of ~650 spots, selected at P < 0.02, with no SE, and 9 of 11 accessions are now deleted from UniProtKB. Worth reanalyzing if the SameSpots data are ever released. |
 | P2 | `PXD015434` | early juveniles, temperature | Thermal | **Registered, QC failed** as `CRANDALL2022_HEAT_SEED` (2026-10-17): one silo per temperature, and the two silos differed beyond temperature (see Rejected below). |
 | P3 | `PXD013262` | seed, time × temperature | Thermal | **Registered, QC failed** as `WANAMAKER2020_HEAT_SEED` (2026-10-17): one silo per temperature, technical replicates only (see Rejected below). With P2 also failed, no public thermal proteomics study in this list is analyzable. |
 | P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. An OA protein layer alongside `LUTIER2022_OA_TIPPING` (RNA-seq) and M4/M5. |
@@ -235,6 +235,11 @@ paper's survival contrast (0 % vs 86 %) is therefore confounded with that
 history, and no protein reaches adjusted P < 0.05. Both P2 and P3 come from
 the same Taylor Shellfish 23-vs-29 °C silo trials. Any further proteomics from
 that program is worth checking for silo replication before claiming it.
+
+2-DE studies (P1, P8) are a separate problem. PRIDE deposits for gel studies
+usually hold only identifications of excised spots, not spot volumes, so they
+cannot be requantified. Check for deposited gel images or a spot-volume table
+before claiming one.
 
 ## Non-coding RNA, chromatin, and metabolomics candidates
 
