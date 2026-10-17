@@ -78,7 +78,8 @@ public sources, with a `.provenance.json` sidecar recording source URLs, SHA-256
 checksums of both inputs and the output, retrieval date, and coverage:
 
 - **NCBI Gene `gene_info`**, filtered to taxid 29159 — GeneID, symbol, synonyms,
-  Ensembl xrefs, description, gene type.
+  Ensembl xrefs, description, gene type, and `LocusTag` (written as
+  `legacy_locus_tags`; see [Legacy gene models](#legacy-gene-models-oyster_v9-cgi_-ids)).
 - **UniProtKB REST**, same organism — accession, reviewed status, GeneID xref.
 - **NCBI Gene `gene_history`**, same organism — GeneIDs NCBI has discontinued and
   what replaced them (written to a separate sidecar, see below).
@@ -91,6 +92,7 @@ Coverage as built (2026-08-27, NCBI annotation release `GCF_963853765.1-RS_2024_
 | `ensembl_gene_id` | 12,717 | 38.1% |
 | `uniprot_accession` | 2,790 | 8.4% |
 | named `gene_symbol` (non-LOC) | 650 | 2.0% |
+| `legacy_locus_tags` (oyster_v9 `CGI_` models; added in builder v1.1.0, 2026-10-17) | 14,699 | 44.1% |
 | `orthogroup_id` | 0 | 0% |
 
 Plus a sidecar, `mgigas_retired_gene_ids.tsv`, covering 9,057 discontinued
@@ -254,6 +256,32 @@ Retired IDs whose replacement is itself absent from the crosswalk are dropped at
 build time rather than chained, so no identifier resolves through a gene that
 does not exist.
 
+### Legacy gene models (oyster_v9 `CGI_` IDs)
+
+Studies from roughly 2012–2016 report the gene models of the first *C. gigas*
+assembly (oyster_v9, Zhang et al. 2012), named `CGI_10001851` and so on. Most
+proteomics studies of that period searched spectra against that proteome, so
+their protein tables are keyed by these IDs, sometimes as ProteinProphet groups
+(`CGI_10000041,CGI_10008574`). They are not GeneIDs, and the retired-GeneID
+sidecar does not cover them.
+
+NCBI keeps them, though: a current gene whose model descends from an oyster_v9
+model carries that model's ID in `gene_info`'s `LocusTag` field. Builder v1.1.0
+writes that field to `legacy_locus_tags`. In the current annotation 14,699
+genes carry one, and no tag is shared between genes. `resolve_identifier(raw,
+"legacy_locus_tag")` looks the ID up there:
+
+- a tag on one current gene resolves to that gene, `inferred` (it crosses an
+  annotation version, as with retired GeneIDs);
+- a protein group resolves only if every member names the same gene;
+  otherwise it is `unresolved`, because a peptide-level group cannot be split;
+- a model NCBI did not carry forward has no tag and stays `unresolved`.
+
+`src/harmonize/proteomics.py` sends any `CGI_` ID (or group) down this route and
+everything else down the UniProt one. For the per-oyster NSAF table of PRIDE
+`PXD000835` (2014), 1,107 of 1,616 proteins (68.5%) resolve this way; the rest
+stay `unresolved`, visibly, rather than being matched by name.
+
 ### Rebuilding
 
 The build streams ~230 MB from NCBI and takes roughly 15–20 minutes on a typical
@@ -286,6 +314,9 @@ stable identity to group on.
 `resolve_identifier(raw_id, id_type)` in `src/harmonize/identifiers.py`
 handles two families of input:
 
+- **Legacy gene models** (`legacy_locus_tag`): oyster_v9 `CGI_` IDs, matched
+  against `legacy_locus_tags` and labelled `inferred`; see
+  [Legacy gene models](#legacy-gene-models-oyster_v9-cgi_-ids).
 - **Stable ID columns** (`ncbi_gene_id`, `ensembl_gene_id`,
   `uniprot_accession`, `locus_id`): looked up directly against the crosswalk.
   A single match is `exact`; multiple matching rows collapse to

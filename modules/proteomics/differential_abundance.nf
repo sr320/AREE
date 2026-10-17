@@ -1,24 +1,16 @@
-// Differential protein abundance via limma, appropriate for proteomics
-// abundance matrices (as opposed to count-based RNA-seq DE tools) because it
-// handles continuous, approximately-normal (post log2/median-normalization)
-// data and tolerates missing values in individual features without requiring
-// a full count model.
+// Differential protein abundance with limma's moderated t-test on normalized
+// log2 abundances, raw_reanalysis mode only.
 //
-// STATUS: structurally complete DSL2 process wrapping a real, syntactically
-// valid R/limma script (pivot to wide protein x sample matrix -> lmFit ->
-// eBayes -> topTable). NOT executed against real data in this build — no
-// compute budget / real abundance matrix available (see
-// workflows/proteomics/README.md). raw_reanalysis mode only.
+// A protein is tested only if it is detected (non-missing) in at least
+// --proteomics.min_detected_per_arm samples in each arm; every protein, tested
+// or not, is listed with its status in the *_detection_status.tsv table.
+// lfcSE is limma's posterior standard error of log2FC
+// (sqrt(s2.post) * stdev.unscaled), so evidence records carry one and can be
+// pooled. --proteomics.quantification (intensity | spectral_count) is written
+// into analysis_method so spectral-count and intensity evidence stay
+// distinguishable downstream.
 //
-// NA handling note: limma's lmFit() tolerates NAs in individual cells of the
-// data matrix (features with too few non-NA observations in a group simply
-// get NA/less-precise statistics rather than failing the whole fit), which is
-// why limma is preferred here over tools that require a complete matrix. We
-// additionally drop proteins missing in >50% of samples before fitting
-// (`max_missing_frac` below) since a linear model on a mostly-imputed/absent
-// feature is not meaningful; this threshold is a documented, adjustable
-// simplification, not a hidden default.
-
+// STATUS: executed by the raw-mode CI smoke test (tests/fixtures/proteomics_raw).
 process DIFFERENTIAL_ABUNDANCE {
     tag "${study_id}:${comparison_id}"
     label 'process_medium'
@@ -27,110 +19,124 @@ process DIFFERENTIAL_ABUNDANCE {
 
     input:
     tuple val(study_id), val(comparison_id), path(normalized_long_table)
-    tuple val(study_id2), val(comparison_id2), path(missingness_per_protein)
+    val min_detected_per_arm
+    val quantification
 
     output:
     tuple val(study_id), val(comparison_id), path("${study_id}_${comparison_id}_limma_results.tsv"), emit: results
-    path "${study_id}_${comparison_id}_limma.RData", emit: rdata
+    path "${study_id}_${comparison_id}_detection_status.tsv", emit: detection_status
+    path "${study_id}_${comparison_id}_diffabundance_qc.json", emit: da_qc
     path "versions.yml", emit: versions
 
     script:
     """
+    cat <<-'EOF' > run_limma.R
     #!/usr/bin/env Rscript
-
-    suppressMessages({
-      library(limma)
-      library(tidyr)
-      library(dplyr)
+    suppressPackageStartupMessages({
+        library(limma)
+        library(jsonlite)
     })
 
-    study_id <- "${study_id}"
-    comparison_id <- "${comparison_id}"
-    max_missing_frac <- 0.5  # drop proteins missing in >50% of samples before fitting
-
-    long_df <- read.delim("${normalized_long_table}", sep = "\\t", stringsAsFactors = FALSE)
-    stopifnot(all(c("protein_accession", "sample_id", "group", "log2_abundance_normalized") %in% colnames(long_df)))
-
-    miss_df <- read.delim("${missingness_per_protein}", sep = "\\t", stringsAsFactors = FALSE)
-
-    keep_proteins <- miss_df\$protein_accession[miss_df\$missingness_percent <= (max_missing_frac * 100)]
-    cat(sprintf(
-      "Retaining %d / %d proteins with <= %.0f%% missingness for differential abundance\\n",
-      length(keep_proteins), nrow(miss_df), max_missing_frac * 100
-    ))
-    long_df <- long_df[long_df\$protein_accession %in% keep_proteins, ]
-
-    # Pivot long -> wide: rows = proteins, columns = samples. limma expects a
-    # numeric matrix with proteins as rows and samples as columns; NAs are
-    # tolerated in individual cells by lmFit().
-    wide_df <- long_df %>%
-      select(protein_accession, sample_id, log2_abundance_normalized) %>%
-      pivot_wider(names_from = sample_id, values_from = log2_abundance_normalized)
-
-    protein_ids <- wide_df\$protein_accession
-    expr_matrix <- as.matrix(wide_df[, -1, drop = FALSE])
-    rownames(expr_matrix) <- protein_ids
-
-    sample_groups <- long_df %>%
-      distinct(sample_id, group) %>%
-      arrange(match(sample_id, colnames(expr_matrix)))
-    stopifnot(identical(sample_groups\$sample_id, colnames(expr_matrix)))
-
-    group_levels <- unique(sample_groups\$group)
-    if (length(group_levels) != 2) {
-      stop(sprintf(
-        "DIFFERENTIAL_ABUNDANCE expects exactly 2 groups (treatment vs control), found: %s",
-        paste(group_levels, collapse = ", ")
-      ))
+    args <- list(
+        table          = "${normalized_long_table}",
+        study_id       = "${study_id}",
+        comparison_id  = "${comparison_id}",
+        min_detected   = as.integer("${min_detected_per_arm}"),
+        quantification = "${quantification}",
+        out_tsv        = "${study_id}_${comparison_id}_limma_results.tsv",
+        out_status     = "${study_id}_${comparison_id}_detection_status.tsv",
+        out_qc         = "${study_id}_${comparison_id}_diffabundance_qc.json"
+    )
+    if (!(args\$quantification %in% c("intensity", "spectral_count"))) {
+        stop("proteomics.quantification must be 'intensity' or 'spectral_count', got '", args\$quantification, "'")
     }
 
-    # Convention: alphabetically first non-'control' label (or simply the
-    # second level) is treated as treatment; 'control' as reference. Study
-    # authors should confirm this against their sample sheet's `group` coding.
-    control_label <- if ("control" %in% group_levels) "control" else group_levels[1]
-    treatment_label <- setdiff(group_levels, control_label)[1]
+    long_df <- read.delim(args\$table, stringsAsFactors = FALSE, check.names = FALSE)
+    stopifnot(all(c("protein_accession", "sample_id", "group", "log2_abundance_normalized") %in% colnames(long_df)))
 
-    group_factor <- factor(sample_groups\$group, levels = c(control_label, treatment_label))
-    design <- model.matrix(~group_factor)
-    colnames(design) <- c("Intercept", "treatment_vs_control")
+    samples <- unique(long_df[, c("sample_id", "group")])
+    if (any(duplicated(samples\$sample_id))) stop("a sample_id has more than one group")
+    condition <- factor(samples\$group, levels = c("control", "treatment"))
+    if (any(is.na(condition))) stop("group must be 'control' or 'treatment' for every sample")
 
-    fit <- lmFit(expr_matrix, design)
-    fit <- eBayes(fit)
+    proteins <- unique(long_df\$protein_accession)
+    expr <- matrix(NA_real_, nrow = length(proteins), ncol = nrow(samples),
+                   dimnames = list(proteins, samples\$sample_id))
+    expr[cbind(match(long_df\$protein_accession, proteins), match(long_df\$sample_id, samples\$sample_id))] <-
+        long_df\$log2_abundance_normalized
 
-    tt <- topTable(fit, coef = "treatment_vs_control", number = Inf, sort.by = "none")
-    tt\$protein_accession <- rownames(tt)
+    detected <- !is.na(expr)
+    n_control   <- rowSums(detected[, condition == "control", drop = FALSE])
+    n_treatment <- rowSums(detected[, condition == "treatment", drop = FALSE])
+    tested <- n_control >= args\$min_detected & n_treatment >= args\$min_detected
+    status <- ifelse(tested, "tested",
+              ifelse(n_control == 0 & n_treatment == 0, "not_detected",
+              ifelse(n_control < args\$min_detected & n_treatment < args\$min_detected,
+                     "detected_too_rarely_in_both_arms",
+              ifelse(n_control < args\$min_detected, "detected_too_rarely_in_control",
+                     "detected_too_rarely_in_treatment"))))
+    write.table(data.frame(protein_accession = proteins,
+                           n_replicates_control = sum(condition == "control"),
+                           n_detected_control = n_control,
+                           n_replicates_treatment = sum(condition == "treatment"),
+                           n_detected_treatment = n_treatment,
+                           status = status, stringsAsFactors = FALSE),
+                args\$out_status, sep = "\\t", quote = FALSE, row.names = FALSE)
+    if (sum(tested) < 2) stop("fewer than 2 proteins pass min_detected_per_arm = ", args\$min_detected)
 
-    out <- tt %>%
-      transmute(
-        protein_accession = protein_accession,
-        log2FC = logFC,
-        pvalue = P.Value,
-        padj = adj.P.Val,
-        ave_expr = AveExpr,
-        t_stat = t
-      )
-
-    out_path <- sprintf("%s_%s_limma_results.tsv", study_id, comparison_id)
-    write.table(out, out_path, sep = "\\t", quote = FALSE, row.names = FALSE)
-
-    save(fit, tt, file = sprintf("%s_%s_limma.RData", study_id, comparison_id))
-
-    r_version <- paste(R.version\$major, R.version\$minor, sep = ".")
-    limma_version <- as.character(packageVersion("limma"))
-    versions_lines <- c(
-      "DIFFERENTIAL_ABUNDANCE:",
-      sprintf("    r_base: \\"%s\\"", r_version),
-      sprintf("    limma: \\"%s\\"", limma_version)
+    design <- model.matrix(~condition)
+    fit <- eBayes(lmFit(expr[tested, , drop = FALSE], design))
+    coef <- "conditiontreatment"
+    tt <- topTable(fit, coef = coef, number = Inf, sort.by = "none")
+    out <- data.frame(
+        protein_accession    = rownames(tt),
+        log2FC               = tt\$logFC,
+        lfcSE                = sqrt(fit\$s2.post) * fit\$stdev.unscaled[, coef],
+        pvalue               = tt\$P.Value,
+        padj                 = tt\$adj.P.Val,
+        ave_expr             = tt\$AveExpr,
+        t_stat               = tt\$t,
+        n_detected_control   = n_control[rownames(tt)],
+        n_detected_treatment = n_treatment[rownames(tt)],
+        analysis_method      = paste0(args\$quantification, "_limma_moderated_t"),
+        stringsAsFactors = FALSE
     )
-    writeLines(versions_lines, "versions.yml")
+    write.table(out, args\$out_tsv, sep = "\\t", quote = FALSE, row.names = FALSE, na = "NA")
 
-    cat(sprintf("limma differential abundance complete: %d proteins tested\\n", nrow(out)))
+    qc <- list(
+        study_id = args\$study_id,
+        comparison_id = args\$comparison_id,
+        n_replicates_control = sum(condition == "control"),
+        n_replicates_treatment = sum(condition == "treatment"),
+        min_detected_per_arm = args\$min_detected,
+        n_proteins_in = length(proteins),
+        n_proteins_tested = sum(tested),
+        n_proteins_not_tested = as.list(table(status[!tested])),
+        n_padj_below_0.05 = sum(out\$padj < 0.05, na.rm = TRUE),
+        n_padj_below_0.1 = sum(out\$padj < 0.1, na.rm = TRUE),
+        limma_df_prior = unname(fit\$df.prior[1]),
+        analysis_method = out\$analysis_method[1]
+    )
+    writeLines(toJSON(qc, auto_unbox = TRUE, pretty = TRUE, null = "null"), args\$out_qc)
+    cat(sprintf("AREE proteomics limma: %d of %d proteins tested on %d vs %d samples\\n",
+                sum(tested), length(proteins), sum(condition == "control"), sum(condition == "treatment")))
+    EOF
+
+    Rscript run_limma.R
+
+    cat <<-END_VERSIONS > versions.yml
+    ${task.process}:
+        r-base: \$(Rscript -e 'cat(as.character(getRversion()))')
+        bioconductor-limma: \$(Rscript -e 'cat(as.character(packageVersion("limma")))')
+        r-jsonlite: \$(Rscript -e 'cat(as.character(packageVersion("jsonlite")))')
+    END_VERSIONS
     """
 
     stub:
     """
     touch ${study_id}_${comparison_id}_limma_results.tsv
-    touch ${study_id}_${comparison_id}_limma.RData
+    touch ${study_id}_${comparison_id}_detection_status.tsv
+    touch ${study_id}_${comparison_id}_diffabundance_qc.json
     touch versions.yml
     """
 }

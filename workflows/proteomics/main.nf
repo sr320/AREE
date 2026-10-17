@@ -2,13 +2,9 @@
 /*
  * AREE proteomics reanalysis / harmonization workflow
  *
- * STATUS: processed_results_harmonization executes end to end and is covered
- * by current-version CI. The raw abundance-matrix path remains unexecuted. Real Channel factories, real
- * `if (params.mode == ...)` branching, and real per-process pandas/R logic
- * (see modules/proteomics/*.nf headers for per-step honesty notes). This
- * workflow has NOT been executed end-to-end against real data in this build
- * -- no raw proteomics data or compute budget was available in this
- * environment. See README.md "What has and has not been run".
+ * STATUS: both modes execute end to end in CI: processed_results_harmonization
+ * on the demo table, raw_reanalysis on a simulated spectral-count fixture
+ * (tests/fixtures/proteomics_raw). See README.md "What has and has not been run".
  *
  * Two modes (params.mode), matching docs/design.md section 7:
  *
@@ -85,13 +81,19 @@ workflow {
 
         HARMONIZE_INPUT(study_id_ch, comparison_id_ch, raw_matrix_ch, sample_sheet_ch)
 
-        NORMALIZE(HARMONIZE_INPUT.out.long_table)
+        NORMALIZE(
+            HARMONIZE_INPUT.out.long_table,
+            Channel.value(params.proteomics.input_scale),
+            Channel.value(params.proteomics.detection_limit == null ? 'null' : params.proteomics.detection_limit),
+            Channel.value(params.proteomics.normalization)
+        )
 
         MISSINGNESS_REPORT(NORMALIZE.out.normalized_long)
 
         DIFFERENTIAL_ABUNDANCE(
             NORMALIZE.out.normalized_long,
-            MISSINGNESS_REPORT.out.per_protein
+            Channel.value(params.proteomics.min_detected_per_arm),
+            Channel.value(params.proteomics.quantification)
         )
 
         ID_TRANSLATION(DIFFERENTIAL_ABUNDANCE.out.results, id_mapping_ch)
@@ -103,6 +105,8 @@ workflow {
         )
 
         manifest_qc_input = MISSINGNESS_REPORT.out.summary_json
+        manifest_da_qc    = DIFFERENTIAL_ABUNDANCE.out.da_qc
+        manifest_inputs   = raw_matrix_ch.mix(sample_sheet_ch).collect()
 
         // Each process's versions.yml, merged by EMIT_MANIFEST into the
         // manifest's software_versions. A process added to this DAG must add
@@ -138,6 +142,8 @@ workflow {
         )
 
         manifest_qc_input = Channel.value(no_missingness_file)
+        manifest_da_qc    = Channel.value(no_missingness_file)
+        manifest_inputs   = processed_results_ch.collect()
         versions_ch = Channel.empty()
 
     } else {
@@ -150,6 +156,8 @@ workflow {
         mode_ch,
         STANDARDIZE_OUTPUT.out.standardized.map { sid, cid, f -> f },
         manifest_qc_input,
+        manifest_da_qc,
+        manifest_inputs,
         Channel.value(workflowVersion()),
         start_time_ch,
         versions_ch.mix(STANDARDIZE_OUTPUT.out.versions).collect(),
@@ -178,7 +186,6 @@ workflow {
         comparison  : ${_params.proteomics?.comparison_id}
         outdir      : ${_params.outdir}
         status      : ${_wf.success ? 'OK' : 'FAILED'}
-        NOTE: this scaffold has not been validated end-to-end against real data.
         """.stripIndent()
     }
 }
