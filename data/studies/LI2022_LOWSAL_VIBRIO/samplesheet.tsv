@@ -1,0 +1,15 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	salinity	timepoint	id	title_replicate	tissue	geo_loc_name	library_layout	instrument_model	read_count
+C10-5	SRR15559845	SAMN20924687	C10-5	10ppt_48h	10ppt	48h	AA12	2	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	20604322
+C23-5	SRR15559846	SAMN20924686	C23-5	30ppt_48h	30ppt	48h	AA11	2	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	20528493
+C23h3	SRR15559847	SAMN20924677	C23h3	30ppt_0h	30ppt	0h	AA2	2	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	21341414
+C23h2	SRR15559848	SAMN20924676	C23h2	30ppt_0h	30ppt	0h	AA1	1	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	19928202
+C10-4	SRR15559849	SAMN20924685	C10-4	10ppt_48h	10ppt	48h	AA10	1	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	22947701
+C23-4	SRR15559850	SAMN20924684	C23-4	30ppt_48h	30ppt	48h	AA9	1	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	21100123
+C10-3	SRR15559851	SAMN20924683	C10-3	10ppt_12h	10ppt	12h	AA8	3	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	23275807
+C23-3	SRR15559852	SAMN20924682	C23-3	30ppt_12h	30ppt	12h	AA7	3	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	21274294
+C23-2	SRR15559853	SAMN20924681	C23-2	30ppt_12h	30ppt	12h	AA6	2	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	22674364
+C10-2	SRR15559854	SAMN20924680	C10-2	10ppt_12h	10ppt	12h	AA5	2	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	22360946
+C23-1	SRR15559855	SAMN20924679	C23-1	30ppt_12h	30ppt	12h	AA4	1	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	20933417
+C10-1	SRR15559856	SAMN20924678	C10-1	10ppt_12h	10ppt	12h	AA3	1	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	21865852
+C23-6	SRR15559857	SAMN20924689	C23-6	30ppt_48h	30ppt	48h	AA14	3	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	21658996
+C10-6	SRR15559858	SAMN20924688	C10-6	10ppt_48h	10ppt	48h	AA13	3	Gill	China:Rongcheng	PAIRED	Illumina NovaSeq 6000	20991559

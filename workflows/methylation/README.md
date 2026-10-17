@@ -115,6 +115,34 @@ a region's estimated overdispersion falls below 1, methylKit resets it to 1,
 so a few null regions can still get small q-values; the `meth_diff_cutoff`
 filter is the second guard.
 
+#### DMR engines (`methylation.dmr_engine`)
+
+- `methylkit` (default): `DMR_METHYLKIT`, as above.
+- `limma` and `dss`: `DMR_POOLED_TILES` (`modules/methylation/dmr_pooled_tiles.nf`).
+  It merges the two strands of each CpG, pools libraries by `replicate_unit`,
+  and keeps CpGs with at least `unit_min_coverage` reads in **every unit**
+  (coverage is applied after pooling, so set `min_coverage` low, e.g. 1). It
+  sums them into `tile_size` tiles with at least `tile_min_cpgs` CpGs, then
+  tests treatment units against control units.
+  - `limma`: a moderated t on per-unit M-values (the logit of methylation),
+    with variance shrunk across tiles by empirical Bayes. Recommended when
+    there are only a few units per arm.
+  - `dss`: `DSS::DMLtest`, a beta-binomial model with shrunken dispersion
+    and a Wald test.
+
+Why `limma` is recommended for few units: on synthetic data with 2 vs 2
+families, real family-to-family variation and 20 true regions among 400
+tiles:
+
+| Test | True regions found | False positives (of 380) |
+|---|---|---|
+| methylKit (families, MN + F) | 0 | 0 |
+| DSS (families) | 17 | 57 |
+| limma (families) | 4 | 1 |
+
+limma's null p-values were calibrated (5.0% below 0.05). DSS's Wald test
+has no small-sample correction, so it is overconfident at 2 vs 2.
+
 ### `processed_results_harmonization`
 
 For studies where only a processed DMR/DML table is publicly available (the

@@ -55,6 +55,8 @@ website:
             href: raw_vs_processed.md
           - text: "Identifier mapping"
             href: identifier_mapping.md
+          - text: "Metabolite–gene links"
+            href: metabolite_gene_links.md
       - section: "Interpreting results"
         contents:
           - text: "Meta-analysis outputs"

@@ -1,0 +1,200 @@
+# Tire microparticles and tire leachate in adult M. gigas gill, day 41.
+# AREE's FIRST REAL pollutant_exposure STUDY. Chosen 2026-10-12 from the
+# RNA-seq studies the sister repository sr320/AREE-co had curated, because it
+# needs only ~9 GB while the machine's queue was download-bound; not in
+# candidate_studies.md.
+#
+# Source: Bernardini et al. 2024, J Hazard Mater (Ifremer LEMAR / Univ.
+# Padova). NOT open access and not in PMC: only the abstract was read. So the
+# exposure concentrations, tank layout and the number of tanks per treatment
+# are unknown, and are left null rather than guessed.
+#
+# LIBRARY TYPE, CHECKED, NOT ASSUMED. The deposit says only "RNA-Seq,
+# RANDOM". Reads are 76 bp single-end, and 7.4% contain a run of 15+ A's,
+# against 0.1% for full-length RNA-seq (LI2022_LOWSAL_VIBRIO) and 15.9% for
+# known QuantSeq (GEORGE2023_HEATWAVE_PLOIDY, 101 bp): these are 3' tag
+# libraries (QuantSeq FWD-style), consistent with the Padova co-authors'
+# usual protocol. They are run with --tag_seq, so counts are not
+# length-corrected. (An earlier reanalysis in sr320/AREE-co quantified them
+# as full-length.)
+#
+# CODES. MR = tire microparticles and LEA = their leachate (the abstract's TP
+# and LEA); L/H = low/high concentration; CTL = unexposed. NAT (probably a
+# natural-particle reference) is not defined in any source read, so it is not
+# used.
+
+study_id: BERNARDINI2024_TIRE
+simulated: false
+
+accessions:
+  doi: "10.1016/j.jhazmat.2024.135742"
+  bioproject: "PRJNA856813"
+  geo: null
+  sra: "SRR20621860-SRR20621899 (day-41 gill RNA-seq runs used)"
+  ena: "PRJNA856813"
+  proteomexchange: null
+  other: "PMID 39276742; the BioProject also holds 16S amplicon (MiSeq), day-44 digestive gland and gonad, and time-zero RNA-seq runs, not used here"
+
+citation: "Bernardini I, Tallec K, Paul-Pont I, Peruzza L, Dalla Rovere G, Huber M, Di Poi C, Koechlin H, Quere C, Quillien V, Le Grand J, Le Goic N, Lambert C, Lagarde F, Detree C, Trevisan R, Corporeau C, Patarnello T, Milan M, Huvet A (2024). Effects of tire particles and associated-chemicals on the Pacific oyster (Magallana gigas) physiology, reproduction and next-generation. Journal of Hazardous Materials 480:135742. https://doi.org/10.1016/j.jhazmat.2024.135742"
+
+species: "Magallana gigas"
+strain_or_population: "Adult oysters conditioned at Ifremer (France); origin not in the deposited metadata or abstract."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, single-end 76 bp, 3' tag (QuantSeq-style) RNA-seq inferred from poly-A content; 30 day-41 gill libraries used, 5.4-8.3 M reads each"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ public in ENA/SRA under PRJNA856813. The design is in each run's experiment_title (e.g. 'Illumina NovaSeq 6000 sequencing: D41_GI_MR_H_3'); the BioSamples are 16S metagenome records that each oyster's 16S and RNA-seq runs share. Only the 30 day-41 gill NovaSeq runs of CTL, MR_L, MR_H, LEA_L and LEA_H are staged. Sequence data are not committed."
+
+# QC PASSED WITH WARNINGS, 2026-10-12 (full-depth run of the 30 libraries,
+# --single_end --tag_seq).
+# - Replicates are real individual oysters: median within-group dispersion
+#   0.030-0.054 in all five groups (replicate_dispersion_qc.tsv).
+# - Library type confirmed twice: Salmon detected every library as SF
+#   (forward-stranded), as QuantSeq FWD is, matching the poly-A screen.
+# - Small responses, consistent with the abstract's "possible oyster
+#   resilience" and its report of stress and energy-metabolism activation
+#   in the leachate treatment: padj < 0.05 for 48 (leachate high), 88
+#   (leachate low), 13 (particles high) and 17 (particles low) genes.
+# - Warnings: tank layout unknown, concentrations unknown, effect sizes on a
+#   3' count scale.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# Four comparisons, each exposure against the same six day-41 gill controls,
+# prespecified 2026-10-12 before any result was computed.
+#
+# meta_analysis_primary = tire particles, high concentration: the particles
+# are the study's central stressor (leachate is one component of their
+# effect), and the high dose is the one most likely to produce a detectable
+# response; the abstract reports dysbiosis at high concentrations of both.
+# The other three share the controls and must not pool alongside it.
+#
+# Replication: one oyster per library (an expressed-SNP check in
+# sr320/AREE-co found every gill library is a different animal). How many
+# tanks per treatment is unknown; if one tank per treatment, oysters are not
+# independent replicates of the exposure. Flagged in limitations, not
+# assumed either way.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "tire_particles_high_vs_ctl_d41_gill"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Tire particles (TP), high concentration, 41 days (run code MR_H); Bernardini et al. 2024"
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: null
+    exposure_duration: "41 days"
+    exposure_timing: "chronic exposure; gill sampled on day 41"
+    control_condition: "Unexposed controls (CTL), day-41 gill, 6 oysters"
+    treatment_condition: "Tire microparticles, high concentration (MR_H), day-41 gill, 6 oysters"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 12
+    biological_replicates: 6
+    meta_analysis_primary: true
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_particles_high_vs_ctl_d41_gill_dge_standardized.tsv"
+
+  - comparison_id: "tire_particles_low_vs_ctl_d41_gill"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Tire particles (TP), low concentration, 41 days (run code MR_L)"
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: null
+    exposure_duration: "41 days"
+    exposure_timing: "chronic exposure; gill sampled on day 41"
+    control_condition: "Unexposed controls (CTL), day-41 gill, 6 oysters"
+    treatment_condition: "Tire microparticles, low concentration (MR_L), day-41 gill, 6 oysters"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 12
+    biological_replicates: 6
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_particles_low_vs_ctl_d41_gill_dge_standardized.tsv"
+
+  - comparison_id: "tire_leachate_high_vs_ctl_d41_gill"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Tire particle leachate (LEA), high concentration, 41 days (run code LEA_H)"
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: null
+    exposure_duration: "41 days"
+    exposure_timing: "chronic exposure; gill sampled on day 41"
+    control_condition: "Unexposed controls (CTL), day-41 gill, 6 oysters"
+    treatment_condition: "Tire leachate, high concentration (LEA_H), day-41 gill, 6 oysters"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 12
+    biological_replicates: 6
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_leachate_high_vs_ctl_d41_gill_dge_standardized.tsv"
+
+  - comparison_id: "tire_leachate_low_vs_ctl_d41_gill"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Tire particle leachate (LEA), low concentration, 41 days (run code LEA_L)"
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: null
+    exposure_duration: "41 days"
+    exposure_timing: "chronic exposure; gill sampled on day 41"
+    control_condition: "Unexposed controls (CTL), day-41 gill, 6 oysters"
+    treatment_condition: "Tire leachate, low concentration (LEA_L), day-41 gill, 6 oysters"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    sample_size: 12
+    biological_replicates: 6
+    results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_leachate_low_vs_ctl_d41_gill_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+
+limitations: >
+  (1) The paper is not open access and only its abstract was read: exposure
+  concentrations, tank layout and tanks per treatment are unknown, so
+  exposure_intensity is null and oysters may be nested in one tank per
+  treatment. (2) The library type was inferred from poly-A content, not
+  stated in the deposit; effect sizes are on a 3' count scale. (3) All four
+  comparisons share the same six controls. (4) No tolerance outcome is
+  compared: the abstract reports no significant ecophysiological change in
+  adults ("possible oyster resilience"), but that is an absence of effect at
+  group level, not a tolerant-vs-sensitive contrast, so the comparisons are
+  stress_response.
+
+provenance:
+  registered_by: "sr320"
+  date_registered: "2026-10-12"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA856813 --study-id
+    BERNARDINI2024_TIRE` (draft PR sr320/AREE#36). Needs --single_end /
+    --tag_seq (main + sr320/AREE#24) and the toxicant_tolerance phenotype
+    (sr320/AREE#31); this branch contains both until they merge. Sample sheet
+    from live ENA metadata with `aree fetch-samplesheet --label-field
+    experiment_title` and the pattern in config/BERNARDINI2024_TIRE.config:
+    all 213 runs parse; 6 per day-41 gill group. Library-type check
+    (2026-10-12): first 200,000 reads of SRR20621899 (D41_GI_CTL_1), poly-A15
+    7.4%, compared on the same day with GEORGE2023_HEATWAVE_PLOIDY SRR22817776
+    (15.9%) and LI2022_LOWSAL_VIBRIO SRR15559845 (0.1%). Comparisons and
+    meta_analysis_primary fixed before any result was computed.
+    Run 2026-10-12 (Nextflow 26.04.7, native, merged single-end + tag_seq
+    code): all 30 FASTQ verified against ENA MD5s; first comparison 96/96
+    tasks, the other three reuse its quantifications. Salmon mapping
+    43.5-56.7%, library type SF for all 30. Harmonized: 89,752 evidence
+    records across the four comparisons.
+  source_links:
+    - "https://doi.org/10.1016/j.jhazmat.2024.135742"
+    - "https://pubmed.ncbi.nlm.nih.gov/39276742/"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA856813"

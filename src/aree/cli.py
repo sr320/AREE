@@ -5,6 +5,7 @@ See README.md for the full command reference.
 from __future__ import annotations
 
 import datetime
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -382,8 +383,40 @@ def harmonize_cmd(study_id, input_path, comparison_id, date_generated):
 @main.command("meta-analyze")
 @click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
 @click.option("--feature-type", default=None, help="Feature type to filter on, e.g. gene, protein (default: all).")
-def meta_analyze_cmd(phenotype, feature_type):
+@click.option("--level", type=click.Choice(["gene", "orthogroup"]), default="gene", show_default=True,
+              help="gene: pool within each species. orthogroup: pool species' gene-level estimates "
+                   "across species through orthogroups (single-copy orthogroups only by default).")
+@click.option("--include-multi-copy", is_flag=True,
+              help="With --level orthogroup, also pool multi-copy orthogroups where each species has "
+                   "evidence for exactly one gene. Off by default: paralogs are not like for like.")
+def meta_analyze_cmd(phenotype, feature_type, level, include_multi_copy):
     """Run a random-effects meta-analysis over the harmonized evidence table."""
+    if level == "orthogroup":
+        from meta_analysis.run import write_orthogroup_meta_analysis
+
+        try:
+            result, _species, summary, out_path = write_orthogroup_meta_analysis(
+                phenotype, feature_type, include_multi_copy=include_multi_copy)
+        except (FileNotFoundError, ValueError) as exc:
+            click.echo(click.style(str(exc), fg="red"))
+            sys.exit(1)
+        click.echo(f"Orthogroup groups seen: {summary['orthogroup_groups']}; pooled across species: "
+                   f"{summary['pooled']}; one species only: {summary['single_species']}; set aside: "
+                   f"{summary['multi_copy_excluded']} multi-copy, {summary['paralogs_in_species_excluded']} "
+                   f"with paralogs in one species, {summary['not_in_active_run_excluded']} not in the "
+                   "active orthogroup run.")
+        if len(result) == 0:
+            click.echo("No orthogroup has gene-level estimates from two or more species.")
+            return
+        click.echo(tabulate(
+            result[["orthogroup_id", "copy_class", "phenotype", "n_species", "k_studies_by_species",
+                    "pooled_effect", "p_value", "adjusted_p_value", "i_squared_between_species",
+                    "meets_replication_gate"]].head(20),
+            headers="keys", showindex=False, floatfmt=".3g",
+        ))
+        click.echo(f"\nFull results ({len(result)} rows) written to {out_path}; per-species "
+                   "estimates beside it. meets_replication_gate: at least two species each with k >= 2.")
+        return
     try:
         result, out_path = write_meta_analysis(phenotype, feature_type)
     except FileNotFoundError as exc:
@@ -435,6 +468,43 @@ def build_evidence_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards)
     for tier in TIER_ORDER:
         if tier in tiers:
             click.echo(f"  {tier}: {tiers[tier]}")
+
+
+@main.command("build-cross-species-cards")
+@click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
+@click.option("--feature-type", default=None, help="Feature type to filter on (default: all).")
+@click.option("--max-adjusted-p", default=DEFAULT_MAX_ADJUSTED_P, show_default=True, type=float,
+              help="Render a card only when the pooled cross-species adjusted p, or any one species' "
+                   "gene-level adjusted p, is at or below this value. Every row is still listed in "
+                   "reports/evidence_cards/cross_species/candidates.tsv.")
+@click.option("--all-cards", is_flag=True, help="Render a card for every orthogroup row.")
+@click.option("--include-multi-copy", is_flag=True,
+              help="Also pool multi-copy orthogroups where each species has evidence for exactly one gene.")
+def build_cross_species_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards, include_multi_copy):
+    """Tier orthogroup-level (cross-species) results and write cross-species evidence cards."""
+    from reporting.cross_species_cards import TIER_ORDER as CROSS_TIERS
+    from reporting.cross_species_cards import build_cross_species_cards_report
+
+    try:
+        report = build_cross_species_cards_report(
+            phenotype=phenotype, feature_type=feature_type, max_adjusted_p=max_adjusted_p,
+            all_cards=all_cards, include_multi_copy=include_multi_copy)
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    if report.n_candidates == 0:
+        click.echo("No orthogroup has gene-level estimates from two or more species, so there are no "
+                   "cross-species candidates. Harmonize a study of a second species first.")
+        return
+    click.echo(click.style(
+        f"Tiered {report.n_candidates} cross-species rows ({report.candidates_path}); "
+        f"wrote {len(report.index)} cards to {report.candidates_path.parent}/", fg="green"))
+    counts = {}
+    for row in report.index:
+        counts[row["tier"]] = counts.get(row["tier"], 0) + 1
+    for tier in CROSS_TIERS:
+        if tier in counts:
+            click.echo(f"  {tier}: {counts[tier]}")
 
 
 @main.command("top-candidates")
@@ -710,6 +780,40 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
     click.echo("assemblies in data/reference/genome_assemblies.yaml:")
     click.echo(click.style(f"  identifier_crosswalk: \"{shown}\"", fg="cyan"))
 
+
+
+@main.command("build-metabolite-links")
+@click.option("--taxid", default=29159, show_default=True, type=int,
+              help="NCBI taxid; must have a KEGG organism code in mappings.build_metabolite_links.")
+@click.option("--offline", is_flag=True,
+              help="Rebuild only from cached KEGG responses in data/mappings/_sources/kegg/.")
+def build_metabolite_links_cmd(taxid, offline):
+    """Build the real metabolite -> enzyme gene link table from the KEGG REST API.
+
+    Queries KEGG only for the compounds curated in
+    data/mappings/metabolite_compound_map.tsv and writes
+    data/mappings/metabolite_gene_links_<slug>.tsv plus a .provenance.json
+    sidecar. The output is git-ignored and must not be committed (KEGG terms).
+    See docs/metabolite_gene_links.md.
+    """
+    from mappings.build_metabolite_links import build
+    from mappings.metabolite_links import clear_caches
+
+    try:
+        path = build(taxid=taxid, offline=offline)
+    except (OSError, ValueError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    clear_caches()
+    prov = json.loads(path.with_suffix(".provenance.json").read_text())
+    cov = prov["coverage"]
+    click.echo(click.style(f"Wrote {path} ({cov['rows']} links)", fg="green"))
+    click.echo(f"  compounds with links: {cov['compounds_with_links']} of {cov['compounds_queried']} queried"
+               f" (currency skipped: {', '.join(prov['currency_metabolites']['skipped']) or 'none'})")
+    click.echo(f"  hub compounds (not credited): {', '.join(cov['hub_compounds']) or 'none'}")
+    click.echo(f"  KEGG genes: {cov['kegg_genes_current']} current, {cov['kegg_genes_retired_remapped']} "
+               f"remapped from retired IDs, {cov['kegg_genes_unresolved']} unresolved")
+    click.echo("  Not for redistribution: do not commit this file (docs/metabolite_gene_links.md).")
 
 if __name__ == "__main__":
     main()

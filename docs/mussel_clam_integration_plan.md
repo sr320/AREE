@@ -2,8 +2,8 @@
 
 **Status, 2026-10-13:** WP0 to WP4 are implemented. WP5 has its backlog and a
 first study (TUCCI2025_HEAT_PRIMING, Manila clam, reanalyzed). WP6 has its
-orthogroup run; orthogroup-level meta-analysis and cross-species candidates
-are not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
+orthogroup run, orthogroup-level meta-analysis and cross-species candidates
+with their evidence cards; the dashboard gate is not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
 species-by-species and then across species through orthology.
@@ -442,7 +442,7 @@ k ≥ 2 per taxon.
 
 ### WP6. Cross-species orthology and pooling (the new science)
 
-**Status: orthogroups done, 2026-10-13; pooling not started.** What exists:
+**Status: orthogroups done, 2026-10-13; pooling and cross-species candidates done, 2026-10-14; dashboard gate not started.** What exists:
 
 - `aree fetch-reference --proteins` writes one protein per gene (the longest)
   for each species, keyed by NCBI GeneID; all seven reference assemblies have
@@ -466,8 +466,41 @@ k ≥ 2 per taxon.
   protein" genes fall into 285 orthogroups, the largest holding 17-23 copies
   in each mussel against 3 in the oyster.
 
-Still to build: orthogroup-level meta-analysis, the cross-species candidate
-category, evidence cards that show both species, and the dashboard gate. The
+**Orthogroup-level meta-analysis: done, 2026-10-14.** `aree meta-analyze
+--level orthogroup` pools each species' gene-level estimate across species
+through orthogroups (two-stage DerSimonian-Laird), reports between-species
+Q, I-squared and tau-squared, per-species estimates and study counts, and a
+`meets_replication_gate` flag (two or more species with k >= 2 each).
+Multi-copy orthogroups are set aside by default, as are orthogroups missing
+from the active run. On the demo, 8 orthogroups pool oyster with mussel
+(larval viability), none past the gate; on all committed real evidence
+(465,531 oyster records), nothing pooled across species yet, correctly, until
+the first clam study merged (see below).
+Building it found that the demo's illustrative orthogroup IDs collide with
+real OrthoFinder IDs, so simulated evidence never consults the run (tested).
+
+**Cross-species candidates and cards: done, 2026-10-14.** `aree
+build-cross-species-cards` tiers each orthogroup row behind five named gates
+(replication, direction, significance, phenotype relevance, quality) into
+`cross_species_convergence`, `cross_species_emerging`,
+`cross_species_discordant` or `cross_species_unsupported`, with a transparent
+weighted score and a between-species I-squared penalty. Each card shows every
+species' estimate side by side, the pooled estimate, the orthogroup run and
+the gates failed. Single-species cards now name their orthogroup. On the
+demo: 5 emerging, 3 unsupported, none convergent.
+
+First real cross-species rows, 2026-10-16, after TUCCI2025_HEAT_PRIMING
+merged: oyster and Manila clam thermal-tolerance evidence pools through 5,681
+single-copy orthogroups, giving 64 emerging, 6 discordant and 5,611
+unsupported rows, none convergent, with 603 cards. Real data changed two
+rules. "Discordant" now requires species that are each significant at gene
+level and disagree in sign: 2,880 of 2,886 sign disagreements involved a
+non-significant species, which is noise, not a reversal. Quality is now
+judged per species, because the union of flags across species always
+exceeded the limit. PERUZZA2023_HEATWAVE (claimed, PR #64) is the second clam
+study, the one that can bring the clam to k = 2.
+
+Still to build: the dashboard gate. The
 OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only
 mode) and only its `Orthogroups.tsv` is used; hierarchical orthogroups are a
 possible refinement.

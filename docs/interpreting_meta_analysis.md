@@ -149,6 +149,59 @@ candidate would score low on both counts and, separately, fails the
 `high_priority_cross_study` hard gate (`direction_consistency >= 0.7`)
 regardless of its overall score.
 
+## Cross-species results (`--level orthogroup`)
+
+Gene-level pooling never crosses species. `aree meta-analyze --level orthogroup`
+does, through orthogroups, in two stages:
+
+1. **Within species.** Each species' estimate for an orthogroup is its
+   gene-level pooled estimate, unchanged, so every gene-level rule (primary
+   comparisons, real standard errors, duplicate mappings) still holds.
+2. **Across species.** Those estimates are pooled with the same
+   DerSimonian-Laird random-effects model. Its heterogeneity is now *between
+   species*: `q_between_species`, `i_squared_between_species`,
+   `tau_squared_between_species`.
+
+It writes `<label>_orthogroup_meta_analysis.tsv` (one row per orthogroup,
+phenotype and feature type) and `<label>_orthogroup_species_estimates.tsv`
+(the per-species rows behind each one).
+
+What may pool:
+
+- **Single-copy orthogroups only, by default** (`single_copy_all`,
+  `single_copy`). In a multi-copy orthogroup one species' gene is compared
+  with another species' different paralog; those are counted and set aside.
+  `--include-multi-copy` pools them only where each species has evidence for
+  exactly one gene, and the row keeps its `multi_copy` label.
+- **Orthogroups from the active run only.** Evidence harmonized under an
+  earlier run is set aside until it is re-harmonized.
+- **Simulated and real evidence never pool together**, as at gene level. The
+  demo's illustrative orthogroups are classed `demo_crosswalk`; their IDs
+  collide with real OrthoFinder IDs, so they are never looked up in the run.
+
+How to read a row:
+
+- `k_studies_by_species` and `species_with_k2` say how much each species
+  contributes. **`meets_replication_gate` is true only when at least two
+  species each have k >= 2 studies.** A row below the gate is a pairing of
+  single-study estimates, not replicated cross-species evidence.
+- `direction_consistency_species` is the share of species agreeing with the
+  majority sign. With two species, 0.5 means they disagree.
+- A high `i_squared_between_species` means the species respond differently;
+  the pooled effect then describes no species well.
+- `adjusted_p_value` is Benjamini-Hochberg within each phenotype, feature type
+  and origin family of orthogroup-level tests.
+
+The first real cross-species rows came on 2026-10-16, once the first real
+clam study reached `main`: oyster and Manila clam thermal-tolerance evidence
+pools through 5,681 single-copy orthogroups (4,890 multi-copy orthogroups set
+aside). None is past the gate, because the clam has one study. The demo adds
+oyster and mussel larval rows sharing demo orthogroups, also below the gate.
+
+`aree build-cross-species-cards` tiers these rows and writes a card for each
+one that shows every species side by side; see
+[interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates).
+
 ## Related documentation
 
 - [interpreting_candidate_scores.md](interpreting_candidate_scores.md)

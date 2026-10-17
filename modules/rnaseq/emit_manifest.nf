@@ -180,6 +180,8 @@ process EMIT_MANIFEST {
             # 3' tag counting changes what a count (and so lfcSE) means.
             "tag_seq": ${params.tag_seq ? 'True' : 'False'},
             "viral_reference": "${params.viral_reference ?: ''}" or None,
+            # Genes dropped before size factors; counts and fractions are in deseq2_design.
+            "exclude_genes": "${params.exclude_genes ?: ''}" or None,
         },
         # The DESeq2 design as fitted (null in processed mode).
         "deseq2_design": deseq2_design,

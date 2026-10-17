@@ -1,0 +1,41 @@
+{
+  "study_id": "LI2022_LOWSAL_VIBRIO",
+  "bioproject": "PRJNA756710",
+  "date_generated": "2026-10-11",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA756710&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "salinity",
+    "timepoint"
+  ],
+  "n_runs": 14,
+  "n_samples": 14,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "10ppt_12h": 3,
+    "10ppt_48h": 3,
+    "30ppt_0h": 2,
+    "30ppt_12h": 3,
+    "30ppt_48h": 3
+  },
+  "min_group_size": 2,
+  "total_fastq_bytes": 40336621079,
+  "outputs": {
+    "data/studies/LI2022_LOWSAL_VIBRIO/samplesheet.tsv": "554b1f637bfc33e39b84a1762f96cc9a5fb0ec2901d3c34611e2de6cd9addeaa",
+    "data/studies/LI2022_LOWSAL_VIBRIO/fastq_manifest.tsv": "1fe3ad5118c2453a136136e92b2061f65ce0420b87378c51a4840ac2763cbc18"
+  },
+  "design_table": {
+    "path": "data/studies/LI2022_LOWSAL_VIBRIO/design.tsv",
+    "sha256": "9aec2baf4bb8143b1f83572e6d856360578d00d6beb5f81abfe9664423f6a8ae",
+    "join_attribute": "ID",
+    "source": "ENA/BioSample sample TITLE of each deposited sample (e.g. 'post-infection 12h(replicate=biological replicate-1) of Crassostrea gigas (Gill tissue) Infected by Vibrio alginolyticus at low salinity'), parsed into salinity and timepoint; the BioSample attributes carry neither"
+  }
+}

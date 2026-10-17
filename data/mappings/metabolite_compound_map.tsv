@@ -1,0 +1,19 @@
+# Curated metabolite name -> KEGG compound / ChEBI map. Used by src/mappings/metabolite_links.py.
+# One row per (name, compound). A reported name that cannot be resolved to a single stereoisomer
+# gets one row per candidate compound and match_basis=curator_judgement (links become 'inferred').
+# KEGG compound IDs and ChEBI cross-references checked against https://rest.kegg.jp/get/cpd:<id> on 2026-10-16.
+# Names are matched after normalization (lowercase; spaces/hyphens -> underscores). See docs/metabolite_gene_links.md.
+metabolite_name	kegg_compound	chebi_id	match_basis	curator	date_curated	note
+lactate	C00186	CHEBI:16651	curator_judgement	aree_curator	2026-10-16	LC-MS does not resolve stereoisomers; (S)-lactate. Molluscs carry both L- and D-LDH, so both are linked.
+lactate	C00256	CHEBI:16004	curator_judgement	aree_curator	2026-10-16	LC-MS does not resolve stereoisomers; (R)-lactate (D-lactate).
+l_lactate	C00186	CHEBI:16651	exact_name	aree_curator	2026-10-16	
+d_lactate	C00256	CHEBI:16004	exact_name	aree_curator	2026-10-16	
+succinate	C00042	CHEBI:15741	exact_name	aree_curator	2026-10-16	
+glucose	C00031	CHEBI:4167	synonym	aree_curator	2026-10-16	D-glucose assumed (the biological enantiomer); anomer not resolved.
+d_glucose	C00031	CHEBI:4167	exact_name	aree_curator	2026-10-16	
+atp	C00002	CHEBI:15422	exact_name	aree_curator	2026-10-16	Currency metabolite; never credited as a link.
+alanine	C00041	CHEBI:16977	synonym	aree_curator	2026-10-16	L-alanine assumed; D-alanine is minor in bivalve tissue but not excluded by the assay.
+l_alanine	C00041	CHEBI:16977	exact_name	aree_curator	2026-10-16	
+glycine_betaine	C00719	CHEBI:17750	synonym	aree_curator	2026-10-16	KEGG name 'Betaine'.
+betaine	C00719	CHEBI:17750	exact_name	aree_curator	2026-10-16	
+pyruvate	C00022	CHEBI:15361	exact_name	aree_curator	2026-10-16	
