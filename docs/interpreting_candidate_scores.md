@@ -31,6 +31,15 @@ positive components:
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
 
+Every quality flag counts the same in `quality_score`: `batch_confounded`
+(treatment fully confounded with a sequencing run, MS acquisition batch, or
+extraction batch) removes the same 0.2 as `low_replication`, and counts
+toward the `quality_score >= 0.4` high-priority gate the same way. Adding the
+term (2026-10-16) did not change any existing score, because no registered
+study declared it yet. Once a study declares it, every candidate with a
+record from that study loses 0.2 `quality_score` (0.4 points of the 0-100
+score) unless the flag was already in its union.
+
 ### Why the unbounded components saturate instead of clipping
 
 Every component whose input has no natural upper bound uses `v / (v + half)`,
@@ -208,6 +217,87 @@ Each card shows the tier, the contributing studies, the pooled and
 BH-adjusted p-values with the family size, and a forest-style table of
 per-study effect estimates with each study's own adjusted p, so a reviewer can
 see exactly which inputs drove the score rather than trusting a single number.
+
+## Cross-species candidates
+
+`aree build-cross-species-cards` tiers the orthogroup-level meta-analysis
+(see [interpreting_meta_analysis.md](interpreting_meta_analysis.md#cross-species-results---level-orthogroup)):
+one row per orthogroup, phenotype and feature type, pooling each species' own
+gene-level estimate. The rule is the same as for single-species candidates:
+**hard gates first, score second.** It writes, under
+`reports/evidence_cards/cross_species/`, a `candidates.tsv` with every row and
+its component breakdown, an `index.json`, and a card for each row whose pooled
+adjusted p, or any one species' gene-level adjusted p, is at or below
+`--max-adjusted-p`.
+
+The five convergence gates, each named in the `gates_failed` column when it
+fails:
+
+| Gate | Passes when |
+|---|---|
+| `replication` | at least two species each have k ≥ 2 studies of their own |
+| `direction` | every species' estimate has the same sign |
+| `significance` | the pooled cross-species BH-adjusted p ≤ 0.05 |
+| `phenotype_relevance` | the weakest evidence class across all species' contributing records is more than exposure-only |
+| `quality` | each species' own quality flags are within the gene-level limit (the weakest species decides) |
+
+The tiers:
+
+| Tier | Meaning |
+|---|---|
+| `cross_species_convergence` | every gate passes |
+| `cross_species_emerging` | species agree in sign and the pooled estimate is significant, but another gate fails, usually replication |
+| `cross_species_discordant` | species that are each significant at gene level disagree in sign; shown, never dropped |
+| `cross_species_unsupported` | the pooled estimate is not significant, or species disagree in sign only because one of them is noise |
+
+The direction gate is judged on point estimates, so any sign disagreement
+fails it. Only a disagreement between species that are each significant at
+gene level is called discordant. Two null estimates disagree in sign about
+half the time: on the first real oyster-clam pool, 2,880 of 2,886 sign
+disagreements involved a non-significant species, and only 6 were reversals
+between significant ones.
+
+The cross-species score uses its own weights, which sum to 100:
+
+| Component | Weight | What it measures |
+|---|---|---|
+| `per_species_replication_score` | 20 | the smallest per-species study count, saturating at 2 = 0.5 |
+| `n_species_score` | 15 | number of species, saturating at 2 = 0.5 |
+| `direction_consistency_score` | 15 | share of species agreeing with the majority sign |
+| `effect_magnitude_score` | 10 | absolute pooled cross-species effect |
+| `significance_score` | 10 | pooled BH-adjusted p, on the −log10 scale |
+| `phenotype_relevance_score` | 10 | weakest evidence class across all species' records |
+| `orthology_score` | 8 | copy class: `single_copy_all` 1.0, `single_copy` and `demo_crosswalk` 0.9, `multi_copy` 0.3 |
+| `sample_size_score` | 5 | total biological replicates across species |
+| `mapping_confidence_score` | 4 | worst identifier mapping behind any species' estimate |
+| `quality_score` | 3 | the weakest species' own gene-level quality (`1 - n_flags/5`) |
+
+Between-species I² is subtracted as a penalty of up to 15 points. The
+smallest per-species study count carries the most weight because a
+cross-species claim is only as strong as its weakest species.
+
+A cross-species card shows each species' gene, original identifiers, studies,
+tissue, life stage, stressor, sample size, effect with 95% CI and gene-level
+adjusted p side by side, then the pooled estimate and between-species
+heterogeneity. It names the orthogroup run, or says the orthogroup is the demo
+crosswalk's illustrative one. It also warns when the species' studies differ
+in stressor, tissue or life stage, because species and study design are then
+confounded. Agreement across species shows an association recurs in
+orthologous genes. It does not show the genes do the same thing in each
+species.
+
+On the demo, oyster and mussel larval studies give five emerging rows and
+three unsupported rows. None converges, because the demo mussel has one study
+per gene. The demo's one sign disagreement involves a non-significant mussel
+estimate, so it is unsupported, not discordant.
+
+On real data (2026-10-16), the three harmonized oyster thermal-tolerance studies and TUCCI2025_HEAT_PRIMING pool through 5,681 single-copy orthogroups: 64 emerging, 6 discordant, 5,611 unsupported, none convergent. Every emerging row fails three gates:
+replication (one clam study), phenotype relevance (the clam comparison is
+exposure-only), and quality (each species' own flags exceed the gene-level
+limit, as they do for its single-species candidates). The 6 discordant rows
+are oyster genes with small significant effects against clam genes with large
+significant effects of opposite sign. The two studies differ in stressor
+timing, so they are leads to check, not established species differences.
 
 ## Related documentation
 

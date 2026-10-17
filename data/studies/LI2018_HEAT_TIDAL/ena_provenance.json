@@ -1,0 +1,85 @@
+{
+  "study_id": "LI2018_HEAT_TIDAL",
+  "bioproject": "PRJNA407831",
+  "date_generated": "2026-10-11",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA407831&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "site",
+    "zone",
+    "hours"
+  ],
+  "n_runs": 36,
+  "n_samples": 36,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "BYQ_J_0": 3,
+    "BYQ_J_24": 3,
+    "BYQ_J_6": 3,
+    "BYQ_X_0": 3,
+    "BYQ_X_24": 3,
+    "BYQ_X_6": 3,
+    "LT_J_0": 3,
+    "LT_J_24": 3,
+    "LT_J_6": 3,
+    "LT_X_0": 3,
+    "LT_X_24": 3,
+    "LT_X_6": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 94094092348,
+  "outputs": {
+    "data/studies/LI2018_HEAT_TIDAL/samplesheet.tsv": "feb55af7b0f30f76deda881c66e0fa38b7bb78f9b7e36d6074c14a1a0278fd62",
+    "data/studies/LI2018_HEAT_TIDAL/fastq_manifest.tsv": "66cb261bdc7d231858f003a9352f24be399fdcd59cdd5a4ceb0ac542402b71e3"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<population>(?P<site>BYQ|LT)(?P<zone>J|X))(?P<hours>0|6|24)(?P<tank>[1-3])$",
+    "labels": {
+      "SRR6057012": "BYQJ01",
+      "SRR6058486": "BYQJ02",
+      "SRR6058506": "BYQJ03",
+      "SRR6058518": "BYQJ241",
+      "SRR6058519": "BYQJ242",
+      "SRR6058521": "BYQJ243",
+      "SRR6058526": "BYQJ61",
+      "SRR6058527": "BYQJ62",
+      "SRR6058528": "BYQJ63",
+      "SRR6058529": "BYQX01",
+      "SRR6058530": "BYQX02",
+      "SRR6058531": "BYQX03",
+      "SRR6058534": "BYQX241",
+      "SRR6058535": "BYQX242",
+      "SRR6058536": "BYQX243",
+      "SRR6058537": "BYQX61",
+      "SRR6058539": "BYQX62",
+      "SRR6058540": "BYQX63",
+      "SRR6058609": "LTJ01",
+      "SRR6058611": "LTJ02",
+      "SRR6058612": "LTJ03",
+      "SRR6058613": "LTJ241",
+      "SRR6058614": "LTJ242",
+      "SRR6058615": "LTJ243",
+      "SRR6058616": "LTJ61",
+      "SRR6058617": "LTJ62",
+      "SRR6058618": "LTJ63",
+      "SRR6058619": "LTX01",
+      "SRR6058620": "LTX02",
+      "SRR6058621": "LTX03",
+      "SRR6058622": "LTX241",
+      "SRR6058623": "LTX242",
+      "SRR6058625": "LTX243",
+      "SRR6058627": "LTX61",
+      "SRR6058629": "LTX62",
+      "SRR6058630": "LTX63"
+    }
+  }
+}

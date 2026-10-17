@@ -342,6 +342,26 @@ def _ambiguous_map() -> dict:
 
 
 def resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
+    """Resolve an identifier against the active crosswalk, then attach its orthogroup.
+
+    Real crosswalks ship `orthogroup_id` empty (it is not NCBI data). When an
+    orthogroup run is active (data/reference/orthogroups/active.yaml), the
+    resolved GeneID's orthogroup is taken from that run instead. The synthetic
+    demo crosswalk keeps its own illustrative orthogroups and is never looked
+    up in a real run.
+    """
+    resolved = _resolve_identifier(raw_id, id_type)
+    if (resolved.orthogroup_id is None and resolved.feature_id_standardized is not None
+            and active_crosswalk_path() != DEMO_CROSSWALK_PATH):
+        from mappings.orthogroups import gene_orthogroup
+
+        og = gene_orthogroup(resolved.feature_id_standardized)
+        if og is not None:
+            return ResolvedIdentifier(resolved.feature_id_standardized, resolved.mapping_confidence, og)
+    return resolved
+
+
+def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
     """Resolve a raw feature identifier to a standardized id + mapping confidence.
 
     id_type must be one of: ncbi_gene_id, ensembl_gene_id, uniprot_accession,

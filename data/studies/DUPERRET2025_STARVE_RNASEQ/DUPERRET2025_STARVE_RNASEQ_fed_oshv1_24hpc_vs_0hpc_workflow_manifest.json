@@ -1,0 +1,371 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "DUPERRET2025_STARVE_RNASEQ",
+  "comparison_id": "fed_oshv1_24hpc_vs_0hpc",
+  "input_files": [
+    {
+      "name": "DUPERRET2025_STARVE_RNASEQ_fed_oshv1_24hpc_vs_0hpc_dge_standardized.tsv",
+      "sha256": "bfe5b91f81dd41dfdeff4d03e55538fb29bf4578c38b70e4ace510ca8dadd24a"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "DUPERRET2025_STARVE_RNASEQ",
+    "comparison_id": "fed_oshv1_24hpc_vs_0hpc",
+    "outdir": "results/rnaseq/DUPERRET2025_STARVE_RNASEQ/fed_oshv1_24hpc_vs_0hpc",
+    "exclude_samples": [],
+    "control_levels": [
+      "3_0"
+    ],
+    "treatment_levels": [
+      "3_24"
+    ],
+    "replicate_unit": "tank_hpc",
+    "covariates": [],
+    "single_end": true,
+    "se_adapter": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+    "tag_seq": false,
+    "viral_reference": "data/reference/pathogens/OsHV-1/NC_005881.2.fasta"
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "lengthScaledTPM counts summed per replicate unit",
+    "n_libraries_or_units": 6,
+    "residual_df": 4
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.42.1",
+      "bioconductor-tximport": "1.30.0",
+      "r-base": "4.3.2"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.9"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "1.1.3",
+      "python": "3.8.5"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "VIRAL_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "VIRAL_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "VIRAL_SUMMARY": {
+      "python": "3.8.5"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.8.5"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "/Users/sr320/Documents/GitHub/AREE/.claude/worktrees/non-rnaseq-studies-scan-e82e13/data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "/Users/sr320/Documents/GitHub/AREE/.claude/worktrees/non-rnaseq-studies-scan-e82e13/data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "/Users/sr320/Documents/GitHub/AREE/.claude/worktrees/non-rnaseq-studies-scan-e82e13/data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386"
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "170cae75beb05c1afd9b7b3dbed4bdeb4225c16f9aab757ccc00c2b449092d18"
+      }
+    ],
+    "bundle": null
+  },
+  "workflow_start": "2026-10-13T12:12:24.908857-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": {
+    "reference": {
+      "file": "NC_005881.2.fasta",
+      "sha256": "cdd9a92f3db33d3f09ffdfd759c677b9296f87aff2eb6d3580546a0f910f98d9",
+      "header": "NC_005881.2 Ostreid herpesvirus 1, complete genome"
+    },
+    "threshold_viral_pairs_per_million": 100.0,
+    "samples": [
+      {
+        "sample_id": "P_F11N_3_0_1",
+        "library_id": "ERR14687865",
+        "condition": "3_0",
+        "pairs_processed": 28687601,
+        "viral_pairs": 12,
+        "viral_per_million": 0.42,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_3_0_2",
+        "library_id": "ERR14687866",
+        "condition": "3_0",
+        "pairs_processed": 22663760,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_3_0_3",
+        "library_id": "ERR14687867",
+        "condition": "3_0",
+        "pairs_processed": 25328006,
+        "viral_pairs": 1,
+        "viral_per_million": 0.04,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_3_24_1",
+        "library_id": "ERR14687877",
+        "condition": "3_24",
+        "pairs_processed": 26939769,
+        "viral_pairs": 718907,
+        "viral_per_million": 26685.72,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_3_24_2",
+        "library_id": "ERR14687878",
+        "condition": "3_24",
+        "pairs_processed": 27732249,
+        "viral_pairs": 746971,
+        "viral_per_million": 26935.1,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_3_24_3",
+        "library_id": "ERR14687879",
+        "condition": "3_24",
+        "pairs_processed": 31048530,
+        "viral_pairs": 336699,
+        "viral_per_million": 10844.28,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_3_24_1",
+        "library_id": "ERR14687895",
+        "condition": "3_24",
+        "pairs_processed": 26652031,
+        "viral_pairs": 305030,
+        "viral_per_million": 11444.91,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_3_24_2",
+        "library_id": "ERR14687896",
+        "condition": "3_24",
+        "pairs_processed": 27354294,
+        "viral_pairs": 1326,
+        "viral_per_million": 48.48,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_3_24_3",
+        "library_id": "ERR14687897",
+        "condition": "3_24",
+        "pairs_processed": 31989738,
+        "viral_pairs": 44237,
+        "viral_per_million": 1382.85,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_3_0_1",
+        "library_id": "ERR14687898",
+        "condition": "3_0",
+        "pairs_processed": 27340169,
+        "viral_pairs": 4,
+        "viral_per_million": 0.15,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_3_0_2",
+        "library_id": "ERR14687902",
+        "condition": "3_0",
+        "pairs_processed": 27969033,
+        "viral_pairs": 1,
+        "viral_per_million": 0.04,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_3_0_3",
+        "library_id": "ERR14687903",
+        "condition": "3_0",
+        "pairs_processed": 27007401,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_5_0_1",
+        "library_id": "ERR14693746",
+        "condition": "5_0",
+        "pairs_processed": 24314847,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_5_0_2",
+        "library_id": "ERR14693747",
+        "condition": "5_0",
+        "pairs_processed": 29044489,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_5_0_3",
+        "library_id": "ERR14693748",
+        "condition": "5_0",
+        "pairs_processed": 23816630,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_5_24_1",
+        "library_id": "ERR14693758",
+        "condition": "5_24",
+        "pairs_processed": 26831266,
+        "viral_pairs": 31,
+        "viral_per_million": 1.16,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_5_24_2",
+        "library_id": "ERR14693759",
+        "condition": "5_24",
+        "pairs_processed": 25594198,
+        "viral_pairs": 138,
+        "viral_per_million": 5.39,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_5_24_3",
+        "library_id": "ERR14693760",
+        "condition": "5_24",
+        "pairs_processed": 25512782,
+        "viral_pairs": 229,
+        "viral_per_million": 8.98,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_5_0_1",
+        "library_id": "ERR14693766",
+        "condition": "5_0",
+        "pairs_processed": 27369122,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_5_0_2",
+        "library_id": "ERR14693767",
+        "condition": "5_0",
+        "pairs_processed": 26053507,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_5_0_3",
+        "library_id": "ERR14693768",
+        "condition": "5_0",
+        "pairs_processed": 26803005,
+        "viral_pairs": 1,
+        "viral_per_million": 0.04,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_5_24_1",
+        "library_id": "ERR14693778",
+        "condition": "5_24",
+        "pairs_processed": 26335424,
+        "viral_pairs": 41080,
+        "viral_per_million": 1559.88,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_5_24_2",
+        "library_id": "ERR14693779",
+        "condition": "5_24",
+        "pairs_processed": 31963360,
+        "viral_pairs": 358,
+        "viral_per_million": 11.2,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_5_24_3",
+        "library_id": "ERR14693780",
+        "condition": "5_24",
+        "pairs_processed": 35753996,
+        "viral_pairs": 245,
+        "viral_per_million": 6.85,
+        "virus_detected": false,
+        "excluded_from_de": false
+      }
+    ],
+    "warnings": [
+      "no_viral_reads_in_challenged_sample: P_F14R_3_24_2 (3_24) has 48.5 viral pairs per million, below the 100 threshold"
+    ]
+  },
+  "warnings": [
+    "no_viral_reads_in_challenged_sample: P_F14R_3_24_2 (3_24) has 48.5 viral pairs per million, below the 100 threshold",
+    "reference_bundle_provenance_missing: no reference_provenance.json beside the reference files; fetch them with `aree fetch-reference` to record where they came from"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "study_id": "GEORGE2023_HEATWAVE_PLOIDY",
+  "bioproject": "PRJNA913164",
+  "date_generated": "2026-10-11",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA913164&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "ploidy",
+    "treatment"
+  ],
+  "n_runs": 72,
+  "n_samples": 72,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "diploid_control": 12,
+    "diploid_multiple_stressor": 12,
+    "diploid_single_stressor": 12,
+    "triploid_control": 12,
+    "triploid_multiple_stressor": 12,
+    "triploid_single_stressor": 12
+  },
+  "min_group_size": 12,
+  "total_fastq_bytes": 17898671626,
+  "outputs": {
+    "data/studies/GEORGE2023_HEATWAVE_PLOIDY/samplesheet.tsv": "eaf989f9e66f066ca717d44863a3890597da56a50c2f928568ec9e68e5d93517",
+    "data/studies/GEORGE2023_HEATWAVE_PLOIDY/fastq_manifest.tsv": "ca57fc49dc56304a6004fea9b36e639fb7417c0b8a9296a2ace4f33aabafcf32"
+  },
+  "design_table": {
+    "path": "data/studies/GEORGE2023_HEATWAVE_PLOIDY/design.tsv",
+    "sha256": "1a5302fb78214482960a5c696a273198825df22673913aae0e4d352cedce0443",
+    "join_attribute": "isolate",
+    "source": "https://github.com/mattgeorgephd/NOPP-gigas-ploidy-temp/blob/24e7abd1c822504cdff9bbd5dab928f4106b38f9/202107_EXP2/tag-seq/NCBI/attributes.tsv (authors' NCBI BioSample submission sheet, description column)"
+  }
+}
