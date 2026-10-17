@@ -29,6 +29,12 @@
 # valve-opening rose from 20.6% to 38.0%), but no tolerance outcome was
 # measured. So toxicant_tolerance is the axis and the comparison is
 # stress_response, overriding the ontology default.
+#
+# MERGED AS A REGISTRATION (2026-10-17), RUN PENDING. The sample sheet, FASTQ
+# manifest and run configuration are ready, but the RNA-seq workflow has not
+# been run: no results, manifests or reports are committed, results_file is
+# null, and both status fields are not_started. Run it in a follow-up study
+# PR from a fresh `aree start-study`-style branch.
 
 study_id: PAYTON2017_HAB_AMINUTUM
 simulated: false
@@ -60,8 +66,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 52 runs are public in ENA (PRJEB18614) / ArrayExpress (E-MTAB-5345). Diet is the ENA sample attribute `growth condition`; sampling time is only in the ArrayExpress SDRF, committed here as E-MTAB-5345.sdrf.txt. Sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+qc_status: "not_started"
+analysis_status: "not_started"
 
 comparisons:
   - comparison_id: "alexandrium_vs_heterocapsa_6d"
@@ -116,7 +122,9 @@ provenance:
     earlier reanalysis in sr320/AREE-co dropped both day-2 ZT 8.5 pools by its
     own QC rule; AREE does not, without an author-stated reason).
     meta_analysis_primary is set on the study's only comparison; there is no
-    other real HAB study to pool with yet.
+    other real HAB study to pool with yet. 2026-10-17: merged as a
+    registration with the run pending (status fields set from in_progress to
+    not_started, since no run is under way).
   source_links:
     - "https://doi.org/10.1038/s41598-017-03797-4"
     - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5471176/"

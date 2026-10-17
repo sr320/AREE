@@ -93,3 +93,9 @@ def test_provenance_and_manifest(samplesheet):
     manifest = _tsv(STUDY_DIR / "fastq_manifest.tsv")
     assert len(manifest) == 104
     assert all(len(r["md5"]) == 32 for r in manifest)
+
+
+def test_merged_as_a_registration_with_the_run_pending():
+    study = yaml.safe_load((STUDIES_DIR / "PAYTON2017_HAB_AMINUTUM.yaml").read_text())
+    assert study["qc_status"] == "not_started" and study["analysis_status"] == "not_started"
+    assert all(c["results_file"] is None for c in study["comparisons"])
