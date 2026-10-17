@@ -149,6 +149,11 @@ with tab_candidates:
                 "- **multi_omics_convergence** — ≥2 molecular layers (e.g. transcriptomics + DNA methylation) "
                 "each with a significant record for the same standardized feature under the **same phenotype**, "
                 "including the candidate's own layer.\n"
+                "- **metabolite_linked_convergence** — the candidate's own layer is significant and a "
+                "metabolite and a gene are linked only through KEGG reaction annotation "
+                "(metabolite → reaction → KO → gene), under the same phenotype. Weaker than shared gene "
+                "identity, ranked below it, and not counted in the score "
+                "(see docs/metabolite_gene_links.md).\n"
                 "- **emerging** — single-study or otherwise unconfirmed; **requires replication**."
             )
 

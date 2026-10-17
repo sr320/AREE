@@ -361,6 +361,17 @@ annotations.
   (`src/prioritize/scoring.py`, `worst_mapping = min(...)`), so a candidate
   is only as trustworthy, identifier-wise, as its weakest link.
 
+## Metabolites are linked, not mapped
+
+Metabolite evidence keeps the reported metabolite name as its
+`feature_id_standardized`; it is never forced into the gene hierarchy above.
+Its connection to genes is a separate, weaker relationship (metabolite →
+KEGG compound → reaction → KO → crg GeneID) resolved at ranking time from
+`data/mappings/metabolite_gene_links_*.tsv`, chosen per partition exactly as
+the crosswalk is: the simulated demo table for simulated evidence, the table
+registered under `metabolite_gene_links` in `genome_assemblies.yaml` for real
+evidence. See [metabolite_gene_links.md](metabolite_gene_links.md).
+
 ## Related documentation
 
 - [interpreting_candidate_scores.md](interpreting_candidate_scores.md)

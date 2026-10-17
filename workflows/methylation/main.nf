@@ -48,6 +48,7 @@ def paramsAsJson() {
         tile_size            : params.methylation?.tile_size,
         tile_step            : params.methylation?.tile_step,
         dmr_engine           : params.methylation?.dmr_engine ?: 'methylkit',
+        dmr_features         : params.methylation?.dmr_features ?: 'tiles',
         unit_min_coverage    : params.methylation?.unit_min_coverage,
         tile_min_cpgs        : params.methylation?.tile_min_cpgs,
         replicate_unit       : params.methylation?.replicate_unit ?: null,
@@ -153,7 +154,10 @@ workflow {
             params.methylation.tile_min_cpgs,
             replicate_unit,
             design_sheet_ch,
-            dmr_engine
+            dmr_engine,
+            params.methylation.dmr_features ?: 'tiles',
+            annotation_gtf_ch,
+            params.methylation.promoter_upstream_bp
           )
           : DMR_METHYLKIT(
             dmr_ch.map { it[0] },

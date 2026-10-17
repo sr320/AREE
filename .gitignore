@@ -58,3 +58,10 @@ registry/study_registry.csv
 # OrthoFinder intermediates (staged proteomes, DIAMOND results); the run's
 # outputs under data/reference/orthogroups/<run_id>/ ARE committed.
 data/reference/orthogroups/_work/
+
+# KEGG-derived metabolite -> gene link table for real C. gigas evidence. Built
+# locally by `aree build-metabolite-links`; NOT committed, because KEGG does not
+# clearly grant redistribution of derived tables (docs/metabolite_gene_links.md).
+# The simulated demo table (metabolite_gene_links_demo.*) IS committed.
+data/mappings/metabolite_gene_links_mgigas.*
+data/mappings/_sources/

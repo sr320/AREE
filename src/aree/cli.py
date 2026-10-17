@@ -5,6 +5,7 @@ See README.md for the full command reference.
 from __future__ import annotations
 
 import datetime
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -779,6 +780,40 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
     click.echo("assemblies in data/reference/genome_assemblies.yaml:")
     click.echo(click.style(f"  identifier_crosswalk: \"{shown}\"", fg="cyan"))
 
+
+
+@main.command("build-metabolite-links")
+@click.option("--taxid", default=29159, show_default=True, type=int,
+              help="NCBI taxid; must have a KEGG organism code in mappings.build_metabolite_links.")
+@click.option("--offline", is_flag=True,
+              help="Rebuild only from cached KEGG responses in data/mappings/_sources/kegg/.")
+def build_metabolite_links_cmd(taxid, offline):
+    """Build the real metabolite -> enzyme gene link table from the KEGG REST API.
+
+    Queries KEGG only for the compounds curated in
+    data/mappings/metabolite_compound_map.tsv and writes
+    data/mappings/metabolite_gene_links_<slug>.tsv plus a .provenance.json
+    sidecar. The output is git-ignored and must not be committed (KEGG terms).
+    See docs/metabolite_gene_links.md.
+    """
+    from mappings.build_metabolite_links import build
+    from mappings.metabolite_links import clear_caches
+
+    try:
+        path = build(taxid=taxid, offline=offline)
+    except (OSError, ValueError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    clear_caches()
+    prov = json.loads(path.with_suffix(".provenance.json").read_text())
+    cov = prov["coverage"]
+    click.echo(click.style(f"Wrote {path} ({cov['rows']} links)", fg="green"))
+    click.echo(f"  compounds with links: {cov['compounds_with_links']} of {cov['compounds_queried']} queried"
+               f" (currency skipped: {', '.join(prov['currency_metabolites']['skipped']) or 'none'})")
+    click.echo(f"  hub compounds (not credited): {', '.join(cov['hub_compounds']) or 'none'}")
+    click.echo(f"  KEGG genes: {cov['kegg_genes_current']} current, {cov['kegg_genes_retired_remapped']} "
+               f"remapped from retired IDs, {cov['kegg_genes_unresolved']} unresolved")
+    click.echo("  Not for redistribution: do not commit this file (docs/metabolite_gene_links.md).")
 
 if __name__ == "__main__":
     main()

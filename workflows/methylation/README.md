@@ -130,6 +130,16 @@ filter is the second guard.
   - `dss`: `DSS::DMLtest`, a beta-binomial model with shrunken dispersion
     and a Wald test.
 
+Units (`methylation.dmr_features`), for `limma` and `dss`:
+- `tiles` (default): `tile_size` windows genome-wide.
+- `genes`: one unit per gene, pooling every CpG in the gene body and its
+  `promoter_upstream_bp` promoter (strand-aware). CpGs outside every gene
+  window fall into intergenic tiles. Each gene then gives one record, so
+  harmonized methylation evidence links one-to-one to RNA-seq genes; with
+  `tiles`, many tiles share a gene and meta-analysis refuses to pool them
+  (identifier collision). `ANNOTATE_REGIONS` keeps the gene and context these
+  units arrive with.
+
 Why `limma` is recommended for few units: on synthetic data with 2 vs 2
 families, real family-to-family variation and 20 true regions among 400
 tiles:
@@ -176,7 +186,7 @@ which is clearly labeled simulated data.
 ## Standardized output schema
 
 `STANDARDIZE_OUTPUT` emits `<study_id>_<comparison_id>_dmr_standardized.tsv`
-with exactly these tab-separated columns, matching
+with these tab-separated columns (the last three optional), matching
 `data/demo/methylation/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_demo.tsv` and
 what `src/harmonize/methylation.py` expects:
 
@@ -191,6 +201,12 @@ what `src/harmonize/methylation.py` expects:
 | `meth_diff_percent` | signed methylation difference, treatment − control |
 | `qvalue` | multiple-testing-adjusted p-value from methylKit (or as supplied in processed mode) |
 | `direction` | `hyper` \| `hypo`, derived from the sign of `meth_diff_percent` when not directly supplied |
+| `pvalue` | *optional*: unadjusted p-value. Written when the DMR step supplies it (`limma` / `dss` engines); methylKit does not |
+| `se_meth_diff_percent` | *optional*: standard error of `meth_diff_percent`. For `limma`, abs(diff) / qnorm(1 - p/2), so a normal (Wald) test, which is what meta-analysis applies, reproduces limma's own p-value and keeps its small-sample df. Using abs(diff / t) instead gave p ~1e-23 where limma gave 3e-4 at 2 vs 2 units |
+| `analysis_method` | *optional*: e.g. `limma_pooled_tiles`; the harmonizer uses it as the evidence `analysis_method` (default `methylKit`) |
+
+Without `pvalue` and `se_meth_diff_percent`, harmonized methylation
+evidence has no standard error and cannot enter inverse-variance pooling.
 
 The only rows genuinely dropped by `STANDARDIZE_OUTPUT` are ones missing
 `chrom`/`start`/`end` entirely (no genomic coordinates at all) — that count

@@ -26,7 +26,7 @@ fmt = (n) => (n == null ? "—" : n.toLocaleString("en-US"))
 fmtP = (p) => (p == null ? "—" : p < 1e-3 ? p.toExponential(1) : p.toFixed(3))
 phen = (id) => data.vocab.phenotype_labels[id] ?? id
 stress = (id) => data.vocab.stressor_labels[id] ?? id
-TIER = new Map([["high_priority_cross_study", "High priority"], ["multi_omics_convergence", "Multi-omics"], ["emerging", "Emerging"]])
+TIER = new Map([["high_priority_cross_study", "High priority"], ["multi_omics_convergence", "Multi-omics"], ["metabolite_linked_convergence", "Metabolite-linked"], ["emerging", "Emerging"]])
 clip = (v, n) => (v && v.length > n ? htl.html`<span title="${v}">${v.slice(0, n - 1).trimEnd()}…</span>` : v ?? "")
 // "Calla B, Thompson NF, Burge CA (2026)" -> "Calla et al. (2026)"
 shortCite = (c) => {
@@ -129,7 +129,8 @@ html`<div class="kpi-grid">
 
   const tierText = html`<p>${fmt(nRanked)} gene × phenotype candidates are ranked:
     ${fmt(k.n_candidates_real_high_priority)} high priority (replicated across studies),
-    ${fmt(k.n_candidates_real_multi_omics)} multi-omics, ${fmt(k.n_candidates_real_emerging)} emerging.
+    ${fmt(k.n_candidates_real_multi_omics)} multi-omics, ${fmt(k.n_candidates_real_metabolite_linked)} metabolite-linked,
+    ${fmt(k.n_candidates_real_emerging)} emerging.
     By evidence class: ${classes.map(d => `${fmt(d.n)} ${d.evidence_class.replace(/_/g, " ")}`).join(", ")}.</p>`;
 
   const caveats = [];

@@ -31,6 +31,15 @@ positive components:
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
 
+Every quality flag counts the same in `quality_score`: `batch_confounded`
+(treatment fully confounded with a sequencing run, MS acquisition batch, or
+extraction batch) removes the same 0.2 as `low_replication`, and counts
+toward the `quality_score >= 0.4` high-priority gate the same way. Adding the
+term (2026-10-16) did not change any existing score, because no registered
+study declared it yet. Once a study declares it, every candidate with a
+record from that study loses 0.2 `quality_score` (0.4 points of the 0-100
+score) unless the flag was already in its union.
+
 ### Why the unbounded components saturate instead of clipping
 
 Every component whose input has no natural upper bound uses `v / (v + half)`,
@@ -123,7 +132,22 @@ Tier assignment, in order:
    qualifies, because every cross-layer overlap in the demo is
    cross-phenotype. The card still lists that adjacent evidence and marks
    each row with whether it counts.
-3. **`emerging`** — everything else: single-study support, or support that
+3. **`metabolite_linked_convergence`** — the candidate's own layer is
+   significant, and another layer carries a significant same-phenotype record
+   for a feature **linked** to it biochemically rather than by a shared ID: a
+   metabolite and a gene whose product KEGG annotates (by orthology) to
+   catalyse a reaction involving that metabolite. Checked only if neither tier
+   above applies. This is a deliberately weaker, separately named kind of
+   convergence: it does not add to `n_supporting_layers` or to the score;
+   currency metabolites (ATP, NAD⁺, …) and hub compounds reaching more than
+   25 genes are never credited; and every link is `inferred` or
+   `one_to_many_ortholog`, never `exact`. The card lists each link's
+   compound, reaction, KO, confidence and source checksum, plus the
+   exclusions. Candidates carry `convergence_basis`
+   (`shared_identifier` / `metabolite_gene_link` / `none`), `linked_layers`,
+   `linked_features`, `link_confidences` and `link_table_status`. See
+   [metabolite_gene_links.md](metabolite_gene_links.md).
+4. **`emerging`** — everything else: single-study support, or support that
    fails one or more of the high-priority gates. Always labeled as requiring
    replication.
 
