@@ -5,74 +5,236 @@
   "description": "Provenance for data/mappings/metabolite_gene_links_<slug>.tsv. The real (KEGG-derived) table and its sidecar are built locally by `aree build-metabolite-links` and are not committed; the simulated demo sidecar is. See docs/metabolite_gene_links.md.",
   "type": "object",
   "required": [
-    "artifact", "artifact_sha256", "simulated", "date_generated", "ncbi_taxid",
-    "source_summary", "sources", "max_genes_per_compound", "known_limitations"
+    "artifact",
+    "artifact_sha256",
+    "simulated",
+    "date_generated",
+    "ncbi_taxid",
+    "source_summary",
+    "sources",
+    "max_genes_per_compound",
+    "known_limitations"
   ],
   "properties": {
-    "artifact": {"type": "string", "pattern": "\\.tsv$"},
-    "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "simulated": {"type": "boolean"},
-    "builder": {"type": "string"},
-    "builder_version": {"type": "string"},
-    "date_generated": {"type": "string", "format": "date"},
-    "ncbi_taxid": {"type": "integer"},
-    "kegg_organism": {"type": "string"},
+    "artifact": {
+      "type": "string",
+      "pattern": "\\.tsv$"
+    },
+    "artifact_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "simulated": {
+      "type": "boolean"
+    },
+    "builder": {
+      "type": "string"
+    },
+    "builder_version": {
+      "type": "string"
+    },
+    "date_generated": {
+      "type": "string",
+      "format": "date"
+    },
+    "ncbi_taxid": {
+      "type": "integer"
+    },
+    "kegg_organism": {
+      "type": "string"
+    },
     "kegg_release": {
       "type": "object",
-      "required": ["summary"],
-      "properties": {"summary": {"type": "string"}, "ko": {"type": "string"}}
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "ko": {
+          "type": "string"
+        }
+      }
     },
-    "source_summary": {"type": "string", "minLength": 1},
-    "licence_note": {"type": "string"},
-    "identifier_crosswalk": {"type": "string"},
-    "compound_map": {"$ref": "#/definitions/checksummed_file"},
+    "source_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "licence_note": {
+      "type": "string"
+    },
+    "identifier_crosswalk": {
+      "type": "string"
+    },
+    "compound_map": {
+      "$ref": "#/definitions/checksummed_file"
+    },
     "currency_metabolites": {
       "allOf": [
-        {"$ref": "#/definitions/checksummed_file"},
-        {"type": "object", "required": ["skipped"],
-         "properties": {"skipped": {"type": "array", "items": {"type": "string", "pattern": "^C\\d{5}$"}}}}
+        {
+          "$ref": "#/definitions/checksummed_file"
+        },
+        {
+          "type": "object",
+          "required": [
+            "skipped"
+          ],
+          "properties": {
+            "skipped": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^C\\d{5}$"
+              }
+            }
+          }
+        }
       ]
     },
-    "max_genes_per_compound": {"type": "integer", "minimum": 1},
+    "max_genes_per_compound": {
+      "type": "integer",
+      "minimum": 1
+    },
     "sources": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["url"],
+        "required": [
+          "url"
+        ],
         "properties": {
-          "url": {"type": "string"},
-          "local_copy": {"type": "string"},
-          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-          "accessed": {"type": "string"}
+          "url": {
+            "type": "string"
+          },
+          "local_copy": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "accessed": {
+            "type": "string"
+          }
         }
       }
     },
     "coverage": {
       "type": "object",
-      "required": ["kegg_genes_with_ko", "kegg_genes_unresolved", "compounds_queried", "hub_compounds", "rows"]
+      "required": [
+        "kegg_genes_with_ko",
+        "kegg_genes_unresolved",
+        "compounds_queried",
+        "hub_compounds",
+        "rows"
+      ]
     },
-    "unresolved_kegg_gene_ids": {"type": "array", "items": {"type": "string"}},
-    "known_limitations": {"type": "array", "items": {"type": "string"}}
+    "unresolved_kegg_gene_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "known_limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "transporter_substrates": {
+      "description": "Curated transporter KO -> compound table (KEGG BRITE ko02000 records no substrates).",
+      "allOf": [
+        {
+          "$ref": "#/definitions/checksummed_file"
+        },
+        {
+          "type": "object",
+          "required": [
+            "rejected_not_in_ko02000",
+            "kos_without_crg_genes",
+            "kos_used"
+          ],
+          "properties": {
+            "rejected_not_in_ko02000": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "ko",
+                  "kegg_compound",
+                  "reason"
+                ]
+              }
+            },
+            "kos_without_crg_genes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^K\\d{5}$"
+              }
+            },
+            "kos_used": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^K\\d{5}$"
+              }
+            }
+          }
+        }
+      ]
+    }
   },
-  "if": {"properties": {"simulated": {"const": false}}},
+  "if": {
+    "properties": {
+      "simulated": {
+        "const": false
+      }
+    }
+  },
   "then": {
     "required": [
-      "builder", "builder_version", "kegg_organism", "kegg_release", "licence_note",
-      "identifier_crosswalk", "compound_map", "currency_metabolites", "coverage",
-      "unresolved_kegg_gene_ids"
+      "builder",
+      "builder_version",
+      "kegg_organism",
+      "kegg_release",
+      "licence_note",
+      "identifier_crosswalk",
+      "compound_map",
+      "currency_metabolites",
+      "coverage",
+      "unresolved_kegg_gene_ids",
+      "transporter_substrates"
     ],
     "properties": {
-      "sources": {"items": {"required": ["url", "local_copy", "sha256"]}}
+      "sources": {
+        "items": {
+          "required": [
+            "url",
+            "local_copy",
+            "sha256"
+          ]
+        }
+      }
     }
   },
   "definitions": {
     "checksummed_file": {
       "type": "object",
-      "required": ["path", "sha256"],
+      "required": [
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "path": {"type": "string"},
-        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       }
     }
   }

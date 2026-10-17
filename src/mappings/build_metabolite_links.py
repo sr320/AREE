@@ -12,6 +12,13 @@ queried — never a mirror of KEGG — and currency compounds
     link/ko/R...+R...        KOs annotated to catalyse those reactions
     get/R...+R...            reaction equations, for the compound's side
     get/cpd:C...+C...        compound names
+    get/br:ko02000           KEGG BRITE Transporters: which KOs are transporters,
+                             and their family
+
+Transporter links come from data/mappings/transporter_substrates.tsv, a curated
+KO -> compound table: ko02000 classifies transporters but records no substrate
+compounds. Each curated KO must be in ko02000; one that is not is rejected and
+listed in the provenance.
 
 KEGG gene IDs for `crg` are NCBI GeneIDs. Each one is checked against the
 species' AREE crosswalk; a retired GeneID is remapped through the
@@ -42,13 +49,17 @@ from .metabolite_links import (
     COMPOUND_MAP_PATH,
     CURRENCY_PATH,
     LINK_COLUMNS,
+    LINK_TYPE_ENZYME,
+    LINK_TYPE_TRANSPORTER,
     MAX_GENES_PER_COMPOUND,
+    TRANSPORTER_SUBSTRATES_PATH,
     load_compound_map,
     load_currency_compounds,
+    load_transporter_substrates,
     provenance_path,
 )
 
-BUILDER_VERSION = "1.0.0"
+BUILDER_VERSION = "1.1.0"
 KEGG_REST = "https://rest.kegg.jp"
 KEGG_ORGANISM = {29159: "crg"}
 DEFAULT_SLUG = {29159: "mgigas"}
@@ -120,6 +131,30 @@ def parse_entries(text: str, fields: tuple) -> dict:
         elif current and line[:12].strip() in fields and line[:12].strip() not in entries[current]:
             entries[current][line[:12].strip()] = line[12:].strip()
     return entries
+
+
+def parse_brite(text: str) -> dict:
+    """Parse a KEGG BRITE hierarchy (`get/br:ko02000`) into {KO: family path}.
+
+    A KO listed under several families gets every path, joined by '; '. The
+    path is the chain of headings above the KO line, e.g.
+    'Solute carrier family (SLC) > SLC16: Monocarboxylate transporter'.
+    """
+    headings, families = {}, defaultdict(list)
+    for line in text.splitlines():
+        if not line or line[0] not in "ABCDEFGH":
+            continue
+        level, body = line[0], re.sub(r"<[^>]+>", "", line[1:]).strip()
+        match = re.match(r"(K\d{5})\s", body)
+        if match:
+            path = " > ".join(headings[k] for k in sorted(headings) if k < level and headings[k])
+            if path not in families[match.group(1)]:
+                families[match.group(1)].append(path)
+            continue
+        headings[level] = body
+        for deeper in [k for k in headings if k > level]:
+            del headings[deeper]
+    return {ko: "; ".join(paths) for ko, paths in families.items()}
 
 
 def equation_side(equation: str, compound: str) -> str | None:
@@ -224,8 +259,32 @@ def build(
                     rows.append({
                         "kegg_compound": cpd, "compound_name": names.get(cpd, ""),
                         "kegg_reaction": reaction, "equation_side": side or "unknown", "ko": ko,
-                        "ncbi_gene_id": resolved[gene], "link_type": "enzyme",
+                        "ncbi_gene_id": resolved[gene], "link_type": LINK_TYPE_ENZYME,
+                        "link_basis": "kegg_reaction", "brite_family": "",
                     })
+
+    # Transporter links: curated KO -> compound, KO verified in BRITE ko02000.
+    transporter_families = parse_brite(kegg.get("get/br:ko02000"))
+    transporter_rows = load_transporter_substrates(TRANSPORTER_SUBSTRATES_PATH)
+    rejected, without_genes, used_kos = [], set(), set()
+    for entry in transporter_rows:
+        cpd, ko = entry["kegg_compound"], entry["ko"]
+        if cpd not in queried:
+            continue
+        if ko not in transporter_families:
+            rejected.append({"ko": ko, "kegg_compound": cpd, "reason": "not in KEGG BRITE ko02000"})
+            continue
+        used_kos.add(ko)
+        genes = [g for g in sorted(genes_by_ko.get(ko, ())) if g in resolved]
+        if not genes:
+            without_genes.add(ko)
+        for gene in genes:
+            rows.append({
+                "kegg_compound": cpd, "compound_name": names.get(cpd, ""),
+                "kegg_reaction": "", "equation_side": "", "ko": ko,
+                "ncbi_gene_id": resolved[gene], "link_type": LINK_TYPE_TRANSPORTER,
+                "link_basis": entry["substrate_basis"], "brite_family": transporter_families[ko],
+            })
     rows = [dict(t) for t in sorted({tuple(r.items()) for r in rows},
                                     key=lambda t: tuple(v for _, v in t))]
 
@@ -240,8 +299,10 @@ def build(
             fh.write("\t".join(str(r[c]) for c in LINK_COLUMNS) + "\n")
 
     genes_per_compound = defaultdict(set)
+    genes_per_type = defaultdict(set)
     for r in rows:
         genes_per_compound[r["kegg_compound"]].add(r["ncbi_gene_id"])
+        genes_per_type[(r["kegg_compound"], r["link_type"])].add(r["ncbi_gene_id"])
     release_line = next((line.strip() for line in release if line.strip().startswith("kegg")), release[0])
     ko_line = next((" ".join(line.split()) for line in release if line.strip().startswith("ko ")), "")
     provenance = {
@@ -261,6 +322,11 @@ def build(
         if crosswalk_path.is_relative_to(REPO_ROOT) else str(crosswalk_path),
         "compound_map": {"path": str(COMPOUND_MAP_PATH.relative_to(REPO_ROOT)),
                          "sha256": sha256_file(COMPOUND_MAP_PATH)},
+        "transporter_substrates": {"path": str(TRANSPORTER_SUBSTRATES_PATH.relative_to(REPO_ROOT)),
+                                   "sha256": sha256_file(TRANSPORTER_SUBSTRATES_PATH),
+                                   "rejected_not_in_ko02000": rejected,
+                                   "kos_without_crg_genes": sorted(without_genes),
+                                   "kos_used": sorted(used_kos)},
         "currency_metabolites": {"path": str(CURRENCY_PATH.relative_to(REPO_ROOT)),
                                  "sha256": sha256_file(CURRENCY_PATH),
                                  "skipped": sorted(c for c in curated if c in currency)},
@@ -274,16 +340,25 @@ def build(
             "compounds_curated": len(curated),
             "compounds_queried": len(queried),
             "compounds_with_links": len(genes_per_compound),
-            "hub_compounds": sorted(c for c, g in genes_per_compound.items() if len(g) > MAX_GENES_PER_COMPOUND),
+            "hub_compounds": sorted(f"{c}:{t}" for (c, t), g in genes_per_type.items()
+                                    if len(g) > MAX_GENES_PER_COMPOUND),
             "genes_per_compound": {c: len(g) for c, g in sorted(genes_per_compound.items())},
+            "genes_per_compound_by_link_type": {
+                f"{c}:{t}": len(g) for (c, t), g in sorted(genes_per_type.items())},
             "rows": len(rows),
+            "rows_by_link_type": {t: sum(1 for r in rows if r["link_type"] == t)
+                                  for t in (LINK_TYPE_ENZYME, LINK_TYPE_TRANSPORTER)},
         },
         "unresolved_kegg_gene_ids": unresolved,
         "known_limitations": [
             "KO assignments are KEGG's orthology transfer to C. gigas, not oyster biochemistry; every "
             "link is 'inferred' or 'one_to_many_ortholog', never 'exact'.",
             "KEGG equations are written reversibly; equation_side is not substrate/product.",
-            "Pumps and transporters without a KEGG REACTION (e.g. SERCA, K05853) get no link.",
+            "Transporter substrates are curated (transporter_substrates.tsv); KEGG BRITE ko02000 "
+            "confirms only that a KO is a transporter and its family, not what it carries. Every "
+            "transporter link is 'inferred'.",
+            "ATP-driven pumps (e.g. SERCA, K05853; Na+/K+-ATPase) are not linked: their KEGG-named "
+            "substrates are ions or ATP, which are not curated metabolites or are currency compounds.",
             "Only compounds in metabolite_compound_map.tsv are queried; add names there first.",
         ],
     }

@@ -83,9 +83,8 @@ A metabolite→gene link is **never** `exact` or `one_to_one_ortholog`:
 Only metabolites at MSI annotation level 1–2 have a standardized name today
 (level 3–4 → `unresolved`), so only those can link. That gate stays as it is.
 
-`link_type` is `enzyme` for MVP. Transporter links (for example, KEGG BRITE
-ko02000 / TCDB) are listed as future work. KEGG REACTION rarely encodes
-transport, and inventing a transporter link would overstate what is known.
+`link_type` is `enzyme` or `transporter`. Transporter links were added on
+2026-10-17; see section 9.
 
 ## 5. Ranking changes (`src/prioritize/rank.py`)
 
@@ -160,6 +159,12 @@ GIGAS_HEAT01 `chronic_heat_vs_control`:
 
 - `ldh` (LOC105342001): significant, linked to lactate through R00703/K00016.
 - `sdha` (LOC105342002): not significant, linked to succinate through R02164/K00234.
+- `glut1` (LOC105342003), added 2026-10-17: significant, linked to glucose
+  by a **transporter** link (GLUT1, K07299, `ko_definition`, with its real
+  ko02000 family path). Demo glucose in GIGAS_GROW06 was moved from adj. p = 0.05
+  (exactly on the threshold) to 0.02 (p 0.021 → 0.006) on 2026-10-17, so the
+  example does not hinge on `<=` versus `<`. Its direction (down) is opposite to
+  `glut1` (up), which the card shows and the gate does not require to agree.
 
 Both are simulated. The KEGG reaction and KO IDs in the demo table are real
 KEGG identifiers, but the gene IDs they point to are fabricated.
@@ -182,10 +187,10 @@ KEGG writes every reaction equation with `<=>`. The table therefore records
 the compound's `equation_side` (`left`/`right`), not substrate or product: the
 equation does not encode the physiological direction.
 
-Pumps and transporters have no KEGG REACTION, so they get no link. For
-example, SERCA (K05853) has none. A significant ATP change and a significant
-`atp2a` change are therefore not linked by this mechanism, and ATP is a
-currency metabolite in any case.
+Pumps and transporters have no KEGG REACTION, so they get no *enzyme* link.
+For example, SERCA (K05853) has none. Transporters are linked separately
+(section 9). ATP-driven pumps such as SERCA still get no link: what they move
+is an ion, and ATP is a currency metabolite.
 
 ### First local build (2026-10-16, not committed)
 
@@ -209,11 +214,84 @@ currency metabolite in any case.
 
 - KEGG's crg KO assignments are adequate as *inferred* enzyme annotation for
   *C. gigas*. They come from orthology, not oyster biochemistry.
-- Reaction participation is the only link type in the MVP. Pathway
-  co-membership is deliberately **not** a link, because it would connect
-  almost everything.
+- Reaction participation (enzymes) and curated transport (transporters) are
+  the only link types. Pathway co-membership is deliberately **not** a link,
+  because it would connect almost everything.
 - The real table is built for RS_2024_06 only. Other assemblies resolve
   through NCBI GeneIDs, as identifiers already do.
 - The only real metabolomics study (DUPERRET2025_POMS_STARVE) failed QC
   (sr320/AREE#70). Real-data convergence is therefore not expected yet, and
   tests use the demo.
+
+## 9. Transporter links (added 2026-10-17)
+
+A transporter changes a metabolite's level in a tissue without making or
+consuming it, so transporters are a second kind of biochemical link:
+
+```
+metabolite name → KEGG compound → transporter KO → crg gene
+```
+
+**KEGG BRITE ko02000 has no substrates.** The Transporters hierarchy
+classifies about 1,070 KOs into families (SLC families, the ABC types, the MFS
+families with TC numbers), but it records no compound IDs. The substrate
+appears only in free-text family and KO names. The KO → compound step is
+therefore AREE curation, kept in
+`data/mappings/transporter_substrates.tsv` (43 rows on 2026-10-17). Each row
+gives the KO, the compound, the human ortholog it rests on, a note, and its
+`substrate_basis`:
+
+| `substrate_basis` | Meaning | Example |
+|---|---|---|
+| `ko_definition` | The KEGG KO definition itself names the compound | SLC2A1/GLUT1, "facilitated glucose transporter" → D-glucose |
+| `substrate_class` | The definition names only a class, and the compound is a curator's call from the characterized human members | SLC16A1/3/7/8 (MCT1–4), "monocarboxylic acid transporters" → L-/D-lactate, pyruvate |
+
+Curation is deliberately narrow. Within SLC16, only MCT1–4 (the
+characterized lactate/pyruvate carriers) are listed. MCT8/10 (thyroid hormone,
+aromatic amino acids) and the orphan members are not. For alanine, only
+system A (SNAT1/2/4), ASCT1/2 and PAT are listed; the broad L-type exchangers
+are not. A KO whose KEGG definition names a substrate the human protein mainly
+does not carry is kept, with the caveat in its note (for example, GLUT9, which
+is chiefly a urate transporter).
+
+**How the builder uses ko02000.** `aree build-metabolite-links` fetches
+`get/br:ko02000` and does two things with it:
+
+- It **verifies** every curated KO is a transporter. A KO absent from ko02000
+  is rejected and listed under `transporter_substrates.rejected_not_in_ko02000`
+  in the provenance.
+- It **records** the KO's family path as `brite_family` on each row, for
+  example `Solute carrier family (SLC) > SLC16: Monocarboxylate transporter`.
+
+Curated KOs with no `crg` gene are listed under `kos_without_crg_genes`.
+
+**Confidence and ranking.**
+
+- A transporter link is always `inferred`. Its substrate is curated, and the
+  oyster ortholog's substrate specificity has not been measured.
+- It is credited for `metabolite_linked_convergence` exactly as an enzyme
+  link is, and adds nothing to the score.
+- The hub cap (25 genes) applies **per link type**, so adding transporter
+  links never removes the credit of a compound's enzyme links, or the reverse.
+- Cards show each link's type, basis and BRITE family, plus a paragraph
+  explaining that transporter links rest on curation.
+
+**First local build (2026-10-17, not committed).** The build produced 249
+links: 191 enzyme and 58 transporter.
+
+- All 33 curated KOs present in `crg` were found in ko02000. None were
+  rejected.
+- 22 curated KOs have no `crg` gene (for example, BGT1/SLC6A12, so betaine
+  has no transporter link).
+- Transporter genes per compound: glucose 16, succinate 11, L-lactate 9,
+  D-lactate 9, pyruvate 9, alanine 4.
+- Pyruvate stays a hub for enzyme links only (47 genes), so its 9 transporter
+  links are credited.
+- The result that matters most for lactate: (S)-lactate, which has **no**
+  enzyme link in `crg`, now links through MCT/SMCT transporters.
+
+**Demo.** The simulated `glut1` gene (section 7, decision D) gives the demo
+one transporter case: glucose ↔ `glut1` → `metabolite_linked_convergence`.
+
+**Not covered.** TCDB substrate annotations; ABC transporters (broad and
+poorly defined substrates); and ion channels and pumps.
