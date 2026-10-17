@@ -1,0 +1,47 @@
+{
+  "study_id": "UW2016_HEATSHOCK_MANTLE",
+  "bioproject": "PRJNA316154",
+  "date_generated": "2026-10-14",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA316154&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "treatment"
+  ],
+  "n_runs": 6,
+  "n_samples": 6,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "C": 3,
+    "HS": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 10390811436,
+  "fastq_sources": {
+    "fastq_ftp": 6,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/UW2016_HEATSHOCK_MANTLE/samplesheet.tsv": "84a1c72875156919d279ad8190a4a8dfb898ecfdabdcffc61470e2ac26aa5f9c",
+    "data/studies/UW2016_HEATSHOCK_MANTLE/fastq_manifest.tsv": "c3fa644423a65ef62e36f3639cbbf5cd1f8360f8a1a5f63f24ce04ac8ecff74d"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<oyster>[246]M)-(?P<treatment>C|HS)$",
+    "labels": {
+      "SRR3286754": "2M-HS",
+      "SRR3288136": "2M-C",
+      "SRR3288139": "4M-HS",
+      "SRR3288141": "4M-C",
+      "SRR3288143": "6M-HS",
+      "SRR3288145": "6M-C"
+    }
+  }
+}
