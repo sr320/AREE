@@ -3,7 +3,7 @@
 # compound, reaction and KO identifiers are real KEGG identifiers (checked 2026-10-16); only the
 # KO -> gene assignment is fabricated. Never merge with a real table (metabolite_gene_links_mgigas.tsv).
 # Columns are the same contract `aree build-metabolite-links` writes. See docs/metabolite_gene_links.md.
-kegg_compound	compound_name	kegg_reaction	equation_side	ko	ncbi_gene_id	link_type
-C00186	(S)-Lactate	R00703	left	K00016	LOC105342001	enzyme
-C00022	Pyruvate	R00703	right	K00016	LOC105342001	enzyme
-C00042	Succinate	R02164	left	K00234	LOC105342002	enzyme
+kegg_compound	compound_name	kegg_reaction	equation_side	ko	ncbi_gene_id	link_type	link_basis	brite_family
+C00186	(S)-Lactate	R00703	left	K00016	LOC105342001	enzyme	kegg_reaction	
+C00022	Pyruvate	R00703	right	K00016	LOC105342001	enzyme	kegg_reaction	
+C00042	Succinate	R02164	left	K00234	LOC105342002	enzyme	kegg_reaction	

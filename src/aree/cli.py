@@ -788,10 +788,12 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
 @click.option("--offline", is_flag=True,
               help="Rebuild only from cached KEGG responses in data/mappings/_sources/kegg/.")
 def build_metabolite_links_cmd(taxid, offline):
-    """Build the real metabolite -> enzyme gene link table from the KEGG REST API.
+    """Build the real metabolite -> enzyme / transporter gene link table from KEGG.
 
     Queries KEGG only for the compounds curated in
-    data/mappings/metabolite_compound_map.tsv and writes
+    data/mappings/metabolite_compound_map.tsv; transporter links come from the
+    curated data/mappings/transporter_substrates.tsv, each KO verified against
+    KEGG BRITE ko02000. Writes
     data/mappings/metabolite_gene_links_<slug>.tsv plus a .provenance.json
     sidecar. The output is git-ignored and must not be committed (KEGG terms).
     See docs/metabolite_gene_links.md.
@@ -807,7 +809,13 @@ def build_metabolite_links_cmd(taxid, offline):
     clear_caches()
     prov = json.loads(path.with_suffix(".provenance.json").read_text())
     cov = prov["coverage"]
-    click.echo(click.style(f"Wrote {path} ({cov['rows']} links)", fg="green"))
+    by_type = cov["rows_by_link_type"]
+    click.echo(click.style(f"Wrote {path} ({cov['rows']} links: {by_type['enzyme']} enzyme, "
+                           f"{by_type['transporter']} transporter)", fg="green"))
+    transporters = prov["transporter_substrates"]
+    click.echo(f"  curated transporter KOs: {len(transporters['kos_used'])} in KEGG BRITE ko02000, "
+               f"{len(transporters['rejected_not_in_ko02000'])} rejected (not in ko02000), "
+               f"{len(transporters['kos_without_crg_genes'])} with no crg gene")
     click.echo(f"  compounds with links: {cov['compounds_with_links']} of {cov['compounds_queried']} queried"
                f" (currency skipped: {', '.join(prov['currency_metabolites']['skipped']) or 'none'})")
     click.echo(f"  hub compounds (not credited): {', '.join(cov['hub_compounds']) or 'none'}")

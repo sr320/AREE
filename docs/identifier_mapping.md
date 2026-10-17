@@ -366,7 +366,9 @@ annotations.
 Metabolite evidence keeps the reported metabolite name as its
 `feature_id_standardized`; it is never forced into the gene hierarchy above.
 Its connection to genes is a separate, weaker relationship (metabolite →
-KEGG compound → reaction → KO → crg GeneID) resolved at ranking time from
+KEGG compound → reaction → KO → crg GeneID for enzymes; metabolite → compound
+→ curated transporter KO in KEGG BRITE ko02000 → crg GeneID for transporters)
+resolved at ranking time from
 `data/mappings/metabolite_gene_links_*.tsv`, chosen per partition exactly as
 the crosswalk is: the simulated demo table for simulated evidence, the table
 registered under `metabolite_gene_links` in `genome_assemblies.yaml` for real

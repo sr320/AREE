@@ -26,7 +26,11 @@ import pandas as pd
 
 from common import REPORTS_DIR, load_vocab, species_term_for_taxid
 from harmonize.core import load_evidence_table
-from mappings.metabolite_links import MAX_GENES_PER_COMPOUND, links_for_partition
+from mappings.metabolite_links import (
+    LINK_TYPE_TRANSPORTER,
+    MAX_GENES_PER_COMPOUND,
+    links_for_partition,
+)
 from meta_analysis.run import run_meta_analysis
 from prioritize.rank import (
     METABOLITE_LAYER,
@@ -205,7 +209,7 @@ def _other_omics_context(index: EvidenceIndex, candidate: dict) -> list:
 EXCLUSION_REASON_TEXT = {
     "currency_metabolite": "currency metabolite (data/mappings/currency_metabolites.yaml); never used as a link",
     "hub_compound": f"hub compound reaching more than {MAX_GENES_PER_COMPOUND} genes; not credited",
-    "no_reaction_in_table": "no reaction for this compound in the link table",
+    "no_reaction_in_table": "no enzyme or transporter link for this compound in the link table",
 }
 
 
@@ -230,7 +234,10 @@ def _linked_omics_context(index: EvidenceIndex, candidate: dict) -> dict:
             "layer": record["_layer"],
             "linked_feature": index.linked_feature_id(link, is_metabolite),
             "kegg_compound": link.kegg_compound,
-            "kegg_reaction": link.kegg_reaction,
+            "link_type": link.link_type,
+            "via": link.via,
+            "link_basis": link.link_basis,
+            "brite_family": link.brite_family,
             "ko": link.ko,
             "equation_side": link.equation_side,
             "link_confidence": link.link_confidence,
@@ -247,7 +254,7 @@ def _linked_omics_context(index: EvidenceIndex, candidate: dict) -> dict:
                        and record["_layer"] not in supporting),
         })
     exclusions = (
-        [{"kegg_compound": e.kegg_compound, "reason": e.reason}
+        [{"kegg_compound": e.kegg_compound, "reason": e.reason, "link_type": e.link_type}
          for e in table.excluded_for_metabolite(candidate["feature_id_standardized"])]
         if is_metabolite and table.available else []
     )
@@ -270,13 +277,28 @@ def _linked_section(candidate: dict, linked: dict) -> list:
         )
         return lines
     lines.append(
-        "These links come from KEGG reaction annotation, not from measurement: the linked gene's "
-        "product is *annotated* (by KEGG orthology transfer) to catalyse a reaction in which the "
-        "metabolite takes part. A link does not mean the gene regulates, or controls the level of, "
+        "These links come from KEGG annotation, not from measurement. An `enzyme` link means the "
+        "linked gene's product is *annotated* (by KEGG orthology transfer) to catalyse a reaction in "
+        "which the metabolite takes part. A link does not mean the gene regulates, or controls the level of, "
         "the metabolite. KEGG writes reactions as reversible equations, so the side the compound is "
         "on does not say whether it is consumed or produced. Linked layers do not add to this "
         "candidate's score."
     )
+    if any(r["link_type"] == LINK_TYPE_TRANSPORTER for r in linked["rows"]):
+        lines.append("")
+        lines.append(
+            "**Transporter links** are weaker still. KEGG BRITE ko02000 confirms only that the KO is a "
+            "transporter and names its family; it records no substrates, so the metabolite was assigned "
+            "to the transporter by AREE curation (`data/mappings/transporter_substrates.tsv`). "
+            "`ko_definition` means KEGG's KO definition names the compound; `substrate_class` means it "
+            "names only a class (e.g. monocarboxylic acids) and the compound is a curator's call from the "
+            "characterized human family members. Transporter links are always `inferred`, and a "
+            "transporter moves a metabolite between compartments rather than making or consuming it."
+        )
+    families = sorted({r["brite_family"] for r in linked["rows"] if r["brite_family"]})
+    if families:
+        lines.append("")
+        lines.append("Transporter families (KEGG BRITE ko02000): " + "; ".join(f"`{f}`" for f in families) + ".")
     lines.append("")
     lines.append(f"Link table: {table.label()}.")
     stressors = {r["stressor"] for r in linked["rows"] if r["counts"]}
@@ -292,13 +314,15 @@ def _linked_section(candidate: dict, linked: dict) -> list:
         lines.append("")
         lines.append("Only rows marked **yes** in the last column count toward "
                      "`metabolite_linked_convergence`:")
-        lines.append("| study | layer | linked feature | compound | reaction | KO | side | link confidence | "
-                     "genes for compound | credited | phenotype | stressor | direction | effect | adj. p | counts |")
-        lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        lines.append("| study | layer | linked feature | compound | link type | via | KO | side | basis | "
+                     "link confidence | genes for compound | credited | phenotype | stressor | direction | "
+                     "effect | adj. p | counts |")
+        lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
         for r in linked["rows"]:
             lines.append(
                 f"| {r['study_id']} | {r['layer']} | {r['linked_feature']} | {r['kegg_compound']} | "
-                f"{r['kegg_reaction']} | {r['ko']} | {r['equation_side']} | {r['link_confidence']} | "
+                f"{r['link_type']} | {r['via']} | {r['ko']} | {r['equation_side'] or '—'} | "
+                f"{r['link_basis']} | {r['link_confidence']} | "
                 f"{r['n_genes_for_compound']} | {'yes' if r['credited'] else 'no (hub)'} | {r['phenotype']} | "
                 f"{r['stressor']} | {r['molecular_direction']} | {_fmt(r['effect_size'], '.3f')} | "
                 f"{_fmt(r['adjusted_p_value'])} | {'**yes**' if r['counts'] else 'no'} |"
@@ -310,7 +334,9 @@ def _linked_section(candidate: dict, linked: dict) -> list:
         lines.append("")
         lines.append("Compounds this metabolite resolves to that contribute no credited link:")
         for e in linked["exclusions"]:
-            lines.append(f"- `{e['kegg_compound']}`: {EXCLUSION_REASON_TEXT.get(e['reason'], e['reason'])}")
+            scope = f" ({e['link_type']} links)" if e.get("link_type") else ""
+            lines.append(f"- `{e['kegg_compound']}`{scope}: "
+                         f"{EXCLUSION_REASON_TEXT.get(e['reason'], e['reason'])}")
     return lines
 
 

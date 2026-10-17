@@ -1,6 +1,6 @@
 {
   "artifact": "metabolite_gene_links_demo.tsv",
-  "artifact_sha256": "2156a4428d9a46ea18f979cccff155ed280c5ca666414f2143c9181b9850d3f0",
+  "artifact_sha256": "4d00f31f6ca4a79926df45e155044534f86136bfb06c6009bbb8bd8278fbeff0",
   "simulated": true,
   "builder": "hand-written demo fixture",
   "date_generated": "2026-10-16",
