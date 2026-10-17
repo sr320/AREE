@@ -105,6 +105,46 @@ def test_metabolomics_handoff_carries_standard_error_and_method(tmp_path):
     assert set(df["analysis_method"]) == {"untargeted_LCMS"}
 
 
+def test_proteomics_handoff_carries_standard_error_method_and_legacy_ids(tmp_path):
+    """The proteomics raw mode writes lfcSE and analysis_method; both must reach
+    the evidence record. oyster_v9 CGI_ models take the legacy-locus-tag route
+    (unresolved against the demo crosswalk, which has no such column), not the
+    UniProt one. The demo's processed table keeps the old defaults."""
+    import pandas as pd
+
+    from harmonize.core import harmonize_processed_table
+    from harmonize.proteomics import protein_id_type
+
+    assert protein_id_type("CGI_10001851") == "legacy_locus_tag"
+    assert protein_id_type("CGI_10000041,CGI_10008574") == "legacy_locus_tag"
+    assert protein_id_type("K1QN12") == "uniprot_accession"
+
+    out = tmp_path / "GIGAS_SAL04_low_salinity_vs_control_protein_abundance_standardized.tsv"
+    pd.DataFrame({
+        "protein_accession": ["K1QN12", "CGI_10001851"],
+        "gene_symbol": ["hsp70", "CGI_10001851"],
+        "log2FC": [1.4, -0.8],
+        "lfcSE": [0.21, 0.33],
+        "pvalue": [0.001, 0.02],
+        "padj": [0.01, 0.08],
+        "missingness_percent": [0.0, 12.5],
+        "analysis_method": ["spectral_count_limma_moderated_t"] * 2,
+    }).to_csv(out, sep="\t", index=False)
+    df = harmonize_processed_table("GIGAS_SAL04", out, date_generated="2026-01-01",
+                                   comparison_id="low_salinity_vs_control")
+    assert df["standard_error"].tolist() == [0.21, 0.33]
+    assert set(df["analysis_method"]) == {"spectral_count_limma_moderated_t"}
+    assert df.set_index("feature_id_original").loc["CGI_10001851", "mapping_confidence"] == "unresolved"
+    assert df.set_index("feature_id_original").loc["K1QN12", "mapping_confidence"] != "unresolved"
+
+    legacy = out.with_name("legacy.tsv")
+    pd.read_csv(out, sep="\t").drop(columns=["lfcSE", "analysis_method"]).to_csv(legacy, sep="\t", index=False)
+    df = harmonize_processed_table("GIGAS_SAL04", legacy, date_generated="2026-01-01",
+                                   comparison_id="low_salinity_vs_control")
+    assert df["standard_error"].isna().all()
+    assert set(df["analysis_method"]) == {"MSstats"}
+
+
 def test_harmonize_rejects_an_unknown_comparison(tmp_path):
     import pandas as pd
     import pytest

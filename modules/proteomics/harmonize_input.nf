@@ -1,16 +1,16 @@
 // Harmonize a raw/wide protein abundance matrix (proteins x samples) into a
-// long-format table plus a validated sample sheet join, for raw_reanalysis
-// mode only.
+// long-format table joined to the sample sheet, for raw_reanalysis mode only.
 //
-// STATUS: structurally complete DSL2 process with a real pandas script. The
-// script implements actual wide-to-long reshape, dtype coercion, and
-// structural validation (duplicate accessions, sample-sheet coverage). It has
-// NOT been executed against a real raw abundance matrix in this build — no
-// such file exists in this repository (see workflows/proteomics/README.md).
-// "Raw" here means a raw/unfiltered wide protein-abundance matrix (e.g. a
-// MaxQuant/Skyline/DIA-NN export), not raw mass-spec spectra — spectral
-// reprocessing is explicitly out of scope for this scaffold.
-
+// "Raw" here means a wide protein-abundance matrix (a MaxQuant/Skyline/DIA-NN
+// intensity export, or a spectral-count/NSAF table), not raw mass-spec
+// spectra; spectral reprocessing is out of scope.
+//
+// Only the samples named in the sample sheet enter the comparison: a matrix
+// usually holds every sample of a study, and each comparison is run with its
+// own sheet. The sheet's `group` column (or `condition`) must say `control` or
+// `treatment` for every sample, so the reference level is never guessed.
+//
+// STATUS: executed by the raw-mode CI smoke test (tests/fixtures/proteomics_raw).
 process HARMONIZE_INPUT {
     tag "${study_id}:${comparison_id}"
     label 'process_low'
@@ -45,62 +45,55 @@ process HARMONIZE_INPUT {
         print(msg)
         log_lines.append(str(msg))
 
-    log(f"AREE proteomics harmonize_input: study={study_id} comparison={comparison_id}")
-    log(f"Reading raw wide abundance matrix from {matrix_path}")
+    def fail(msg):
+        log(f"ERROR: {msg}")
+        with open(f"{study_id}_{comparison_id}_harmonize_input.log", "w") as fh:
+            fh.write("\\n".join(log_lines) + "\\n")
+        sys.exit(1)
 
-    # Wide matrix expected shape: first column = protein accession, remaining
-    # columns = one per sample (raw or log-space intensities from a
-    # MaxQuant/Skyline/DIA-NN-style export). Sep is sniffed between tab/comma.
+    log(f"AREE proteomics harmonize_input: study={study_id} comparison={comparison_id}")
+
+    # First column = protein accession, remaining columns = one per sample.
     sep = "\\t"
     with open(matrix_path) as fh:
         header = fh.readline()
     if header.count(",") > header.count("\\t"):
         sep = ","
-
     wide = pd.read_csv(matrix_path, sep=sep)
     if wide.shape[1] < 2:
-        log("ERROR: raw abundance matrix must have a protein accession column plus >=1 sample column")
-        sys.exit(1)
+        fail("raw abundance matrix must have a protein accession column plus >=1 sample column")
+    wide = wide.rename(columns={wide.columns[0]: "protein_accession"})
+    if wide["protein_accession"].duplicated().any():
+        dups = sorted(wide.loc[wide["protein_accession"].duplicated(), "protein_accession"].unique())
+        fail(f"{len(dups)} duplicate protein_accession rows (e.g. {dups[:5]}); resolve them upstream")
+    log(f"Loaded {len(wide)} proteins x {wide.shape[1] - 1} sample columns")
 
-    id_col = wide.columns[0]
-    wide = wide.rename(columns={id_col: "protein_accession"})
-
-    n_before = len(wide)
-    dup_mask = wide["protein_accession"].duplicated(keep=False)
-    n_dup = int(dup_mask.sum())
-    if n_dup > 0:
-        log(f"WARNING: {n_dup} duplicate protein_accession rows found; collapsing via mean")
-        wide = wide.groupby("protein_accession", as_index=False).mean(numeric_only=True)
-    log(f"Loaded {n_before} input rows -> {len(wide)} unique protein_accession rows")
-
-    sample_cols = [c for c in wide.columns if c != "protein_accession"]
-    log(f"Detected {len(sample_cols)} sample columns: {sample_cols}")
-
-    # Validate against sample sheet (expects columns: sample_id, group; group
-    # values typically 'treatment'/'control' or comparison-specific labels).
-    samples = pd.read_csv(sample_sheet_path, sep=None, engine="python")
-    required_cols = {"sample_id", "group"}
-    missing_cols = required_cols - set(samples.columns)
+    samples = pd.read_csv(sample_sheet_path, sep=None, engine="python", dtype=str)
+    if "group" not in samples.columns and "condition" in samples.columns:
+        samples = samples.rename(columns={"condition": "group"})
+    missing_cols = {"sample_id", "group"} - set(samples.columns)
     if missing_cols:
-        log(f"ERROR: sample_sheet missing required columns: {sorted(missing_cols)}")
-        sys.exit(1)
+        fail(f"sample_sheet missing required columns: {sorted(missing_cols)}")
+    bad = sorted(set(samples["group"]) - {"control", "treatment"})
+    if bad:
+        fail(f"sample_sheet group must be 'control' or 'treatment'; found {bad}")
+    if samples["sample_id"].duplicated().any():
+        fail("sample_sheet lists a sample_id more than once")
 
-    unmatched = sorted(set(samples["sample_id"]) - set(sample_cols))
-    if unmatched:
-        log(f"WARNING: sample_sheet sample_id(s) not found in abundance matrix columns: {unmatched}")
+    absent = sorted(set(samples["sample_id"]) - set(wide.columns))
+    if absent:
+        fail(f"sample_sheet sample_id(s) not in the abundance matrix: {absent}")
+    unused = [c for c in wide.columns[1:] if c not in set(samples["sample_id"])]
+    if unused:
+        log(f"{len(unused)} matrix column(s) are not in this comparison's sample sheet and are left out: {unused}")
+    log(f"Comparison samples: {samples['group'].value_counts().to_dict()}")
 
-    # Reshape wide -> long: one row per (protein_accession, sample_id, abundance)
     long_df = wide.melt(
         id_vars=["protein_accession"],
-        value_vars=[c for c in sample_cols if c in set(samples["sample_id"]) or True],
+        value_vars=list(samples["sample_id"]),
         var_name="sample_id",
         value_name="abundance",
-    )
-    long_df = long_df.merge(samples[["sample_id", "group"]], on="sample_id", how="left")
-
-    unmapped_samples = long_df.loc[long_df["group"].isna(), "sample_id"].unique().tolist()
-    if unmapped_samples:
-        log(f"WARNING: {len(unmapped_samples)} sample column(s) had no group in sample_sheet: {unmapped_samples}")
+    ).merge(samples[["sample_id", "group"]], on="sample_id", how="left")
 
     out_path = f"{study_id}_{comparison_id}_long_abundance.tsv"
     long_df.to_csv(out_path, sep="\\t", index=False)

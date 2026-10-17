@@ -1,11 +1,24 @@
-// Normalize long-format protein abundance values: log2 transform (if not
-// already log-space) + median normalization across samples, a standard
-// proteomics normalization approach that is robust to the large dynamic
-// range and non-normality of raw intensities.
+// Put protein abundances on a log2 scale and (optionally) median-normalize
+// samples, raw_reanalysis mode only.
 //
-// STATUS: structurally complete DSL2 process with a real pandas script
-// (median-of-medians centering per sample). NOT executed against real data
-// in this build. raw_reanalysis mode only.
+// --proteomics.input_scale
+//     auto   : the original heuristic. Max value < 100 is taken as already
+//              log2; otherwise log2(x + 1). Wrong for spectral-count ratios
+//              such as NSAF (all values < 1, but linear), so set it explicitly
+//              for those.
+//     linear : log2(x). Zeros and values at or below detection_limit become
+//              missing (not detected), never log2 of a pseudocount.
+//     log2   : used as is.
+// --proteomics.detection_limit
+//     Values at or below it are missing. Defaults to 0 for linear input, so a
+//     zero spectral count means "not detected", not "very low".
+// --proteomics.normalization
+//     median : subtract each sample's median log2 abundance (over detected
+//              proteins), re-centred on the grand median.
+//     none   : leave as is, e.g. for NSAF, which is already normalized within
+//              each sample.
+//
+// STATUS: executed by the raw-mode CI smoke test (tests/fixtures/proteomics_raw).
 
 process NORMALIZE {
     tag "${study_id}:${comparison_id}"
@@ -15,6 +28,9 @@ process NORMALIZE {
 
     input:
     tuple val(study_id), val(comparison_id), path(long_abundance_table)
+    val input_scale
+    val detection_limit
+    val normalization
 
     output:
     tuple val(study_id), val(comparison_id), path("${study_id}_${comparison_id}_normalized_long.tsv"), emit: normalized_long
@@ -30,51 +46,62 @@ process NORMALIZE {
 
     study_id = "${study_id}"
     comparison_id = "${comparison_id}"
+    input_scale = "${input_scale}"
+    detection_limit = "${detection_limit}"
+    normalization = "${normalization}"
+
+    if input_scale not in ("auto", "linear", "log2"):
+        sys.exit(f"ERROR: proteomics.input_scale must be auto, linear or log2, got {input_scale!r}")
+    if normalization not in ("median", "none"):
+        sys.exit(f"ERROR: proteomics.normalization must be median or none, got {normalization!r}")
 
     df = pd.read_csv("${long_abundance_table}", sep="\\t")
     required = {"protein_accession", "sample_id", "abundance", "group"}
     missing = required - set(df.columns)
     if missing:
-        print(f"ERROR: normalize input missing columns: {sorted(missing)}", file=sys.stderr)
-        sys.exit(1)
-
+        sys.exit(f"ERROR: normalize input missing columns: {sorted(missing)}")
     df["abundance"] = pd.to_numeric(df["abundance"], errors="coerce")
 
-    # Heuristic: if the max observed abundance is large (>100), assume linear
-    # intensity space and log2-transform (adding a small pseudocount to
-    # tolerate zeros); otherwise assume already log-space.
-    max_val = df["abundance"].max(skipna=True)
-    already_log = pd.notna(max_val) and max_val < 100
-    if already_log:
-        df["log2_abundance"] = df["abundance"]
-        transform_applied = "none (input already appeared to be log-space)"
-    else:
-        pseudocount = 1.0
-        df["log2_abundance"] = np.log2(df["abundance"].clip(lower=0) + pseudocount)
-        transform_applied = f"log2(x + {pseudocount})"
+    if input_scale == "auto":
+        max_val = df["abundance"].max(skipna=True)
+        input_scale = "log2" if pd.notna(max_val) and max_val < 100 else "auto_linear_pseudocount"
 
-    # Median normalization: subtract each sample's median log2 abundance,
-    # then re-center on the grand median so overall scale is preserved.
+    limit = None if detection_limit in ("", "null", "None") else float(detection_limit)
+    if input_scale == "linear":
+        limit = 0.0 if limit is None else limit
+        detected = df["abundance"] > limit
+        df["log2_abundance"] = np.log2(df["abundance"].where(detected))
+        transform_applied = f"log2(x); x <= {limit} treated as not detected (missing)"
+    elif input_scale == "log2":
+        df["log2_abundance"] = df["abundance"]
+        if limit is not None:
+            df.loc[df["abundance"] <= limit, "log2_abundance"] = np.nan
+        transform_applied = "none (input declared or detected as log2)"
+    else:
+        df["log2_abundance"] = np.log2(df["abundance"].clip(lower=0) + 1.0)
+        transform_applied = "log2(x + 1) (auto: input looked linear)"
+
     sample_medians = df.groupby("sample_id")["log2_abundance"].median()
     grand_median = sample_medians.median()
-    median_offset = df["sample_id"].map(sample_medians) - grand_median
-    df["log2_abundance_normalized"] = df["log2_abundance"] - median_offset
+    if normalization == "median":
+        offset = sample_medians - grand_median
+    else:
+        offset = sample_medians * 0.0
+    df["log2_abundance_normalized"] = df["log2_abundance"] - df["sample_id"].map(offset)
 
     qc = pd.DataFrame({
         "sample_id": sample_medians.index,
+        "n_detected": df.groupby("sample_id")["log2_abundance"].count().reindex(sample_medians.index).values,
         "pre_norm_median_log2": sample_medians.values,
-        "median_offset_applied": (sample_medians - grand_median).values,
+        "offset_applied": offset.values,
     })
     qc["grand_median_log2"] = grand_median
     qc["transform_applied"] = transform_applied
+    qc["normalization"] = normalization
 
-    out_path = f"{study_id}_{comparison_id}_normalized_long.tsv"
-    df.to_csv(out_path, sep="\\t", index=False)
-
-    qc_path = f"{study_id}_{comparison_id}_normalization_qc.tsv"
-    qc.to_csv(qc_path, sep="\\t", index=False)
-
-    print(f"Normalization complete: transform={transform_applied}, n_samples={len(sample_medians)}")
+    df.to_csv(f"{study_id}_{comparison_id}_normalized_long.tsv", sep="\\t", index=False)
+    qc.to_csv(f"{study_id}_{comparison_id}_normalization_qc.tsv", sep="\\t", index=False)
+    print(f"Normalization complete: transform={transform_applied}, normalization={normalization}, n_samples={len(sample_medians)}")
 
     with open("versions.yml", "w") as fh:
         fh.write("NORMALIZE:\\n")
