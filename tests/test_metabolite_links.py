@@ -288,6 +288,16 @@ def test_demo_lactate_and_ldh_converge_by_link_only(isolated_reports):
     assert not (candidates["tier"] == "multi_omics_convergence").any()
 
 
+def test_demo_link_examples_are_not_on_the_significance_boundary(isolated_reports):
+    """A demo convergence case that sits at adj. p = 0.05 would flip on a change
+    from <= to <, and silently stop demonstrating anything."""
+    harmonize_all_demo_studies()
+    evidence = oyster(load_evidence_table()).set_index("feature_id_standardized")
+    for feature in ("lactate", "glucose", LDH, GLUT1):
+        adjusted = float(evidence.loc[feature, "adjusted_p_value"])
+        assert adjusted <= 0.04, (feature, adjusted)
+
+
 def test_demo_cards_explain_the_link_and_its_exclusions(isolated_reports):
     harmonize_all_demo_studies()
     index = evidence_cards.build_evidence_cards(phenotype="growth_under_stress")

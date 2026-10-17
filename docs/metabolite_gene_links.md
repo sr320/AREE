@@ -161,8 +161,9 @@ GIGAS_HEAT01 `chronic_heat_vs_control`:
 - `sdha` (LOC105342002): not significant, linked to succinate through R02164/K00234.
 - `glut1` (LOC105342003), added 2026-10-17: significant, linked to glucose
   by a **transporter** link (GLUT1, K07299, `ko_definition`, with its real
-  ko02000 family path). Glucose in GIGAS_GROW06 sits exactly at adj. p = 0.05,
-  the edge of the significance threshold. Its direction (down) is opposite to
+  ko02000 family path). Demo glucose in GIGAS_GROW06 was moved from adj. p = 0.05
+  (exactly on the threshold) to 0.02 (p 0.021 → 0.006) on 2026-10-17, so the
+  example does not hinge on `<=` versus `<`. Its direction (down) is opposite to
   `glut1` (up), which the card shows and the gate does not require to agree.
 
 Both are simulated. The KEGG reaction and KO IDs in the demo table are real
