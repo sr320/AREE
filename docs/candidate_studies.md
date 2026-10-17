@@ -198,8 +198,8 @@ papers is the realistic route. The Roberts-lab projects make that easiest.
 | # | Accession | Design | Context | Notes |
 |---|---|---|---|---|
 | P1 | `PXD002316` | 4 treatments (temperature × pH) × 3 tank replicates, larvae | OA × warming (multi-stressor) | Harney et al. 2016, *J Proteomics* (PRIDE reference). Complete submission. |
-| P2 | `PXD015434` | early juveniles, temperature | Thermal | **Confirmed**: Crandall et al. 2022, *PeerJ*. |
-| P3 | `PXD013262` | seed, time × temperature | Thermal | **Registered, QC failed** as `WANAMAKER2020_HEAT_SEED` (2026-10-17): one silo per temperature, technical replicates only (see Rejected below). P2 is now the only thermal proteomics candidate, so thermal proteomics k=2 needs another study. |
+| P2 | `PXD015434` | early juveniles, temperature | Thermal | **Registered, QC failed** as `CRANDALL2022_HEAT_SEED` (2026-10-17): one silo per temperature, and the two silos differed beyond temperature (see Rejected below). |
+| P3 | `PXD013262` | seed, time × temperature | Thermal | **Registered, QC failed** as `WANAMAKER2020_HEAT_SEED` (2026-10-17): one silo per temperature, technical replicates only (see Rejected below). With P2 also failed, no public thermal proteomics study in this list is analyzable. |
 | P4 | `PXD000835` | ctenidia, ambient vs high pCO₂ | Ocean acidification | **Confirmed**: Timmins-Schiffman et al. 2014, *BMC Genomics*. An OA protein layer alongside `LUTIER2022_OA_TIPPING` (RNA-seq) and M4/M5. |
 | P5 | `PXD011365` | gill mitochondria, hypoxia–reoxygenation | **Hypoxia tolerance** | Sokolov et al. 2019, *J Proteomics* (PRIDE reference). This is the only public omics dataset found for `hypoxia_tolerance`, which the RNA-seq screen flagged as empty. |
 | P6 | `PXD065668` / `PXD065706` | gill proteome + phosphoproteome, ERK inhibition | Thermotolerance divergence | **Confirmed**: Wang et al. 2026, *Commun Biol*. This is a pharmacological perturbation, so it is mechanism support, not population evidence. |
@@ -225,6 +225,16 @@ another. Temperature is confounded with silo, and no replicate is biological.
 The paper's ASCA found no temperature effect (P = 0.19). The authors' code
 also mentions a second 23 °C silo that was never deposited. If those samples
 exist, re-screen.
+
+**Registered, QC failed:** `PXD015434` (P2, `CRANDALL2022_HEAT_SEED`).
+The 16 runs are 4 pools × 4 DIA m/z-range injections. The pools come from
+two silos, the only 23 °C control and the 29 °C control, each sampled on two
+days. The hatchery notebook in the authors' Zenodo release shows the 23 °C silo
+started at 16–18 °C, set poorly and died out after a ciliate outbreak. The
+paper's survival contrast (0 % vs 86 %) is therefore confounded with that
+history, and no protein reaches adjusted P < 0.05. Both P2 and P3 come from
+the same Taylor Shellfish 23-vs-29 °C silo trials. Any further proteomics from
+that program is worth checking for silo replication before claiming it.
 
 ## Non-coding RNA, chromatin, and metabolomics candidates
 
