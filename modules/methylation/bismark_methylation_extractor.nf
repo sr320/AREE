@@ -43,7 +43,7 @@ process BISMARK_METHYLATION_EXTRACTOR {
 
     cat <<-END_VERSIONS > versions.yml
     ${task.process}:
-        bismark: \$(bismark_methylation_extractor --version | grep 'Bismark Version' | sed 's/.*Bismark Version: v//')
+        bismark: \$(bismark_methylation_extractor --version | grep -oE 'Version: v[0-9.]+' | head -1 | sed 's/Version: v//')
     END_VERSIONS
     """
 }

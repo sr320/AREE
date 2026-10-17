@@ -105,7 +105,7 @@ process BISMARK_DEDUPLICATE {
 
     cat <<-END_VERSIONS > versions.yml
     ${task.process}:
-        bismark: \$(deduplicate_bismark --version | grep 'Bismark Version' | sed 's/.*Bismark Version: v//')
+        bismark: \$(deduplicate_bismark --version | grep -oE 'Version: v[0-9.]+' | head -1 | sed 's/Version: v//')
     END_VERSIONS
     """
 }
