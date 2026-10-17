@@ -31,8 +31,11 @@ from common import (
     STUDIES_DIR,
     load_vocab,
     registered_crosswalks,
+    resolve_species,
     species_term_for_taxid,
 )
+
+from .species import species_identity_basis, species_summary
 
 EVIDENCE_TABLE = REPORTS_DIR / "evidence" / "evidence_table.tsv"
 CANDIDATES_TABLE = REPORTS_DIR / "evidence_cards" / "candidates.tsv"
@@ -132,6 +135,21 @@ def _short_citation(citation: str | None) -> str:
     return m.group(1) if m else citation[:80]
 
 
+def _study_taxid(study: dict):
+    resolved = resolve_species(study.get("species"))
+    return resolved.ncbi_taxid if resolved else None
+
+
+def _study_canonical(study: dict):
+    resolved = resolve_species(study.get("species"))
+    return resolved.scientific_name if resolved else study.get("species")
+
+
+def _study_complex(study: dict):
+    resolved = resolve_species(study.get("species"))
+    return resolved.complex if resolved else None
+
+
 def _study_rows(studies: list[dict], evidence: pd.DataFrame) -> tuple[list[dict], list[dict]]:
     records_by_comparison: Counter = Counter()
     if len(evidence):
@@ -178,6 +196,12 @@ def _study_rows(studies: list[dict], evidence: pd.DataFrame) -> tuple[list[dict]
             "study_id": sid,
             "simulated": simulated,
             "species": study.get("species"),
+            "species_taxid": _study_taxid(study),
+            # The vocabulary's accepted name, so a synonym (Crassostrea gigas)
+            # groups with its species (Magallana gigas) on the page.
+            "species_canonical": _study_canonical(study),
+            "species_complex": _study_complex(study),
+            "species_identity_basis": species_identity_basis(study),
             "assay_types": _as_list(study.get("assay_type")),
             "analysis_mode": study.get("analysis_mode"),
             "analysis_status": study.get("analysis_status"),
@@ -743,6 +767,7 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
         "candidates": candidates,
         "pools": pools,
         "cross_species": cross_species,
+        "species": species_summary(studies, evidence),
         "activity": _activity(),
         "tests": _test_summary(),
         "implementation_status": _implementation_status(),

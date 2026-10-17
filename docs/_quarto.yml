@@ -67,6 +67,8 @@ website:
         contents:
           - text: "Adding a new species"
             href: adding_a_species.md
+          - text: "Species identity"
+            href: species_identity.md
           - text: "Plan: mussel and clam datasets"
             href: mussel_clam_integration_plan.md
           - text: "Handling genome-version changes"

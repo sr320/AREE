@@ -168,6 +168,23 @@ an orthogroup (the rest are non-coding genes, which have no protein), and 190
 of those 274 are in `multi_copy` orthogroups. Expect most cross-species links
 for stress-response genes to be one-to-many.
 
+What the run is used for:
+
+- **Cross-species meta-analysis**: `aree meta-analyze --level orthogroup` pools
+  each species' gene-level estimate through single-copy orthogroups
+  ([interpreting_meta_analysis.md](interpreting_meta_analysis.md#cross-species-results---level-orthogroup)).
+- **Cross-species candidates and cards**: `aree build-cross-species-cards`
+  ([interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates)).
+- **The dashboard gate**: a phenotype's cross-species results appear on the
+  dashboard only once two species each have a within-species pool of k ≥ 2.
+  Before that, the dashboard offers only an ortholog lookup for each top
+  candidate. As of 2026-10-17 thermal tolerance is open, through the oyster
+  and the Manila clam.
+- **Not yet for GFF-route species.** The run is keyed by NCBI GeneID, so a
+  species whose crosswalk is anchored on author gene IDs (*M. coruscus*) is
+  not in it, and its genes get no orthogroup until a run keyed by gene and
+  taxid includes it.
+
 ### Mussel and clam crosswalks
 
 Built 2026-10-11 with the same builder, each against its species' NCBI

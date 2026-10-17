@@ -13,7 +13,7 @@ from common import STUDIES_DIR, STUDY_REGISTRY_CSV, load_yaml
 from .schema_validate import validate_study_file
 
 REGISTRY_FIELDS = [
-    "study_id", "species", "strain_or_population", "genome_assembly", "annotation_version",
+    "study_id", "species", "species_identity_basis", "strain_or_population", "genome_assembly", "annotation_version",
     "assay_type", "analysis_mode", "platform", "raw_data_available", "processed_data_available",
     "data_status", "qc_status", "analysis_status", "n_comparisons", "simulated", "citation",
     "registered_by", "date_registered",
@@ -44,6 +44,9 @@ def _study_to_row(study: dict) -> dict:
     return {
         "study_id": study["study_id"],
         "species": study.get("species", ""),
+        # How the species was established, for studies in a hybridizing complex
+        # (docs/species_identity.md); empty where the YAML records none.
+        "species_identity_basis": (study.get("species_identity") or {}).get("basis", ""),
         "strain_or_population": study.get("strain_or_population") or "",
         "genome_assembly": study.get("genome_assembly", ""),
         "annotation_version": study.get("annotation_version") or "",

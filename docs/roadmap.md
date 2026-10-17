@@ -91,11 +91,19 @@ for the assumptions this roadmap is consistent with.
 - **Containers.** `containers/README.md` documents the intended
   Docker/Apptainer approach, but container images/definitions themselves are
   not yet built.
-- **Ortholog mapping.** Orthogroups across all seven registered species come
-  from an OrthoFinder run on their RefSeq proteomes and are attached to
-  evidence at harmonization (crosswalks themselves stay NCBI-only).
-  Cross-species pooling on them is the next step — see
+- **Ortholog mapping and cross-species evidence.** Orthogroups across the seven
+  RefSeq-annotated species come from an OrthoFinder run and are attached to
+  evidence at harmonization. Cross-species meta-analysis, cross-species
+  candidates with their cards, and the dashboard gate exist; on real data the
+  oyster and Manila clam pool through 5,975 single-copy orthogroups on thermal
+  tolerance, none convergent because the clam studies are exposure-only. See
   [identifier_mapping.md](identifier_mapping.md#orthogroups).
+- **Species beyond the oyster.** Seven mussel and clam species are registered
+  with crosswalks: six from NCBI Gene and one, *M. coruscus*, from its
+  authors' GFF with a recorded homology search. The Manila clam has the first
+  real within-species pool outside the oyster (k = 2). The dashboard and app
+  show per-species counts, species filters and species identity
+  ([species_identity.md](species_identity.md)).
 
 ## Next milestones
 
@@ -109,9 +117,12 @@ for the assumptions this roadmap is consistent with.
 - **Container verification.** Execute the CI fixtures with the declared Docker
   images, pin an AREE utility image, and record introspected rather than declared
   software versions.
-- **Additional species.** The schema and vocabularies are species-aware and
-  ranking/reporting partitions on `species_taxid`; onboarding another species
-  still requires its reference data and identifier crosswalk.
+- **First real mussel studies.** No real mussel study is harmonized yet; the
+  WP5 backlog's *M. edulis* heat pair is the nearest within-species pool.
+- **A clam study that measured tolerance**, so a cross-species row can reach
+  convergence on a tolerance phenotype rather than on exposure alone.
+- **GFF-route species in an orthogroup run**, and crosswalks for razor clam
+  and geoduck once their authors' annotation files are sourced.
 - **Expanded ontologies.** Phenotype, stressor, tissue, and life-stage
   vocabularies cover the terms specified in the founding proposal but will
   need extension as more species and study types are added (e.g. finfish

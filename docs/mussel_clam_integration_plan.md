@@ -1,6 +1,7 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-17:** WP0 to WP4 are implemented. WP5 has its backlog and
+**Status, 2026-10-17:** WP0 to WP4, WP6 and WP8 are implemented, and WP7 has
+its builder and first species. WP5 has its backlog and
 its first within-species pool: two Manila clam heat studies
 (TUCCI2025_HEAT_PRIMING and PERUZZA2023_HEATWAVE, both reanalyzed and on
 `main`, k = 2). WP6 has its
@@ -598,6 +599,18 @@ GFF-route species to an orthogroup run, which needs `gene_orthogroups.tsv`
 keyed by gene and taxid rather than GeneID alone.
 
 ### WP8. Interface and documentation
+
+**Status: done, 2026-10-17.** Dashboard and app: a per-species table
+(crosswalk route and size, real and demo study counts, evidence records), a
+species filter on the studies table and on the app's studies, evidence and
+candidates tabs, accepted names throughout so synonyms group, and a species
+identity column for studies of a hybridizing complex (also in the registry
+index). Docs: a worked example in
+[adding_a_species.md](adding_a_species.md), which follows the Manila clam
+rather than the first mussel because no real mussel study is harmonized yet,
+plus a GFF-route species; a new [species_identity.md](species_identity.md);
+and updates to the roadmap, implementation status and the orthogroup section
+of identifier_mapping.md.
 
 - Dashboard and study browser: species filter, per-species crosswalk and
   study counts, a species-identity column for *Mytilus* studies.
