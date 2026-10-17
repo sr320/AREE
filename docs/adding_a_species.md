@@ -86,8 +86,24 @@ crosswalk for each species are registered, so their studies can be harmonized.
    command above in its error message).
 
    A species with only a GenBank assembly and an author-supplied annotation has
-   no NCBI Gene records, so `build-crosswalk` has nothing to download. That
-   route is planned (WP7 in the integration plan) but not built.
+   no NCBI Gene records. Build its crosswalk from the authors' GFF3 and
+   proteins with a recorded DIAMOND search against one UniProtKB release:
+
+   ```bash
+   aree build-crosswalk --taxid 42192 --slug mcoru \
+     --from-gff genomic.gff --proteins protein.faa \
+     --uniprot-fasta uniprot_sprot.fasta.gz \
+     --uniprot-release "UniProtKB/Swiss-Prot Release 2026_03 of 02-Sep-2026" \
+     --uniprot-url https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz \
+     --diamond /path/to/diamond --threads 6
+   ```
+
+   Register the assembly first with `is_ncbi_reference: false` and its
+   `identifier_crosswalk` set; the builder reads the annotation description
+   from it. Such a species has no NCBI reference assembly, and tests allow
+   that only for a GFF-route crosswalk. Commit the crosswalk and its
+   provenance; there is no retired-GeneID sidecar. See
+   [identifier_mapping.md](identifier_mapping.md#genomes-without-ncbi-gene-records-gff-route-wp7).
 
 4. **Species-appropriate tissue, life-stage, phenotype and stressor terms**,
    only if the existing vocabulary does not fit. Add new terms rather than

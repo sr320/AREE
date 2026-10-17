@@ -204,6 +204,66 @@ What this means in practice:
 - **No retirement history yet** for most mussels: their RefSeq annotations are
   first releases, so there are no older GeneIDs to remap.
 
+### Genomes without NCBI Gene records (GFF route, WP7)
+
+A species NCBI has not annotated has no GeneIDs, so the NCBI route has nothing
+to download. `aree build-crosswalk --from-gff` builds its crosswalk from the
+authors' own annotation instead (`src/mappings/gff_crosswalk.py`):
+
+- **Genes come from the authors' GFF3**, one row each, anchored on `gene_id`,
+  the GFF gene ID without a `gene-` prefix. For an NCBI GenBank annotation that
+  is the locus tag (`MCOR_1`). `ncbi_gene_id` stays empty. Every downstream
+  reader uses the crosswalk's anchor, never a route's own column, and the
+  provenance records `"route": "gff_homology"` and `"anchor_column": "gene_id"`.
+- **Transcript and protein IDs** from the GFF go into `transcript_ids` and
+  `protein_ids` (GenBank protein IDs with and without their version). A study
+  reporting any of them reaches the gene.
+- **UniProt accessions come from one recorded DIAMOND blastp search** of the
+  longest protein per gene against a named UniProtKB release (Swiss-Prot by
+  default). The thresholds are explicit and recorded: e-value ≤ 1e-10,
+  identity ≥ 30%, query and subject coverage ≥ 50%, up to 5 hits per gene. The
+  builder re-applies them when it reads the hits table. The best hit is
+  `uniprot_accession`, all passing hits are in `uniprot_accessions_all`, and
+  `uniprot_evidence` is `diamond_blastp`. The source files, the database and
+  the hits table are all checksummed in the provenance.
+- **The authors' own homology names** (GenBank `standard_name`) become
+  `gene_symbol`, and their own UniProt assignment, where the GFF records one,
+  is kept in `author_uniprot_accession`. The provenance reports how often it
+  is among our hits, a free check on the search.
+
+Resolution follows what a lookup went through, not the route that built the
+file:
+
+| Study reports | Resolves |
+|---|---|
+| the authors' gene ID, locus tag, transcript ID or protein ID | `exact`: it names that gene in that annotation |
+| a UniProt accession | `inferred`: reached through our homology search; `many_to_one_ortholog` when several genes share it |
+| a gene symbol | `inferred` or `many_to_one_ortholog`, as for every route |
+
+A GFF-route gene gets no orthogroup from the active orthogroup run, which is
+keyed by NCBI GeneID. An author ID could collide with a GeneID, so the lookup
+is skipped. Cross-species comparison needs the species added to an orthogroup
+run, which is not built yet.
+
+**First GFF-route crosswalk: `mcoru`**, *Mytilus coruscus* MCOR1.1
+(GCA_011752425.2, GenBank annotation submitted by Ningbo University). Built
+2026-10-17 against UniProtKB/Swiss-Prot 2026_03 with DIAMOND 2.2.8
+(`--sensitive`, 103 s on 6 threads).
+
+| Genes | With a protein | With a Swiss-Prot hit | Authors' accession among our hits |
+|---|---|---|---|
+| 58,540 | 58,249 | 9,877 (17.0%) | 3,085 of the 6,353 genes both assigned (48.6%) |
+
+The hit rate is low because the thresholds require half of both proteins to
+align, which keeps partial, single-domain matches out. Resolving a study's own
+gene, transcript or protein IDs does not depend on it. Of the 3,268 genes
+where the authors' accession is not among our hits, 1,883 of the 3,265 that
+can be compared (57.7%) carry the same Swiss-Prot protein name on both
+entries: the same protein, recorded from a different species. Counting those,
+our search names the authors' protein for 78% of the genes both assigned. *M. coruscus* studies on the two later chromosome-level
+assemblies use annotations NCBI does not hold, so their identifiers will not
+resolve against `mcoru`.
+
 ### Design decisions in the real crosswalk
 
 - **One row per NCBI GeneID.** GeneID anchors the table because it is the most
@@ -326,6 +386,10 @@ handles two families of input:
   `uniprot_accession` is resolved through a prebuilt index over
   `uniprot_accessions_all` so that any accession for a gene — not just the
   representative one stored in `uniprot_accession` — resolves `exact`.
+- **GFF-route crosswalks** add the authors' `gene_id`, `transcript_ids` and
+  `protein_ids` to the stable-ID search (all `exact`), and a UniProt match on
+  a row whose `uniprot_evidence` is `diamond_blastp` is `inferred`; see
+  [the GFF route](#genomes-without-ncbi-gene-records-gff-route-wp7).
 - **Gene symbols**: looked up case-insensitively against the crosswalk's
   `gene_symbol` column first. A single match is labeled `inferred` (not
   `exact`) — symbols are not guaranteed unique or stable, so even a clean

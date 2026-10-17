@@ -581,6 +581,22 @@ species their only route to cross-species comparison. Until this lands, their
 studies harmonize with `unresolved` identifiers and are visible as registered
 but unmapped.
 
+**Status: builder and first species done, 2026-10-17.** `aree build-crosswalk
+--from-gff` exists (`src/mappings/gff_crosswalk.py`), and the resolver is
+anchor-aware: it reads `gene_id` for a GFF-route crosswalk and `ncbi_gene_id`
+otherwise. One decision differs from the text above. Rows are not marked
+`inferred` wholesale. A study reporting the authors' gene, transcript or
+protein ID resolves `exact`, because it names that gene in that annotation;
+only a lookup through the homology-derived UniProt accession is `inferred`.
+*Mytilus coruscus* is registered with its MCOR1.1 assembly (GCA_011752425.2,
+the only annotated one) and the `mcoru` crosswalk: 58,540 genes, 9,877 with a
+Swiss-Prot 2026_03 hit at the recorded thresholds, and the authors' own
+accession among our hits for 48.6% of the genes both assigned. Still to do:
+*S. constricta* and *P. generosa*, whose annotations are not on NCBI (the
+authors' GFF and proteins must be sourced and checksummed), and adding
+GFF-route species to an orthogroup run, which needs `gene_orthogroups.tsv`
+keyed by gene and taxid rather than GeneID alone.
+
 ### WP8. Interface and documentation
 
 - Dashboard and study browser: species filter, per-species crosswalk and

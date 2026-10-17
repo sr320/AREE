@@ -710,12 +710,37 @@ def build_orthogroups_cmd(orthofinder_bin, threads, run_id, work_dir, from_resul
 @click.option("--uniprot", default=None, type=click.Path(exists=True),
               help="Pre-downloaded UniProt TSV export.")
 @click.option("--download", is_flag=True, help="Force re-download of reference sources.")
-def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, download):
-    """Build a real identifier crosswalk from NCBI Gene and UniProtKB.
+@click.option("--from-gff", "from_gff", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route (WP7), for a genome with no NCBI Gene records: the authors' GFF3.")
+@click.option("--proteins", "proteins", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route: the authors' protein FASTA (headers = protein, mRNA or gene IDs).")
+@click.option("--uniprot-fasta", "uniprot_fasta", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route: UniProtKB FASTA to search (e.g. uniprot_sprot.fasta.gz of one release).")
+@click.option("--uniprot-release", default=None,
+              help="GFF route: the UniProtKB release searched, as its reldate.txt states it.")
+@click.option("--uniprot-url", default=None, help="GFF route: where the UniProtKB FASTA was downloaded from.")
+@click.option("--diamond", default="diamond", show_default=True, help="GFF route: DIAMOND executable.")
+@click.option("--threads", default=4, show_default=True, type=int, help="GFF route: DIAMOND threads.")
+@click.option("--hits", "hits", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route: reuse a DIAMOND hits table (outfmt 6 in the builder's field order) "
+                   "instead of running DIAMOND; thresholds are re-applied.")
+@click.option("--workdir", default=None, type=click.Path(path_type=Path),
+              help="GFF route: where the query FASTA, DIAMOND database and hits go "
+                   "(default: data/reference/crosswalk/_sources/<slug>_gff/).")
+def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, download, from_gff, proteins,
+                        uniprot_fasta, uniprot_release, uniprot_url, diamond, threads, hits, workdir):
+    """Build a real identifier crosswalk from NCBI Gene and UniProtKB, or from a GFF.
 
-    Downloads reference data from public sources (~230 MB streamed from NCBI) and
-    writes a crosswalk plus a JSON provenance sidecar to data/reference/crosswalk/.
-    The species and its reference assembly must already be registered (see
+    NCBI route (default): downloads reference data from public sources (~230 MB
+    streamed from NCBI) and writes a crosswalk plus a JSON provenance sidecar to
+    data/reference/crosswalk/.
+
+    GFF route (--from-gff, WP7): for a genome NCBI has not annotated. Genes come
+    from the authors' GFF3, anchored on their gene IDs; UniProt accessions come
+    from a recorded DIAMOND blastp search with explicit thresholds, so a UniProt
+    lookup resolves 'inferred'. See docs/identifier_mapping.md.
+
+    The species and its assembly must already be registered (see
     docs/adding_a_species.md), so that provenance names the right annotation.
     """
     from common import load_assemblies, load_vocab
@@ -730,6 +755,10 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
     if term is None:
         fail(f"taxid {taxid} is not in registry/controlled_vocabularies/species.yaml; "
              "register the species first (docs/adding_a_species.md).")
+    if from_gff is not None:
+        _build_gff_crosswalk(term, taxid, slug, organism, assembly, from_gff, proteins, uniprot_fasta,
+                             uniprot_release, uniprot_url, diamond, threads, hits, workdir, fail)
+        return
     reference = [a for a in load_assemblies().values()
                  if a.get("ncbi_taxid") == taxid and a.get("is_ncbi_reference")]
     if assembly is None:
@@ -780,6 +809,53 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
     click.echo("assemblies in data/reference/genome_assemblies.yaml:")
     click.echo(click.style(f"  identifier_crosswalk: \"{shown}\"", fg="cyan"))
 
+
+
+def _build_gff_crosswalk(term, taxid, slug, organism, assembly, gff, proteins, uniprot_fasta, uniprot_release,
+                         uniprot_url, diamond, threads, hits, workdir, fail):
+    """The GFF route of `aree build-crosswalk` (WP7)."""
+    from common import assembly_crosswalk_path, load_assemblies
+    from harmonize.identifiers import crosswalk_taxid
+    from mappings.build_crosswalk import CROSSWALK_DIR, SOURCES_DIR
+    from mappings.gff_crosswalk import build as build_gff
+
+    if slug is None:
+        fail("--slug is required with --from-gff.")
+    missing = [n for n, v in (("--proteins", proteins), ("--uniprot-fasta", uniprot_fasta),
+                              ("--uniprot-release", uniprot_release)) if v is None]
+    if missing:
+        fail(f"--from-gff also needs {', '.join(missing)}.")
+    out_path = CROSSWALK_DIR / f"{slug}_gene_id_crosswalk.tsv"
+    if out_path.exists() and crosswalk_taxid(out_path) not in (None, taxid):
+        fail(f"{out_path} was built for taxid {crosswalk_taxid(out_path)}; choose a different --slug.")
+    if assembly is None:
+        records = [a for a in load_assemblies().values() if a.get("ncbi_taxid") == taxid
+                   and assembly_crosswalk_path(a) == out_path]
+        if not records:
+            fail(f"no assembly of taxid {taxid} in data/reference/genome_assemblies.yaml registers "
+                 f"identifier_crosswalk {out_path.relative_to(REPO_ROOT)}; register it, or pass --assembly.")
+        rec = records[0]
+        assembly = (f"{rec['ncbi_assembly_accession']} ({rec['assembly_id']}), "
+                    f"{rec.get('annotation_release')}, {rec.get('annotation_release_date')}")
+    if organism is None:
+        organism = f"{term['scientific_name']}, {term['label']}"
+    try:
+        path = build_gff(gff=gff, proteins=proteins, uniprot_fasta=uniprot_fasta, uniprot_release=uniprot_release,
+                         uniprot_url=uniprot_url, taxid=taxid, organism=organism, annotation=assembly,
+                         out_dir=CROSSWALK_DIR, slug=slug, workdir=workdir or SOURCES_DIR / f"{slug}_gff",
+                         diamond=diamond, threads=threads, hits_path=hits)
+    except (ValueError, FileNotFoundError) as exc:
+        fail(str(exc))
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    cov = prov["coverage"]
+    click.echo(click.style(f"Wrote {path}", fg="green"))
+    click.echo(f"{cov['genes_total']} genes; {cov['genes_with_protein']['n']} with a protein; "
+               f"{cov['with_uniprot_accession']['n']} with a UniProt hit "
+               f"({cov['with_uniprot_accession']['pct_of_genes_with_protein']}% of genes with a protein).")
+    agree = cov["author_uniprot_agreement"]
+    if agree["genes_with_both"]:
+        click.echo(f"The authors' own UniProt assignment is among our hits for {agree['pct']}% of the "
+                   f"{agree['genes_with_both']} genes that have both.")
 
 
 @main.command("build-metabolite-links")

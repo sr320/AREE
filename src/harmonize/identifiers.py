@@ -88,6 +88,19 @@ def crosswalk_taxid(crosswalk_path) -> int | None:
     return int(taxid) if taxid is not None else None
 
 
+def crosswalk_route(crosswalk_path) -> str | None:
+    """How a crosswalk was built, from its provenance: 'ncbi_gene' or 'gff_homology'.
+
+    Crosswalks from build_crosswalk.py predate the field and are 'ncbi_gene';
+    None for a crosswalk without provenance (the demo).
+    """
+    crosswalk_path = Path(crosswalk_path)
+    provenance = crosswalk_path.with_name(f"{crosswalk_path.stem}.provenance.json")
+    if not provenance.exists():
+        return None
+    return load_json(provenance).get("route", "ncbi_gene")
+
+
 def crosswalk_for_study(study: dict) -> Path:
     """The crosswalk a study must resolve against, decided by the study itself.
 
@@ -181,6 +194,7 @@ def set_crosswalk_path(path) -> None:
     _load_crosswalk.cache_clear()
     _uniprot_index.cache_clear()
     _legacy_locus_index.cache_clear()
+    _multi_id_index.cache_clear()
     _retired_map.cache_clear()
 
 
@@ -193,12 +207,39 @@ def _load_crosswalk(path_str: str) -> pd.DataFrame:
             "`aree build-crosswalk`, or unset $AREE_CROSSWALK."
         )
     df = pd.read_csv(path, sep="\t", comment="#", dtype=str).fillna("")
-    missing = {"ncbi_gene_id", "gene_symbol"} - set(df.columns)
-    if missing:
-        raise ValueError(f"crosswalk {path} is missing required column(s): {sorted(missing)}")
+    if "gene_symbol" not in df.columns or not ({"ncbi_gene_id", "gene_id"} & set(df.columns)):
+        raise ValueError(f"crosswalk {path} needs gene_symbol and an anchor column "
+                         "(ncbi_gene_id, or gene_id for a GFF-route crosswalk)")
     if "orthogroup_id" not in df.columns:
         df["orthogroup_id"] = ""
+    # The standardized identifier: NCBI GeneID for the NCBI route; the authors'
+    # gene ID for the GFF route (mappings/gff_crosswalk.py), whose genes have no
+    # GeneID. Everything downstream reads `_anchor`, never a route's own column.
+    df["_anchor"] = df[anchor_column(df)]
     return df
+
+
+def anchor_column(df: pd.DataFrame) -> str:
+    """`gene_id` for a GFF-route crosswalk, else `ncbi_gene_id`."""
+    return "gene_id" if "gene_id" in df.columns else "ncbi_gene_id"
+
+
+# Multi-valued identifier columns of a GFF-route crosswalk: the authors'
+# transcript and protein IDs, each naming exactly one gene in that annotation.
+MULTI_ID_COLUMNS = ("transcript_ids", "protein_ids")
+
+
+@lru_cache(maxsize=8)
+def _multi_id_index(path_str: str, column: str) -> dict:
+    """Map each ';'-delimited ID in `column` to its row index (-1 if two genes carry it)."""
+    df = _load_crosswalk(path_str)
+    index: dict = {}
+    if column not in df.columns:
+        return index
+    for pos, ids in enumerate(df[column]):
+        for value in (v for v in ids.split(";") if v):
+            index[value] = -1 if value in index and index[value] != pos else pos
+    return index
 
 
 def _crosswalk() -> pd.DataFrame:
@@ -370,8 +411,11 @@ def resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
     up in a real run.
     """
     resolved = _resolve_identifier(raw_id, id_type)
+    # The active orthogroup run is keyed by NCBI GeneID, so only a GeneID-anchored
+    # crosswalk may consult it: an author gene ID could collide with a GeneID.
     if (resolved.orthogroup_id is None and resolved.feature_id_standardized is not None
-            and active_crosswalk_path() != DEMO_CROSSWALK_PATH):
+            and active_crosswalk_path() != DEMO_CROSSWALK_PATH
+            and anchor_column(_crosswalk()) == "ncbi_gene_id"):
         from mappings.orthogroups import gene_orthogroup
 
         og = gene_orthogroup(resolved.feature_id_standardized)
@@ -400,10 +444,13 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
             match = cw[cw["uniprot_accessions_all"].str.contains(str(raw_id), regex=False)]
             row = match.iloc[0]
             return ResolvedIdentifier(
-                row["ncbi_gene_id"], "many_to_one_ortholog", row["orthogroup_id"] or None
+                row["_anchor"], "many_to_one_ortholog", row["orthogroup_id"] or None
             )
         row = cw.iloc[pos]
-        return ResolvedIdentifier(row["ncbi_gene_id"], "exact", row["orthogroup_id"] or None)
+        # A GFF-route crosswalk reached this accession through our own homology
+        # search, not a curated cross-reference: 'inferred', not 'exact'.
+        confidence = "inferred" if row.get("uniprot_evidence", "") == "diamond_blastp" else "exact"
+        return ResolvedIdentifier(row["_anchor"], confidence, row["orthogroup_id"] or None)
 
     if id_type == "legacy_locus_tag":
         # A legacy gene model (e.g. oyster_v9 CGI_ IDs) found in NCBI's LocusTag
@@ -416,7 +463,7 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
         if not tags or None in positions or -1 in positions or len(positions) != 1:
             return ResolvedIdentifier(None, "unresolved", None)
         row = cw.iloc[positions.pop()]
-        return ResolvedIdentifier(row["ncbi_gene_id"], "inferred", row["orthogroup_id"] or None)
+        return ResolvedIdentifier(row["_anchor"], "inferred", row["orthogroup_id"] or None)
 
     if id_type in STABLE_ID_COLUMNS:
         # `ncbi_gene_id` and `locus_id` are two spellings of the same thing:
@@ -426,6 +473,8 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
         # rather than trusting the caller's guess from a column name.
         if id_type in ("ncbi_gene_id", "locus_id"):
             columns = ["ncbi_gene_id", "locus_id"]
+            if "gene_id" in cw.columns:
+                columns = ["gene_id", "locus_id", "ncbi_gene_id"]
         else:
             columns = [STABLE_ID_COLUMNS[id_type]]
         columns = [c for c in columns if c in cw.columns]
@@ -445,16 +494,25 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
                     ]
                 else:
                     match = cw[cw[column] == candidate]
+                if column == "ncbi_gene_id":
+                    match = match[match["ncbi_gene_id"] != ""]
                 if len(match) == 1:
                     row = match.iloc[0]
                     return ResolvedIdentifier(
-                        row["ncbi_gene_id"], "exact", row["orthogroup_id"] or None
+                        row["_anchor"], "exact", row["orthogroup_id"] or None
                     )
                 if len(match) > 1:
                     row = match.iloc[0]
                     return ResolvedIdentifier(
-                        row["ncbi_gene_id"], "many_to_one_ortholog", row["orthogroup_id"] or None
+                        row["_anchor"], "many_to_one_ortholog", row["orthogroup_id"] or None
                     )
+            # GFF route: the authors' transcript or protein ID names one gene.
+            if id_type in ("ncbi_gene_id", "locus_id"):
+                for column in MULTI_ID_COLUMNS:
+                    pos = _multi_id_index(str(active_crosswalk_path()), column).get(candidate)
+                    if pos is not None and pos >= 0:
+                        row = cw.iloc[pos]
+                        return ResolvedIdentifier(row["_anchor"], "exact", row["orthogroup_id"] or None)
 
         # Nothing in the current annotation. The identifier may be a GeneID that
         # NCBI has since retired — common for studies run on an older annotation.
@@ -470,7 +528,7 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
                     row = repl.iloc[0]
                     # 'inferred', not 'exact': the remap crosses an annotation version.
                     return ResolvedIdentifier(
-                        row["ncbi_gene_id"], "inferred", row["orthogroup_id"] or None
+                        row["_anchor"], "inferred", row["orthogroup_id"] or None
                     )
         return ResolvedIdentifier(None, "unresolved", None)
 
@@ -480,15 +538,15 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
             row = match.iloc[0]
             # Symbol-based match to a stable reference id, but symbols are not
             # guaranteed unique/stable, so this is "inferred" rather than "exact".
-            return ResolvedIdentifier(row["ncbi_gene_id"], "inferred", row["orthogroup_id"] or None)
+            return ResolvedIdentifier(row["_anchor"], "inferred", row["orthogroup_id"] or None)
         if len(match) > 1:
             row = match.iloc[0]
-            return ResolvedIdentifier(row["ncbi_gene_id"], "many_to_one_ortholog", row["orthogroup_id"] or None)
+            return ResolvedIdentifier(row["_anchor"], "many_to_one_ortholog", row["orthogroup_id"] or None)
 
         ambiguous = _ambiguous_map().get(raw_id)
         if ambiguous:
             standardized = ambiguous["standardized_id"]
-            og_row = cw[cw["ncbi_gene_id"] == standardized]
+            og_row = cw[cw["_anchor"] == standardized]
             orthogroup = (og_row.iloc[0]["orthogroup_id"] or None) if len(og_row) else None
             return ResolvedIdentifier(standardized, ambiguous["mapping_confidence"], orthogroup)
 
