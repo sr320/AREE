@@ -19,7 +19,7 @@ from harmonize.core import load_evidence_table
 from mappings.build_metabolite_links import build, equation_side, parse_entries
 from prioritize.rank import TIER_ORDER, build_candidates
 
-LDH, SDHA = "LOC105342001", "LOC105342002"
+LDH, SDHA, GLUT1 = "LOC105342001", "LOC105342002", "LOC105342003"
 
 
 @pytest.fixture(autouse=True)
@@ -279,6 +279,11 @@ def test_demo_lactate_and_ldh_converge_by_link_only(isolated_reports):
     # sdha is linked to a significant succinate change, but is not significant itself.
     assert candidates.loc[SDHA, "tier"] == "emerging"
     assert candidates.loc["succinate", "tier"] == "emerging"
+    # glucose <-> simulated glut1 converge through a transporter link, not a reaction.
+    for feature in (GLUT1, "glucose"):
+        assert candidates.loc[feature, "tier"] == "metabolite_linked_convergence"
+        assert candidates.loc[feature, "linked_features"] == "glucose→LOC105342003 via C00031/transport/K07299"
+        assert candidates.loc[feature, "link_confidences"] == "inferred"
     assert candidates.loc["ATP", "tier"] == "emerging"
     assert not (candidates["tier"] == "multi_omics_convergence").any()
 
@@ -297,6 +302,12 @@ def test_demo_cards_explain_the_link_and_its_exclusions(isolated_reports):
     assert "Transporter links" not in lactate  # the demo table has no transporter rows
     assert "different stressor" in lactate
     assert "`C00256`: no enzyme or transporter link" in lactate
+
+    glucose = cards[("glucose", 29159)]
+    assert "**Transporter links** are weaker still" in glucose
+    assert "SLC2: Facilitative GLUT transporter" in glucose
+    assert ("| GIGAS_HEAT01 | transcriptomics | LOC105342003 | C00031 | transporter | transport | K07299 | — | "
+            "ko_definition | inferred |") in glucose
 
     atp = cards[("ATP", 29159)]
     assert "`C00002`: currency metabolite" in atp

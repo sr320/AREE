@@ -1,18 +1,23 @@
 {
   "artifact": "metabolite_gene_links_demo.tsv",
-  "artifact_sha256": "4d00f31f6ca4a79926df45e155044534f86136bfb06c6009bbb8bd8278fbeff0",
+  "artifact_sha256": "2e19208c611d8f6e45d337f9e84e3ea6f1f16c2f148b3eff1504adcc36fe5129",
   "simulated": true,
   "builder": "hand-written demo fixture",
   "date_generated": "2026-10-16",
   "ncbi_taxid": 29159,
   "organism": "Magallana gigas (Crassostrea gigas) \u2014 SIMULATED demo partition only",
-  "source_summary": "SIMULATED demo links; real KEGG reaction/KO IDs, fabricated gene IDs",
+  "source_summary": "SIMULATED demo links; real KEGG reaction/KO/BRITE IDs, fabricated gene IDs",
   "reference_annotation": "cgigas_annotation_v1_demo (fabricated demo crosswalk, data/mappings/gene_id_crosswalk.tsv)",
   "sources": [
     {
       "name": "KEGG REST (identifiers only, checked by hand)",
       "url": "https://rest.kegg.jp/get/R00703+R02164",
       "accessed": "2026-10-16"
+    },
+    {
+      "name": "KEGG BRITE ko02000 (family path for K07299, checked by hand)",
+      "url": "https://rest.kegg.jp/get/br:ko02000",
+      "accessed": "2026-10-17"
     }
   ],
   "max_genes_per_compound": 25,

@@ -159,6 +159,11 @@ GIGAS_HEAT01 `chronic_heat_vs_control`:
 
 - `ldh` (LOC105342001): significant, linked to lactate through R00703/K00016.
 - `sdha` (LOC105342002): not significant, linked to succinate through R02164/K00234.
+- `glut1` (LOC105342003), added 2026-10-17: significant, linked to glucose
+  by a **transporter** link (GLUT1, K07299, `ko_definition`, with its real
+  ko02000 family path). Glucose in GIGAS_GROW06 sits exactly at adj. p = 0.05,
+  the edge of the significance threshold. Its direction (down) is opposite to
+  `glut1` (up), which the card shows and the gate does not require to agree.
 
 Both are simulated. The KEGG reaction and KO IDs in the demo table are real
 KEGG identifiers, but the gene IDs they point to are fabricated.
@@ -283,6 +288,9 @@ links: 191 enzyme and 58 transporter.
   links are credited.
 - The result that matters most for lactate: (S)-lactate, which has **no**
   enzyme link in `crg`, now links through MCT/SMCT transporters.
+
+**Demo.** The simulated `glut1` gene (section 7, decision D) gives the demo
+one transporter case: glucose ↔ `glut1` → `metabolite_linked_convergence`.
 
 **Not covered.** TCDB substrate annotations; ABC transporters (broad and
 poorly defined substrates); and ion channels and pumps.
