@@ -313,20 +313,66 @@ crossRows.length ? Inputs.table(crossRows, {
 }
 ```
 
+## Species
+
+```{ojs}
+ROUTE = new Map([["ncbi_gene", "NCBI Gene"], ["gff_homology", "authors' GFF + homology"]])
+speciesRows = (data.species ?? []).filter(s => s.n_studies_real || s.n_studies_simulated || s.crosswalk_built)
+```
+
+```{ojs}
+html`<p>${speciesRows.filter(s => s.n_evidence_records_real).length} of ${speciesRows.length} registered species
+  have real evidence. A species' genes are identified through its own crosswalk; the route says where its
+  gene identifiers come from (<a href="identifier_mapping.html">identifier mapping</a>). Simulated demo studies
+  are counted separately.</p>`
+```
+
+```{ojs}
+Inputs.table(speciesRows, {
+  columns: ["species", "label", "crosswalk_route", "crosswalk_genes", "n_studies_real",
+            "n_studies_real_harmonized", "n_evidence_records_real", "n_studies_simulated"],
+  header: {species: "Species", label: "Common name", crosswalk_route: "Gene IDs from",
+           crosswalk_genes: "Genes", n_studies_real: "Real studies", n_studies_real_harmonized: "With evidence",
+           n_evidence_records_real: "Records", n_studies_simulated: "Demo studies"},
+  format: {
+    species: (v, i, rows) => htl.html`<em>${v}</em>${rows[i].complex ? htl.html` <span title="member of a hybridizing species complex; see Species identity">†</span>` : ""}`,
+    crosswalk_route: v => ROUTE.get(v) ?? (v ?? "not built"),
+    crosswalk_genes: fmt, n_evidence_records_real: fmt
+  },
+  rows: 12, layout: "auto"
+})
+```
+
+```{ojs}
+html`<p class="dash-meta">† Member of a hybridizing complex: a study's species label is only as good as its
+  basis (genotyped, morphology, collection site, ...), shown in the studies table below.
+  See <a href="species_identity.html">species identity</a>.</p>`
+```
+
 ## Studies
 
 ```{ojs}
-html`<p>${realStudies.length} real ${realStudies.length === 1 ? "study" : "studies"}${studyStress ? html`, all <em>${studyStress.toLowerCase()}</em> experiments` : ""}.
+viewof studySpecies = Inputs.select(["All species", ...new Set(realStudies.map(s => s.species_canonical))], {label: "Species"})
+shownStudies = studySpecies === "All species" ? realStudies : realStudies.filter(s => s.species_canonical === studySpecies)
+showIdentity = shownStudies.some(s => s.species_complex)
+```
+
+```{ojs}
+html`<p>${shownStudies.length} real ${shownStudies.length === 1 ? "study" : "studies"}${studyStress ? html`, all <em>${studyStress.toLowerCase()}</em> experiments` : ""}.
   Hover a citation for the full reference.</p>`
 ```
 
 ```{ojs}
-Inputs.table(realStudies, {
-  columns: ["study_id", "citation", ...(studyStress ? [] : ["stressors"]), "phenotypes",
+Inputs.table(shownStudies, {
+  columns: ["study_id", "citation", "species_canonical", ...(showIdentity ? ["species_identity_basis"] : []),
+            ...(studyStress ? [] : ["stressors"]), "phenotypes",
             "n_comparisons_harmonized", "n_evidence_records"],
-  header: {study_id: "Study", citation: "Citation", stressors: "Stressor", phenotypes: "Phenotype",
+  header: {study_id: "Study", citation: "Citation", species_canonical: "Species", species_identity_basis: "Species identity",
+           stressors: "Stressor", phenotypes: "Phenotype",
            n_comparisons_harmonized: "Harmonized", n_evidence_records: "Records"},
   format: {
+    species_canonical: v => htl.html`<em>${spShort(v)}</em>`,
+    species_identity_basis: (v, i, rows) => rows[i].species_complex ? (v ?? "not recorded") : "—",
     study_id: (v, i, rows) => htl.html`<a href="${data.repo_url}/blob/main/${rows[i].registry_file}">${v}</a>`,
     citation: (v, i, rows) => rows[i].doi ? htl.html`<a href="https://doi.org/${rows[i].doi}" title="${v}">${shortCite(v)}</a>` : shortCite(v),
     stressors: v => v.map(stress).join(", "),
