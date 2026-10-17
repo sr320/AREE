@@ -49,7 +49,8 @@ with tab_studies:
     if registry.empty:
         st.info("No studies registered yet. Run: `aree register-study registry/studies/STUDY_ID.yaml`")
     else:
-        species_filter = st.multiselect("Species", sorted(registry["species_accepted"].dropna().unique()))
+        species_filter = st.multiselect("Species", sorted(registry["species_accepted"].dropna().unique()),
+                                        key="studies_species")
         assay_filter = st.multiselect("Assay type", sorted(registry["assay_type"].unique()))
         mode_filter = st.multiselect("Analysis mode", sorted(registry["analysis_mode"].unique()))
         view = registry.copy()
@@ -76,7 +77,8 @@ with tab_evidence:
         evidence = evidence.assign(species_accepted=evidence["species_taxid"].map(da.species_label))
         col1, col2, col3 = st.columns(3)
         with col1:
-            species_f = st.multiselect("Species", sorted(evidence["species_accepted"].dropna().unique()))
+            species_f = st.multiselect("Species", sorted(evidence["species_accepted"].dropna().unique()),
+                                       key="evidence_species")
             stressor_f = st.multiselect("Stressor", sorted(evidence["stressor"].dropna().unique()))
             phenotype_f = st.multiselect("Phenotype", sorted(evidence["phenotype"].dropna().unique()))
         with col2:
@@ -142,7 +144,7 @@ with tab_candidates:
             st.info("No candidates for this filter.")
         else:
             candidates = candidates.assign(species=candidates["species_taxid"].map(da.species_label))
-            species_c = st.multiselect("Species", sorted(candidates["species"].unique()),
+            species_c = st.multiselect("Species", sorted(candidates["species"].unique()), key="candidates_species",
                                        help="Candidates never pool across species; each is ranked within "
                                             "its own. Cross-species results are in "
                                             "reports/evidence_cards/cross_species/ (aree build-cross-species-cards).")

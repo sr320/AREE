@@ -50,9 +50,9 @@ def test_app_on_the_demo_filters_by_species(app_on):
     assert table.loc["Mytilus galloprovincialis", "n_evidence_records_simulated"] > 0
     assert table.loc["Mytilus galloprovincialis", "complex"] == "mytilus_edulis_complex"
     # Filter the evidence tab to the demo mussel: every row shown is that species.
-    evidence_species = [m for m in at.multiselect if m.label == "Species"]
-    assert len(evidence_species) >= 2  # studies tab and evidence tab
-    evidence_species[1].set_value(["Mytilus galloprovincialis"]).run()
+    # Selected by key: the studies tab has no filter when the registry index is
+    # absent (as in CI, where tests run before it is built), so position lies.
+    at.multiselect(key="evidence_species").set_value(["Mytilus galloprovincialis"]).run()
     shown = [d.value for d in at.dataframe
              if {"species_accepted", "feature_id_standardized"} <= set(d.value.columns)]
     assert shown and set(shown[0]["species_accepted"]) == {"Mytilus galloprovincialis"}
