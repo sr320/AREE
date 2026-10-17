@@ -1,0 +1,127 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "PERUZZA2023_HEATWAVE",
+  "comparison_id": "heatwave_30c_vs_control_20c",
+  "input_files": [
+    {
+      "name": "PERUZZA2023_HEATWAVE_heatwave_30c_vs_control_20c_dge_standardized.tsv",
+      "sha256": "cac70a4f116ca15fbd7d8b716817393f1f33370e1f89bd979292243ba4fd4923"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "PERUZZA2023_HEATWAVE",
+    "comparison_id": "heatwave_30c_vs_control_20c",
+    "outdir": "results/rnaseq/PERUZZA2023_HEATWAVE/heatwave_30c_vs_control_20c",
+    "exclude_samples": [],
+    "control_levels": [
+      "20"
+    ],
+    "treatment_levels": [
+      "30"
+    ],
+    "replicate_unit": null,
+    "covariates": [
+      "sex"
+    ],
+    "single_end": true,
+    "se_adapter": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+    "tag_seq": true,
+    "viral_reference": null,
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~sex + condition",
+    "covariates_requested": [
+      "sex"
+    ],
+    "covariates_used": [
+      "sex"
+    ],
+    "covariates_dropped_constant": [],
+    "tag_seq": true,
+    "length_model": "none: counts without length offsets (tag_seq)",
+    "exclude_genes": null,
+    "n_libraries_or_units": 40,
+    "residual_df": 37
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.3"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.35"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.17"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.4.0"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.17"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_026571515.1",
+    "annotation_version": "GCF_026571515.1-RS_2023_10",
+    "transcript_fasta": "data/reference/GCF_026571515.1/rna.fna",
+    "gtf": "data/reference/GCF_026571515.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_026571515.1/tx2gene.tsv",
+    "salmon_index": "/Users/sr320/aree-data/reference/GCF_026571515.1/salmon_index",
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "99299a6252c91d941eee4ae579ff540ef08019317ae3c44a7927500cdd46eb0b",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "reference_provenance.json",
+        "sha256": "a39261e783dccf164ed976d93a25abc1f871f0d47ffd437218041f3b6cfeb67b"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "2c45a6c9478b0ff312737772ee3c23019468042fd09bbf2a25a7f263cbfe4014",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "1f76e774cf67286927a3428f570f3f899246e7849e2a60a5a1459de2e396a961",
+        "matches_bundle_provenance": true
+      }
+    ],
+    "bundle": {
+      "bundle": "GCF_026571515.1",
+      "assembly_id": "ASM2657151v2",
+      "ncbi_assembly_accession": "GCF_026571515.1",
+      "annotation_source": "NCBI RefSeq GCF_026571515.1-RS_2023_10",
+      "annotation_release_matches_registry": true,
+      "date_generated": "2026-10-13",
+      "bundler_version": "1.0.0"
+    }
+  },
+  "workflow_start": "2026-10-17T00:01:30.595202-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

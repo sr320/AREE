@@ -8,7 +8,14 @@
 # Peruzza et al. 2023 (Mar Pollut Bull, open access, CC BY-NC-ND) gives
 # "BioProject ID: PRJNA906528" for the RNA-seq libraries, and its methods
 # (20 clams per arm, digestive gland, 75 bp single-end QuantSeq) match the
-# deposit. NOT YET RUN.
+# deposit.
+#
+# REANALYZED 2026-10-17 on Pori, fitted on clams with --tag_seq (no length
+# correction in Salmon or DESeq2) and ~ sex + condition. Heatwave (30 C) vs
+# control (20 C): 2,993 of 32,634 genes at padj < 0.05 (1,386 up, 1,607
+# down). An upper bound: tank, the unit of treatment, is not modelled
+# (limitations 2). Replicate dispersion QC passes (median 0.097 at 20 C,
+# 0.093 at 30 C). Salmon mapped 37.5-52.5% of reads; see limitations (1).
 #
 # INDEPENDENCE FROM TUCCI2025_HEAT_PRIMING (checked 2026-10-15). Same Padova
 # group and the same hatchery (SATMAR, France), but different animals: these
@@ -68,8 +75,8 @@ data_availability:
   status: "available"
   access_notes: "Raw single-end FASTQ for all 40 RNA-seq libraries are public in ENA/SRA under PRJNA906528 (first public 2023-07-01). The project also holds 39 paired-end 16S amplicon runs from the same RNA; the sample sheet keeps only library_strategy RNA-Seq. The paper's DEG tables are per sex after RUVs normalization and would not be reproduced here. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 comparisons:
   - comparison_id: "heatwave_30c_vs_control_20c"
@@ -104,7 +111,8 @@ limitations: >
   --noLengthCorrection, DESeq2 without length offsets); the workflow
   manifest's deseq2_design.length_model must read "none". Gene-level 3'
   counts depend on the RefSeq annotation's 3' ends on a contig-level assembly;
-  expect a low Salmon mapping rate, as for Tucci (42-49%).
+  Salmon mapped 37.5-52.5% of reads (mean 48.9%), as for Tucci (42-49%),
+  consistent with many 3' tags falling beyond annotated transcript ends.
   (2) Tank is the unit of treatment: 4 tanks per arm, 5 clams sampled from
   each. Tank membership is not in the deposit or the paper, so the analysis
   cannot be fitted on tanks. Following the decision for TUCCI2025_HEAT_PRIMING
@@ -162,6 +170,25 @@ provenance:
     PUBLICATION: the backlog listed none; found by searching the BioProject
     title. The open copy used for curation is the University of Padova
     repository PDF of the published version.
+    REANALYSIS (Pori, 2026-10-16 to 17): all 40 RNA-seq FASTQs (7.9 GB) were
+    downloaded fresh over HTTPS from ENA and accepted only at manifest size
+    and ENA MD5. The first download attempt was ended by an external
+    termination signal at 19:51 on 2026-10-16 (it stopped another session's
+    download at the same moment) after 12 files; the restart kept those 12
+    and re-fetched the rest, all 40 verified at 00:01 on 2026-10-17. The
+    comparison ran natively (-profile local,workstation, 8 GB resource
+    config) with tag_seq = true and covariates = sex, reusing the
+    GCF_026571515.1 Salmon index saved from TUCCI2025_HEAT_PRIMING: 125
+    tasks, 21 m 40 s, no failures. The manifest records tag_seq true, design
+    ~sex + condition, length_model "none: counts without length offsets
+    (tag_seq)", 40 libraries, residual df 37, every reference file matching
+    the bundle provenance, and no warnings. Replicate dispersion QC
+    (scripts/check_replicate_dispersion.py, replicate_dispersion_qc.tsv)
+    passes: median dispersion 0.097 (20 C) and 0.093 (30 C) on about 900
+    genes per group with mean count >= 500, close to Tucci's 0.08-0.12.
+    Harmonized against rphil_gene_id_crosswalk.tsv: all 32,634 records
+    resolve exact; 29,508 carry an orthogroup from the active run. DESeq2
+    calls at padj < 0.05: 2,993 (1,386 up, 1,607 down).
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA906528"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA906528"
