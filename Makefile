@@ -47,6 +47,7 @@ meta:
 
 cards:
 	aree build-evidence-cards
+	aree build-cross-species-cards --feature-type gene
 	aree top-candidates
 
 demo: register harmonize meta cards

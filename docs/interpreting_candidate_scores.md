@@ -317,6 +317,14 @@ limit, as they do for its single-species candidates). With one clam study
 (2026-10-16) the same pool had 5,681 rows, 64 emerging and 6 discordant; the
 discordant rows did not survive the second clam study.
 
+**On the dashboard.** The home page shows cross-species tiers, rows and cards
+only for a phenotype past the WP6 gate: at least two species each with a
+within-species gene pool of k >= 2. A row for a gated phenotype is counted as
+withheld, not ranked. Every top single-species candidate also lists its
+orthologs in other species, the phenotypes they were tested under and how many
+of their records were significant. That lookup pools nothing, so it is shown
+whether or not the gate is open.
+
 ## Related documentation
 
 - [interpreting_meta_analysis.md](interpreting_meta_analysis.md)

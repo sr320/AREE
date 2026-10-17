@@ -49,9 +49,11 @@ jobs:
           done
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
+          aree build-cross-species-cards --feature-type gene
           aree top-candidates
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
+          test -f reports/evidence_cards/cross_species/candidates.tsv
           test -f reports/top_candidates_summary.md
 
   study-pr-scope:
