@@ -1,0 +1,105 @@
+{
+  "workflow_name": "aree/workflows/proteomics",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "TIMMINS2014_OA_GILL",
+  "comparison_id": "mech_stress_vs_none_at_2800",
+  "date_generated": "2026-10-17T12:04:18.203267-07:00",
+  "generated_by": "automated:aree-proteomics-workflow@0.1.0-scaffold",
+  "provenance_level": "infra-level (see docs/design.md section 4; distinct from per-row evidence-level provenance)",
+  "inputs": {
+    "standardized_table": {
+      "path": "TIMMINS2014_OA_GILL_mech_stress_vs_none_at_2800_protein_abundance_standardized.tsv",
+      "sha256": "f9d9a5a0347d0da5a1f2f8311bba0cf40dfd9151499b4e936f9d3d77427fa306"
+    },
+    "input_files_sha256": {
+      "nsaf_matrix.tsv": "569a7a6ff0708d61aa2f961f56ec0598aa830166879ad155b37ad26e044ab0c9",
+      "samplesheet_mech_stress_vs_none_at_2800.tsv": "f713f05d0360ddc77169137db1b2eb18d4028e41278192eb51e699188c4ee8ec"
+    }
+  },
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "proteomics": {
+      "raw_abundance_matrix": "/Users/sr320/Documents/GitHub/AREE-TIMMINS2014_OA_GILL/data/studies/TIMMINS2014_OA_GILL/nsaf_matrix.tsv",
+      "sample_sheet": "/Users/sr320/Documents/GitHub/AREE-TIMMINS2014_OA_GILL/data/studies/TIMMINS2014_OA_GILL/samplesheet_mech_stress_vs_none_at_2800.tsv",
+      "study_id": "TIMMINS2014_OA_GILL",
+      "comparison_id": "mech_stress_vs_none_at_2800",
+      "input_scale": "linear",
+      "normalization": "none",
+      "quantification": "spectral_count",
+      "min_detected_per_arm": "3",
+      "id_mapping_table": "/Users/sr320/Documents/GitHub/AREE-proteomics-raw/data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv",
+      "detection_limit": null,
+      "processed_results": null
+    }
+  },
+  "software_versions": {
+    "DIFFERENTIAL_ABUNDANCE": {
+      "bioconductor-limma": "3.58.1",
+      "r-base": "4.3.2",
+      "r-jsonlite": "1.8.9"
+    },
+    "HARMONIZE_INPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "ID_TRANSLATION": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "MISSINGNESS_REPORT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "NORMALIZE": {
+      "numpy": "2.0.2",
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6",
+      "pandas": "2.3.3"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards"
+  },
+  "container_engine": null,
+  "qc_metrics": {
+    "n_proteins": 639,
+    "mean_missingness_percent": 4.812206572769953,
+    "differential_abundance_qc": {
+      "study_id": "TIMMINS2014_OA_GILL",
+      "comparison_id": "mech_stress_vs_none_at_2800",
+      "n_replicates_control": 4,
+      "n_replicates_treatment": 4,
+      "min_detected_per_arm": 3,
+      "n_proteins_in": 1616,
+      "n_proteins_tested": 639,
+      "n_proteins_not_tested": {
+        "detected_too_rarely_in_both_arms": 580,
+        "detected_too_rarely_in_control": 120,
+        "detected_too_rarely_in_treatment": 125,
+        "not_detected": 152
+      },
+      "n_padj_below_0.05": 0,
+      "n_padj_below_0.1": 1,
+      "limma_df_prior": 5.1996,
+      "analysis_method": "spectral_count_limma_moderated_t"
+    }
+  },
+  "missingness_summary": {
+    "study_id": "TIMMINS2014_OA_GILL",
+    "comparison_id": "mech_stress_vs_none_at_2800",
+    "n_proteins_total": 1616,
+    "n_samples_total": 8,
+    "mean_missingness_percent_per_protein": 44.62407178217822,
+    "max_missingness_percent_per_protein": 100.0,
+    "n_proteins_over_10pct_missing": 1172
+  },
+  "warnings": []
+}

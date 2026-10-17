@@ -1,0 +1,16 @@
+{
+  "median_normalization": {
+    "n_proteins_tested_in_both": 639,
+    "log2FC_pearson_r": 1.0,
+    "share_same_direction": 0.973,
+    "mean_log2FC_shift": 0.018,
+    "n_padj_below_0.05": 0
+  },
+  "replicates_2_3": {
+    "n_proteins_tested_in_both": 636,
+    "log2FC_pearson_r": 0.852,
+    "share_same_direction": 0.846,
+    "mean_log2FC_shift": 0.015,
+    "n_padj_below_0.05": 0
+  }
+}
