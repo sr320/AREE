@@ -17,6 +17,7 @@ from functools import lru_cache
 import pandas as pd
 
 from common import load_vocab
+from mappings.metabolite_links import links_for_partition
 
 from .scoring import (
     candidate_score,
@@ -41,8 +42,22 @@ HIGH_PRIORITY_MAX_ADJUSTED_P = 0.05
 MULTI_OMICS_MIN_LAYERS = 2
 LAYER_SUPPORT_MAX_ADJUSTED_P = 0.05
 
+# A metabolite cannot share a gene identifier, so metabolomics is linked to the
+# gene-level layers biochemically instead (metabolite -> KEGG reaction -> KO ->
+# C. gigas gene; src/mappings/metabolite_links.py). That is annotation, not a
+# second measurement of the same molecule, so it is a separate, weaker tier:
+# never merged into `multi_omics_convergence`, never counted in
+# n_supporting_layers, and never part of the numeric score
+# (docs/metabolite_gene_links.md).
+METABOLITE_LAYER = "metabolomics"
+
 # Order in which tiers are presented: strongest evidence first.
-TIER_ORDER = ["high_priority_cross_study", "multi_omics_convergence", "emerging"]
+TIER_ORDER = [
+    "high_priority_cross_study",
+    "multi_omics_convergence",
+    "metabolite_linked_convergence",
+    "emerging",
+]
 
 # What KIND of evidence supports a candidate, independent of how strong it is.
 # The tier answers "how well replicated?"; this answers "replicated evidence of
@@ -213,6 +228,60 @@ class EvidenceIndex:
             layers.add(layer_of(meta_row["feature_type"]))
         return layers
 
+    def links_for(self, meta_row: dict) -> list:
+        """Metabolite <-> gene links touching this candidate's feature, from the
+        link table of its own partition (simulated demo or real)."""
+        key = candidate_key(meta_row)
+        table = links_for_partition(key[3], key[4])
+        if not table.available:
+            return []
+        return table.links_for_feature(key[0], layer_of(meta_row["feature_type"]) == METABOLITE_LAYER)
+
+    @staticmethod
+    def linked_feature_id(link, from_metabolite: bool) -> str:
+        return link.ncbi_gene_id if from_metabolite else link.metabolite
+
+    def linked_records(self, meta_row: dict) -> pd.DataFrame:
+        """Evidence for every feature linked to this candidate, under any
+        phenotype, from layers other than the candidate's own, with the link
+        that connects each record in `_link`. Callers use `phenotype`,
+        `_significant` and `_link.credited` to tell support from context."""
+        key = candidate_key(meta_row)
+        own_layer = layer_of(meta_row["feature_type"])
+        from_metabolite = own_layer == METABOLITE_LAYER
+        frames = []
+        for link in self.links_for(meta_row):
+            linked_id = self.linked_feature_id(link, from_metabolite)
+            records = self._slice(self._by_feature, (linked_id, key[3], key[4]))
+            records = records[records["_layer"] != own_layer]
+            if len(records):
+                frames.append(records.assign(_link=[link] * len(records)))
+        if not frames:
+            return self.evidence.iloc[0:0].assign(_link=None)
+        return pd.concat(frames)
+
+    def linked_support(self, meta_row: dict, supporting: set) -> tuple:
+        """(linked_layers, credited links behind them) for this candidate.
+
+        A linked layer is one with a significant record for a CREDITED linked
+        feature under this candidate's own phenotype and partition, that is not
+        already a shared-identifier supporting layer — shared identity is the
+        stronger link and is never double-counted as a biochemical one.
+        """
+        key = candidate_key(meta_row)
+        from_metabolite = layer_of(meta_row["feature_type"]) == METABOLITE_LAYER
+        layers, links = set(), []
+        for link in self.links_for(meta_row):
+            if not link.credited:
+                continue
+            linked_id = self.linked_feature_id(link, from_metabolite)
+            found = self._supported_layers.get((linked_id, key[1], key[3], key[4]), set()) - supporting
+            found.discard(layer_of(meta_row["feature_type"]))
+            if found:
+                layers |= found
+                links.append(link)
+        return layers, links
+
 
 def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.DataFrame:
     if len(meta_df) == 0:
@@ -228,6 +297,9 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         own_layer = layer_of(meta_dict["feature_type"])
         supporting = index.supporting_layers(meta_dict)
         n_supporting_layers = len(supporting)
+        linked_layers, linked_links = index.linked_support(meta_dict, supporting)
+        link_table = links_for_partition(_partition_value(meta_dict["simulated"]),
+                                         _partition_value(meta_dict["species_taxid"]))
 
         classifications = (subset["resilience_classification"]
                            if "resilience_classification" in subset.columns else [])
@@ -250,13 +322,25 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         # layers converging on a gene this candidate itself shows no signal for
         # is not evidence for this candidate.
         is_multi_omics = own_layer in supporting and n_supporting_layers >= MULTI_OMICS_MIN_LAYERS
+        # Same own-layer rule for the biochemical link: the candidate itself must
+        # carry signal, and some other layer must carry it for a linked feature.
+        is_metabolite_linked = own_layer in supporting and bool(linked_layers)
 
         if is_high_priority:
             tier = "high_priority_cross_study"
         elif is_multi_omics:
             tier = "multi_omics_convergence"
+        elif is_metabolite_linked:
+            tier = "metabolite_linked_convergence"
         else:
             tier = "emerging"
+
+        if is_multi_omics:
+            convergence_basis = "shared_identifier"
+        elif is_metabolite_linked:
+            convergence_basis = "metabolite_gene_link"
+        else:
+            convergence_basis = "none"
 
         rows.append({
             **meta_dict,
@@ -271,6 +355,14 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             "molecular_layer": own_layer,
             "n_supporting_layers": n_supporting_layers,
             "supporting_layers": "|".join(sorted(supporting)),
+            "is_metabolite_linked_convergence": is_metabolite_linked,
+            "convergence_basis": convergence_basis,
+            "n_linked_layers": len(linked_layers),
+            "linked_layers": "|".join(sorted(linked_layers)),
+            "linked_features": "|".join(sorted({link.describe() for link in linked_links})),
+            "link_confidences": "|".join(sorted({link.link_confidence for link in linked_links})),
+            "link_table_status": link_table.status,
+            "link_table_sha256": link_table.sha256 or "",
             "mapping_confidences": "|".join(mapping_confidences),
             "quality_flags_union": "|".join(quality_flags),
             **{f"component_{k}": v for k, v in components.items()},

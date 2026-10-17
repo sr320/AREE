@@ -123,7 +123,22 @@ Tier assignment, in order:
    qualifies, because every cross-layer overlap in the demo is
    cross-phenotype. The card still lists that adjacent evidence and marks
    each row with whether it counts.
-3. **`emerging`** — everything else: single-study support, or support that
+3. **`metabolite_linked_convergence`** — the candidate's own layer is
+   significant, and another layer carries a significant same-phenotype record
+   for a feature **linked** to it biochemically rather than by a shared ID: a
+   metabolite and a gene whose product KEGG annotates (by orthology) to
+   catalyse a reaction involving that metabolite. Checked only if neither tier
+   above applies. This is a deliberately weaker, separately named kind of
+   convergence: it does not add to `n_supporting_layers` or to the score;
+   currency metabolites (ATP, NAD⁺, …) and hub compounds reaching more than
+   25 genes are never credited; and every link is `inferred` or
+   `one_to_many_ortholog`, never `exact`. The card lists each link's
+   compound, reaction, KO, confidence and source checksum, plus the
+   exclusions. Candidates carry `convergence_basis`
+   (`shared_identifier` / `metabolite_gene_link` / `none`), `linked_layers`,
+   `linked_features`, `link_confidences` and `link_table_status`. See
+   [metabolite_gene_links.md](metabolite_gene_links.md).
+4. **`emerging`** — everything else: single-study support, or support that
    fails one or more of the high-priority gates. Always labeled as requiring
    replication.
 
