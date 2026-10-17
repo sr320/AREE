@@ -344,11 +344,11 @@ The stress-relevant ones are mostly unreplicated:
 
 | Accession | Runs | Design | Verdict |
 |---|---|---|---|
-| `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Best ncRNA candidate.** Whole-transcriptome (miRNA + lncRNA-capable stranded RNA-seq) on breeding lines. The stressor/phenotype behind "HH vs CC" must be recovered from the paper. Probably growth or heat line, not confirmed. |
+| `PRJNA836789` | 6 miRNA + 6 ssRNA | selectively bred strains HH vs CC, n=3, soft tissue | **Out of scope (checked 2026-10-15).** The BioProject describes it as a study of **inbreeding depression** (one inbred strain with growth depression), not a stressor or resilience contrast. |
 | `PRJNA750516` | 2 miRNA + 6 lncRNA-labelled RNA | two groups (RZ_GH vs KTD_GL), **one sample alias each** | Skip: replicates are re-sequenced libraries of one sample. |
 | `PRJNA694837` | 6 miRNA + 6 RNA | BM vs OM mantle, n=3 | Probably shell colour/biomineralization. No stressor, so low priority. |
 | `PRJNA341808` ❌ | 3 "miRNA" + 9 RNA | larvae: control / bacteria / heat / bacteria+heat, Ion Torrent | **Rejected 2026-10-14** (see *Rejected* below): the replicates are technical, and the "miRNA-Seq" control runs are mislabelled RNA-seq. |
-| `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. |
+| `PRJNA484109` | 1 miRNA + 9 RNA | OsHV-1 infection (Rosani et al. 2020, *BMC Genomics*, [10.1186/s12864-020-07026-7](https://doi.org/10.1186/s12864-020-07026-7)) | Only one small-RNA run is in this project. The paper's paired miRNA/mRNA libraries must be located before this is usable. Checked 2026-10-15: the six gill RNA-seq runs (`S1`–`S6`) carry no group labels in the deposit, so the design is not recoverable from it. |
 | `PRJNA266361`, `PRJNA259995`, `PRJNA232734` | 1–3 | miRNA stress/atlas, single pooled sample | Skip: unreplicated. |
 
 Several published stress miRNA studies have **no accession in their
@@ -486,6 +486,15 @@ match the 23 °C arm (`C23-n`) of the same lab's `PRJNA756710`
 (`LI2022_LOWSAL_VIBRIO`, #26). Using that study's 30 ppt libraries as a
 control would cross BioProjects and probably sequencing batches, so it is not
 done. A within-infection time contrast is not stress-vs-control evidence.
+
+`PRJNA298285`: larval OA × warming, University of Brest (2015). It has 24 RNA-seq
+runs: trochophore / early / late veliger × pH 7.9 / 8.1 × 20 / 22 °C, two
+runs per group. Each group's two runs share **one BioSample**. **Rejected
+before download, 2026-10-15**, by `scripts/prescreen_replicates.py` (first
+1 M reads per run from NCBI, the four 24 h groups). Every group's median
+dispersion is **negative** (−0.0047 to −0.0065): the two runs vary *less*
+than read sampling alone predicts, which is the signature of one library
+sequenced on two lanes. Effective n is 1 per group, for all 12 groups.
 
 **Two lessons from these rejections.** One BioSample per group, or a whole
 study under one BioSample, is the cheapest early warning of

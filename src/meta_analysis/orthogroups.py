@@ -55,7 +55,15 @@ SPECIES_COLUMNS = [
     "orthogroup_id", "phenotype", "feature_type", "simulated", "species_taxid",
     "feature_id_standardized", "k_studies", "studies", "pooled_effect", "pooled_se",
     "p_value", "adjusted_p_value",
+    # Carried from the gene-level row so cross-species prioritization can judge
+    # relevance, quality and context without re-running the gene-level pool.
+    "contributing_evidence_ids", "total_sample_size", "distinct_tissues",
+    "distinct_life_stages", "distinct_stressors", "mapping_confidences", "quality_flags_union",
 ]
+# Defaults for gene-level rows built by hand (tests) without these columns.
+_CARRIED_DEFAULTS = {"contributing_evidence_ids": "", "total_sample_size": 0, "distinct_tissues": 0,
+                     "distinct_life_stages": 0, "distinct_stressors": "", "mapping_confidences": "",
+                     "quality_flags_union": ""}
 
 
 def gene_to_orthogroup(evidence: pd.DataFrame) -> dict[tuple, str]:
@@ -85,6 +93,13 @@ def _key(value):
         return int(float(text))
     except ValueError:
         return text
+
+
+def _carried(row: pd.Series, column: str):
+    value = row.get(column)
+    if value is None or (isinstance(value, float) and value != value):
+        return _CARRIED_DEFAULTS[column]
+    return value
 
 
 def run_orthogroup_meta_analysis(
@@ -166,6 +181,7 @@ def run_orthogroup_meta_analysis(
                 "k_studies": int(r["k_studies"]), "studies": r["studies"],
                 "pooled_effect": r["pooled_effect"], "pooled_se": r["pooled_se"],
                 "p_value": r["p_value"], "adjusted_p_value": r.get("adjusted_p_value"),
+                **{c: _carried(r, c) for c in _CARRIED_DEFAULTS},
             })
 
     result = pd.DataFrame(rows)

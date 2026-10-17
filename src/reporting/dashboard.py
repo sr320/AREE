@@ -371,7 +371,10 @@ def _pool_summary() -> list[dict]:
     seen = set()
     # A per-phenotype run and the all-phenotypes run describe the same pools;
     # read the specific files first so `seen` credits each pool to one of them.
-    paths = sorted(META_ANALYSIS_DIR.glob("*_meta_analysis.tsv"),
+    # Orthogroup-level (cross-species) results share the suffix but not the
+    # columns; they are summarized separately, not as gene-level pools.
+    paths = sorted((p for p in META_ANALYSIS_DIR.glob("*_meta_analysis.tsv")
+                    if not p.name.endswith("_orthogroup_meta_analysis.tsv")),
                    key=lambda p: (p.name.startswith("all_phenotypes"), p.name))
     for path in paths:
         df = pd.read_csv(path, sep="\t", low_memory=False)
@@ -515,6 +518,7 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
         "n_evidence_records_simulated": int(evidence["simulated"].sum()) if len(evidence) else 0,
         "n_candidates_real_high_priority": _tier_count(False, "high_priority_cross_study"),
         "n_candidates_real_multi_omics": _tier_count(False, "multi_omics_convergence"),
+        "n_candidates_real_metabolite_linked": _tier_count(False, "metabolite_linked_convergence"),
         "n_candidates_real_emerging": _tier_count(False, "emerging"),
         "n_real_stressor_classes": len(real_stressors),
         "real_stressor_classes": real_stressors,

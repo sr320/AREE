@@ -47,6 +47,19 @@ def test_unknown_vocabulary_term_is_rejected(tmp_path):
     assert any("phenotype" in e for e in result.errors)
 
 
+def test_batch_confounded_quality_flag_validates(tmp_path):
+    with open("registry/studies/GIGAS_HEAT01.yaml") as fh:
+        study = yaml.safe_load(fh)
+    study["study_id"] = "BATCH_FLAG"
+    study["quality_flags"] = [*(study.get("quality_flags") or []), "batch_confounded"]
+    path = tmp_path / "BATCH_FLAG.yaml"
+    with open(path, "w") as fh:
+        yaml.safe_dump(study, fh)
+
+    result = validate_study_file(path)
+    assert result.valid, result.errors
+
+
 def test_resilience_classification_mismatch_is_a_warning_not_an_error(tmp_path):
     with open("registry/studies/GIGAS_HEAT01.yaml") as fh:
         study = yaml.safe_load(fh)

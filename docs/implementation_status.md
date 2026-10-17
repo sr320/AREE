@@ -22,6 +22,7 @@ demo pipeline runs from the committed header-only registry).
 | Provenance manifests | `src/harmonize/core.py` (`_write_harmonize_manifest`) | checksum, params, versions, warnings per comparison |
 | Random-effects meta-analysis | `src/meta_analysis/` | DerSimonian–Laird, I²/τ², direction-consistency; Benjamini–Hochberg `adjusted_p_value` per phenotype/feature-type/origin/species family; tail p-values via the survival function (no underflow to 0); standard errors derived once for the whole table and groups sliced as flat arrays, so a 54k-record, 30k-feature pool runs in about 5 s (was ~95 s); poolability-aware replication counts; lower-confidence alias de-duplication; fails closed on repeated within-study contrasts unless the study prespecifies one comparison as `meta_analysis_primary`, with the others counted in `n_excluded_non_primary` |
 | Transparent candidate scoring + tiers | `src/prioritize/` | named weighted components scored on adjusted p, each unbounded component saturating rather than clipping so the top of a genome-wide ranking does not tie (126 candidates shared one score before 2026-09-05; the largest tie group is now 10); every candidate also carries `evidence_class` and `context_replication`, which say what the evidence is *of* and whether it replicates across biological contexts, independent of tier; hard gates that a score cannot override, including adjusted p ≤ 0.05 for the top tier; multi-omics convergence counts molecular layers (from the feature_types vocabulary) with significant same-phenotype support, not feature types anywhere; origin/species partitions preserved; tiers ordered strongest-first |
+| Metabolite → gene links (`metabolite_linked_convergence` tier) | `src/mappings/metabolite_links.py`, `src/mappings/build_metabolite_links.py`, `data/mappings/metabolite_compound_map.tsv`, `data/mappings/currency_metabolites.yaml` | metabolite name → KEGG compound → reaction → KO → crg GeneID; currency and hub (> 25 genes) compounds shown but never credited; links never `exact`; separate tier below shared-identity convergence, no score contribution; demo GIGAS_GROW06 lactate ↔ simulated `ldh` converges, `sdha`/succinate and ATP do not. The real KEGG-derived table is built locally (`aree build-metabolite-links`, 191 links on 2026-10-16) and **not committed** (KEGG terms), so CI exercises the simulated table only; no real metabolomics study has passed QC yet (DUPERRET2025_POMS_STARVE failed), so no real candidate is linked |
 | Evidence cards | `src/reporting/evidence_cards.py` | every card opens with a "What this evidence does and does not show" section naming the evidence class, the contexts that do and do not vary, and — where no contributing study measured a resilience outcome — the phenotype gap ahead of any validation advice; every candidate incl. emerging ranked into `candidates.tsv`; a markdown card for each with a significant signal (BH-adjusted p ≤ 0.05 pooled or in a contributing study; `--all-cards` for all); single indexed pass, so a 30k-candidate real pool renders in about a minute; partition-safe filenames, forest/multi-omics context, limitations and next step |
 | `aree` CLI | `src/aree/cli.py` | all 6 required commands run on a clean machine, plus `build-crosswalk` and `intake-supplementary` |
 | Streamlit interface | `app/main.py` | browse/filter studies, evidence, candidates, search, CSV/TSV export; verified serving HTTP 200 |
@@ -44,7 +45,7 @@ demo pipeline runs from the committed header-only registry).
 | RNA-seq Nextflow workflow | `workflows/rnaseq/`, `modules/rnaseq/` | **Executed at full depth against real public FASTQ** on eight comparisons (three from PRJNA1329250, one from PRJNA593309, three from PRJNA826964 that failed QC, one from PRJNA735889): FASTQC → fastp → Salmon quant → MultiQC → DESeq2 → standardize → viral QC → manifest → report, 23,189–30,625 genes per comparison, every one with a real `lfcSE`. An arm can pool several condition levels, and `--replicate_unit` fits DESeq2 on pseudo-bulk units (e.g. tanks) where treatment was applied per unit; the manifest records both. The two 2026-09-30 CALLA2026 re-runs are the first to finish `OK`, with the report task in local scratch and the work directory off exFAT; every earlier full-depth run exited `ERR` at `RENDER_REPORT`. Processed mode runs end to end; CI also stub-runs the raw DAG | runs are native (`-profile local`, Homebrew tools), **not** inside the declared containers; manifests committed before 2026-10-11 list the declared container versions in `software_versions` (e.g. Salmon 1.10.3, DESeq2 1.42.0), not those that ran (Salmon 2.6.0, DESeq2 1.50.2, tximport 1.38.2); newer runs build it from each process's `versions.yml`, and CI checks the manifest against the work dir (`scripts/check_manifest_versions.py`); `qc_metrics` is still null; a non-stub run on the tiny CI fixtures fails in `SALMON_QUANT` under Salmon 2.6; the CI stub run validates wiring, not tools or biology |
 | Methylation Nextflow workflow | `workflows/methylation/`, `modules/methylation/` | parses and runs `processed_results_harmonization` end to end; real Bismark/methylKit command lines | raw path never run against bisulfite data; R scripts unexecuted |
 | Proteomics Nextflow workflow | `workflows/proteomics/`, `modules/proteomics/` | parses and runs `processed_results_harmonization` end to end; limma diff-abundance written | raw path not run; no raw abundance-matrix fixture |
-| Metabolomics Nextflow workflow | `workflows/metabolomics/`, `modules/metabolomics/` | parses and runs `processed_results_harmonization` end to end | raw path not run against real feature-table data |
+| Metabolomics Nextflow workflow | `workflows/metabolomics/`, `modules/metabolomics/` | runs `processed_results_harmonization` end to end; CI runs the raw path for real (not stubbed) on a simulated targeted-panel fixture: per-platform internal-standard normalization, detection limit, `--replicate_unit`, limma with `lfcSE`, missingness report, manifest and report | native only (`-profile local`), no container pulled; the untargeted TIC path has no real-data run |
 | Container images | `containers/README.md` | declared image tags per step | **no image has ever been pulled or built.** Every real execution used Homebrew-installed tools via `-profile local`, so the container specifications remain entirely unverified |
 
 `processed_results_harmonization` is now **verified** for all four workflows —
@@ -76,8 +77,11 @@ worth less than one that says what it got wrong.
 - Cross-species pooling. Orthogroups exist (OrthoFinder run
   `orthofinder3.1.5_2026-10-13`, attached to evidence at harmonization) and
   orthogroup-level meta-analysis exists (`aree meta-analyze --level
-  orthogroup`), but cross-species candidates, their evidence cards and the
-  dashboard gate are not built; see WP6 in mussel_clam_integration_plan.md.
+  orthogroup`), as do cross-species candidates and their evidence cards
+  (`aree build-cross-species-cards`). On real data the oyster and the first
+  Manila clam study pool through 5,681 single-copy orthogroups, none past the
+  replication gate yet (one clam study). The dashboard gate is not built; see
+  WP6 in mussel_clam_integration_plan.md.
 - Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
   cross-references to NCBI GeneID — most likely by mapping RefSeq protein
   accessions through the NCBI annotation rather than relying on UniProt xrefs.
@@ -85,9 +89,10 @@ worth less than one that says what it got wrong.
   `resolve_identifier` so that legacy symbols from older publications resolve.
 - Additional species beyond *C. gigas* (schema already carries `species`; this
   is a data + reference addition, see [adding_a_species.md](adding_a_species.md)).
-- Real-data execution of the methylation, proteomics, and metabolomics raw
-  paths. RNA-seq has tiny paired-FASTQ fixtures for a stubbed CI DAG test;
-  equivalent fixtures for the other assays remain future work.
+- Real-data execution of the methylation and proteomics raw paths. RNA-seq
+  has tiny paired-FASTQ fixtures for a stubbed CI DAG test and metabolomics a
+  targeted-panel fixture CI runs for real; equivalent fixtures for methylation
+  and proteomics remain future work.
 - Recording observed tool versions and parsed Salmon/MultiQC QC metrics in the
   RNA-seq manifest, instead of declared versions and null `qc_metrics`.
 - A covariance-aware within-study model, so a study can contribute more than
