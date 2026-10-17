@@ -1,0 +1,90 @@
+{
+  "study_id": "SOKOLOV2019_HYPOX_MITO",
+  "accession": "PXD011365",
+  "repository": "PRIDE",
+  "license": "Creative Commons Public Domain (CC0)",
+  "submission_type": "COMPLETE",
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/SOKOLOV2019_HYPOX_MITO/build_provenance.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD011365",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD011365/files/all",
+    "https://ftp.pride.ebi.ac.uk/pride/data/archive/2021/11/PXD011365/<run>.raw (bytes 0-1023)"
+  ],
+  "pride_reference": "Sokolov EP, Markert S, Hinzke T, Hirschfeld C, Becher D, Ponsuksili S, Sokolova IM. Effects of hypoxia-reoxygenation stress on mitochondrial proteome and bioenergetics of the hypoxia-tolerant marine bivalve Crassostrea gigas. J Proteomics. 2019 194:99-111",
+  "pride_instrument": [
+    "LTQ Orbitrap Classic",
+    "LTQ Orbitrap Velos"
+  ],
+  "pride_files_by_category": {
+    "FASTA": 1,
+    "PEAK": 24,
+    "RAW": 105,
+    "RESULT": 24
+  },
+  "total_proteome": {
+    "n_samples": 9,
+    "samples_by_condition": {
+      "normoxia": [
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "hypoxia_24h": [
+        "H1",
+        "H2",
+        "H5"
+      ],
+      "reoxygenation_1h": [
+        "R2",
+        "R4",
+        "R5"
+      ]
+    },
+    "fractions_per_sample": 10,
+    "acquisition_order_of_samples": [
+      "H1",
+      "C2",
+      "C3",
+      "C4",
+      "R2",
+      "R4",
+      "R5",
+      "H2",
+      "H5"
+    ],
+    "acquisition_window": [
+      "2017-05-08T17:00:28",
+      "2017-05-17T15:48:57"
+    ],
+    "quantitative_files": "one Scaffold 4.8.4 mzIdentML export per sample (Mudpit_*.mzid.gz); no per-sample abundance table deposited"
+  },
+  "phosphoproteome": {
+    "n_runs": 15,
+    "acquisition_order": [
+      "PP_01",
+      "PP_06",
+      "PP_11",
+      "PP_02",
+      "PP_05",
+      "PP_07",
+      "PP_12",
+      "PP_03",
+      "PP_08",
+      "PP_10",
+      "PP_13",
+      "PP_04",
+      "PP_09",
+      "PP_14",
+      "PP_15"
+    ],
+    "acquisition_window": [
+      "2017-10-20T15:52:41",
+      "2017-10-23T08:45:34"
+    ],
+    "condition_key_deposited": false
+  },
+  "outputs_sha256": {
+    "data/studies/SOKOLOV2019_HYPOX_MITO/run_order.tsv": "f0d278717bbc4f72bbe1d9d486a569c897f8e29e7fa999d231a28306f09a4f64"
+  }
+}
