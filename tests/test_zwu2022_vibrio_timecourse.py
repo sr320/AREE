@@ -62,3 +62,19 @@ def test_each_time_point_vs_control_with_24h_primary(study):
     for comp in study["comparisons"]:
         assert comp["resilience_classification"] == "disease"
         assert comp["exposure_intensity"] is None  # not deposited, no paper
+
+
+def test_run_outputs_match_the_registered_comparisons(study):
+    from common import REPO_ROOT
+
+    for comp in study["comparisons"]:
+        cid = comp["comparison_id"]
+        t = cid.split("_")[1]
+        params = json.loads((STUDY_DIR / f"ZWU2022_VIBRIO_TIMECOURSE_{cid}_workflow_manifest.json").read_text())["parameters"]
+        assert params["comparison_id"] == cid
+        assert params["control_levels"] == ["control"] and params["treatment_levels"] == [f"V{t}"]
+        rows = _tsv(REPO_ROOT / comp["results_file"])
+        assert len(rows) > 20000
+        assert sum(r["lfcSE"] not in ("", "NA") for r in rows) > 0.95 * len(rows)
+    dispersion = _tsv(STUDY_DIR / "replicate_dispersion_qc.tsv")
+    assert all(r["passes"] == "True" for r in dispersion)

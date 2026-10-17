@@ -1,0 +1,109 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "ZWU2022_VIBRIO_TIMECOURSE",
+  "comparison_id": "vibrio_6h_vs_control",
+  "input_files": [
+    {
+      "name": "ZWU2022_VIBRIO_TIMECOURSE_vibrio_6h_vs_control_dge_standardized.tsv",
+      "sha256": "e4ae0c13b65af3ec7255c50980d7fc0c5845e0e857cf411bc5adda703730a76c"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "ZWU2022_VIBRIO_TIMECOURSE",
+    "comparison_id": "vibrio_6h_vs_control",
+    "outdir": "results/rnaseq/ZWU2022_VIBRIO_TIMECOURSE",
+    "exclude_samples": [],
+    "control_levels": [
+      "control"
+    ],
+    "treatment_levels": [
+      "V6h"
+    ],
+    "replicate_unit": null,
+    "covariates": [],
+    "single_end": false,
+    "se_adapter": null,
+    "tag_seq": false,
+    "viral_reference": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "tximport average transcript length offsets",
+    "n_libraries_or_units": 6,
+    "residual_df": 4
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.42.1",
+      "bioconductor-tximport": "1.30.0",
+      "r-base": "4.3.2"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.9"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386"
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "170cae75beb05c1afd9b7b3dbed4bdeb4225c16f9aab757ccc00c2b449092d18"
+      }
+    ],
+    "bundle": null
+  },
+  "workflow_start": "2026-10-16T20:14:49.558477-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": [
+    "reference_bundle_provenance_missing: no reference_provenance.json beside the reference files; fetch them with `aree fetch-reference` to record where they came from"
+  ]
+}

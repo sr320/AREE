@@ -1,0 +1,7 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+V12h	3	V12h_1,V12h_2,V12h_3	5304	0.0068	True
+V1h	3	V1h_1,V1h_2,V1h_3	5295	0.00937	True
+V24h	3	V24h_1,V24h_2,V24h_3	5355	0.0067	True
+V3h	3	V3h_1,V3h_2,V3h_3	5301	0.0087	True
+V6h	3	V6h_1,V6h_2,V6h_3	5369	0.01089	True
+control	3	control1,control2,control3	5326	0.00711	True
