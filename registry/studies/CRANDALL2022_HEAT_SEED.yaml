@@ -1,68 +1,188 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# Real proteomics study: Pacific oyster seed held at 23 vs 29 C after
+# settlement, DIA LC-MS/MS on days 5 and 8 of exposure. Registered from PRIDE
+# PXD015434 (CC0), the authors' Zenodo release (10.5281/zenodo.5708415,
+# grace-ac/paper-pacific.oyster-larvae v2.1.0) and the open-access paper,
+# Crandall et al. 2022, PeerJ 10:e14158 (PMC9575672).
+#
+# ONE SILO PER ARM; QC FAILED AT REGISTRATION (2026-10-17). Four pools of seed
+# were analysed: the 23 C control silo (Silo 9) and the 29 C control silo
+# (Silo 8), each sampled on exposure days 5 and 8 (11 and 14 Sep 2015). Each
+# pool was injected four times, one precursor m/z range per injection, so the
+# 16 deposited runs are 4 pools x 4 m/z ranges, not replicates. The run ->
+# pool -> silo chain comes from the MSstats report (Condition, BioReplicate per
+# file), the Skyline replicate names Oysterseed_01/_02/_13/_14 (Zenodo
+# screenshot 40-condition-and-newbioreps.PNG) and the hatchery notebook's
+# proteomic sample key, where those are samples 1, 2, 13 and 14
+# (build_samplesheet.py checks the key; samplesheet.tsv, pride_provenance.json).
+#
+# The authors' MSstats run treated the two sampling days as the replicates
+# ("to compensate for the small number of samples", paper Methods). That is
+# n = 1 silo per arm measured twice, and the temperature effect cannot be
+# separated from the two silos' other differences, below. MSstats also saw the
+# four m/z-range injections as four runs per pool (Fraction set to "1"), so its
+# degrees of freedom (up to 12) count injections. No protein passed adjusted
+# P < 0.05 (0 of 2,808); the paper's 69 proteins of interest are |log2FC| > 2
+# without a significance test. QC decision (2026-10-17, sr320): qc_status
+# failed, results_file null, not reanalyzed, not harmonized.
+#
+# THE TWO SILOS DIFFERED IN MORE THAN TEMPERATURE. From the hatchery notebook
+# (Zenodo data/2015X15P8LargescaleSeed29CtoAmbient.xlsx, Notes sheet):
+#   - The experiment was a 9-silo transfer design. Silos 1-7 started at 29 C
+#     and were moved to 23 C on successive days; Silo 8 stayed at 29 C; Silo 9
+#     was the only 23 C control. Only Silos 8 and 9 were used for proteomics.
+#   - Silo 9 began in ambient water (16-18 C) and was moved to 23 C on day 2,
+#     because ambient was too cold. It "did not seem to set very well".
+#   - On day 5 all 29 C seed was screened, combined and redivided among the 29 C
+#     silos; the day-5 29 C pool (Oysterseed_02) was taken around that step.
+#   - Ciliates and dying seed appeared in Silo 9 on day 10; by day 14 it was
+#     "All dead". Silo 8 kept 84% (paper: 86%).
+# The 0% vs 86% survival is therefore one silo with a cold start and a ciliate
+# outbreak against one silo without either. It cannot be attributed to
+# temperature.
+#
+# SIGN. The MSstats result labels the contrast "23C-29C", but the contrast
+# vector is c(-1, 1) over the levels (23C, 29C), so log2FC = 29C - 23C. The
+# paper reads it that way (log2FC > 2 = higher at 29 C). Any later use of
+# Zenodo data/20190403-2015Cgseed-protcomp.csv must not trust the label.
 
 study_id: CRANDALL2022_HEAT_SEED
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.7717/peerj.14158"
   bioproject: null
   geo: null
   sra: null
   ena: null
   proteomexchange: "PXD015434"
-  other: null
+  other: "Zenodo 10.5281/zenodo.5708415"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Crandall G, Elliott Thompson R, Eudeline B, Vadopalas B, Timmins-Schiffman E, Roberts S (2022) Proteomic response of early juvenile Pacific oysters (Crassostrea gigas) to temperature. PeerJ 10:e14158. https://doi.org/10.7717/peerj.14158 (PMID 36262416). Proteomics: PRIDE PXD015434 (CC0). Data, scripts and hatchery notebook: Zenodo 10.5281/zenodo.5708415 (grace-ac/paper-pacific.oyster-larvae v2.1.0). Skyline document on PanoramaWeb (UW - Roberts Lab/2015-DIA-Cgigas-seed)."
 
-assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+species: "Magallana gigas"
+strain_or_population: "Taylor Shellfish Hatchery (Quilcene, WA) production cohort 'P8', 2015: 20 Hood Canal adults strip-spawned, larvae reared to competence (19 dpf, the 236 and 224 um screen fractions) and set at 1.1 million per silo across 9 silos on 6 Sep 2015."
+
+# Not genome-aligned. DIA spectra were matched against a Gigaton-derived
+# protein set (Zenodo data/Cg_Giga_cont_prtc_AA.fasta, IDs like
+# CHOYP_1433E.1.2|m.3638) with EncyclopeDIA/Walnut and Skyline; AREE has no
+# crosswalk for it. As in WANAMAKER2020_HEAT_SEED, this records the annotation
+# a protein -> gene link would have to target. See identifier_mapping_uncertain.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "raw_reanalysis"
+platform: "Data-independent acquisition LC-MS/MS on a Thermo Q Exactive. MS1 400-900 m/z at 30k; four injections per sample with precursor ranges 400-525, 535-650, 650-775 and 775-900 m/z; 4 m/z isolation windows from 450-850 m/z at 60k in MS2. One injection per sample was re-acquired on 1 Feb 2016 (the 2016_Feb_01 files), the rest on 30 Dec 2015. Chromatogram library with EncyclopeDIA/Walnut 0.6.14, peak picking in Skyline Daily 4.1.9.18271, protein summarization and comparison in MSstats 3.12.3."
 
 data_availability:
-  raw_data_available: false
+  raw_data_available: true
   processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  status: "available"
+  access_notes: "PRIDE PXD015434 (public 2022-03-03, CC0, PARTIAL submission): 16 .raw (about 14 GB) and 16 EncyclopeDIA .elib files, with no sample metadata and no FASTA. Zenodo 5708415 (v2.1.0, 68 MB zip) holds the Skyline MSstats export (transition-level peak areas, Condition and BioReplicate per file), the MSstats groupComparison result for 2,808 proteins (log2FC, SE, DF, p-value, adjusted p-value), the protein FASTA, the analysis scripts and the hatchery notebook with the proteomic sample key. Checksums in data/studies/CRANDALL2022_HEAT_SEED/pride_provenance.json."
 
-qc_status: "not_started"
+# See the header: one silo per arm, and the two silos differed beyond temperature.
+qc_status: "failed"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# ONE COMPARISON, the paper's: 29 C vs 23 C with the two sampling days
+# combined. Flagged primary before any result was computed. 23 C is the
+# reference, so a positive effect means higher at 29 C (the authors' MSstats
+# contrast, despite its label).
+#
+# sample_size 4 = the four pools (16 injections). One silo per arm, so
+# biological_replicates is 1.
+#
+# PHENOTYPE. Survival to 14 days of exposure in the same two silos: 0% at 23 C
+# (Silo 9) vs 86% at 29 C (paper; the notebook gives 84% for Silo 8). The
+# paper's 22.6% vs 9.2% settlement compares all 29 C silos combined with
+# Silo 9 (notebook). Survival is an outcome measured on the sampled silos, so
+# the classification stays at the ontology default (resilience); the
+# confounding above is what makes it unusable, and that is carried by
+# qc_status and the quality flags, not by reclassifying the phenotype.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
-    life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
+  - comparison_id: "temp29_vs_temp23_days5and8"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Competent larvae (19 dpf) set at 1.1 million per 46 cm fiberglass silo with 180-315 um microcultch and held at 29 C (elevated) or 23 C (conventional commercial) for 14 days; mixed microalgal diet, Dabob Bay seawater filtered to 5 um, pH set point 8.4. Settled seed (~500 uL dry) sampled for proteomics on days 5 and 8 (24 and 27 dpf). Hatchery notebook: the 23 C silo started in 16-18 C ambient water and was moved to 23 C on day 2."
     stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
-    phenotype_unit: null
+    exposure_intensity: "29 C vs 23 C (+6 C over the standard hatchery setting temperature)"
+    exposure_duration: "5 and 8 d (sampling); 14 d (survival)"
+    exposure_timing: "chronic, from settlement (19 dpf) to 33 dpf"
+    control_condition: "23 C, Silo 9 (the only 23 C control silo), one pool on day 5 and one on day 8 (Oysterseed_01, Oysterseed_13), 8 DIA injections"
+    treatment_condition: "29 C, Silo 8 (29 C control silo), one pool on day 5 and one on day 8 (Oysterseed_02, Oysterseed_14), 8 DIA injections"
+    phenotype: "survival"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival at 14 d of exposure (33 dpf): 86% at 29 C vs 0% at 23 C, one silo each; 23 C silo affected by ciliates from day 10"
     resilience_classification: "resilience"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 4
+    biological_replicates: 1
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - tank_level_replication
+  - batch_confounded
+  - identifier_mapping_uncertain
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) One silo per arm: temperature is fully confounded with silo. The four
+  pools are two silos sampled on two days; the authors' analysis used the
+  days as replicates, which measures day-to-day change in one silo, not
+  between-silo variation. MSstats additionally counted the four m/z-range
+  injections of each pool as runs. No protein reached adjusted P < 0.05, and
+  the paper's 69 proteins of interest rest on a |log2FC| > 2 cutoff alone.
+  The study failed QC at registration and is not reanalyzed or harmonized.
+  batch_confounded is declared for the silo. (2) The two silos differed
+  beyond temperature: the 23 C silo started at 16-18 C for two days, set
+  poorly, and had ciliates and dying seed from day 10. Its 0% survival
+  against 86% at 29 C is confounded with that history and with a likely
+  disease outbreak; it is not evidence of a temperature effect on survival.
+  (3) The experiment was a 9-silo transfer design (seven silos moved from 29
+  to 23 C on successive days); only the two controls are in the proteomic
+  data, and the paper's settlement figure for 29 C pools all 29 C silos.
+  (4) Each sample is a pool of settled seed, which averages away
+  between-animal variance. (5) Proteins are Gigaton-derived IDs with no AREE
+  crosswalk to GCF_963853765.1 gene IDs. (6) The MSstats result file labels
+  its contrast "23C-29C" but reports 29C - 23C. (7) One injection per pool
+  was re-acquired five weeks after the others (2016_Feb_01 files); this is
+  balanced across the four pools. (8) Same hatchery, rearing system and
+  23-vs-29 C question as WANAMAKER2020_HEAT_SEED, but a different cohort and
+  year; neither study is analyzable, so their independence has not been
+  examined further.
 
 provenance:
-  registered_by: "sr320"
+  registered_by: sr320
   date_registered: "2026-10-17"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD015434 --study-id
+    CRANDALL2022_HEAT_SEED` (branch study/PXD015434/CRANDALL2022_HEAT_SEED).
+    Registered from the PRIDE v3 project and file records and the Zenodo
+    release (v2.1.0, md5-checked against the Zenodo API), retrieved 2026-10-17
+    by build_samplesheet.py, which writes samplesheet.tsv and
+    pride_provenance.json and stops if the MSstats report and PRIDE list
+    different runs, a file has more than one condition, the four pools are not
+    the Silo 9 and Silo 8 controls on exposure days 5 and 8, or a pool lacks
+    four injections. The BioReplicate -> hatchery sample link (Oysterseed_01,
+    _02, _13, _14) was read from the Skyline screenshot in the Zenodo release
+    and is written into the script as a constant. Silo history, survival and
+    the ciliate observation come from the hatchery notebook's Notes sheet;
+    design, settlement, survival and the MSstats approach from the open-access
+    full text (PMC9575672), Methods and Results, read 2026-10-17. The notebook
+    key's column headers give the year as 2016; its dated rows, the Notes
+    sheet and the December 2015 MS acquisition say 2015, which is used here.
+    One comparison is registered (the paper's), flagged meta_analysis_primary
+    before any analysis. QC decision (2026-10-17, sr320): failed for one
+    silo per arm and the silo confounding in the header. The registering
+    curator is the paper's senior author; the decision rests on the deposited
+    design and notebook, which tests/test_crandall2022_study.py pins.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD015434"
+    - "https://doi.org/10.5281/zenodo.5708415"
+    - "https://doi.org/10.7717/peerj.14158"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC9575672/"
+    - "https://panoramaweb.org/targetedms/UW%20-%20Roberts%20Lab/2015-DIA-Cgigas-seed/showPrecursorList.view?id=61228"
