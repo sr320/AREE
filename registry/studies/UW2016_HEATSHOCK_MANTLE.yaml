@@ -10,7 +10,13 @@
 # (BioProject 2016, public 2017-03-24) because there is no first author to
 # name it after. Details missing from the deposit can come from lab records.
 #
-# Registered 2026-10-14. Not yet reanalyzed.
+# Registered 2026-10-14. REANALYZED 2026-10-17 at full depth: 5,465 of
+# 26,555 genes at padj < 0.05 (2,329 up, 3,136 down), all with lfcSE,
+# fitted as ~ oyster + condition (2 residual df). Replicate dispersion passes
+# (C 0.031, HS 0.077). Compared with LI2022_HEAT_PLOIDY's acute 12 h gill
+# contrast, the inducible HSP70 B2 rises in both, but most jointly
+# significant genes move in opposite directions (see curation_notes). That
+# disagreement is recorded, not resolved.
 
 study_id: UW2016_HEATSHOCK_MANTLE
 simulated: false
@@ -44,8 +50,8 @@ data_availability:
   status: "available"
   access_notes: "Raw single-end FASTQ for all 6 runs are public in ENA/SRA under PRJNA316154 (first public 2017-03-24). No count matrix or DE table is deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. sample_alias is <oyster>-<C|HS>: three individuals
@@ -84,7 +90,7 @@ comparisons:
     resilience_classification: "exposure_only"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/UW2016_HEATSHOCK_MANTLE/UW2016_HEATSHOCK_MANTLE_heat_shock_40c_1h_vs_control_dge_standardized.tsv"
     meta_analysis_primary: true
 
 quality_flags:
@@ -133,6 +139,31 @@ provenance:
     genes (prescreen_replicates.tsv), consistent with distinct animals.
     Salmon mapped 46.8-73.0% of the subsampled reads. 6M-HS (SRR3288143) is
     lowest at 46.8%; check it in the full run.
+    REANALYSIS (Pori, 2026-10-15 to 17): all 6 FASTQ files downloaded from
+    ENA over HTTPS (fresh, never resumed) and accepted only at exact size
+    and ENA MD5. ENA was very slow: about 40 h in total, and SRR3288141
+    needed a second job. Native tools from environment.yml; versions are in
+    the workflow manifest (Salmon 2.8.0, fastp 1.4.0, DESeq2 1.50.2,
+    tximport 1.38.2). Saved Salmon index; 23 tasks, status OK; design
+    ~oyster + condition, 2 residual df. Salmon mapped 48.2-73.9% of reads
+    (18.3-28.4 M reads), unstranded (U). 6M-HS is lowest at 48.2%, as the
+    pre-screen predicted; it is not excluded, because there is no
+    independent reason to. Dispersion at full depth: C 0.0310, HS 0.0770
+    (replicate_dispersion_qc.tsv). Harmonized locally: 26,555 evidence
+    records. CROSS-STUDY, DESCRIPTIVE ONLY: vs LI2022_HEAT_PLOIDY
+    diploid_acute_heat_12h_vs_baseline (gill), genome-wide log2FC r = -0.04.
+    Of 706 genes at padj < 0.05 in both, 240 agree in direction (85 up/up,
+    155 down/down) and 466 disagree (184 up here/down there, 282 down
+    here/up there). Of this study's 200 most significant genes, 60 are also
+    significant in LI2022 12 h and only 9 agree in direction. The inducible
+    HSP70 B2 (LOC105334234) rises in both (+4.1 here, +5.0 there), which
+    confirms the labels and a shared core heat response. 1 of the 8
+    HSP70-family genes up here is also up there. Candidate reasons, not
+    tested: tissue (mantle vs gill), exposure (40 C for 1 h vs ~12 h at an
+    unstated temperature), time of sampling, and this study's paired design,
+    where the control biopsy came a week earlier, so wound repair is part
+    of the contrast. Per AREE policy the disagreement stays visible in the
+    evidence table and cards.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA316154"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA316154"
