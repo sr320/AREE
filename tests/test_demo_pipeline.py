@@ -105,7 +105,7 @@ def test_metabolomics_handoff_carries_standard_error_and_method(tmp_path):
     assert set(df["analysis_method"]) == {"untargeted_LCMS"}
 
 
-def test_proteomics_handoff_carries_standard_error_method_and_legacy_ids(tmp_path):
+def test_proteomics_handoff_carries_standard_error_method_and_legacy_ids(isolated_reports, tmp_path):
     """The proteomics raw mode writes lfcSE and analysis_method; both must reach
     the evidence record. oyster_v9 CGI_ models take the legacy-locus-tag route
     (unresolved against the demo crosswalk, which has no such column), not the
