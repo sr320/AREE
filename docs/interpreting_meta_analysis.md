@@ -194,8 +194,10 @@ How to read a row:
 
 The first real cross-species rows came on 2026-10-16, once the first real
 clam study reached `main`: oyster and Manila clam thermal-tolerance evidence
-pools through 5,681 single-copy orthogroups (4,890 multi-copy orthogroups set
-aside). None is past the gate, because the clam has one study. The demo adds
+pooled through 5,681 single-copy orthogroups, none past the gate with one
+clam study. With the second clam study (2026-10-17) it pools through 5,975
+(5,152 multi-copy orthogroups set aside), and 5,633 meet the replication
+gate. The demo adds
 oyster and mussel larval rows sharing demo orthogroups, also below the gate.
 
 `aree build-cross-species-cards` tiers these rows and writes a card for each

@@ -306,13 +306,16 @@ three unsupported rows. None converges, because the demo mussel has one study
 per gene. The demo's one sign disagreement involves a non-significant mussel
 estimate, so it is unsupported, not discordant.
 
-On real data (2026-10-16), the three harmonized oyster thermal-tolerance studies and TUCCI2025_HEAT_PRIMING pool through 5,681 single-copy orthogroups: 64 emerging, 6 discordant, 5,611 unsupported, none convergent. Every emerging row fails three gates:
-replication (one clam study), phenotype relevance (the clam comparison is
-exposure-only), and quality (each species' own flags exceed the gene-level
-limit, as they do for its single-species candidates). The 6 discordant rows
-are oyster genes with small significant effects against clam genes with large
-significant effects of opposite sign. The two studies differ in stressor
-timing, so they are leads to check, not established species differences.
+On real data (2026-10-17), the three harmonized oyster thermal-tolerance
+studies and the two Manila clam heat studies (TUCCI2025_HEAT_PRIMING,
+PERUZZA2023_HEATWAVE) pool through 5,975 single-copy orthogroups: 133
+emerging, 5,842 unsupported, none discordant or convergent. The replication
+gate is met in 5,633 rows. 131 emerging rows pass replication, direction and
+significance and fail only phenotype relevance (both clam comparisons are
+exposure-only) and quality (each species' own flags exceed the gene-level
+limit, as they do for its single-species candidates). With one clam study
+(2026-10-16) the same pool had 5,681 rows, 64 emerging and 6 discordant; the
+discordant rows did not survive the second clam study.
 
 ## Related documentation
 
