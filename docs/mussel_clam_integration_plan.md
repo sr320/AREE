@@ -5,7 +5,7 @@ its first within-species pool: two Manila clam heat studies
 (TUCCI2025_HEAT_PRIMING and PERUZZA2023_HEATWAVE, both reanalyzed and on
 `main`, k = 2). WP6 has its
 orthogroup run, orthogroup-level meta-analysis and cross-species candidates
-with their evidence cards; the dashboard gate is not built yet (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
+with their evidence cards, and the dashboard gate (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
 species-by-species and then across species through orthology.
@@ -446,7 +446,7 @@ k ≥ 2 per taxon.
 
 ### WP6. Cross-species orthology and pooling (the new science)
 
-**Status: orthogroups done, 2026-10-13; pooling and cross-species candidates done, 2026-10-14; dashboard gate not started.** What exists:
+**Status: done. Orthogroups 2026-10-13; pooling and cross-species candidates 2026-10-14; dashboard gate 2026-10-17.** What exists:
 
 - `aree fetch-reference --proteins` writes one protein per gene (the longest)
   for each species, keyed by NCBI GeneID; all seven reference assemblies have
@@ -514,7 +514,21 @@ thermal tolerance until a clam study measures a tolerance outcome in its
 pooled comparison. The 6 discordant rows seen with one clam study did not
 survive the second.
 
-Still to build: the dashboard gate. The
+**Dashboard gate: done, 2026-10-17.** The dashboard's pools are now per
+species, and `cross_species_gate` opens a phenotype only when at least two
+species each have a within-species gene pool with k >= 2. For an open
+phenotype the home page's "Across species" section shows the gate, the
+cross-species tiers and the top rows with their cards; rows for a closed
+phenotype are counted as withheld, never ranked or linked. Whether or not the
+gate is open, each top single-species candidate carries an ortholog lookup:
+the other species' genes in its orthogroup, the phenotypes they were tested
+under, and how many of their records were significant. On `main` (2026-10-17)
+thermal tolerance is open (*M. gigas* k = 3, *R. philippinarum* k = 2) and
+the demo's larval viability is closed (the demo mussel has k = 1, 8 rows
+withheld). `make demo`, CI and the Pages build now run
+`aree build-cross-species-cards`.
+
+The
 OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only
 mode) and only its `Orthogroups.tsv` is used; hierarchical orthogroups are a
 possible refinement.

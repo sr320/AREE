@@ -81,8 +81,10 @@ worth less than one that says what it got wrong.
   (`aree build-cross-species-cards`). On real data the oyster and two Manila
   clam studies pool through 5,975 single-copy orthogroups, 5,633 past the
   replication gate; none converges, because both clam comparisons are
-  exposure-only. The dashboard gate is not built; see
-  WP6 in mussel_clam_integration_plan.md.
+  exposure-only. The dashboard shows cross-species results only for
+  phenotypes past the WP6 gate (two species each with a pool of k >= 2;
+  thermal tolerance so far) and an ortholog lookup for every top candidate;
+  see WP6 in mussel_clam_integration_plan.md.
 - Improving UniProt coverage beyond the 8.4% of genes that UniProtKB itself
   cross-references to NCBI GeneID — most likely by mapping RefSeq protein
   accessions through the NCBI annotation rather than relying on UniProt xrefs.
