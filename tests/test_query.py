@@ -118,7 +118,12 @@ def test_site_export_writes_sorted_parquet_and_meta(demo_sources, tmp_path):
     assert features["n_records"].sum() == len(evidence)
     assert CONFLICT_GENE in set(features["feature_id_standardized"])
     assert not (features[["feature_id_standardized", "feature_id_original"]] == "nan").any().any()
-    assert len(pd.read_parquet(out_dir / "candidates.parquet")) == meta["tables"]["candidates"]["total"]
+    candidates = pd.read_parquet(out_dir / "candidates.parquet")
+    assert len(candidates) == meta["tables"]["candidates"]["total"]
+    # Real booleans, so `WHERE is_predictive_baseline` works in the page's SQL.
+    assert candidates["is_predictive_baseline"].dtype == bool
+    assert {"contrast_type", "gene_symbol", "gene_description"} <= set(candidates.columns)
+    assert meta["facets"]["candidates"]["contrast_type"] == ["exposure_response"]
     assert len(pd.read_parquet(out_dir / "studies.parquet")) == meta["tables"]["studies"]["total"]
     on_disk = json.loads((out_dir / "meta.json").read_text())
     assert "larval_viability" in on_disk["facets"]["evidence"]["phenotype"]

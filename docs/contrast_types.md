@@ -69,8 +69,16 @@ When in doubt, choose `exposure_response`. It is the type that claims least.
   candidates" section. Evidence cards state the contrast type and what it does
   and does not show. A card for a non-default contrast type has the type as a
   filename suffix, so it never overwrites the exposure-response card for the
-  same feature. The query layer and MCP server can filter candidates by
-  `contrast_type`.
+  same feature, and its per-study table names each comparison, so the sign of
+  the effect can be read against the arms. The query layer and MCP server can
+  filter candidates by `contrast_type`.
+- **Website.** The [home page](index.qmd) has a "Predictive baseline
+  candidates" section: the significant ones, by tier then score, with gene
+  names and links to their evidence cards, and a plain statement when all rest
+  on a single study. On the [Explore page](explore.qmd), the Candidates tab
+  filters by contrast type and has a "Predictive baseline only" toggle; the
+  candidates table carries `gene_symbol` and `gene_description`, and
+  `is_predictive_baseline` is a true/false column usable directly in SQL.
 - **Old evidence.** An evidence table harmonized before this field existed has
   no `contrast_type`. The meta-analysis refuses it and names the studies to
   re-harmonize, rather than defaulting them to `exposure_response`.

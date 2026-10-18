@@ -152,3 +152,46 @@ def test_cli_build_dashboard_writes_json(tmp_path, monkeypatch):
 ])
 def test_short_citation(citation, expected):
     assert dashboard._short_citation(citation) == expected
+
+
+def _candidate_row(feature, contrast, adj_p, k=1, predictive=None, score=50.0):
+    return {
+        "feature_id_standardized": feature, "feature_type": "gene", "phenotype": "thermal_tolerance",
+        "tier": "emerging", "evidence_class": "resilience_associated", "context_replication": "single_study",
+        "contrast_type": contrast, "is_predictive_baseline": contrast == "baseline_phenotype_difference"
+        if predictive is None else predictive,
+        "score": score, "pooling_status": "pooled", "k_studies": k, "studies": "BASE_STUDY",
+        "total_sample_size": 11, "pooled_effect": -1.5, "adjusted_p_value": adj_p,
+        "direction_consistency": 1.0, "i_squared": 0.0, "n_supporting_layers": 1, "mapping_confidences": "exact",
+        "simulated": False, "species_taxid": 29159, "orthogroup_id": "", "card_file": "",
+    }
+
+
+def test_predictive_baseline_section_lists_significant_baseline_candidates(tmp_path, monkeypatch):
+    import pandas as pd
+
+    rows = [
+        _candidate_row("111", "baseline_phenotype_difference", 1e-6, score=55.0),
+        _candidate_row("222", "baseline_phenotype_difference", 0.3, score=60.0),  # not significant
+        _candidate_row("333", "exposure_response", 1e-9, score=70.0),  # a response, not a baseline
+        # A missing flag must read as False, not as bool(nan).
+        _candidate_row("444", "baseline_phenotype_difference", 1e-6, predictive=float("nan")),
+    ]
+    table = tmp_path / "candidates.tsv"
+    pd.DataFrame(rows).to_csv(table, sep="\t", index=False)
+    monkeypatch.setattr(dashboard, "CANDIDATES_TABLE", table)
+
+    pb = dashboard._candidate_summary({"thermal_tolerance": "Thermal tolerance"})["predictive_baseline"]
+    assert pb["n"] == 2 and pb["n_significant"] == 1 and pb["n_significant_replicated"] == 0
+    assert [r["feature_id_standardized"] for r in pb["top"]] == ["111"]
+    assert pb["top"][0]["is_predictive_baseline"] is True
+    assert pb["top"][0]["contrast_type"] == "baseline_phenotype_difference"
+    assert pb["studies"] == ["BASE_STUDY"] and pb["phenotypes"] == ["thermal_tolerance"]
+    json.dumps(pb)  # serializable as data.json
+
+
+def test_predictive_baseline_section_is_present_when_there_is_none(tmp_path, monkeypatch):
+    _point_at_reports(monkeypatch, tmp_path / "empty_reports")
+    data = build_dashboard_data(tmp_path / "data.json")
+    assert data["candidates"]["predictive_baseline"] == {
+        "n": 0, "n_significant": 0, "n_significant_replicated": 0, "studies": [], "phenotypes": [], "top": []}

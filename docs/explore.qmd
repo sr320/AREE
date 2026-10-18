@@ -205,7 +205,9 @@ viewof candFilters = Inputs.form({
   phenotype: Inputs.select(meta.facets.candidates.phenotype ?? [], {label: "Phenotype", multiple: true, format: phenoLabel}),
   tier: Inputs.select(meta.facets.candidates.tier ?? [], {label: "Tier", multiple: true}),
   evidence_class: Inputs.select(meta.facets.candidates.evidence_class ?? [], {label: "Evidence class", multiple: true}),
-  feature: Inputs.text({label: "Feature contains", placeholder: "optional"}),
+  contrast_type: Inputs.select(meta.facets.candidates.contrast_type ?? [], {label: "Contrast type", multiple: true}),
+  predictiveOnly: Inputs.toggle({label: "Predictive baseline only", value: false}),
+  feature: Inputs.text({label: "Gene ID or name contains", placeholder: "optional"}),
   includeSim: Inputs.toggle({label: "Include simulated", value: false})
 })
 ```
@@ -213,13 +215,17 @@ viewof candFilters = Inputs.form({
 ```{ojs}
 //| echo: false
 candidates = sql(`
-  SELECT feature_id_standardized, feature_type, phenotype, simulated, species_taxid, tier, evidence_class,
+  SELECT feature_id_standardized, gene_symbol, gene_description, feature_type, phenotype, simulated,
+         species_taxid, tier, evidence_class, contrast_type, is_predictive_baseline,
          context_replication, score, k_studies, n_supporting_layers, direction_consistency,
          pooled_effect, i_squared, adjusted_p_value, studies
   FROM candidates
   WHERE TRUE ${inList("phenotype", candFilters.phenotype)} ${inList("tier", candFilters.tier)}
-        ${inList("evidence_class", candFilters.evidence_class)} ${simClause(candFilters.includeSim)}
-        ${candFilters.feature.trim() ? `AND lower(feature_id_standardized) LIKE ${lit(`%${candFilters.feature.trim().toLowerCase()}%`)}` : ""}
+        ${inList("evidence_class", candFilters.evidence_class)} ${inList("contrast_type", candFilters.contrast_type)}
+        ${candFilters.predictiveOnly ? "AND is_predictive_baseline" : ""} ${simClause(candFilters.includeSim)}
+        ${candFilters.feature.trim() ? (() => { const q = lit(`%${candFilters.feature.trim().toLowerCase()}%`);
+          return `AND (lower(feature_id_standardized) LIKE ${q} OR lower(coalesce(gene_symbol, '')) LIKE ${q}
+                       OR lower(coalesce(gene_description, '')) LIKE ${q})`; })() : ""}
   ORDER BY CASE tier WHEN 'high_priority_cross_study' THEN 0 WHEN 'multi_omics_convergence' THEN 1
                      WHEN 'metabolite_linked_convergence' THEN 2 ELSE 3 END, score DESC
   LIMIT 20000`)
@@ -238,6 +244,11 @@ for the same feature and phenotype. *metabolite_linked_convergence*: linked only
 reaction annotation (weaker). *emerging*: single-study or unconfirmed, **requires replication**.
 `evidence_class` says what the evidence is *of*: only `resilience_associated` rests on a measured
 resilience outcome. See [Interpreting candidate scores](interpreting_candidate_scores.md).
+`contrast_type` says between whom and when: *baseline_phenotype_difference* compares groups that differ
+in resilience under common unstressed conditions, the design for a marker that could be read before any
+stress; *exposure_response* is a treatment against its control. **Predictive baseline only** keeps
+baseline contrasts with a resilience outcome (`is_predictive_baseline`). See
+[Contrast types](contrast_types.md).
 
 ## Filter evidence
 
@@ -339,6 +350,11 @@ ORDER BY records DESC`],
 FROM candidates
 WHERE tier = 'high_priority_cross_study' AND evidence_class = 'resilience_associated'
 ORDER BY score DESC`],
+  ["Predictive baseline candidates (significant)", `SELECT feature_id_standardized, gene_symbol, gene_description,
+       phenotype, tier, score, k_studies, pooled_effect, adjusted_p_value, studies
+FROM candidates
+WHERE is_predictive_baseline AND adjusted_p_value <= 0.05 AND NOT simulated
+ORDER BY adjusted_p_value`],
   ["Mapping confidence of significant records", `SELECT mapping_confidence, count(*) AS records
 FROM evidence
 WHERE adjusted_p_value <= 0.05

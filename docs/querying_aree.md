@@ -22,7 +22,9 @@ with the evidence cards.
   orthogroup. The tab shows every evidence record across studies, a summary that
   flags significant records disagreeing in direction, and an effect-size plot with
   confidence intervals once the search narrows to one feature.
-- **Candidates.** Ranked candidates, filterable by phenotype, tier and evidence class.
+- **Candidates.** Ranked candidates, filterable by phenotype, tier, evidence class and contrast
+  type, with a "Predictive baseline only" toggle and a search over gene IDs, symbols and
+  descriptions ([contrast types](contrast_types.md)).
 - **Filter evidence.** Filter by phenotype, stressor, species, feature type, tissue and
   an adjusted-p cutoff.
 - **Studies.** Every registered study.
@@ -44,7 +46,7 @@ toggle still separates them, and rows keep their `simulated` column either way.
 |---|---|
 | `evidence.parquet` | Every harmonized evidence record, provenance columns included, sorted by standardized then original feature id |
 | `features.parquet` | One row per distinct identifier combination (standardized, original, orthogroup), with its record count |
-| `candidates.parquet` | Every ranked candidate from `aree build-evidence-cards` |
+| `candidates.parquet` | Every ranked candidate from `aree build-evidence-cards`, with `gene_symbol` and `gene_description` for real genes and `is_predictive_baseline` as a true/false column |
 | `studies.parquet` | One row per study YAML |
 | `meta.json` | Export time, row counts (real / simulated), filter values, vocabulary labels |
 

@@ -467,11 +467,14 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
                       "stable biomarker, until the source of heterogeneity is resolved.")
     lines.append("")
     lines.append("## Per-study evidence (forest-plot data)")
-    lines.append("| study | tissue | life stage | stressor | effect | SE | p | adj. p | pooled | direction | mapping confidence |")
-    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    # The comparison names the arms (treatment_vs_control), which is what gives
+    # the effect's sign its meaning.
+    lines.append("| study | comparison | tissue | life stage | stressor | effect | SE | p | adj. p | pooled | "
+                 "direction | mapping confidence |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for p in forest_points:
         lines.append(
-            f"| {p['study_id']} | {p['tissue']} | {p['life_stage']} | {p['stressor']} | "
+            f"| {p['study_id']} | {p.get('comparison_id', '')} | {p['tissue']} | {p['life_stage']} | {p['stressor']} | "
             f"{p['effect_size']:.3f} | {_fmt(p['standard_error'], '.3f')} | {_fmt(p['p_value'])} | "
             f"{_fmt(p['adjusted_p_value'])} | "
             f"{'yes' if p['included_in_pool'] else 'no'} | {p['molecular_direction']} | "

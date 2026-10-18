@@ -228,6 +228,34 @@ candidateTable(data.candidates.top_real, {showPhenotype: !topPhen})
 }
 ```
 
+### Predictive baseline candidates
+
+```{ojs}
+{
+  // Genes that differ between groups of measured, differing resilience sampled under
+  // common unstressed conditions (contrast_type = baseline_phenotype_difference).
+  const pb = data.candidates.predictive_baseline ?? {n: 0, n_significant: 0, top: [], studies: []};
+  const why = html`<p>A gene that responds to stress tells you an animal is stressed. A gene that already
+    differs between resilient and susceptible animals <em>before</em> any stress could be read on animals
+    that are then kept, which is what a breeder needs. These candidates come from comparisons of groups
+    that differ in resilience by origin (line, family, population, ploidy or age), sampled under the same
+    unstressed conditions (<a href="contrast_types.html">contrast types</a>).</p>`;
+  if (!pb.n) return html`${why}<p>No harmonized study contributes a baseline contrast yet.</p>`;
+  const single = pb.n_significant_replicated === 0;
+  const meta = html`<p>${fmt(pb.n_significant)} of ${fmt(pb.n)} baseline candidates are significant after
+    multiple-testing correction, from ${pb.studies.join(", ")}${single ? html`. All rest on a
+    <strong>single study</strong>: groups that differ in origin differ in more than resilience, so each needs
+    an independent resistant-vs-susceptible pair, and ideally pre-challenge sampling of individuals whose
+    survival is then recorded, before it is more than a lead` : ""}.
+    ${pb.top.length < pb.n_significant ? `Top ${pb.top.length} shown, by tier then score; ` : ""}click a gene
+    for its evidence card. log2FC compares each study's registered treatment arm with its control arm
+    (for LI2018, intertidal relative to subtidal); the card's comparison column names both.</p>`;
+  return html`${why}${meta}${pb.top.length
+    ? candidateTable(pb.top, {showPhenotype: pb.phenotypes.length > 1, maxRows: pb.top.length})
+    : html`<p>None is significant yet.</p>`}`;
+}
+```
+
 ## Across species
 
 ```{ojs}

@@ -60,6 +60,10 @@ TOP_N_CANDIDATES = 15
 # The overall top list is dominated by whichever pool has the most studies, so
 # each phenotype also gets its own short list.
 TOP_N_PER_PHENOTYPE = 5
+# Significant predictive baseline candidates shown on the home page: features
+# that differ between resilient and susceptible groups under unstressed
+# conditions (docs/contrast_types.md).
+TOP_N_PREDICTIVE_BASELINE = 25
 TOP_N_CROSS_SPECIES = 15
 # WP6 dashboard gate: a phenotype's cross-species pooled results are shown only
 # once at least this many species each have a within-species pool with k >= 2.
@@ -280,6 +284,20 @@ def _evidence_summary(evidence: pd.DataFrame) -> dict:
     return {"by_study": by_study, "mapping_confidence": mapping, "by_feature_type": by_feature_type}
 
 
+def gene_annotation_frame() -> pd.DataFrame:
+    """ncbi_gene_id, gene_symbol, gene_description for every gene in the built
+    crosswalks, one row per GeneID. Empty when no crosswalk is built (e.g. CI
+    without the reference download)."""
+    frames = [
+        pd.read_csv(cw, sep="\t", comment="#", dtype=str,
+                    usecols=["ncbi_gene_id", "gene_symbol", "gene_description"])
+        for cw in _built_crosswalks()
+    ]
+    if not frames:
+        return pd.DataFrame(columns=["ncbi_gene_id", "gene_symbol", "gene_description"])
+    return pd.concat(frames, ignore_index=True).dropna(subset=["ncbi_gene_id"]).drop_duplicates("ncbi_gene_id")
+
+
 def _gene_annotations(gene_ids: list[str]) -> dict[str, dict]:
     """Symbol and description for real NCBI GeneIDs, from the committed crosswalks.
 
@@ -310,7 +328,7 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
                        include_simulated: bool = False) -> dict:
     empty = {"by_tier": [], "by_evidence_class": [], "top_real": [], "top_simulated": [],
              "top_real_by_phenotype": {}, "top_simulated_by_phenotype": {}, "n_total": 0,
-             "n_real": 0, "n_simulated": 0}
+             "n_real": 0, "n_simulated": 0, "predictive_baseline": _empty_predictive_baseline()}
     if not CANDIDATES_TABLE.exists():
         return empty
     df = pd.read_csv(CANDIDATES_TABLE, sep="\t", low_memory=False)
@@ -333,7 +351,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
     ranked = df.sort_values(["_tier_rank", "score"], ascending=[True, False])
 
     cols = ["feature_id_standardized", "feature_type", "phenotype", "tier", "evidence_class",
-            "context_replication", "score", "pooling_status", "k_studies", "studies", "total_sample_size",
+            "context_replication", "contrast_type", "is_predictive_baseline",
+            "score", "pooling_status", "k_studies", "studies", "total_sample_size",
             "pooled_effect", "adjusted_p_value", "direction_consistency", "i_squared",
             "n_supporting_layers", "mapping_confidences", "simulated", "species_taxid",
             "orthogroup_id", "card_file"]
@@ -347,6 +366,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
                 r["species_taxid"] = _taxid(r["species_taxid"])
                 r["species"] = _species_label(r["species_taxid"])
             r["phenotype_label"] = phenotype_labels.get(r.get("phenotype"), r.get("phenotype"))
+            if "is_predictive_baseline" in r:
+                r["is_predictive_baseline"] = str(r["is_predictive_baseline"]).strip().lower() == "true"
             for k, v in list(r.items()):
                 if isinstance(v, float) and pd.isna(v):
                     r[k] = None
@@ -359,7 +380,28 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
                     for phen, grp in ranked[~ranked["simulated"]].groupby("phenotype", sort=True)}
     by_phen_sim = {phen: _top(grp, TOP_N_PER_PHENOTYPE)
                    for phen, grp in ranked[ranked["simulated"]].groupby("phenotype", sort=True)}
-    all_real = top_real + [r for rows in by_phen_real.values() for r in rows]
+    # Candidates whose evidence is a baseline difference between resilient and
+    # susceptible groups, and significant: the design for a predictive marker.
+    # Ranked like everything else (tier, then score); real studies only.
+    real_ranked = ranked[~ranked["simulated"]]
+    # Compared as text: a candidates.tsv round-trip gives "True"/"False", and a
+    # missing value must read as False (bool(nan) is True).
+    is_baseline = (real_ranked["is_predictive_baseline"].astype(str).str.strip().str.lower().eq("true")
+                   if "is_predictive_baseline" in real_ranked.columns
+                   else pd.Series(False, index=real_ranked.index))
+    baseline = real_ranked[is_baseline]
+    significant = baseline[pd.to_numeric(baseline["adjusted_p_value"], errors="coerce") <= SIGNIFICANCE_THRESHOLD]
+    top_baseline = _top(significant, TOP_N_PREDICTIVE_BASELINE)
+    predictive = {
+        "n": int(len(baseline)),
+        "n_significant": int(len(significant)),
+        "n_significant_replicated": int((pd.to_numeric(significant["k_studies"], errors="coerce") >= 2).sum()),
+        "studies": sorted({s for v in baseline["studies"].dropna() for s in str(v).split("|") if s}),
+        "phenotypes": sorted(baseline["phenotype"].dropna().unique().tolist()),
+        "top": top_baseline,
+    }
+
+    all_real = top_real + [r for rows in by_phen_real.values() for r in rows] + top_baseline
     all_rows = all_real + top_sim + [r for rows in by_phen_sim.values() for r in rows]
     for r in all_rows:
         r["card_page"] = _publish_card(r.pop("card_file", None), cards_dir)
@@ -378,7 +420,12 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
         "n_total": int(len(df)),
         "n_real": int((~df["simulated"]).sum()),
         "n_simulated": int(df["simulated"].sum()),
+        "predictive_baseline": predictive,
     }
+
+
+def _empty_predictive_baseline() -> dict:
+    return {"n": 0, "n_significant": 0, "n_significant_replicated": 0, "studies": [], "phenotypes": [], "top": []}
 
 
 def _taxid(value):
