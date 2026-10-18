@@ -12,7 +12,7 @@ import pytest
 from conftest import ALL_DEMO_STUDY_IDS, harmonize_all_demo_studies
 
 import query
-from common import STUDIES_DIR
+from common import study_files
 from reporting.evidence_cards import build_evidence_cards
 
 CONFLICT_GENE = "LOC105331241"  # sod1 in the demo: opposite directions across larval studies
@@ -41,8 +41,8 @@ def test_missing_outputs_are_reported_not_hidden(sources):
 
 def test_studies_come_from_every_yaml_and_filter(sources):
     every = query.list_studies(sources=sources)
-    n_yaml = len([p for p in STUDIES_DIR.glob("*.yaml") if not p.name.startswith("_")])
-    assert every["n_studies"] == n_yaml
+    # Real (registry/studies/) and demo (registry/demo_studies/) alike.
+    assert every["n_studies"] == len(study_files())
     real_only = query.list_studies(include_simulated=False, sources=sources)
     assert not {s["study_id"] for s in real_only["studies"]} & set(ALL_DEMO_STUDY_IDS)
     heat = query.list_studies(stressor="temperature", sources=sources)
@@ -105,7 +105,7 @@ def test_site_export_writes_sorted_parquet_and_meta(demo_sources, tmp_path):
     from query.site_export import export_site_data
 
     out_dir = tmp_path / "site"
-    meta = export_site_data(out_dir, sources=demo_sources)
+    meta = export_site_data(out_dir, sources=demo_sources, include_simulated=True)
     evidence = pd.read_parquet(out_dir / "evidence.parquet")
     assert len(evidence) == meta["tables"]["evidence"]["total"] > 0
     assert evidence["simulated"].dtype == bool
@@ -123,6 +123,12 @@ def test_site_export_writes_sorted_parquet_and_meta(demo_sources, tmp_path):
     on_disk = json.loads((out_dir / "meta.json").read_text())
     assert "larval_viability" in on_disk["facets"]["evidence"]["phenotype"]
     assert on_disk["note"] == query.INTERPRETATION_NOTE
+
+    # The published site leaves simulated demo data out unless asked.
+    real_only = export_site_data(tmp_path / "real_only", sources=demo_sources)
+    assert real_only["tables"]["evidence"]["total"] == 0
+    assert real_only["tables"]["studies"]["simulated"] == 0
+    assert real_only["tables"]["studies"]["real"] > 0
 
 
 def test_mcp_server_exposes_the_tools_and_answers(demo_sources):

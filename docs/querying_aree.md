@@ -30,8 +30,11 @@ with the evidence cards.
   worked examples (genes significant in three or more studies, conflicting directions,
   evidence volume by context).
 
-Every result downloads as CSV. Simulated demo evidence is excluded by default, and
-a toggle brings it back in. Rows keep their `simulated` column either way.
+Every result downloads as CSV. The published page holds real studies only:
+`aree export-site-data` leaves the simulated demo studies (`registry/demo_studies/`)
+and their evidence out unless run with `--include-simulated`, and the Pages build
+never harmonizes them. For a locally built page that includes them, the page's
+toggle still separates them, and rows keep their `simulated` column either way.
 
 ### How it works
 

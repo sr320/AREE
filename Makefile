@@ -1,7 +1,8 @@
 # AREE task runner. Run `make help` for the list.
 .PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard site-data mcp docs app clean metabolite-links
 
-# Every simulated study in registry/studies/, so a new demo study needs no edit here.
+# Every simulated study in registry/demo_studies/, so a new demo study needs no edit here.
+# The demo studies are pipeline fixtures; register/harmonize/meta/cards run only them.
 DEMO_STUDIES = $(shell aree study-ids --simulated)
 
 help:
@@ -18,7 +19,7 @@ help:
 	@echo "  intake-check verify the committed result tables still reproduce (no writes)"
 	@echo "  real-study   register + harmonize the real study (HESSER2024_VCOR) against the real crosswalk"
 	@echo "  real-pool    harmonize every committed result of every real study that passed QC"
-	@echo "  dashboard    build dashboard data + Explore tables from current outputs, then render the site"
+	@echo "  dashboard    build dashboard data + Explore tables from current outputs (real studies only), then render the site"
 	@echo "  site-data    export Parquet tables for the site's Explore page (docs/explore/data/)"
 	@echo "  mcp          serve AREE to MCP clients (Claude) over stdio"
 	@echo "  docs         render the Quarto documentation site"
@@ -38,8 +39,8 @@ lint:
 	ruff check src tests
 
 register:
-	@for sid in $(DEMO_STUDIES); do aree register-study "registry/studies/$$sid.yaml" --update; done
-	@aree list-studies
+	@for sid in $(DEMO_STUDIES); do aree register-study "registry/demo_studies/$$sid.yaml" --update; done
+	@aree list-studies --include-simulated
 
 harmonize:
 	@for sid in $(DEMO_STUDIES); do aree harmonize --study "$$sid"; done
@@ -50,7 +51,7 @@ meta:
 cards:
 	aree build-evidence-cards
 	aree build-cross-species-cards --feature-type gene
-	aree top-candidates
+	aree top-candidates --include-simulated
 
 demo: register harmonize meta cards
 	@echo ""

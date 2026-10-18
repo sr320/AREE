@@ -60,7 +60,7 @@ def test_dashboard_carries_species_rows_and_identity(isolated_reports, tmp_path,
     monkeypatch.setattr(dashboard, "EVIDENCE_TABLE", isolated_reports["evidence_table_path"])
     monkeypatch.setattr(dashboard, "META_ANALYSIS_DIR", isolated_reports["meta_dir"])
     monkeypatch.setattr(dashboard, "CANDIDATES_TABLE", tmp_path / "absent.tsv")
-    data = dashboard.build_dashboard_data(tmp_path / "data.json")
+    data = dashboard.build_dashboard_data(tmp_path / "data.json", include_simulated=True)
     mussel = next(s for s in data["species"] if s["ncbi_taxid"] == MUSSEL)
     assert mussel["n_studies_simulated"] >= 1 and mussel["n_evidence_records_simulated"] > 0
     study = next(s for s in data["studies"] if s["study_id"] == "MYTGAL_HEAT01")
@@ -77,7 +77,9 @@ def test_registry_index_records_species_identity_basis(isolated_registry):
     from intake.registry import rebuild_registry
 
     rebuild_registry()
-    with open(isolated_registry, newline="") as fh:
-        rows = {r["study_id"]: r for r in csv.DictReader(fh)}
+    rows = {}
+    for path in (isolated_registry, isolated_registry.parent / "demo_study_registry.csv"):
+        with open(path, newline="") as fh:
+            rows.update({r["study_id"]: r for r in csv.DictReader(fh)})
     assert rows["MYTGAL_HEAT01"]["species_identity_basis"] == "collection_site"
     assert rows["HESSER2024_VCOR"]["species_identity_basis"] == ""

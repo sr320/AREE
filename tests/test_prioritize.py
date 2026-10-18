@@ -433,11 +433,11 @@ def test_missing_classification_falls_back_to_the_phenotype_default():
 def test_harmonized_evidence_carries_each_comparisons_classification(isolated_reports):
     """The evidence table must keep the curator's classification, not only the
     phenotype, or ranking cannot honour an override."""
-    from common import STUDIES_DIR, load_yaml
+    from common import load_yaml, study_yaml_path
 
     harmonize_all_demo_studies()
     evidence = load_evidence_table()
     for (study_id, comparison_id), records in evidence.groupby(["study_id", "comparison_id"]):
-        study = load_yaml(STUDIES_DIR / f"{study_id}.yaml")
+        study = load_yaml(study_yaml_path(study_id))
         (comparison,) = [c for c in study["comparisons"] if c["comparison_id"] == comparison_id]
         assert set(records["resilience_classification"]) == {comparison["resilience_classification"]}

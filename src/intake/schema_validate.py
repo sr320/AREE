@@ -16,7 +16,9 @@ import jsonschema
 
 from common import (
     DATA_DIR,
+    DEMO_STUDIES_DIR,
     SCHEMAS_DIR,
+    STUDIES_DIR,
     assembly_crosswalk_path,
     load_json,
     load_vocab,
@@ -64,6 +66,22 @@ def validate_study_file(path) -> ValidationResult:
     if stem not in ("_TEMPLATE",) and study.get("study_id") != stem:
         errors.append(
             f"study_id {study.get('study_id')!r} does not match filename stem {stem!r}"
+        )
+
+    # Real and simulated studies are kept in separate directories so the study
+    # registry never lists demo fixtures as studies. A file in the wrong one is
+    # an error rather than something to infer around.
+    parent = path.resolve().parent
+    simulated = bool(study.get("simulated", False))
+    if parent == STUDIES_DIR.resolve() and simulated:
+        errors.append(
+            "simulated: true study is in registry/studies/; simulated demo studies "
+            "belong in registry/demo_studies/"
+        )
+    elif parent == DEMO_STUDIES_DIR.resolve() and not simulated:
+        errors.append(
+            "study in registry/demo_studies/ is not simulated: true; real studies "
+            "belong in registry/studies/"
         )
 
     phenotype_vocab = load_vocab("phenotype_ontology")

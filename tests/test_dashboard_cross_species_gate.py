@@ -79,7 +79,7 @@ def test_demo_dashboard_gates_the_mussel_and_offers_the_lookup(isolated_reports,
     oyster candidates still show where their mussel orthologs were tested."""
     runner = CliRunner()
     for study_id in ALL_DEMO_STUDY_IDS:
-        assert runner.invoke(main, ["register-study", f"registry/studies/{study_id}.yaml"]).exit_code == 0
+        assert runner.invoke(main, ["register-study", f"registry/demo_studies/{study_id}.yaml"]).exit_code == 0
         assert runner.invoke(main, ["harmonize", "--study", study_id, "--date", "2026-01-01"]).exit_code == 0
     assert runner.invoke(main, ["meta-analyze", "--feature-type", "gene"]).exit_code == 0
     assert runner.invoke(main, ["build-evidence-cards"]).exit_code == 0
@@ -92,7 +92,7 @@ def test_demo_dashboard_gates_the_mussel_and_offers_the_lookup(isolated_reports,
     monkeypatch.setattr(dashboard, "CROSS_SPECIES_TABLE",
                         reports_dir / "evidence_cards" / "cross_species" / "candidates.tsv")
     monkeypatch.setattr(dashboard, "META_ANALYSIS_DIR", reports_dir / "meta_analysis")
-    data = build_dashboard_data(tmp_path / "site" / "dashboard" / "data.json")
+    data = build_dashboard_data(tmp_path / "site" / "dashboard" / "data.json", include_simulated=True)
 
     larval = [g for g in data["cross_species"]["gate"] if g["phenotype"] == "larval_viability"]
     assert len(larval) == 1 and larval[0]["simulated"] is True and larval[0]["open"] is False

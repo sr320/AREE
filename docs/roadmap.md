@@ -16,7 +16,7 @@ for the assumptions this roadmap is consistent with.
   `registry/controlled_vocabularies/` and are actively checked/consumed by
   code (`src/common/load_vocab`, `src/intake/schema_validate.py`).
 - **Study registry.** Seven demo studies are registered: six oyster
-  (`registry/studies/GIGAS_{HEAT01,OA02,PATH03,SAL04,LARV05,GROW06}.yaml`) and
+  (`registry/demo_studies/GIGAS_{HEAT01,OA02,PATH03,SAL04,LARV05,GROW06}.yaml`) and
   one mussel (`MYTGAL_HEAT01`) that exercises species partitioning. The six
   oyster studies cover the required demo mix: two RNA-seq raw-reanalysis studies
   (`GIGAS_HEAT01`, `GIGAS_OA02`), one methylation study (`GIGAS_PATH03`), one
@@ -24,8 +24,10 @@ for the assumptions this roadmap is consistent with.
   processed-results-only study (`GIGAS_GROW06`), one imperfect-identifier
   example (`GIGAS_LARV05`, legacy symbol-only annotation), and one
   conflicting-direction example (`sod1`/`LOC105331241` across `GIGAS_OA02`
-  and `GIGAS_LARV05`). `registry/study_registry.csv` is the resulting index, rebuilt by
-  `aree build-registry` rather than committed.
+  and `GIGAS_LARV05`). They live in `registry/demo_studies/`, apart from the real studies, and
+  index into `registry/demo_study_registry.csv`; `registry/study_registry.csv`
+  lists real studies only. Both are rebuilt by `aree build-registry` rather
+  than committed.
   `aree validate-study` and `aree register-study` both work end to end
   against these files.
 - **Harmonization for all four assay types.** `src/harmonize` converts

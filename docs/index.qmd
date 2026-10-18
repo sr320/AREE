@@ -63,7 +63,7 @@ ${missing.length ? html`<p><strong>Pipeline outputs missing from this build:</st
 html`<div class="kpi-grid">
   <div class="kpi"><div class="kpi-label">Real studies</div>
     <div class="kpi-value">${k.n_studies_real}</div>
-    <div class="kpi-note">${k.n_studies_simulated} simulated demo studies kept separate</div></div>
+    <div class="kpi-note">${data.includes_simulated ? `${k.n_studies_simulated} simulated demo studies kept separate` : "simulated demo studies not shown"}</div></div>
   <div class="kpi"><div class="kpi-label">Comparisons harmonized</div>
     <div class="kpi-value">${k.n_comparisons_real_harmonized} / ${k.n_comparisons_real}</div>
     <div class="kpi-note">registered contrasts with evidence in the table</div></div>

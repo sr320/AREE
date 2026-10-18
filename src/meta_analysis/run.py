@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
-from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, STUDIES_DIR, load_yaml
+from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, load_yaml, study_files
 
 from .effect_sizes import MIN_P
 from .pooling import benjamini_hochberg, dersimonian_laird
@@ -185,7 +185,7 @@ def _non_primary_comparisons() -> set[tuple[str, str]]:
     nothing, so the within-study guard still sees every comparison it contributes.
     """
     excluded = set()
-    for path in sorted(STUDIES_DIR.glob("*.yaml")):
+    for path in study_files():
         study = load_yaml(path)
         comparisons = study.get("comparisons") or []
         if any(c.get("meta_analysis_primary") for c in comparisons):

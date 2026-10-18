@@ -157,7 +157,7 @@ def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, m
         "  - comparison_id: contrast_b\n"
         "    meta_analysis_primary: true\n"
     )
-    monkeypatch.setattr(meta_run, "STUDIES_DIR", studies_dir)
+    monkeypatch.setattr(meta_run, "study_files", lambda: sorted(studies_dir.glob("*.yaml")))
 
     result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
     assert result["k_studies"] == 1
