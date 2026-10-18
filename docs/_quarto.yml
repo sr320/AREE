@@ -1,6 +1,10 @@
 project:
   type: website
   output-dir: _site
+  # Parquet tables for explore.qmd, fetched by DuckDB-WASM rather than linked,
+  # so Quarto must be told to copy them (written by `aree export-site-data`).
+  resources:
+    - explore/data/
 
 website:
   title: "AREE"
@@ -11,6 +15,8 @@ website:
     left:
       - text: "Progress"
         href: index.qmd
+      - text: "Explore"
+        href: explore.qmd
       - text: "About"
         href: about.qmd
       - text: "Docs"
@@ -27,6 +33,10 @@ website:
             href: index.qmd
           - text: "About AREE"
             href: about.qmd
+          - text: "Explore the evidence"
+            href: explore.qmd
+          - text: "Querying AREE (explorer + MCP)"
+            href: querying_aree.md
           - text: "Installation"
             href: installation.md
           - text: "Why this resource matters"

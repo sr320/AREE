@@ -550,6 +550,42 @@ def build_dashboard_cmd(out_path):
     click.echo(click.style(f"Wrote dashboard data to {out_path}", fg="green"))
 
 
+@main.command("export-site-data")
+@click.option("--out", "out_dir", default=None, type=click.Path(path_type=Path),
+              help="Directory for the Parquet tables (default: docs/explore/data).")
+def export_site_data_cmd(out_dir):
+    """Export evidence, candidates and studies as Parquet for the site's Explore page.
+
+    docs/explore.qmd queries them with DuckDB-WASM in the browser. Needs pyarrow
+    (pip install -e ".[site]").
+    """
+    from query.site_export import DEFAULT_OUT_DIR, export_site_data
+
+    out_dir = out_dir or DEFAULT_OUT_DIR
+    meta = export_site_data(out_dir)
+    for name, table in meta["tables"].items():
+        click.echo(f"{name}: {table['total']} rows ({table['real']} real, {table['simulated']} simulated)")
+    missing = [k for k, v in meta["artifacts"].items() if not v["present"]]
+    if missing:
+        click.echo(click.style(f"Pipeline outputs not found: {', '.join(missing)} "
+                               "(run `make demo` to populate them)", fg="yellow"))
+    click.echo(click.style(f"Wrote site data to {out_dir}", fg="green"))
+
+
+@main.command("mcp")
+@click.option("--transport", type=click.Choice(["stdio", "streamable-http"]), default="stdio",
+              show_default=True, help="stdio for desktop clients; streamable-http to serve over HTTP.")
+def mcp_cmd(transport):
+    """Serve AREE's studies, evidence and candidates to MCP clients (e.g. Claude).
+
+    Read-only. Needs the mcp extra (Python >= 3.10): pip install -e ".[mcp]".
+    See docs/querying_aree.md for client setup.
+    """
+    from query.mcp_server import run
+
+    run(transport)
+
+
 @main.command("fetch-reference")
 @click.option("--assembly", "assembly", required=True,
               help="Registered assembly: assembly_id or accession, e.g. GCF_965363235.1.")
