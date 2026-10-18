@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import pandas as pd
 
-from common import REPO_ROOT, STUDIES_DIR, load_yaml
+from common import REPO_ROOT, load_yaml, study_yaml_path
 
 STUDY_ID = "GIGAS_PATH03"
 
 
 def _demo_table():
-    study = load_yaml(STUDIES_DIR / f"{STUDY_ID}.yaml")
+    study = load_yaml(study_yaml_path(STUDY_ID))
     (comp,) = study["comparisons"]
     return comp["comparison_id"], pd.read_csv(REPO_ROOT / comp["results_file"], sep="\t")
 

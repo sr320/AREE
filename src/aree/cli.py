@@ -79,9 +79,10 @@ def register_study_cmd(path, allow_update):
 
 
 @main.command("list-studies")
-def list_studies_cmd():
+@click.option("--include-simulated", is_flag=True, help="Also list the simulated demo studies.")
+def list_studies_cmd(include_simulated):
     """List all studies currently in the registry."""
-    rows = list_studies()
+    rows = list_studies(include_simulated=include_simulated)
     if not rows:
         click.echo("No studies in the index yet. Run `aree build-registry` to build it from registry/studies/.")
         return
@@ -95,7 +96,7 @@ def list_studies_cmd():
 @click.option("--simulated", "which", flag_value="simulated", help="Only simulated (demo) studies.")
 @click.option("--real", "which", flag_value="real", help="Only real studies.")
 def study_ids_cmd(which):
-    """Print registered study_ids, one per line, read from registry/studies/.
+    """Print study_ids, one per line, read from registry/studies/ and registry/demo_studies/.
 
     `aree study-ids --simulated` is the demo study list the Makefile, CI and the
     Pages build iterate over.
@@ -176,7 +177,7 @@ def start_study_cmd(accession, study_id, worktree_dir, registered_by, machine, n
 @click.option("--base", default="origin/main", show_default=True, help="Ref the PR merges into.")
 def check_study_scope_cmd(branch, base):
     """Fail if a study PR changes files its study does not own (run by CI on study/ branches)."""
-    from common import STUDIES_DIR, load_yaml
+    from common import load_yaml, study_yaml_path
     from intake.study_claims import parse_branch
 
     diff = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True,
@@ -186,7 +187,7 @@ def check_study_scope_cmd(branch, base):
         sys.exit(1)
     changed = [p for p in diff.stdout.splitlines() if p]
     parsed = parse_branch(branch)
-    yaml_path = STUDIES_DIR / f"{parsed[1]}.yaml" if parsed else None
+    yaml_path = study_yaml_path(parsed[1]) if parsed else None
     study = load_yaml(yaml_path) if yaml_path and yaml_path.exists() else None
     errors, warnings = check_study_scope(branch, changed, study, registered_on(base, REPO_ROOT))
     for w in warnings:
@@ -515,10 +516,13 @@ def build_cross_species_cards_cmd(phenotype, feature_type, max_adjusted_p, all_c
               help="Path to a ranked candidates.tsv (from `aree build-evidence-cards`).")
 @click.option("--out", "out_path", default=DEFAULT_OUT_PATH, show_default=True, type=click.Path(path_type=Path),
               help="Where to write the Markdown summary.")
-def top_candidates_cmd(n, candidates_path, out_path):
+@click.option("--include-simulated", is_flag=True,
+              help="Also rank candidates from the simulated demo studies (left out by default).")
+def top_candidates_cmd(n, candidates_path, out_path, include_simulated):
     """Summarize the top-N ranked candidates per phenotype from an existing candidates.tsv."""
     try:
-        out = build_top_candidates_summary(n=n, candidates_path=candidates_path, out_path=out_path)
+        out = build_top_candidates_summary(n=n, candidates_path=candidates_path, out_path=out_path,
+                                           include_simulated=include_simulated)
     except FileNotFoundError as exc:
         click.echo(click.style(str(exc), fg="red"))
         sys.exit(1)
@@ -528,14 +532,16 @@ def top_candidates_cmd(n, candidates_path, out_path):
 @main.command("build-dashboard")
 @click.option("--out", "out_path", default=DEFAULT_DASHBOARD_PATH, show_default=True,
               type=click.Path(path_type=Path), help="Where to write the dashboard JSON.")
-def build_dashboard_cmd(out_path):
+@click.option("--include-simulated", is_flag=True,
+              help="Also show the simulated demo studies and their evidence (left out by default).")
+def build_dashboard_cmd(out_path, include_simulated):
     """Summarize registry, pipeline, and findings state into docs/dashboard/data.json.
 
     Reads whatever the pipeline has produced so far; missing outputs are reported
     as missing on the page rather than hidden. `quarto render docs` then renders
     docs/index.qmd (the site home page) from it.
     """
-    data = build_dashboard_data(out_path)
+    data = build_dashboard_data(out_path, include_simulated=include_simulated)
     present = data["artifacts_present"]
     missing = [k for k, v in present.items() if not v]
     k = data["kpis"]

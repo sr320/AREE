@@ -20,8 +20,8 @@ st.set_page_config(page_title="AREE — Aquaculture Resilience Evidence Engine",
 st.title("AREE — Aquaculture Resilience Evidence Engine")
 st.caption(
     "Harmonized, cross-study resilience biomarker evidence for the Pacific oyster (Magallana gigas), "
-    "mussels and clams, each species against its own gene identifiers. Simulated demo and real-study "
-    "evidence are explicitly separated."
+    "mussels and clams, each species against its own gene identifiers. Simulated demo data is hidden "
+    "unless you include it from the sidebar, and is never pooled with real-study evidence."
 )
 
 st.warning(
@@ -29,6 +29,12 @@ st.warning(
     "A high score never overrides the study-count and direction-consistency gates required for the "
     "high-priority tier. Read the evidence card limitations before acting on any candidate.",
     icon="⚠️",
+)
+
+include_simulated = st.sidebar.checkbox(
+    "Include simulated demo data", value=False, key="include_simulated",
+    help="The simulated demo studies (registry/demo_studies/) are pipeline test fixtures, not findings. "
+         "They are hidden unless this is checked. Simulated and real evidence are never pooled together.",
 )
 
 tab_studies, tab_evidence, tab_candidates, tab_search = st.tabs(
@@ -40,14 +46,14 @@ tab_studies, tab_evidence, tab_candidates, tab_search = st.tabs(
 with tab_studies:
     st.header("Registered studies")
     st.subheader("Species")
-    st.dataframe(da.load_species_summary(), use_container_width=True, hide_index=True)
+    st.dataframe(da.load_species_summary(include_simulated), use_container_width=True, hide_index=True)
     st.caption("Gene identifiers come from each species' own crosswalk: `ncbi_gene` (NCBI Gene) or "
                "`gff_homology` (the authors' annotation plus a recorded homology search). Species in a "
                "hybridizing `complex` carry a species-identity basis on every study; see "
                "docs/species_identity.md.")
-    registry = da.load_registry()
+    registry = da.load_registry(include_simulated)
     if registry.empty:
-        st.info("No studies registered yet. Run: `aree register-study registry/studies/STUDY_ID.yaml`")
+        st.info("No studies registered yet. Run: `aree build-registry`")
     else:
         species_filter = st.multiselect("Species", sorted(registry["species_accepted"].dropna().unique()),
                                         key="studies_species")
@@ -70,7 +76,7 @@ with tab_studies:
 # --------------------------------------------------------------------------- Evidence
 with tab_evidence:
     st.header("Harmonized evidence records")
-    evidence = da.load_evidence()
+    evidence = da.load_evidence(include_simulated)
     if evidence.empty:
         st.info("No evidence table yet. Run: `aree harmonize --study STUDY_ID` for each registered study.")
     else:
@@ -87,7 +93,7 @@ with tab_evidence:
         with col3:
             feature_type_f = st.multiselect("Feature type", sorted(evidence["feature_type"].dropna().unique()))
             mapping_f = st.multiselect("Mapping confidence", sorted(evidence["mapping_confidence"].dropna().unique()))
-            data_origin = st.radio(
+            data_origin = "Real studies only" if not include_simulated else st.radio(
                 "Data origin", ["All", "Real studies only", "Simulated only"], index=0,
                 help="Simulated demo evidence and evidence from real published studies are "
                      "never pooled together; this filter makes the split explicit.",
@@ -127,13 +133,13 @@ with tab_candidates:
         st.info("No evidence table yet. Run `aree harmonize` first, then `aree build-evidence-cards`.")
     else:
         labels = da.phenotype_labels()
-        evidence = da.load_evidence()
+        evidence = da.load_evidence(include_simulated)
         phenotype_options = ["(all)"] + sorted(evidence["phenotype"].dropna().unique())
         chosen = st.selectbox("Phenotype", phenotype_options, format_func=lambda p: labels.get(p, p))
         phenotype = None if chosen == "(all)" else chosen
 
         try:
-            candidates = da.load_candidates(phenotype=phenotype)
+            candidates = da.load_candidates(phenotype=phenotype, include_simulated=include_simulated)
         except ValueError as exc:
             # The meta-analysis refuses evidence it cannot pool honestly (e.g. an
             # evidence table harmonized by older code); say why instead of crashing.
@@ -201,7 +207,7 @@ with tab_candidates:
 # --------------------------------------------------------------------------- Search
 with tab_search:
     st.header("Search a gene / protein / feature")
-    evidence = da.load_evidence()
+    evidence = da.load_evidence(include_simulated)
     if evidence.empty:
         st.info("No evidence table yet. Run `aree harmonize` first.")
     else:

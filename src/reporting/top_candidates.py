@@ -61,9 +61,18 @@ def build_top_candidates_summary(
     n: int = 10,
     candidates_path: Path = DEFAULT_CANDIDATES_PATH,
     out_path: Path = DEFAULT_OUT_PATH,
+    include_simulated: bool = False,
 ) -> Path:
-    """Write a Markdown top-N-per-phenotype summary and return its path."""
+    """Write a Markdown top-N-per-phenotype summary and return its path.
+
+    Candidates from simulated demo studies are left out unless include_simulated
+    is set: they demonstrate the pipeline and are not findings.
+    """
     candidates = load_candidates(candidates_path)
+    is_simulated = candidates["simulated"].astype(str).str.lower().eq("true")
+    n_simulated_excluded = 0 if include_simulated else int(is_simulated.sum())
+    if not include_simulated:
+        candidates = candidates[~is_simulated].reset_index(drop=True)
     by_phenotype = top_candidates_by_phenotype(candidates, n=n)
     phenotype_vocab = load_vocab("phenotype_ontology")
 
@@ -91,6 +100,14 @@ def build_top_candidates_summary(
         "`resilience_associated` candidates bear on resilience directly.",
         "",
     ]
+    if n_simulated_excluded:
+        lines += [
+            f"{n_simulated_excluded} candidates from simulated demo studies are left out. "
+            "Pass `--include-simulated` to show them.",
+            "",
+        ]
+    if not len(candidates):
+        lines += ["No candidates from real studies yet.", ""]
     if n_simulated_phenotypes:
         lines += [
             f"Phenotypes with at least one simulated/demo candidate in this table: "

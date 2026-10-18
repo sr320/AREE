@@ -87,7 +87,7 @@ Once installed, the full demo pipeline runs against the committed demo data
 with no external downloads:
 
 ```bash
-aree validate-study registry/studies/GIGAS_HEAT01.yaml
+aree validate-study registry/demo_studies/GIGAS_HEAT01.yaml
 aree harmonize --study GIGAS_HEAT01
 aree meta-analyze --phenotype thermal_tolerance --feature-type gene
 aree build-evidence-cards --phenotype thermal_tolerance

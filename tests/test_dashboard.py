@@ -42,7 +42,9 @@ def test_builder_reports_missing_outputs_instead_of_failing(tmp_path, monkeypatc
     assert present["evidence_table"] is False
     assert present["candidates"] is False
     # Registry-derived counts still come through; pipeline-derived counts are zero.
-    assert data["kpis"]["n_studies_simulated"] >= 6
+    # The simulated demo studies are fixtures, left out unless asked for.
+    assert data["includes_simulated"] is False
+    assert data["kpis"]["n_studies_simulated"] == 0
     assert data["kpis"]["n_studies_real"] >= 1
     assert data["kpis"]["n_evidence_records_real"] == 0
     assert data["candidates"]["top_real"] == []
@@ -51,11 +53,16 @@ def test_builder_reports_missing_outputs_instead_of_failing(tmp_path, monkeypatc
     # Nothing fabricated: no cards were copied when there were none to copy.
     assert not (out.parent / "cards").exists()
 
+    with_demo = build_dashboard_data(out, include_simulated=True)
+    assert with_demo["includes_simulated"] is True
+    assert with_demo["kpis"]["n_studies_simulated"] >= 6
+    assert with_demo["kpis"]["n_studies_real"] == data["kpis"]["n_studies_real"]
+
 
 def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_registry, tmp_path, monkeypatch):
     runner = CliRunner()
     for study_id in ALL_DEMO_STUDY_IDS:
-        assert runner.invoke(main, ["register-study", f"registry/studies/{study_id}.yaml"]).exit_code == 0
+        assert runner.invoke(main, ["register-study", f"registry/demo_studies/{study_id}.yaml"]).exit_code == 0
         assert runner.invoke(main, ["harmonize", "--study", study_id, "--date", "2026-01-01"]).exit_code == 0
     assert runner.invoke(main, ["meta-analyze", "--feature-type", "gene"]).exit_code == 0
     assert runner.invoke(main, ["build-evidence-cards"]).exit_code == 0
@@ -64,7 +71,7 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     _point_at_reports(monkeypatch, reports_dir)
     out = tmp_path / "site" / "dashboard" / "data.json"
 
-    data = build_dashboard_data(out)
+    data = build_dashboard_data(out, include_simulated=True)
 
     assert data["artifacts_present"]["evidence_table"] is True
     assert data["artifacts_present"]["candidates"] is True
@@ -131,6 +138,9 @@ def test_cli_build_dashboard_writes_json(tmp_path, monkeypatch):
     result = CliRunner().invoke(main, ["build-dashboard", "--out", str(out)])
     assert result.exit_code == 0, result.output
     assert "Pipeline outputs not found" in result.output
+    assert json.loads(out.read_text())["kpis"]["n_studies_simulated"] == 0
+    result = CliRunner().invoke(main, ["build-dashboard", "--out", str(out), "--include-simulated"])
+    assert result.exit_code == 0, result.output
     assert json.loads(out.read_text())["kpis"]["n_studies_simulated"] >= 6
 
 
