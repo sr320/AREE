@@ -106,7 +106,7 @@ Tier assignment, in order:
    - `phenotype_relevance_score > 0.1` (not `exposure_only` — see
      [resilience_vs_exposure.md](resilience_vs_exposure.md))
    - `direction_consistency >= 0.7`
-   - `quality_score >= 0.4` (i.e. fewer than ~3 of 5 quality flags present)
+   - `quality_score >= 0.4` (at most 3 distinct quality flags under the current scoring formula)
    - `adjusted_p_value <= 0.05` — the pooled effect survives
      Benjamini–Hochberg control within its phenotype / feature-type family
      (see [interpreting_meta_analysis.md](interpreting_meta_analysis.md#multiple-testing)).
@@ -184,13 +184,16 @@ Each candidate therefore carries two more columns, computed in
 
 | column | values | meaning |
 |---|---|---|
-| `evidence_class` | `resilience_associated`, `disease_associated`, `stress_response`, `exposure_only` | the `resilience_relevance` of the phenotype the contributing studies actually measured |
+| `evidence_class` | `resilience_associated`, `disease_associated`, `stress_response`, `exposure_only` | the most conservative comparison-level `resilience_classification` among contributing records; ontology default only when absent |
 | `context_replication` | `single_study`, `single_context`, `multi_context` | whether the contributing studies vary in stressor, tissue, or life stage — replication of the *biology*, as distinct from replication of the study |
 
-Both real OsHV-1 studies measure `disease_susceptibility`: animals were
-challenged with the virus, but no survival or per-animal viral load was
-recorded. So all 1,994 top-tier candidates are `disease_associated`, not
-`resilience_associated`. They are well-replicated evidence of an infection
+In the initial two-study OsHV-1 pool (September 2026), the selected contrasts
+measured `disease_susceptibility`: animals were challenged with the virus,
+without an individual survival outcome used in those contrasts. Its 1,994
+top-tier candidates were therefore `disease_associated`. Subsequent CALLA2026
+viral read counts are QC measurements, not a survival phenotype. These
+historical counts do not describe the current expanded pool; see the
+[dashboard](index.qmd). The selected contrasts provide evidence of an infection
 response. Whether any of them distinguishes an animal that survives from one
 that does not is a question these data cannot answer, and the card says so
 rather than leaving the tier to imply otherwise.

@@ -8,8 +8,8 @@ than a summary you should trust.
 ## How pooling works
 
 `src/meta_analysis/run.py` groups the evidence table by
-`(feature_id_standardized, phenotype, feature_type, simulated, species_taxid)`
-— never across feature types, demo/real origins, or species, since those are
+`(feature_id_standardized, phenotype, feature_type, simulated, species_taxid, contrast_type)`
+— never across feature types, demo/real origins, species or contrast types, since those are
 not comparable pools. Records with `mapping_confidence == "unresolved"` are
 excluded from pooling (no stable identity to group on) but remain visible in
 the raw evidence table. Within each group, effect sizes and standard errors
@@ -67,7 +67,7 @@ pool and a 23,000-gene real pool are corrected against their own sizes.
 | `pooled_effect` | random-effects pooled estimate of the effect size |
 | `pooled_se` | standard error of the pooled effect |
 | `ci_lower` / `ci_upper` | 95% CI on the pooled effect (`pooled_effect ± 1.96 × pooled_se`) |
-| `z`, `p_value` | test statistic and two-sided p-value for the pooled effect (computed with the normal survival function, so it stays strictly positive even for very large |z|) |
+| `z`, `p_value` | test statistic and two-sided p-value for the pooled effect (computed with the normal survival function to avoid cancellation; sufficiently extreme tails can still underflow in floating-point arithmetic) |
 | `adjusted_p_value` | Benjamini–Hochberg false-discovery-rate adjusted `p_value`, computed within the test family described below |
 | `n_tests_in_family` | number of features tested in that family — the denominator the adjustment was made against |
 | `q_statistic` | Cochran's Q, the weighted sum of squared deviations from the fixed-effect estimate |

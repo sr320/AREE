@@ -29,7 +29,7 @@ from common import (  # noqa: E402
 )
 from harmonize.core import load_evidence_table  # noqa: E402
 from meta_analysis.run import run_meta_analysis  # noqa: E402
-from prioritize.rank import build_candidates  # noqa: E402
+from prioritize.rank import build_candidates, sort_candidates  # noqa: E402
 from reporting.species import species_summary  # noqa: E402
 
 
@@ -105,7 +105,7 @@ def load_candidates(phenotype: str | None = None, include_simulated: bool = Fals
             frames.append(build_candidates(meta_df, evidence_df))
     if not frames:
         return pd.DataFrame()
-    candidates = pd.concat(frames, ignore_index=True).sort_values(["tier", "score"], ascending=[True, False])
+    candidates = sort_candidates(pd.concat(frames, ignore_index=True))
     return _without_simulated(candidates, include_simulated)
 
 

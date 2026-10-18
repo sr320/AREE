@@ -7,7 +7,8 @@
                        lookup touches only the row groups holding that gene;
 * features.parquet   — one row per distinct identifier combination (standardized,
                        original, orthogroup), the small index a lookup searches first;
-* candidates.parquet — every ranked candidate;
+* candidates.parquet — every ranked candidate, with gene symbol and description
+                       for real genes (from the built crosswalks);
 * studies.parquet    — one row per registered study;
 * meta.json          — build date, row counts, real/simulated split, and the
                        interpretation note shown on the page.
@@ -34,17 +35,36 @@ DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "explore" / "data"
 # Small row groups keep a single-gene lookup to a few hundred KB of transfer.
 ROW_GROUP_SIZE = 20_000
 
+# Columns written as real booleans, so `WHERE is_predictive_baseline` works in SQL.
+BOOLEAN_COLUMNS = {"simulated", "is_predictive_baseline"}
+
+
 def _normalize(df: pd.DataFrame) -> pd.DataFrame:
     """One consistent Parquet type per column: bool, float, or nullable text."""
     df = df.copy()
     for col in df.columns:
-        if col == "simulated":
+        if col in BOOLEAN_COLUMNS:
             df[col] = df[col].astype(str).str.strip().str.lower().isin({"true", "1", "yes"})
         elif col in query.NUMERIC_COLUMNS:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         elif df[col].dtype == object:
             df[col] = df[col].map(lambda v: None if v is None or (isinstance(v, float) and pd.isna(v)) else str(v))
     return df
+
+
+def _with_gene_names(candidates: pd.DataFrame) -> pd.DataFrame:
+    """Add gene_symbol and gene_description for gene candidates whose ID is an NCBI
+    GeneID in a built crosswalk; blank otherwise (demo IDs, proteins, metabolites)."""
+    from reporting.dashboard import gene_annotation_frame
+
+    names = gene_annotation_frame()
+    ids = candidates["feature_id_standardized"].astype(str)
+    is_gene = candidates["feature_type"].astype(str) == "gene"
+    by_id = names.set_index("ncbi_gene_id")
+    out = candidates.copy()
+    for col in ("gene_symbol", "gene_description"):
+        out[col] = ids.map(by_id[col]).where(is_gene) if len(by_id) else None
+    return out
 
 
 def _write(df: pd.DataFrame, path: Path) -> None:
@@ -87,7 +107,7 @@ def export_site_data(out_dir: Path = DEFAULT_OUT_DIR,
         candidates = candidates[[c for c in query.CANDIDATE_COLUMNS if c in candidates.columns]].copy()
         candidates["card_file"] = candidates["card_file"].map(
             lambda p: Path(p).name if isinstance(p, str) and p else None)
-        candidates = _normalize(candidates)
+        candidates = _normalize(_with_gene_names(candidates))
     else:
         candidates = pd.DataFrame(columns=query.CANDIDATE_COLUMNS)
 
@@ -109,7 +129,8 @@ def export_site_data(out_dir: Path = DEFAULT_OUT_DIR,
         "facets": {
             "evidence": _facets(evidence, ["phenotype", "stressor", "species", "feature_type", "tissue",
                                            "life_stage", "mapping_confidence"]),
-            "candidates": _facets(candidates, ["phenotype", "tier", "evidence_class", "feature_type"]),
+            "candidates": _facets(candidates, ["phenotype", "tier", "evidence_class", "contrast_type",
+                                               "feature_type"]),
         },
         "labels": {
             "phenotype": {tid: t.get("label", tid) for tid, t in load_vocab("phenotype_ontology").items()},

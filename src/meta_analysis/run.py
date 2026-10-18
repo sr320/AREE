@@ -35,7 +35,7 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 # grouping on the free-text name would both split one species across its accepted
 # synonyms (Crassostrea gigas / Magallana gigas) and, once a second species is
 # registered, silently pool across species. Cross-species evidence is only ever
-# meant to combine through orthogroups, which are not yet populated.
+# meant to combine through the separate orthogroup-level analysis.
 #
 # `contrast_type` keeps a baseline difference between resilient and susceptible
 # groups apart from a response to exposure. Both can be filed under one
@@ -99,10 +99,11 @@ def effective_standard_errors(evidence: pd.DataFrame) -> np.ndarray:
     use_reported = np.isfinite(reported) & (reported > 0)
     out[use_reported] = reported[use_reported]
 
-    need = ~use_reported & np.isfinite(effect) & np.isfinite(p) & (effect != 0)
+    need = (~use_reported & np.isfinite(effect) & np.isfinite(p)
+            & (effect != 0) & (p >= 0) & (p < 1))
     if need.any():
         p_clipped = np.clip(p[need], MIN_P, 1.0 - 1e-16)
-        z = norm.ppf(1 - p_clipped / 2)
+        z = norm.isf(p_clipped / 2)
         approx = np.where(z > 0, np.abs(effect[need]) / z, np.nan)
         out[need] = approx
     return out
