@@ -29,8 +29,11 @@ from .rank import (
     add_partition_columns,
     candidate_key,
     conservative_relevance,
+    contrast_type_of,
     evidence_class,
+    is_predictive_baseline,
     layer_of,
+    with_contrast_type,
 )
 
 POOLING_STATUS_POOLED = "pooled"
@@ -54,7 +57,7 @@ def unpoolable_records(evidence_df: pd.DataFrame) -> pd.DataFrame:
     Mirrors run_meta_analysis's eligibility: a resolved identifier, an effect
     size, and a comparison the study has not prespecified out of pooling.
     """
-    evidence = add_partition_columns(evidence_df)
+    evidence = with_contrast_type(add_partition_columns(evidence_df))
     evidence = evidence[
         (evidence["mapping_confidence"] != "unresolved")
         & evidence["feature_id_standardized"].notna()
@@ -76,8 +79,8 @@ def unpoolable_records(evidence_df: pd.DataFrame) -> pd.DataFrame:
 
 def build_unpooled_candidates(evidence_df: pd.DataFrame, pooled_candidates: pd.DataFrame,
                               phenotype: str | None = None, feature_type: str | None = None) -> pd.DataFrame:
-    """One `emerging`, unscored row per feature/phenotype/feature type/partition
-    whose evidence is entirely unpoolable."""
+    """One `emerging`, unscored row per feature/phenotype/feature type/partition/
+    contrast type whose evidence is entirely unpoolable."""
     records = unpoolable_records(evidence_df)
     if phenotype:
         records = records[records["phenotype"] == phenotype]
@@ -100,6 +103,7 @@ def build_unpooled_candidates(evidence_df: pd.DataFrame, pooled_candidates: pd.D
             "feature_type": first["feature_type"],
             "simulated": first["simulated"],
             "species_taxid": first["species_taxid"],
+            "contrast_type": contrast_type_of(first),
         }
         if candidate_key(meta_like) in pooled_keys:
             continue
@@ -131,6 +135,8 @@ def build_unpooled_candidates(evidence_df: pd.DataFrame, pooled_candidates: pd.D
             "score": np.nan,
             "tier": "emerging",
             "evidence_class": evidence_class(meta_like, relevance),
+            "is_predictive_baseline": is_predictive_baseline(meta_like["contrast_type"],
+                                                             evidence_class(meta_like, relevance)),
             "context_replication": "single_study",
             "pooling_status": POOLING_STATUS_UNPOOLED,
             "orthogroup_id": ("|".join(sorted(group["orthogroup_id"].dropna().astype(str).unique()))

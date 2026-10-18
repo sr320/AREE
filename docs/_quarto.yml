@@ -61,6 +61,8 @@ website:
             href: defining_a_phenotype.md
           - text: "Resilience vs. exposure-only"
             href: resilience_vs_exposure.md
+          - text: "Contrast types"
+            href: contrast_types.md
           - text: "Raw vs. processed harmonization"
             href: raw_vs_processed.md
           - text: "Identifier mapping"

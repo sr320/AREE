@@ -81,6 +81,7 @@ def harmonize_metabolomics(
             "phenotype": comparison["phenotype"],
             "phenotype_direction": comparison["phenotype_direction"],
             "resilience_classification": comparison.get("resilience_classification"),
+            "contrast_type": comparison["contrast_type"],
             "analysis_method": method,
             "mapping_confidence": confidence,
             "quality_flags": quality_flags,

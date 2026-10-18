@@ -99,6 +99,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 6
     meta_analysis_primary: true
@@ -118,6 +119,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 6
     results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_particles_low_vs_ctl_d41_gill_dge_standardized.tsv"
@@ -136,6 +138,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 6
     results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_leachate_high_vs_ctl_d41_gill_dge_standardized.tsv"
@@ -154,6 +157,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 6
     results_file: "data/studies/BERNARDINI2024_TIRE/BERNARDINI2024_TIRE_tire_leachate_low_vs_ctl_d41_gill_dge_standardized.tsv"

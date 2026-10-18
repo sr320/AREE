@@ -87,6 +87,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 20
     biological_replicates: 2
     results_file: "data/studies/TUCCI2025_HEAT_PRIMING/TUCCI2025_HEAT_PRIMING_naive_hw_vs_naive_control_dge_standardized.tsv"
@@ -105,6 +106,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_after_heatwave (group level)"
     resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
     sample_size: 20
     biological_replicates: 2
     results_file: "data/studies/TUCCI2025_HEAT_PRIMING/TUCCI2025_HEAT_PRIMING_primed_hw_vs_naive_hw_dge_standardized.tsv"

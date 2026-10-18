@@ -85,6 +85,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "no phenotype reported"
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null

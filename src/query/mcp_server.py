@@ -104,13 +104,17 @@ def build_server(sources: query.Sources = query.DEFAULT_SOURCES):
     def list_candidates(phenotype: str | None = None, tier: str | None = None,
                         evidence_class: str | None = None, feature: str | None = None,
                         species_taxid: int | None = None, feature_type: str | None = None,
-                        include_simulated: bool = True, limit: int = 25) -> dict:
+                        include_simulated: bool = True, limit: int = 25,
+                        contrast_type: str | None = None) -> dict:
         """Ranked candidate biomarkers with transparent score components (k_studies, direction
         consistency, I-squared, pooled effect, adjusted p). tier: high_priority_cross_study,
         multi_omics_convergence, metabolite_linked_convergence, emerging. evidence_class:
-        resilience_associated, stress_response, disease_associated, exposure_only."""
+        resilience_associated, stress_response, disease_associated, exposure_only. contrast_type:
+        baseline_phenotype_difference (resilient vs susceptible groups under unstressed conditions,
+        the design for a predictive marker), phenotype_difference_under_exposure,
+        exposure_response, phenotype_by_exposure_interaction."""
         return query.list_candidates(phenotype, tier, evidence_class, feature, species_taxid,
-                                     feature_type, include_simulated, limit, sources)
+                                     feature_type, include_simulated, limit, contrast_type, sources)
 
     @server.tool()
     def get_evidence_card(feature: str, phenotype: str | None = None,

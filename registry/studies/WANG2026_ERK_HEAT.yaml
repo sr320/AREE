@@ -89,6 +89,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "no survival endpoint for this contrast; 37 C is sublethal"
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null
@@ -107,6 +108,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "survival under 42 C heat about halved with the inhibitor after 15 h (Kaplan-Meier, n = 100 per group); oxygen consumption at 37 C lower (n = 8)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null

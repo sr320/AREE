@@ -84,6 +84,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 26
     biological_replicates: 13
     meta_analysis_primary: true

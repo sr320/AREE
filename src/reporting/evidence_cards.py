@@ -38,6 +38,8 @@ from prioritize.rank import (
     _partition_value,
     add_partition_columns,
     build_candidates,
+    contrast_suffix,
+    contrast_type_of,
     sort_candidates,
 )
 from prioritize.unpooled import POOLING_STATUS_UNPOOLED, build_unpooled_candidates
@@ -69,6 +71,34 @@ NEXT_STEP_BY_TIER = {
 # sees only `high_priority_cross_study` will read "resilience biomarker", which
 # is wrong for every candidate whose contributing studies never measured a
 # resilience outcome.
+# What the comparison behind the evidence contrasts. The evidence class says
+# what was measured; this says when and between whom.
+CONTRAST_TYPE_STATEMENT = {
+    "baseline_phenotype_difference": (
+        "The contributing comparisons contrast groups that differ in resilience (line, family, "
+        "population, ploidy or age), sampled under **common unstressed conditions**. A difference "
+        "here exists before any stress, which is what a predictive marker needs. Groups that differ "
+        "in origin differ in more than resilience, so replication across independent group pairs, "
+        "and ultimately pre-challenge sampling of individuals whose survival is then recorded, is "
+        "what separates a marker from a background difference."
+    ),
+    "phenotype_difference_under_exposure": (
+        "The contributing comparisons contrast groups that differ in resilience, sampled **during or "
+        "after a challenge**. A difference here may be a cause of the outcome or a consequence of it "
+        "(sicker animals express different genes), so it does not by itself predict resilience "
+        "before stress."
+    ),
+    "exposure_response": (
+        "The contributing comparisons contrast a **treatment with a control**. They show how the "
+        "feature responds to the exposure, not whether it differs between resilient and susceptible "
+        "animals."
+    ),
+    "phenotype_by_exposure_interaction": (
+        "The contributing comparisons contrast **how two groups respond** to the same exposure. A "
+        "difference here is a difference in response, not a baseline difference."
+    ),
+}
+
 EVIDENCE_CLASS_STATEMENT = {
     "resilience_associated": (
         "The contributing studies measured a **resilience outcome** (survival, tolerance, or "
@@ -367,12 +397,16 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     evidence_class = candidate.get("evidence_class", "exposure_only")
     lines.append(f"**Evidence class:** `{evidence_class}`  "
                  f"**Context replication:** `{candidate.get('context_replication', 'single_study')}`")
+    lines.append(f"**Contrast type:** `{contrast_type_of(candidate)}`"
+                 + ("  **Predictive baseline candidate**" if candidate.get("is_predictive_baseline") else ""))
     lines.append("")
     lines.append("> AREE candidate scores are associations across available evidence, not validated biomarkers. "
                   "See Limitations below before acting on this card.")
     lines.append("")
     lines.append("## What this evidence does and does not show")
     lines.append(EVIDENCE_CLASS_STATEMENT.get(evidence_class, EVIDENCE_CLASS_STATEMENT["exposure_only"]))
+    lines.append("")
+    lines.append(CONTRAST_TYPE_STATEMENT[contrast_type_of(candidate)])
     lines.append("")
     lines.append(_context_statement(candidate))
     lines.append("")
@@ -523,6 +557,7 @@ def _unpooled_card_markdown(candidate: dict, forest_points: list, phenotype_labe
         "",
         f"**Tier:** `{candidate['tier']}`  **Score:** not scored (unpooled)",
         f"**Evidence class:** `{evidence_class}`  **Pooling status:** `{POOLING_STATUS_UNPOOLED}`",
+        f"**Contrast type:** `{contrast_type_of(candidate)}`",
         "",
         "> This feature has no pooled estimate. Every record below comes from a source that reports "
         "neither a standard error nor an unadjusted p-value — typically an author-curated, "
@@ -532,6 +567,8 @@ def _unpooled_card_markdown(candidate: dict, forest_points: list, phenotype_labe
         "",
         "## What this evidence does and does not show",
         EVIDENCE_CLASS_STATEMENT.get(evidence_class, EVIDENCE_CLASS_STATEMENT["exposure_only"]),
+        "",
+        CONTRAST_TYPE_STATEMENT[contrast_type_of(candidate)],
         "",
         CONTEXT_REPLICATION_STATEMENT["single_study"],
         "",
@@ -581,6 +618,7 @@ def _card_slug(candidate: dict) -> str:
     return _slug(
         f"{candidate['feature_id_standardized']}_{candidate['phenotype']}_"
         f"{candidate['feature_type']}_{origin}_taxid{candidate['species_taxid']}"
+        f"{contrast_suffix(candidate)}"
     )
 
 

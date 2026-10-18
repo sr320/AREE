@@ -106,6 +106,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "D-larva size (area, um2) at 40 h: smaller under acidification (Dunn z = -8.58); birefringence not different (z = -1.31); larvae tested as units"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null
@@ -124,6 +125,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "D-larva birefringence (greyscale 0-255) at 40 h: lower in warm acidified than warm (Dunn z = -2.44); size not compared between these two arms"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null
@@ -141,6 +143,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "D-larva size (area, um2) and birefringence at 40 h: both higher when warm (Dunn z = 3.15 and 8.61); larvae tested as units"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null
@@ -158,6 +161,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "not tested between these two arms; relative to control, acidified larvae were smaller and warm-acidified larvae were not"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null
@@ -175,6 +179,7 @@ comparisons:
     phenotype_direction: "mixed"
     phenotype_unit: "D-larva size not different from control (Dunn z = 1.05); birefringence higher (z = 6.59)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null

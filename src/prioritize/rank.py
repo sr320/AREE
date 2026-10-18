@@ -74,8 +74,24 @@ EVIDENCE_CLASS_BY_RELEVANCE = {
 }
 DEFAULT_EVIDENCE_CLASS = "exposure_only"
 
+# What a comparison's two arms differ in (schemas/study.schema.json). It is part
+# of the candidate key, as of the meta-analysis grouping: a gene that differs
+# between resilient and susceptible animals at baseline and a gene that responds
+# to heat are two different candidates, even under one phenotype.
+CONTRAST_TYPES = [
+    "baseline_phenotype_difference",
+    "phenotype_difference_under_exposure",
+    "exposure_response",
+    "phenotype_by_exposure_interaction",
+]
+BASELINE_CONTRAST = "baseline_phenotype_difference"
+# For rows and frames built by hand (tests). Harmonized evidence always carries
+# a contrast type, and the meta-analysis refuses evidence that does not.
+DEFAULT_CONTRAST_TYPE = "exposure_response"
+
 PARTITION_COLUMNS = ["_simulated", "_species_taxid"]
-CANDIDATE_GROUP_COLUMNS = ["feature_id_standardized", "phenotype", "feature_type", *PARTITION_COLUMNS]
+CANDIDATE_GROUP_COLUMNS = ["feature_id_standardized", "phenotype", "feature_type", *PARTITION_COLUMNS,
+                           "contrast_type"]
 FEATURE_GROUP_COLUMNS = ["feature_id_standardized", *PARTITION_COLUMNS]
 
 
@@ -106,6 +122,35 @@ def add_partition_columns(evidence_df: pd.DataFrame) -> pd.DataFrame:
         _simulated=evidence_df["simulated"].map(_partition_value),
         _species_taxid=evidence_df["species_taxid"].map(_partition_value),
     )
+
+
+def contrast_type_of(row: dict) -> str:
+    value = row.get("contrast_type")
+    return value if isinstance(value, str) and value else DEFAULT_CONTRAST_TYPE
+
+
+def with_contrast_type(evidence_df: pd.DataFrame) -> pd.DataFrame:
+    """The evidence with a contrast_type column, defaulted only where it is absent
+    altogether (frames built by hand); never overwrites a recorded value."""
+    if "contrast_type" in evidence_df.columns:
+        return evidence_df
+    return evidence_df.assign(contrast_type=DEFAULT_CONTRAST_TYPE)
+
+
+def contrast_suffix(row: dict) -> str:
+    """Card-name suffix that keeps two contrast types of one feature apart.
+
+    Empty for exposure_response, so the names of existing cards do not change.
+    """
+    contrast = contrast_type_of(row)
+    return "" if contrast == DEFAULT_CONTRAST_TYPE else f"_{contrast}"
+
+
+def is_predictive_baseline(contrast_type: str, evidence_class_value: str) -> bool:
+    """A candidate whose evidence is a baseline difference between groups that
+    differ in a measured resilience outcome: the design for a marker that could
+    be read before any stress. Its tier still says how well replicated it is."""
+    return contrast_type == BASELINE_CONTRAST and evidence_class_value == "resilience_associated"
 
 
 @lru_cache(maxsize=1)
@@ -163,6 +208,7 @@ def candidate_key(meta_row: dict) -> tuple:
         meta_row["feature_type"],
         _partition_value(meta_row["simulated"]),
         _partition_value(meta_row["species_taxid"]),
+        contrast_type_of(meta_row),
     )
 
 
@@ -170,7 +216,7 @@ class EvidenceIndex:
     """Positional indices into a normalized evidence frame, built once per run."""
 
     def __init__(self, evidence_df: pd.DataFrame):
-        evidence = add_partition_columns(evidence_df)
+        evidence = with_contrast_type(add_partition_columns(evidence_df))
         mapped = evidence[evidence["feature_id_standardized"].notna()].copy()
         mapped["feature_id_standardized"] = mapped["feature_id_standardized"].astype(str)
         mapped["_layer"] = mapped["feature_type"].map(layer_of)
@@ -183,11 +229,13 @@ class EvidenceIndex:
         self.evidence = mapped
         self._by_candidate = mapped.groupby(CANDIDATE_GROUP_COLUMNS, sort=False).indices
         self._by_feature = mapped.groupby(FEATURE_GROUP_COLUMNS, sort=False).indices
-        # Layers with at least one significant record, per feature + phenotype + partition.
+        # Layers with at least one significant record, per feature + phenotype +
+        # partition + contrast type. Expression differing at baseline and
+        # methylation responding to heat are two questions, not convergence.
         significant = mapped[mapped["_significant"]]
         self._supported_layers = (
-            significant.groupby(["feature_id_standardized", "phenotype", *PARTITION_COLUMNS])["_layer"]
-            .agg(set).to_dict()
+            significant.groupby(["feature_id_standardized", "phenotype", *PARTITION_COLUMNS, "contrast_type"])
+            ["_layer"].agg(set).to_dict()
         )
 
     def _slice(self, index, key) -> pd.DataFrame:
@@ -197,7 +245,7 @@ class EvidenceIndex:
         return self.evidence.iloc[positions]
 
     def for_candidate(self, meta_row: dict) -> pd.DataFrame:
-        """All records for this feature / phenotype / feature type / partition."""
+        """All records for this feature / phenotype / feature type / partition / contrast type."""
         return self._slice(self._by_candidate, candidate_key(meta_row))
 
     def contributing(self, meta_row: dict) -> pd.DataFrame:
@@ -219,11 +267,11 @@ class EvidenceIndex:
 
     def supporting_layers(self, meta_row: dict) -> set:
         """Molecular layers with a significant record for this feature under
-        this candidate's own phenotype and partition. The candidate's own layer
+        this candidate's own phenotype, partition and contrast type. The candidate's own layer
         also counts when its pooled estimate is significant, even if no single
         contributing record is."""
         key = candidate_key(meta_row)
-        layers = set(self._supported_layers.get((key[0], key[1], key[3], key[4]), set()))
+        layers = set(self._supported_layers.get((key[0], key[1], key[3], key[4], key[5]), set()))
         if significance_p_value(meta_row) <= LAYER_SUPPORT_MAX_ADJUSTED_P:
             layers.add(layer_of(meta_row["feature_type"]))
         return layers
@@ -264,7 +312,7 @@ class EvidenceIndex:
         """(linked_layers, credited links behind them) for this candidate.
 
         A linked layer is one with a significant record for a CREDITED linked
-        feature under this candidate's own phenotype and partition, that is not
+        feature under this candidate's own phenotype, partition and contrast type, that is not
         already a shared-identifier supporting layer — shared identity is the
         stronger link and is never double-counted as a biochemical one.
         """
@@ -275,7 +323,7 @@ class EvidenceIndex:
             if not link.credited:
                 continue
             linked_id = self.linked_feature_id(link, from_metabolite)
-            found = self._supported_layers.get((linked_id, key[1], key[3], key[4]), set()) - supporting
+            found = self._supported_layers.get((linked_id, key[1], key[3], key[4], key[5]), set()) - supporting
             found.discard(layer_of(meta_row["feature_type"]))
             if found:
                 layers |= found
@@ -342,11 +390,15 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
         else:
             convergence_basis = "none"
 
+        klass = evidence_class(meta_dict, relevance)
+        contrast = contrast_type_of(meta_dict)
         rows.append({
             **meta_dict,
+            "contrast_type": contrast,
             "score": score,
             "tier": tier,
-            "evidence_class": evidence_class(meta_dict, relevance),
+            "evidence_class": klass,
+            "is_predictive_baseline": is_predictive_baseline(contrast, klass),
             "context_replication": context_replication(meta_dict),
             "pooled_stressors": "|".join(pooled_stressors(meta_dict)),
             "pooling_status": "pooled",

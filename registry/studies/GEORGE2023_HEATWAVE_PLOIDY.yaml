@@ -114,6 +114,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "percent mortality per ploidy x treatment group (measured; not per sequenced oyster)"
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 22
     biological_replicates: 11
     meta_analysis_primary: true
@@ -140,6 +141,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "percent mortality per ploidy x treatment group (measured; not per sequenced oyster)"
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 21
     biological_replicates: 10
     excluded_samples:
@@ -168,6 +170,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "percent mortality per ploidy x treatment group (measured: 14.8% in diploids after the multiple stressor; not per sequenced oyster)"
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 21
     biological_replicates: 10
     excluded_samples:
@@ -196,6 +199,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "percent mortality per ploidy x treatment group (measured: 36.4% in triploids after the multiple stressor; not per sequenced oyster)"
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 22
     biological_replicates: 11
     excluded_samples:

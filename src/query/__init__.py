@@ -42,7 +42,7 @@ INTERPRETATION_NOTE = (
 
 # Columns returned for an evidence record: identity, effect, context, and provenance.
 EVIDENCE_COLUMNS = [
-    "evidence_id", "study_id", "comparison_id", "simulated", "species",
+    "evidence_id", "study_id", "comparison_id", "contrast_type", "simulated", "species",
     "feature_id_original", "feature_id_standardized", "feature_type", "orthogroup_id",
     "mapping_confidence", "molecular_direction", "effect_size", "effect_size_type",
     "standard_error", "ci_lower", "ci_upper", "p_value", "adjusted_p_value", "sample_size",
@@ -53,7 +53,8 @@ EVIDENCE_COLUMNS = [
 
 CANDIDATE_COLUMNS = [
     "feature_id_standardized", "feature_type", "phenotype", "simulated", "species_taxid",
-    "tier", "evidence_class", "context_replication", "score", "k_studies",
+    "tier", "evidence_class", "contrast_type", "is_predictive_baseline", "context_replication",
+    "score", "k_studies",
     "n_supporting_layers", "direction_consistency", "pooled_effect", "i_squared",
     "adjusted_p_value", "studies", "card_file",
 ]
@@ -61,7 +62,7 @@ CANDIDATE_COLUMNS = [
 STUDY_COLUMNS = [
     "study_id", "simulated", "species", "species_accepted", "assay_type", "analysis_mode",
     "tissues", "life_stages", "stressors", "phenotypes", "resilience_classifications",
-    "n_comparisons", "data_status", "raw_data_available", "processed_data_available",
+    "contrast_types", "n_comparisons", "data_status", "raw_data_available", "processed_data_available",
     "qc_status", "analysis_status", "doi", "bioproject", "citation",
 ]
 
@@ -203,6 +204,7 @@ def _study_summary(study: dict) -> dict:
         "stressors": "|".join(collect("stressor_standardized")),
         "phenotypes": "|".join(collect("phenotype")),
         "resilience_classifications": "|".join(collect("resilience_classification")),
+        "contrast_types": "|".join(collect("contrast_type")),
         "n_comparisons": len(comparisons),
         "data_status": availability.get("status"),
         "raw_data_available": availability.get("raw_data_available"),
@@ -348,13 +350,18 @@ def list_candidates(phenotype: str | None = None, tier: str | None = None,
                     evidence_class: str | None = None, feature: str | None = None,
                     species_taxid: int | None = None, feature_type: str | None = None,
                     include_simulated: bool = True, limit: int = 25,
+                    contrast_type: str | None = None,
                     sources: Sources = DEFAULT_SOURCES) -> dict:
-    """Ranked candidate biomarkers from `aree build-evidence-cards`, best score first within tier order."""
+    """Ranked candidate biomarkers from `aree build-evidence-cards`, best score first within tier order.
+
+    contrast_type="baseline_phenotype_difference" returns candidates resting on a
+    difference between resilient and susceptible groups under unstressed conditions.
+    """
     df = sources.candidates()
     if df.empty:
         return {"n_candidates": 0, "candidates": [], "artifacts": artifacts(sources)}
     for column, value in (("phenotype", phenotype), ("tier", tier), ("evidence_class", evidence_class),
-                          ("feature_type", feature_type)):
+                          ("feature_type", feature_type), ("contrast_type", contrast_type)):
         if value and column in df.columns:
             df = df[df[column].astype(str).str.lower() == value.lower()]
     if feature:

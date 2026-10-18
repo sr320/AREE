@@ -34,6 +34,7 @@ from common import (
     species_term_for_taxid,
     study_files,
 )
+from prioritize.rank import DEFAULT_CONTRAST_TYPE
 
 from .species import species_identity_basis, species_summary
 
@@ -583,9 +584,13 @@ def _pool_summary(include_simulated: bool = False) -> list[dict]:
         if "species_taxid" not in df.columns:
             df["species_taxid"] = None
         df["_taxid"] = df["species_taxid"].map(_taxid)
-        for (phen, ftype, sim, taxid), grp in df.groupby(["phenotype", "feature_type", "simulated", "_taxid"],
-                                                         dropna=False):
-            key = (phen, ftype, bool(sim), taxid)
+        # A baseline contrast and an exposure response under one phenotype are
+        # separate pools (meta_analysis.run.GROUP_KEYS).
+        if "contrast_type" not in df.columns:
+            df["contrast_type"] = DEFAULT_CONTRAST_TYPE
+        for (phen, ftype, sim, taxid, contrast), grp in df.groupby(
+                ["phenotype", "feature_type", "simulated", "_taxid", "contrast_type"], dropna=False):
+            key = (phen, ftype, bool(sim), taxid, contrast)
             if key in seen:
                 continue
             seen.add(key)
@@ -598,6 +603,7 @@ def _pool_summary(include_simulated: bool = False) -> list[dict]:
                 "feature_type": ftype,
                 "simulated": bool(sim),
                 "species_taxid": taxid,
+                "contrast_type": contrast,
                 "species": _species_label(taxid),
                 "studies": sorted(studies),
                 "n_features": int(len(grp)),

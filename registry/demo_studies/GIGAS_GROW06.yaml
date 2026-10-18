@@ -45,6 +45,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "wet_weight_g"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 10
     biological_replicates: 2
     results_file: "data/demo/metabolomics/GIGAS_GROW06_hypoxia_vs_control_metabolite_features_demo.tsv"
