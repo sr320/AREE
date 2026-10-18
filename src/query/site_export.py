@@ -62,8 +62,13 @@ def _split(df: pd.DataFrame) -> dict:
 
 
 def export_site_data(out_dir: Path = DEFAULT_OUT_DIR,
-                     sources: query.Sources = query.DEFAULT_SOURCES) -> dict:
-    """Write the explorer's Parquet tables and meta.json; return the meta document."""
+                     sources: query.Sources = query.DEFAULT_SOURCES,
+                     include_simulated: bool = False) -> dict:
+    """Write the explorer's Parquet tables and meta.json; return the meta document.
+
+    Simulated demo studies and their evidence are left out unless
+    include_simulated is set: they are pipeline fixtures, not findings.
+    """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,6 +93,9 @@ def export_site_data(out_dir: Path = DEFAULT_OUT_DIR,
 
     studies = _normalize(query.study_table(sources))
 
+    evidence = query._filter_simulated(evidence, include_simulated)
+    candidates = query._filter_simulated(candidates, include_simulated)
+    studies = query._filter_simulated(studies, include_simulated)
     tables = {"evidence": evidence, "features": _feature_index(evidence),
               "candidates": candidates, "studies": studies}
     for name, df in tables.items():

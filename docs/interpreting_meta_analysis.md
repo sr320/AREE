@@ -115,7 +115,7 @@ effects for the same gene under the same phenotype (`larval_viability`):
 under ocean acidification (log2FC ≈ -1.00, adjusted p = 0.03), while
 `GIGAS_LARV05` finds it **up**-regulated under nutritional limitation
 (log2FC ≈ 0.60). This is intentional in the demo data — the curation note in
-`registry/studies/GIGAS_OA02.yaml` states the study "deliberately includes an
+`registry/demo_studies/GIGAS_OA02.yaml` states the study "deliberately includes an
 antioxidant-pathway gene (sod1) that is down-regulated here but up-regulated
 in GIGAS_LARV05 under the same larval_viability phenotype, to demonstrate how
 AREE surfaces conflicting same-phenotype cross-study evidence in

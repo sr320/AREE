@@ -352,7 +352,7 @@ aree harmonize --study GIGAS_HEAT01 \
 
 which calls `src/harmonize/rnaseq.py::harmonize_rnaseq()` to convert the
 table into evidence records (`schemas/evidence.schema.json`) joined against
-the study's registry entry (`registry/studies/GIGAS_HEAT01.yaml`) for
+the study's registry entry (`registry/demo_studies/GIGAS_HEAT01.yaml`) for
 tissue/life-stage/stressor/phenotype/sample-size context. The workflow
 manifest JSON is a separate, complementary artifact — it documents how the
 TSV was produced (or, in harmonization mode, that it was *not* independently

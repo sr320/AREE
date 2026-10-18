@@ -57,12 +57,14 @@ def isolated_reports(tmp_path, monkeypatch):
 
 @pytest.fixture
 def isolated_registry(tmp_path, monkeypatch):
-    """Redirect the study registry CSV to a temp file so tests never mutate
-    the real registry/study_registry.csv."""
+    """Redirect the study registry CSVs (real and demo) to temp files so tests
+    never mutate registry/study_registry.csv or registry/demo_study_registry.csv.
+    Returns the real-study registry path; the demo index sits beside it."""
     import intake.registry as registry_mod
 
     registry_path = tmp_path / "study_registry.csv"
     monkeypatch.setattr(registry_mod, "STUDY_REGISTRY_CSV", registry_path)
+    monkeypatch.setattr(registry_mod, "DEMO_REGISTRY_CSV", tmp_path / "demo_study_registry.csv")
     return registry_path
 
 

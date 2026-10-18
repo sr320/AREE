@@ -21,7 +21,15 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_vocab, load_yaml, resolve_species
+from common import (
+    DEMO_STUDIES_DIR,
+    REPO_ROOT,
+    REPORTS_DIR,
+    STUDIES_DIR,
+    load_vocab,
+    load_yaml,
+    resolve_species,
+)
 
 # Stated with every answer that carries evidence: AREE reports associations and
 # convergence, never validation or causation (CLAUDE.md, docs/interpreting_candidate_scores.md).
@@ -75,7 +83,15 @@ class Sources:
 
     reports_dir: Path = REPORTS_DIR
     studies_dir: Path = STUDIES_DIR
+    # Simulated demo studies live apart from real ones; `include_simulated`
+    # decides whether answers show them, as for evidence and candidates.
+    demo_studies_dir: Path = DEMO_STUDIES_DIR
     _cache: dict = field(default_factory=dict, repr=False)
+
+    def study_paths(self) -> list[Path]:
+        """Every study YAML, real then demo; templates (`_*`) skipped."""
+        return [p for d in (self.studies_dir, self.demo_studies_dir)
+                for p in sorted(d.glob("*.yaml")) if not p.name.startswith("_")]
 
     @property
     def evidence_table(self) -> Path:
@@ -202,8 +218,7 @@ def _study_summary(study: dict) -> dict:
 
 
 def _load_studies(sources: Sources) -> list[dict]:
-    paths = sorted(p for p in sources.studies_dir.glob("*.yaml") if not p.name.startswith("_"))
-    return [load_yaml(p) for p in paths]
+    return [load_yaml(p) for p in sources.study_paths()]
 
 
 def study_table(sources: Sources = DEFAULT_SOURCES) -> pd.DataFrame:
@@ -228,9 +243,9 @@ def list_studies(species: str | None = None, stressor: str | None = None,
 
 def get_study(study_id: str, sources: Sources = DEFAULT_SOURCES) -> dict:
     """The full registration record for one study, plus how much evidence it contributed."""
-    path = sources.studies_dir / f"{study_id}.yaml"
-    if not path.exists():
-        known = sorted(p.stem for p in sources.studies_dir.glob("*.yaml") if not p.name.startswith("_"))
+    path = next((p for p in sources.study_paths() if p.stem == study_id), None)
+    if path is None:
+        known = sorted(p.stem for p in sources.study_paths())
         return {"error": f"No registered study {study_id!r}.", "known_study_ids": known}
     study = load_yaml(path)
     evidence = sources.evidence()

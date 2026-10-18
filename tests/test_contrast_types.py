@@ -5,7 +5,7 @@ import pytest
 import yaml
 from conftest import harmonize_all_demo_studies
 
-from common import STUDIES_DIR
+from common import STUDIES_DIR, study_files, study_yaml_path
 from harmonize.core import load_evidence_table
 from intake.schema_validate import validate_study_file
 from meta_analysis.run import require_contrast_type, run_meta_analysis
@@ -18,9 +18,7 @@ RESPONSE = "exposure_response"
 
 
 def _registered_comparisons():
-    for path in sorted(STUDIES_DIR.glob("*.yaml")):
-        if path.name.startswith("_"):
-            continue
+    for path in study_files():  # real and demo
         study = yaml.safe_load(path.read_text())
         for comp in study["comparisons"]:
             yield study["study_id"], comp
@@ -42,7 +40,7 @@ def test_baseline_contrasts_are_classified_as_resilience():
 
 
 def _copy_study(tmp_path, study_id, edit):
-    study = yaml.safe_load((STUDIES_DIR / f"{study_id}.yaml").read_text())
+    study = yaml.safe_load(study_yaml_path(study_id).read_text())
     edit(study)
     path = tmp_path / f"{study_id}.yaml"
     path.write_text(yaml.safe_dump(study, sort_keys=False))
@@ -114,7 +112,7 @@ def two_contrast_study(isolated_reports, tmp_path, monkeypatch):
         "  - comparison_id: response_b\n"
         f"    contrast_type: {RESPONSE}\n"
     )
-    monkeypatch.setattr(meta_run, "STUDIES_DIR", studies_dir)
+    monkeypatch.setattr(meta_run, "study_files", lambda: sorted(studies_dir.glob("*.yaml")))
     return load_evidence_table()
 
 
@@ -146,7 +144,9 @@ def test_baseline_candidate_is_flagged_predictive_and_gets_its_own_card(two_cont
 
     path = tmp_path / "candidates.tsv"
     candidates.reset_index().assign(card_file="").to_csv(path, sep="\t", index=False)
-    summary = build_top_candidates_summary(candidates_path=path, out_path=tmp_path / "s.md").read_text()
+    # The fixture is built from demo evidence, so it is simulated.
+    summary = build_top_candidates_summary(candidates_path=path, out_path=tmp_path / "s.md",
+                                           include_simulated=True).read_text()
     section = summary.split("## Predictive baseline candidates", 1)[1].split("\n## ", 1)[0]
     assert "LOC105331241" in section and BASELINE in section and RESPONSE not in section
 

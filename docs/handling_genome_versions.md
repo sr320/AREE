@@ -14,7 +14,7 @@ Every study record (`schemas/study.schema.json`) carries:
   gene annotation build, since the same assembly can have multiple
   annotation releases over time, e.g. `"cgigas_annotation_v1_demo"` or, for a
   deliberately mismatched demo case,
-  `"legacy_oyster_v9_symbols_only_demo"` (`registry/studies/GIGAS_LARV05.yaml`
+  `"legacy_oyster_v9_symbols_only_demo"` (`registry/demo_studies/GIGAS_LARV05.yaml`
   — a study annotated with an older, symbol-only gene set).
 
 Every evidence record (`schemas/evidence.schema.json`) independently carries

@@ -31,18 +31,19 @@ jobs:
       - name: Validate all demo studies
         run: |
           for sid in $(aree study-ids --simulated); do
-            aree validate-study "registry/studies/$sid.yaml"
+            aree validate-study "registry/demo_studies/$sid.yaml"
           done
 
-      # The registry CSV is generated, not committed. Every study YAML on the
-      # branch, demo and real, must still validate into it.
+      # The registry CSVs are generated, not committed. Every study YAML on the
+      # branch, real (registry/studies/) and demo (registry/demo_studies/), must
+      # still validate into them, each in its own directory.
       - name: Rebuild the registry index from every study YAML
         run: aree build-registry --strict
 
       - name: Run full demo pipeline end-to-end
         run: |
           for sid in $(aree study-ids --simulated); do
-            aree register-study "registry/studies/$sid.yaml" --update
+            aree register-study "registry/demo_studies/$sid.yaml" --update
           done
           for sid in $(aree study-ids --simulated); do
             aree harmonize --study "$sid"
@@ -50,7 +51,8 @@ jobs:
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
           aree build-cross-species-cards --feature-type gene
-          aree top-candidates
+          aree top-candidates --include-simulated
+          aree build-dashboard --include-simulated --out "$RUNNER_TEMP/dashboard.json"
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
           test -f reports/evidence_cards/cross_species/candidates.tsv

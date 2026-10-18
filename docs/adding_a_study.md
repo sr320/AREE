@@ -45,14 +45,17 @@ other — all nullable), `strain_or_population`, `annotation_version`,
 `platform`, `qc_status`, `analysis_status`, `quality_flags`, `limitations`.
 
 If the study is synthetic/demo data rather than a real dataset, set
-`simulated: true` and say so plainly in the `citation` and `limitations`
-fields (see any file in `registry/studies/GIGAS_*.yaml` for the convention
-used by the demo set — they are all prefixed `[SIMULATED]`).
+`simulated: true`, put the YAML in `registry/demo_studies/` instead of
+`registry/studies/`, and say so plainly in the `citation` and `limitations`
+fields (see any file in `registry/demo_studies/GIGAS_*.yaml` for the convention
+used by the demo set — they are all prefixed `[SIMULATED]`). Validation fails
+for a study in the wrong directory. Demo studies are test fixtures for code
+paths real data does not reach yet; add one only for that reason.
 
 ## 3. The `comparisons[]` structure
 
 A single study can report more than one phenotype or stressor — for example
-`registry/studies/GIGAS_HEAT01.yaml` reports both an acute heat-shock
+`registry/demo_studies/GIGAS_HEAT01.yaml` reports both an acute heat-shock
 comparison (phenotype `survival`) and a chronic heat comparison (phenotype
 `growth_under_stress`) from the same study. Rather than forcing one label per
 study, phenotype/stressor/tissue/life-stage fields live at the **comparison**

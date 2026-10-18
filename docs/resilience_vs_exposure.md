@@ -77,7 +77,7 @@ structural requirement rather than a style guideline:
   actually just describing the treatment condition itself, it is
   `exposure_only`.
 - A single study can legitimately contain comparisons in more than one
-  category — e.g. `GIGAS_PATH03` (`registry/studies/GIGAS_PATH03.yaml`) is
+  category — e.g. `GIGAS_PATH03` (`registry/demo_studies/GIGAS_PATH03.yaml`) is
   classified `disease` because its phenotype is `disease_susceptibility`
   measured via tissue pathology score rather than a survival curve, which is
   explicitly noted in its `limitations` field.
