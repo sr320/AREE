@@ -1,71 +1,257 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# WGBS of adult gill from common-garden F1 oysters of intertidal and subtidal
+# origin (Laoting, Bohai Sea), before and after 6 h at 35 C. The methylation
+# counterpart of LI2018_HEAT_TIDAL's Laoting half.
+#
+# Source: Wang et al. 2020, Heredity (open access, PMC7852555), which names
+# PRJNA562805. Methods read in full 2026-10-18.
+#
+# NOT INDEPENDENT OF LI2018_HEAT_TIDAL. SAME COHORT, SAME EXPERIMENT, AND
+# (BY ALL AVAILABLE EVIDENCE) THE SAME ANIMALS.
+# - Methods: "The breeding and the heat-stress treatment of the oysters used
+#   in this study were performed in a previous study (Li et al. 2018)."
+# - Methods: the RNA-seq of PRJNA407831 (= LI2018_HEAT_TIDAL) was "matched
+#   ... with the WGBS data on identical materials from the present study."
+# - Design matches LI2018's Laoting arm exactly: Laoting intertidal and
+#   subtidal wild parents, 30 females x 30 males per group, three culture
+#   replicates, 10-month-old F1, 15 d laboratory acclimation at 14.2-18.2 C,
+#   35 C seawater, gill sampled at 0 h and 6 h, n = 15 per group per time.
+#   LI2018 sampled five oysters from each of three replicates per population
+#   per time (n = 15); this study pooled DNA from its 15 per group into
+#   three pools of five.
+# - What is NOT stated: that each WGBS pool of five is the same five animals
+#   (or the same tank) as an LI2018 RNA library. That is inferred from the
+#   matching counts and the "identical materials" wording, not read.
+# So this study is a second molecular layer on LI2018's Laoting population
+# pair, not a replication of it. Its intertidal-vs-subtidal contrast must not
+# count as a second independent population pair for LI2018's baseline
+# contrast. It covers only Laoting (BioSample geo_loc_name "China: Laoting");
+# LI2018's Bayuquan pair has no methylation data.
+#
+# REGISTERED, RUN PENDING (2026-10-18). Sample sheet, methylKit sheet, FASTQ
+# manifest and run configuration are generated; no FASTQ downloaded, no
+# workflow run, results_file null, both status fields not_started.
 
 study_id: WANG2020_TIDAL_HEAT_WGBS
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1038/s41437-020-0351-7"
   bioproject: "PRJNA562805"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR10065364-SRR10065375"
+  ena: "PRJNA562805"
   proteomexchange: null
-  other: null
+  other: "BioSample SAMN12651045 (single BioSample for all 12 libraries); PMID 32807851; PMC7852555. Paired RNA-seq: PRJNA407831 (LI2018_HEAT_TIDAL)"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Wang X, Li A, Wang W, Que H, Zhang G, Li L (2020). DNA methylation mediates differentiation in thermal responses of Pacific oyster (Crassostrea gigas) derived from different tidal levels. Heredity 126(1):10-22. https://doi.org/10.1038/s41437-020-0351-7"
 
-assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+species: "Magallana gigas"
+strain_or_population: "F1 of two wild populations from the intertidal (In) and subtidal (Sub) zones at Laoting (39°16'N, Tangshan, Hebei, Bohai Sea, China); parents acclimated 1 month at Qingdao, eggs of 30 females split 30 ways and each fertilized by one of 30 males, larvae combined into three culture replicates per group, reared in sea cages; 10-month-old oysters used. Same F1 cohort as the Laoting populations of LI2018_HEAT_TIDAL (LT J / LT X)."
+
+# AREE reanalyzes against its current reference, as for the other
+# raw_reanalysis studies. The authors mapped to the Zhang et al. 2012 assembly.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["methylation"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq X Ten per SRA (paper: HiSeq 2500/4000, 125/150 bp), paired-end 150 bp whole-genome bisulfite sequencing, directional, lambda spike-in; 12 pooled-DNA libraries, 66.0-91.1 M read pairs each; 140.7 GB FASTQ reported by ENA"
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 12 runs are public in ENA/SRA under PRJNA562805 (first public 2020-05-30). No methylation calls or DMR tables are deposited; supplementary tables were not checked for gene-level DMR results. All 12 libraries share one BioSample (SAMN12651045, whose attributes describe the whole project: isolation source 'intertidal and subtidal area', isolate 'under heat shock and control conditions'), so the design comes from the run library_name (InC_1 ... SubH_3), which uses the paper's own group codes. Sequence data are not committed."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
+# ---------------------------------------------------------------------------
+# Comparisons, prespecified 2026-10-18 before any AREE result was computed.
+# (The authors' own results are published; see curation_notes for how the
+# primary was chosen with that in mind.)
+#
+# RUN-TO-GROUP MAPPING. library_name = <origin><temperature>_<replicate>,
+# In/Sub = intertidal/subtidal, C/H = control (0 h) / heat (6 h at 35 C); the
+# paper: "InC/SubC and InH/SubH were used to represent control and heat-shock
+# treatment samples from the intertidal/subtidal area." Corroborated: the
+# mean ENA read count of each library_name group equals the paper's Table 1
+# "raw reads" for that group (InC 83,021,662; InH 69,956,461; SubC 75,452,051;
+# SubH 79,864,515), to within rounding of a single read.
+#
+# REPLICATION. Each library pools gill DNA of five oysters; three pools per
+# group, 15 animals per group. Pools within a group are different animals from
+# one population's F1. Whether each pool is one culture/heat-stress tank is
+# not stated (inferred from LI2018's 3 x 5 sampling).
+# - Tidal-origin contrasts: tolerance belongs to the population, and there is
+#   ONE population per class (Laoting intertidal vs Laoting subtidal). The
+#   effective n is 1 v 1. Pools are replicates of the population, not of
+#   tidal origin; any test on 3 v 3 pools tests these two populations, and
+#   cannot separate tidal origin from any other difference between them.
+#   biological_replicates is recorded as 1.
+# - Heat contrasts: three pools (probably tanks) per arm. Control is the same
+#   aquarium stock before heating (0 h), not a concurrent unheated group,
+#   as in LI2018.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "intertidal_vs_subtidal_0h"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
+    stressor_original: "No treatment contrast: F1 of intertidal-origin (thermally tolerant) vs subtidal-origin populations from Laoting, one-generation common garden, sampled before heat shock (0 h, laboratory acclimation 14.2-18.2 C, salinity 31.3 ± 0.5, 15 d); paper groups InC vs SubC"
     stressor_standardized: "temperature"
     exposure_intensity: null
     exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
+    exposure_timing: "baseline (0 h); tolerance measured separately (Li et al. 2018: survival after 42 C for 1 h, 4-month-olds of the same cohorts)"
+    control_condition: "subtidal-origin F1 (Laoting, SubC), 0 h; 3 pools of 5 oysters, 1 population"
+    treatment_condition: "intertidal-origin F1 (Laoting, InC), 0 h; 3 pools of 5 oysters, 1 population"
     phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
-    phenotype_unit: null
+    phenotype_direction: "increase"
+    phenotype_unit: "survival after acute heat stress (42 C, 1 h; followed 14 d), higher in intertidal than subtidal F1 at both Laoting and Bayuquan (Kaplan-Meier, log-rank p < 0.05); measured per population in 4-month-olds of the same cohorts by Li et al. 2018, not in this study"
     resilience_classification: "resilience"
-    # baseline_phenotype_difference | phenotype_difference_under_exposure |
-    # exposure_response | phenotype_by_exposure_interaction (docs/contrast_types.md)
-    contrast_type: "exposure_response"
-    sample_size: 0
-    biological_replicates: 0
+    contrast_type: "baseline_phenotype_difference"
+    sample_size: 6
+    biological_replicates: 1
     results_file: null
 
-quality_flags: []
-limitations: null
+  - comparison_id: "intertidal_vs_subtidal_6h_heat"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "F1 of intertidal-origin vs subtidal-origin populations from Laoting, both after acute heat shock, 35 C seawater for 6 h (seawater not changed, no feeding); paper groups InH vs SubH"
+    stressor_standardized: "temperature"
+    exposure_intensity: "35 C seawater (sublethal), from laboratory acclimation at 14.2-18.2 C"
+    exposure_duration: "6 h"
+    exposure_timing: "acute; both arms sampled at 6 h"
+    control_condition: "subtidal-origin F1 (Laoting, SubH) after 6 h at 35 C; 3 pools of 5 oysters, 1 population. Reference group, not an unexposed control."
+    treatment_condition: "intertidal-origin F1 (Laoting, InH) after 6 h at 35 C; 3 pools of 5 oysters, 1 population"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: "as for intertidal_vs_subtidal_0h (survival after 42 C, 1 h; Li et al. 2018)"
+    resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
+    sample_size: 6
+    biological_replicates: 1
+    results_file: null
+
+  - comparison_id: "heat_35c_6h_vs_0h_subtidal"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'exposed to acute heat shock (35 °C) for 6 h', subtidal-origin F1 (Wang et al. 2020); paper groups SubH vs SubC"
+    stressor_standardized: "temperature"
+    exposure_intensity: "35 C seawater vs laboratory acclimation at 14.2-18.2 C"
+    exposure_duration: "6 h"
+    exposure_timing: "acute; sampled before heating (0 h) and after 6 h"
+    control_condition: "subtidal-origin F1 (Laoting), 0 h, before heating; 3 pools of 5 oysters"
+    treatment_condition: "subtidal-origin F1 (Laoting), 6 h at 35 C; 3 pools of 5 oysters"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    meta_analysis_primary: true
+    results_file: null
+
+  - comparison_id: "heat_35c_6h_vs_0h_intertidal"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'exposed to acute heat shock (35 °C) for 6 h', intertidal-origin F1 (Wang et al. 2020); paper groups InH vs InC"
+    stressor_standardized: "temperature"
+    exposure_intensity: "35 C seawater vs laboratory acclimation at 14.2-18.2 C"
+    exposure_duration: "6 h"
+    exposure_timing: "acute; sampled before heating (0 h) and after 6 h"
+    control_condition: "intertidal-origin F1 (Laoting), 0 h, before heating; 3 pools of 5 oysters"
+    treatment_condition: "intertidal-origin F1 (Laoting), 6 h at 35 C; 3 pools of 5 oysters"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - family_level_replication   # tidal-origin contrasts: tolerance is a population trait, 1 v 1 populations
+  - low_replication            # tidal-origin contrasts: 1 population per class
+
+limitations: >
+  (1) NOT INDEPENDENT OF LI2018_HEAT_TIDAL: same breeding, same F1 cohort,
+  same heat-stress experiment, and per the authors "identical materials" to
+  LI2018's RNA-seq (PRJNA407831); the paper's methylation-expression analysis
+  uses those RNA-seq data. It adds a methylation layer to LI2018's Laoting
+  population pair and must not be counted as an independent study or a second
+  population pair when replicating LI2018's intertidal-vs-subtidal contrast.
+  Multi-omics convergence between the two is same-animal linkage, not
+  replication. Whether each WGBS pool is the same five animals as an LI2018
+  RNA library is inferred, not stated. (2) Effective n for both tidal-origin
+  contrasts is 1 population vs 1 population. The three pools per group
+  replicate the population, not tidal origin, so tidal origin is fully
+  confounded with everything else that differs between these two
+  populations (genetic background, founder sampling, rearing replicate).
+  The authors' SNP analysis found libraries cluster genetically by tidal
+  origin; cytosine variation from SNPs can mimic C-to-T methylation calls and
+  must be filtered or considered. (3) Every library pools DNA of five
+  oysters, which averages individual variation. The shared BioSample does not
+  by itself establish distinct pools; the paper states three pools of five
+  distinct individuals per group. (4) The tolerance phenotype was not
+  measured in this study: it is the survival difference after 42 C for 1 h
+  measured by Li et al. 2018 in 4-month-olds of the same cohorts, while
+  methylation is from 10-month-olds. Li et al. 2018 also report that
+  Bayuquan intertidal oysters were more tolerant than Laoting intertidal
+  oysters; only Laoting is sequenced here. (5) The heat contrasts' control
+  is the same aquarium stock before heating (0 h), not a concurrent unheated
+  group, so time, handling and the unchanged, unfed seawater are confounded
+  with heat. Only 6 h was sequenced; LI2018's 24 h has no methylation
+  counterpart. (6) Platform conflict: SRA says HiSeq X Ten and every run is
+  2 x 150 bp; the paper says HiSeq 2500/4000, 125/150 bp. AREE uses the
+  deposited reads as they are. (7) The authors report that two subtidal
+  heat-shock libraries diverged from the rest in clustering; no library is
+  excluded here, since no reason independent of the result is given. (8)
+  The authors used Bismark with the default --score_min L,0,-0.2 and report
+  ~30% mapping; CIBNOR2021 found the default badly under-maps this
+  heterozygous genome, so the run config starts from the relaxed setting.
+  (9) Sex and pool-to-tank assignment are not recorded. (10)
+  Coordinate-based results are tied to GCF_963853765.1.
 
 provenance:
-  registered_by: "Steven Roberts"
+  registered_by: "sr320"
   date_registered: "2026-10-18"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA562805 --study-id
+    WANG2020_TIDAL_HEAT_WGBS`. Registration only: no FASTQ downloaded and no
+    workflow run. Sample sheet from live ENA metadata with `aree
+    fetch-samplesheet --bioproject PRJNA562805 --study
+    WANG2020_TIDAL_HEAT_WGBS --label-field library_name --label-pattern
+    '^(?P<origin>In|Sub)(?P<temperature>C|H)_(?P<replicate>[1-3])$'
+    --condition-attribute origin --condition-attribute temperature
+    --attribute replicate --attribute tissue --methylkit-levels Sub_C In_C`:
+    12 runs, 4 groups of 3, one BioSample. The group codes are the paper's
+    (InC/InH/SubC/SubH), and the per-group mean ENA read counts reproduce the
+    paper's Table 1 raw-read means. methylkit_samplesheet.csv codes the
+    baseline contrast (SubC = 0, InC = 1); regenerate it with the other
+    --methylkit-levels for the other comparisons. Orientation: intertidal is
+    the treatment arm and subtidal the reference, as in LI2018, so positive
+    effects mean higher in intertidal. Relationship to LI2018 established from
+    the Wang et al. 2020 methods (PMC7852555) and the Li et al. 2018 methods
+    (PMC6120431), both read 2026-10-18. PRIMARY COMPARISON: the two
+    exposure_response comparisons share phenotype and contrast type, so one
+    must be primary. heat_35c_6h_vs_0h_subtidal was chosen because the
+    authors report more methylation plasticity in the intertidal group;
+    taking intertidal as primary would select the comparison with the larger
+    published response. This was decided from the published abstract, before
+    any AREE analysis. The baseline and under-exposure contrasts are each the
+    only comparison of their type and are not flagged. No exclusions.
+    CLASSIFICATION OVERRIDE: the two heat comparisons are stress_response,
+    not the thermal_tolerance default (resilience), as for LI2018's heat
+    comparisons: heated vs unheated animals of one population measure the
+    response to heat, not a difference in tolerance.
+  source_links:
+    - "https://doi.org/10.1038/s41437-020-0351-7"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC7852555/"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA562805"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA562805"
+    - "https://www.ncbi.nlm.nih.gov/biosample/SAMN12651045"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC6120431/"
