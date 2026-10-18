@@ -95,7 +95,42 @@ def test_provenance_and_manifest(samplesheet):
     assert all(len(r["md5"]) == 32 for r in manifest)
 
 
-def test_merged_as_a_registration_with_the_run_pending():
+STEM = "PAYTON2017_HAB_AMINUTUM_alexandrium_vs_heterocapsa_6d"
+
+
+def test_reanalysis_is_harmonized_with_standard_errors():
+    import pandas as pd
+
     study = yaml.safe_load((STUDIES_DIR / "PAYTON2017_HAB_AMINUTUM.yaml").read_text())
-    assert study["qc_status"] == "not_started" and study["analysis_status"] == "not_started"
-    assert all(c["results_file"] is None for c in study["comparisons"])
+    assert study["qc_status"] == "passed_with_warnings" and study["analysis_status"] == "harmonized"
+    (comp,) = study["comparisons"]
+    res = pd.read_csv(REPO_ROOT / comp["results_file"], sep="\t")
+    assert len(res) == 30995
+    assert res["lfcSE"].notna().all()
+    sig = res[res["padj"] < 0.01]
+    # The paper found DE mostly up in A. minutum; the reanalysis agrees in direction.
+    assert len(sig) > 1000 and (sig["log2FoldChange"] > 0).mean() > 0.7
+
+
+def test_deseq2_compared_lane_summed_libraries():
+    manifest = json.loads((DATA_DIR / "studies" / "PAYTON2017_HAB_AMINUTUM" / f"{STEM}_workflow_manifest.json").read_text())
+    assert manifest["mode"] == "raw_reanalysis"
+    assert manifest["parameters"]["replicate_unit"] == "sample_accession"
+
+
+def test_replicates_are_independent_pools_once_lanes_are_summed():
+    import pandas as pd
+
+    qc = pd.read_csv(DATA_DIR / "studies" / "PAYTON2017_HAB_AMINUTUM" / "replicate_dispersion_qc.tsv", sep="\t")
+    lib = qc[qc["unit"].str.startswith("library")]
+    assert set(lib["n_samples"]) == {13}
+    assert lib["passes"].all() and (lib["median_dispersion"] > 0.03).all()
+
+
+def test_two_runs_came_from_ncbi_sra_and_match_ena():
+    src = json.loads((DATA_DIR / "studies" / "PAYTON2017_HAB_AMINUTUM" / "fastq_source.json").read_text())
+    sra = src["ncbi_sra"]
+    assert sra["files_installed"] == ["ERR1758957_1.fastq.gz", "ERR1758957_2.fastq.gz", "ERR1758961_1.fastq.gz"]
+    assert sra["read_counts_match_ena"] is True
+    assert set(sra["vdb_validate"]) == {"ERR1758957", "ERR1758961"}
+    assert "identical in read IDs, sequences and qualities" in sra["equivalence_check"]

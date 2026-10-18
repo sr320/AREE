@@ -30,11 +30,28 @@
 # measured. So toxicant_tolerance is the axis and the comparison is
 # stress_response, overriding the ontology default.
 #
-# MERGED AS A REGISTRATION (2026-10-17), RUN PENDING. The sample sheet, FASTQ
-# manifest and run configuration are ready, but the RNA-seq workflow has not
-# been run: no results, manifests or reports are committed, results_file is
-# null, and both status fields are not_started. Run it in a follow-up study
-# PR from a fresh `aree start-study`-style branch.
+# REANALYZED 2026-10-18 (merged as a registration on 2026-10-17, run after).
+# workflows/rnaseq on all 52 runs, lanes summed per library
+# (replicate_unit = sample_accession), DESeq2 13 vs 13 libraries against the
+# GCF_963853765.1 transcriptome: Salmon mapping 73.6-81.3% (median 75.2%),
+# about 29 M read pairs per run. 3,202 of 30,995 genes at padj < 0.05 (2,156
+# up, 1,046 down in A. minutum); 2,134 at padj < 0.01, 76% up. The paper
+# reported 740 transcripts at FDR < 0.01, 89.5% up (transcript level, its own
+# 2017 assembly), so the direction agrees and the count differs as expected
+# for a gene-level reanalysis on a newer annotation. Effects are modest
+# (median |log2FC| 0.57 at padj < 0.01) and, per the replication note above,
+# lfcSE is somewhat too small. Replicates behave as independent pools:
+# median within-diet dispersion 0.045-0.048 with lanes summed
+# (replicate_dispersion_qc.tsv; threshold 0.005). QC decision (2026-10-18,
+# sr320): passed_with_warnings, for the tank-level replication.
+#
+# THREE FASTQ FILES CAME FROM NCBI SRA. ERR1758957_1, ERR1758957_2 and
+# ERR1758961_1 were corrupt in every ENA download (six attempts, two disks,
+# ENA's MD5s unchanged), so runs ERR1758957 and ERR1758961 were taken from
+# NCBI SRA (vdb-validate consistent; read counts equal ENA's). The SRA copy of
+# ERR1758961_2 is identical to ENA's verified file in read IDs, sequences and
+# qualities, differing only in the original Illumina read names
+# (fastq_source.json). The other 101 files are ENA's, MD5-verified.
 
 study_id: PAYTON2017_HAB_AMINUTUM
 simulated: false
@@ -64,10 +81,10 @@ data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "Raw paired-end FASTQ for all 52 runs are public in ENA (PRJEB18614) / ArrayExpress (E-MTAB-5345). Diet is the ENA sample attribute `growth condition`; sampling time is only in the ArrayExpress SDRF, committed here as E-MTAB-5345.sdrf.txt. Sequence data are not committed."
+  access_notes: "Raw paired-end FASTQ for all 52 runs are public in ENA (PRJEB18614) / ArrayExpress (E-MTAB-5345). Diet is the ENA sample attribute `growth condition`; sampling time is only in the ArrayExpress SDRF, committed here as E-MTAB-5345.sdrf.txt. Sequence data are not committed. 2026-10-18: ENA served ERR1758957_1/_2 and ERR1758961_1 corrupt on every download, so ERR1758957 and ERR1758961 were taken from NCBI SRA; see data/studies/PAYTON2017_HAB_AMINUTUM/fastq_source.json."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 comparisons:
   - comparison_id: "alexandrium_vs_heterocapsa_6d"
@@ -87,7 +104,7 @@ comparisons:
     sample_size: 26
     biological_replicates: 13
     meta_analysis_primary: true
-    results_file: null
+    results_file: "data/studies/PAYTON2017_HAB_AMINUTUM/PAYTON2017_HAB_AMINUTUM_alexandrium_vs_heterocapsa_6d_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -124,7 +141,17 @@ provenance:
     meta_analysis_primary is set on the study's only comparison; there is no
     other real HAB study to pool with yet. 2026-10-17: merged as a
     registration with the run pending (status fields set from in_progress to
-    not_started, since no run is under way).
+    not_started, since no run is under way). 2026-10-18: reanalyzed on Hete
+    with `nextflow run workflows/rnaseq -config
+    config/PAYTON2017_HAB_AMINUTUM.config -profile local,workstation`
+    (AREE_WORKDIR=/Volumes/Monarch/AREE/work), 162 tasks, none failed. FASTQ
+    from ENA (101 files, MD5-verified) and NCBI SRA (ERR1758957,
+    ERR1758961; fastq_source.json). Replicate dispersion computed with
+    scripts/check_replicate_dispersion.py's functions on lane-summed
+    libraries, matching the DESeq2 replicate unit; per-run values are listed
+    too. Harmonized against the mgigas crosswalk: all 30,995 genes exact,
+    all with standard errors. QC decision (2026-10-18, sr320):
+    passed_with_warnings.
   source_links:
     - "https://doi.org/10.1038/s41598-017-03797-4"
     - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5471176/"
