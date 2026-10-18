@@ -349,6 +349,7 @@ def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.Dat
             "evidence_class": evidence_class(meta_dict, relevance),
             "context_replication": context_replication(meta_dict),
             "pooled_stressors": "|".join(pooled_stressors(meta_dict)),
+            "pooling_status": "pooled",
             "is_high_priority": is_high_priority,
             "is_multi_omics_convergence": is_multi_omics,
             "orthogroup_id": "|".join(orthogroups),

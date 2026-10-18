@@ -40,6 +40,7 @@ from prioritize.rank import (
     build_candidates,
     sort_candidates,
 )
+from prioritize.unpooled import POOLING_STATUS_UNPOOLED, build_unpooled_candidates
 
 EVIDENCE_CARDS_DIR = REPORTS_DIR / "evidence_cards"
 DEFAULT_MAX_ADJUSTED_P = 0.05
@@ -411,11 +412,20 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
                  f"(95% CI {candidate['ci_lower']:.3f} to {candidate['ci_upper']:.3f})")
     lines.append(f"- Pooled p-value: {_fmt(candidate['p_value'])}")
     n_tests = candidate.get("n_tests_in_family")
+    # Float once unpooled rows (which have no test family) share the frame.
+    n_tests = int(n_tests) if n_tests is not None and n_tests == n_tests else None
     lines.append(
         f"- Pooled p-value, BH-adjusted across the {_fmt(n_tests, 'd')} features tested for "
         f"`{candidate['phenotype']}` / `{candidate['feature_type']}` in this partition: "
         f"{_fmt(candidate.get('adjusted_p_value'))}"
     )
+    n_unpooled = candidate.get("n_excluded_unpoolable") or 0
+    if n_unpooled == n_unpooled and n_unpooled > 0:
+        lines.append(
+            f"- Records left out of the pool for lack of a standard error or unadjusted p-value: "
+            f"{int(n_unpooled)} ({candidate.get('excluded_studies')}). They appear below with "
+            "`pooled = no`; their effects are shown but carry no weight in the estimate."
+        )
     lines.append(f"- Direction consistency across studies: {candidate['direction_consistency']:.2f}")
     lines.append(f"- Heterogeneity (I²): {candidate['i_squared']:.1f}%")
     if candidate["direction_consistency"] < 0.7 and candidate["k_studies"] >= 2:
@@ -504,6 +514,68 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     return "\n".join(lines)
 
 
+def _unpooled_card_markdown(candidate: dict, forest_points: list, phenotype_label: str) -> str:
+    """Card for a feature whose evidence could not enter any pooled estimate."""
+    evidence_class = candidate.get("evidence_class", "exposure_only")
+    simulated = _partition_value(candidate["simulated"]) == "true"
+    lines = [
+        f"# Evidence card: {candidate['feature_id_standardized']} — {phenotype_label}",
+        "",
+        f"**Tier:** `{candidate['tier']}`  **Score:** not scored (unpooled)",
+        f"**Evidence class:** `{evidence_class}`  **Pooling status:** `{POOLING_STATUS_UNPOOLED}`",
+        "",
+        "> This feature has no pooled estimate. Every record below comes from a source that reports "
+        "neither a standard error nor an unadjusted p-value — typically an author-curated, "
+        "significance-filtered DEG list — so it cannot be weighted, pooled, or scored. Effects from "
+        "such a list are selected for being large and significant and will overstate the true "
+        "effect. Read this card as a pointer to a reported result, not as an estimate.",
+        "",
+        "## What this evidence does and does not show",
+        EVIDENCE_CLASS_STATEMENT.get(evidence_class, EVIDENCE_CLASS_STATEMENT["exposure_only"]),
+        "",
+        CONTEXT_REPLICATION_STATEMENT["single_study"],
+        "",
+        "## Candidate identifiers",
+        f"- Standardized feature ID: `{candidate['feature_id_standardized']}`",
+        f"- Feature type: `{candidate['feature_type']}`",
+        f"- Species taxid: `{candidate['species_taxid']}`",
+        f"- Data origin: `{'simulated' if simulated else 'real'}`",
+        f"- Mapping confidence: {candidate['mapping_confidences']}",
+        "",
+        "## Reported evidence (not pooled)",
+        f"- Phenotype context: `{candidate['phenotype']}`",
+        f"- Source studies: {candidate['excluded_studies']}",
+        "",
+        "| study | comparison | tissue | life stage | stressor | effect | adj. p | direction | mapping confidence |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for p in forest_points:
+        lines.append(
+            f"| {p['study_id']} | {p['comparison_id']} | {p['tissue']} | {p['life_stage']} | "
+            f"{p['stressor']} | {_fmt(p['effect_size'], '.3f')} | {_fmt(p['adjusted_p_value'])} | "
+            f"{p['molecular_direction']} | {p['mapping_confidence']} |"
+        )
+    lines += [
+        "",
+        "## Limitations",
+        f"- Quality flags present: {candidate['quality_flags_union'] or 'none recorded'}",
+        "- No standard error or unadjusted p-value: not pooled, not scored, not eligible for any "
+        "tier above `emerging`. See the source study's registry `limitations` for its design caveats.",
+        "- This candidate reflects association, not confirmed mechanistic causation.",
+    ]
+    if simulated:
+        lines.append("- This card contains simulated demo evidence; do not cite it as real evidence.")
+    lines += [
+        "",
+        "## Recommended next validation step",
+        "Obtain the full result table (all genes, with standard errors or unadjusted p-values) from "
+        "the authors or by raw-data reanalysis so this evidence can be pooled; otherwise "
+        + NEXT_STEP_BY_TIER["emerging"][0].lower() + NEXT_STEP_BY_TIER["emerging"][1:],
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def _card_slug(candidate: dict) -> str:
     origin = "simulated" if _partition_value(candidate["simulated"]) == "true" else "real"
     return _slug(
@@ -524,6 +596,12 @@ def rank_all_candidates(evidence_df: pd.DataFrame, phenotype: str | None, featur
         meta_df = run_meta_analysis(phenotype=phenotype, feature_type=ftype)
         if len(meta_df):
             frames.append(build_candidates(meta_df, evidence_df))
+    pooled = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    # Features whose evidence is entirely unpoolable get an unscored `emerging`
+    # row instead of vanishing (prioritize/unpooled.py).
+    unpooled = build_unpooled_candidates(evidence_df, pooled, phenotype, feature_type)
+    if len(unpooled):
+        frames.append(unpooled)
     if not frames:
         return pd.DataFrame()
     return sort_candidates(pd.concat(frames, ignore_index=True))
@@ -573,11 +651,14 @@ def build_evidence_cards_report(
             card_files.append("")
             continue
 
-        other_omics = _other_omics_context(index, candidate)
         phenotype_label = phenotype_vocab.get(candidate["phenotype"], {}).get("label", candidate["phenotype"])
         card_path = EVIDENCE_CARDS_DIR / f"{_card_slug(candidate)}.md"
-        linked = _linked_omics_context(index, candidate)
-        card_path.write_text(_card_markdown(candidate, forest_points, other_omics, phenotype_label, linked))
+        if candidate.get("pooling_status") == POOLING_STATUS_UNPOOLED:
+            card_path.write_text(_unpooled_card_markdown(candidate, forest_points, phenotype_label))
+        else:
+            other_omics = _other_omics_context(index, candidate)
+            linked = _linked_omics_context(index, candidate)
+            card_path.write_text(_card_markdown(candidate, forest_points, other_omics, phenotype_label, linked))
         card_files.append(str(card_path))
         written.append({
             "feature_id_standardized": candidate["feature_id_standardized"],

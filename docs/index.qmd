@@ -184,7 +184,7 @@ candidateTable = (rows, {showPhenotype = false, maxRows = 15} = {}) => Inputs.ta
   format: {
     feature_id_standardized: (v, i, rows) => rows[i].card_page ? htl.html`<a href="${rows[i].card_page}">${v}</a>` : v,
     gene_description: v => clip(v, 38),
-    tier: v => TIER.get(v) ?? v,
+    tier: (v, i, rows) => (TIER.get(v) ?? v) + (rows[i].pooling_status === "unpooled" ? " (unpooled)" : ""),
     pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
     adjusted_p_value: fmtP
   },
