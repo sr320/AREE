@@ -166,6 +166,8 @@ AREE/
 | `aree fetch-reference --assembly <acc> [--genome] [--proteins] [--plan] [--check]` | Fetch, verify and record a RefSeq reference bundle (transcriptome, GTF, tx2gene, optional genome, optional one-protein-per-gene proteome) |
 | `aree build-orthogroups --orthofinder <path> [--threads N] [--activate]` | Infer orthogroups across every species with a crosswalk (OrthoFinder on RefSeq proteomes); writes `data/reference/orthogroups/<run_id>/` |
 | `aree build-dashboard [--out <path>] [--include-simulated]` | Summarize registry, pipeline, and findings state into `docs/dashboard/data.json` (plus the top candidates' evidence cards) for the Quarto dashboard page. Simulated demo studies are left out unless `--include-simulated` |
+| `aree export-site-data [--out <dir>] [--include-simulated]` | Export evidence, candidates and studies as Parquet (`docs/explore/data/`) for the site's in-browser [Explore page](https://sr320.github.io/AREE/explore.html); simulated demo data left out unless `--include-simulated`; needs the `site` extra |
+| `aree mcp [--transport stdio\|streamable-http]` | Serve studies, evidence, candidates and evidence cards to MCP clients such as Claude, as read-only tools; needs the `mcp` extra (Python ≥ 3.10). See [docs/querying_aree.md](docs/querying_aree.md) |
 
 ## Working with real data
 
@@ -262,6 +264,25 @@ repository's Pages source to **GitHub Actions** (Settings → Pages), or run:
 
 ```bash
 gh api -X POST repos/sr320/AREE/pages -f build_type=workflow
+```
+
+## Querying the evidence
+
+Two ways to ask questions of AREE's evidence without writing pipeline code
+(details in [docs/querying_aree.md](docs/querying_aree.md)):
+
+- **Explore page** (<https://sr320.github.io/AREE/explore.html>): gene lookup with
+  an effect plot, candidate and evidence filters, studies, and a SQL console,
+  running in DuckDB-WASM in the browser against Parquet exports. No server, no login.
+- **MCP server** (`aree mcp`): connect Claude Desktop, Claude Code or another MCP
+  client and ask in plain language ("which genes are significant for survival
+  in more than one real study, and do any conflict in direction?"). Answers come
+  from read-only tools over the pipeline outputs, with study and evidence ids cited.
+
+```bash
+pip install -e ".[site,mcp]"
+aree export-site-data && quarto render docs   # Explore page, locally
+claude mcp add aree -- aree mcp               # MCP server, in Claude Code
 ```
 
 ## Implementation status

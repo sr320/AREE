@@ -20,7 +20,7 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,app,intake]"
+          pip install -e ".[dev,app,intake,site,mcp]"
 
       - name: Lint (ruff)
         run: ruff check src tests scripts modules/shared

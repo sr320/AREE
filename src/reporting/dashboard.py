@@ -332,7 +332,7 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
     ranked = df.sort_values(["_tier_rank", "score"], ascending=[True, False])
 
     cols = ["feature_id_standardized", "feature_type", "phenotype", "tier", "evidence_class",
-            "context_replication", "score", "k_studies", "studies", "total_sample_size",
+            "context_replication", "score", "pooling_status", "k_studies", "studies", "total_sample_size",
             "pooled_effect", "adjusted_p_value", "direction_consistency", "i_squared",
             "n_supporting_layers", "mapping_confidences", "simulated", "species_taxid",
             "orthogroup_id", "card_file"]

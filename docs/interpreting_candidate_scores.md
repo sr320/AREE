@@ -235,6 +235,27 @@ BH-adjusted p-values with the family size, and a forest-style table of
 per-study effect estimates with each study's own adjusted p, so a reviewer can
 see exactly which inputs drove the score rather than trusting a single number.
 
+### Unpooled candidates (`pooling_status = unpooled`)
+
+Pooling needs a standard error, either reported or backed out of an
+unadjusted p-value. Some sources publish neither: typically an author-curated,
+significance-filtered DEG list with only log2FC and padj (HESSER2024_VCOR).
+AREE does not back a standard error out of padj, and it does not pool such
+records. A significance-selected subset overstates effects and inflates apparent
+replication. Those records still never disappear:
+
+- When a feature also has poolable evidence for the same phenotype, its card
+  names the excluded records (`Records left out of the pool…`) and lists them
+  in the forest table with `pooled = no`. They carry no weight.
+- When a feature's evidence for a phenotype is *entirely* unpoolable, it gets
+  its own `candidates.tsv` row with `tier = emerging`,
+  `pooling_status = unpooled`, `k_studies = 0` and **no score**. These rows
+  sort after every scored candidate, and their card says the effect is a
+  reported, selection-biased value rather than an estimate.
+
+The fix is upstream: obtain the full result table from the authors, or
+reanalyze the raw reads, so the study can be pooled like any other.
+
 ## Cross-species candidates
 
 `aree build-cross-species-cards` tiers the orthogroup-level meta-analysis

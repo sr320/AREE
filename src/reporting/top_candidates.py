@@ -20,7 +20,7 @@ DEFAULT_OUT_PATH = REPORTS_DIR / "top_candidates_summary.md"
 
 SUMMARY_COLUMNS = [
     "rank", "feature_id_standardized", "species", "feature_type", "tier", "evidence_class",
-    "score", "k_studies", "total_sample_size", "direction_consistency",
+    "score", "pooling_status", "k_studies", "total_sample_size", "direction_consistency",
     "adjusted_p_value", "context_replication", "n_supporting_layers",
     "mapping_confidences", "simulated", "card_file",
 ]
@@ -99,6 +99,10 @@ def build_top_candidates_summary(
         "stress-response, disease-associated, or exposure-only — and only "
         "`resilience_associated` candidates bear on resilience directly.",
         "",
+        "Rows with `pooling_status = unpooled` have no score: their source reports neither a "
+        "standard error nor an unadjusted p-value (typically a significance-filtered DEG list), so "
+        "they are listed for visibility, sorted after every pooled candidate, and never pooled.",
+        "",
     ]
     if n_simulated_excluded:
         lines += [
@@ -131,6 +135,10 @@ def build_top_candidates_summary(
         # One phenotype can hold candidates from several species, and the same
         # feature ID may appear once per species; name the species on every row.
         table["species"] = table["species_taxid"].map(_species_name)
+        # Candidates ranked before pooling_status existed are all pooled.
+        if "pooling_status" not in table.columns:
+            table["pooling_status"] = "pooled"
+        table["pooling_status"] = table["pooling_status"].fillna("pooled")
         table = table[SUMMARY_COLUMNS]
         lines.append(table.to_markdown(index=False, floatfmt=".3g"))
         lines.append("")

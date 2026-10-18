@@ -6,7 +6,27 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from common import study_ids  # noqa: E402
+from common import EVIDENCE_TABLE_PATH, study_ids  # noqa: E402
+
+
+def _stat(path: Path):
+    return path.stat().st_mtime_ns if path.exists() else None
+
+
+@pytest.fixture(autouse=True)
+def _real_evidence_table_is_untouched():
+    """Fail any test that writes the real reports/evidence/evidence_table.tsv.
+
+    A harmonize call without `isolated_reports` upserts its fixture rows into the
+    working evidence table, where they silently replace real or demo records
+    until someone re-harmonizes (a stray GIGAS_GROW06 fixture once broke the
+    full meta-analysis this way).
+    """
+    before = _stat(EVIDENCE_TABLE_PATH)
+    yield
+    assert _stat(EVIDENCE_TABLE_PATH) == before, (
+        "this test modified the real evidence table; request the `isolated_reports` fixture"
+    )
 
 
 @pytest.fixture

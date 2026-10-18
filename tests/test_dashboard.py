@@ -93,7 +93,8 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     for phen, rows in by_phen.items():
         assert 0 < len(rows) <= dashboard.TOP_N_PER_PHENOTYPE
         assert all(r["phenotype"] == phen and r["simulated"] for r in rows)
-        keys = [(tier_rank[r["tier"]], -r["score"]) for r in rows]
+        # Unpooled candidates carry no score and sort after every scored one.
+        keys = [(tier_rank[r["tier"]], r["score"] is None, -(r["score"] or 0)) for r in rows]
         assert keys == sorted(keys)
 
     by_study = {r["study_id"]: r for r in data["evidence"]["by_study"]}

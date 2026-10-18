@@ -1,0 +1,372 @@
+---
+title: "Explore the evidence"
+subtitle: "Query AREE's harmonized evidence, candidates and studies in your browser"
+page-layout: full
+toc: false
+---
+
+This page runs [DuckDB](https://duckdb.org/docs/api/wasm/overview) inside your browser
+against Parquet exports of AREE's pipeline outputs (`aree export-site-data`). Nothing is
+sent to a server: queries fetch only the parts of the files they need. For conversational
+access through Claude or another MCP client, see [Querying AREE](querying_aree.md).
+
+::: {.callout-warning appearance="simple"}
+**How to read these results.** Evidence records are statistical associations from individual
+studies. A significant record or a high candidate score is not a validated biomarker and does
+not establish causation; *emerging*-tier candidates require replication. Rows with
+`simulated = true` come from synthetic demo studies and are not real findings.
+:::
+
+```{ojs}
+//| echo: false
+meta = fetch(new URL("explore/data/meta.json", document.baseURI)).then(r => {
+  if (!r.ok) throw new Error("explore/data/meta.json not found — run `aree export-site-data` before `quarto render docs`.");
+  return r.json();
+})
+```
+
+```{ojs}
+//| echo: false
+duckdb = import("https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm")
+```
+
+```{ojs}
+//| echo: false
+// One DuckDB instance; each table is a view over its Parquet file, read by HTTP range request.
+conn = {
+  const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
+  const workerUrl = URL.createObjectURL(
+    new Blob([`importScripts("${bundle.mainWorker}");`], {type: "text/javascript"}));
+  const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), new Worker(workerUrl));
+  await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  URL.revokeObjectURL(workerUrl);
+  const base = new URL("explore/data/", document.baseURI).href;
+  const c = await db.connect();
+  for (const t of Object.keys(meta.tables)) {
+    await db.registerFileURL(`${t}.parquet`, base + meta.tables[t].file, duckdb.DuckDBDataProtocol.HTTP, false);
+    await c.query(`CREATE VIEW ${t} AS SELECT * FROM read_parquet('${t}.parquet')`);
+  }
+  return c;
+}
+```
+
+```{ojs}
+//| echo: false
+// Run SQL; return plain objects (BigInt -> Number) for Inputs.table and Plot.
+async function sql(q) {
+  const result = await conn.query(q);
+  return result.toArray().map(row => {
+    const o = row.toJSON();
+    for (const k in o) if (typeof o[k] === "bigint") o[k] = Number(o[k]);
+    return o;
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+lit = s => `'${String(s).replace(/'/g, "''")}'`
+inList = (col, values) => values.length ? `AND ${col} IN (${values.map(lit).join(", ")})` : ""
+simClause = includeSim => includeSim ? "" : "AND NOT simulated"
+phenoLabel = id => meta.labels.phenotype[id] ?? id
+stressorLabel = id => meta.labels.stressor[id] ?? id
+
+function downloadButton(rows, filename, label = "Download CSV") {
+  const button = html`<button class="btn btn-sm btn-outline-secondary">${label} (${rows.length.toLocaleString()} rows)</button>`;
+  button.onclick = () => {
+    const cols = rows.length ? Object.keys(rows[0]) : [];
+    const esc = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+    const csv = [cols.join(","), ...rows.map(r => cols.map(c => esc(r[c])).join(","))].join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  return button;
+}
+```
+
+```{ojs}
+//| echo: false
+html`<p class="text-muted small">Data exported ${new Date(meta.generated).toLocaleString()} ·
+AREE ${meta.aree_version} ·
+${meta.tables.evidence.real.toLocaleString()} real + ${meta.tables.evidence.simulated.toLocaleString()} simulated evidence records ·
+${meta.tables.candidates.total.toLocaleString()} ranked candidates ·
+${meta.tables.studies.total} registered studies</p>`
+```
+
+::: {.panel-tabset}
+
+## Gene / feature lookup
+
+Search a standardized or original identifier, or an orthogroup, e.g. `LOC105333935`, `hsp70`.
+
+```{ojs}
+//| echo: false
+viewof featureQuery = Inputs.text({placeholder: "Feature identifier…", submit: "Search", width: 360})
+viewof lookupSim = Inputs.toggle({label: "Include simulated", value: false})
+```
+
+```{ojs}
+//| echo: false
+// Two steps, so a lookup never scans the full evidence file:
+// 1. resolve the query against the small `features` index (exact id match, else substring);
+// 2. fetch evidence by exact id. evidence.parquet is sorted by standardized id, then
+//    original id, so DuckDB skips every row group whose min/max excludes the ids.
+lookup = {
+  const q = featureQuery.trim();
+  if (!q) return null;
+  const lq = lit(q.toLowerCase());
+  const idCols = ["feature_id_standardized", "feature_id_original", "orthogroup_id"];
+  const sim = simClause(lookupSim);
+  let ids = await sql(`SELECT DISTINCT feature_id_standardized AS std, feature_id_original AS orig FROM features
+    WHERE (${idCols.map(c => `lower(${c}) = ${lq}`).join(" OR ")}) ${sim} LIMIT 200`);
+  if (!ids.length) {
+    const like = lit(`%${q.toLowerCase()}%`);
+    ids = await sql(`SELECT DISTINCT feature_id_standardized AS std, feature_id_original AS orig FROM features
+      WHERE (${idCols.map(c => `lower(${c}) LIKE ${like}`).join(" OR ")}) ${sim}
+      ORDER BY std NULLS LAST, orig LIMIT 200`);
+  }
+  const std = [...new Set(ids.filter(d => d.std != null).map(d => d.std))].slice(0, 50);
+  const orig = [...new Set(ids.filter(d => d.std == null).map(d => d.orig))].slice(0, 50);
+  // One equality branch per id: DuckDB prunes row groups for `=`, not for a multi-value IN.
+  const branches = [
+    ...std.map(id => `SELECT * FROM evidence WHERE feature_id_standardized = ${lit(id)} ${sim}`),
+    ...orig.map(id => `SELECT * FROM evidence WHERE feature_id_standardized IS NULL
+                         AND feature_id_original = ${lit(id)} ${sim}`),
+  ];
+  if (!branches.length) return [];
+  return sql(`SELECT * FROM (${branches.join("\nUNION ALL\n")})
+    ORDER BY feature_id_standardized, adjusted_p_value NULLS LAST LIMIT 5000`);
+}
+```
+
+```{ojs}
+//| echo: false
+lookupSummary = {
+  if (lookup === null) return html`<p class="text-muted">Enter an identifier and press Search.</p>`;
+  if (!lookup.length) return html`<p>No evidence records match <code>${featureQuery}</code>.</p>`;
+  const features = new Set(lookup.map(d => d.feature_id_standardized));
+  const studies = new Set(lookup.map(d => d.study_id));
+  const sig = lookup.filter(d => d.adjusted_p_value != null && d.adjusted_p_value <= 0.05);
+  const up = sig.filter(d => d.molecular_direction === "up").length;
+  const down = sig.filter(d => d.molecular_direction === "down").length;
+  return html`<p><strong>${lookup.length.toLocaleString()}</strong> records ·
+    <strong>${features.size}</strong> standardized feature(s) · <strong>${studies.size}</strong> studies ·
+    ${sig.length} with adjusted p ≤ 0.05 (${up} up, ${down} down)
+    ${lookup.length === 5000 ? html` · <em>showing the first 5,000</em>` : ""}</p>
+    ${up && down ? html`<div class="callout callout-style-simple callout-note"><div class="callout-body">
+      Significant records disagree in direction. That is reported, not averaged away: check
+      whether the phenotypes, tissues or life stages differ.</div></div>` : ""}`;
+}
+```
+
+```{ojs}
+//| echo: false
+lookupPlot = {
+  if (!lookup || !lookup.length) return html``;
+  const features = new Set(lookup.map(d => d.feature_id_standardized));
+  if (features.size > 1) return html`<p class="text-muted small">Effect plot shown when the search narrows to one standardized feature (${features.size} matched).</p>`;
+  const rows = lookup.filter(d => d.effect_size != null).map(d => ({
+    ...d, row: `${d.study_id} · ${d.comparison_id}`, sig: d.adjusted_p_value != null && d.adjusted_p_value <= 0.05}));
+  return Plot.plot({
+    marginLeft: 280, height: Math.max(120, 26 * rows.length + 60), width,
+    x: {label: "Effect size →", grid: true},
+    y: {label: null},
+    color: {legend: true, label: "Effect-size type"},
+    caption: "Effect-size types differ by assay (e.g. log2 fold change vs. methylation difference); compare within a type. Filled = adjusted p ≤ 0.05.",
+    marks: [
+      Plot.ruleX([0], {stroke: "currentColor", strokeOpacity: 0.4}),
+      Plot.ruleY(rows.filter(d => d.ci_lower != null && d.ci_upper != null),
+        {y: "row", x1: "ci_lower", x2: "ci_upper", stroke: "effect_size_type"}),
+      Plot.dot(rows.filter(d => d.sig), {y: "row", x: "effect_size", fill: "effect_size_type", r: 4}),
+      Plot.dot(rows, {y: "row", x: "effect_size", stroke: "effect_size_type", r: 4,
+        title: d => `${d.study_id} · ${d.comparison_id}\n${phenoLabel(d.phenotype)} / ${stressorLabel(d.stressor)}\n${d.tissue}, ${d.life_stage}\neffect ${d.effect_size} (${d.effect_size_type}), adj p ${d.adjusted_p_value}\nmapping: ${d.mapping_confidence}${d.simulated ? "\nSIMULATED" : ""}`})
+    ]
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+lookup && lookup.length ? html`${downloadButton(lookup, `aree_${featureQuery.trim()}_evidence.csv`)}
+${Inputs.table(lookup, {rows: 15, columns: ["study_id", "comparison_id", "simulated", "feature_id_original",
+  "feature_id_standardized", "feature_type", "mapping_confidence", "molecular_direction", "effect_size",
+  "effect_size_type", "ci_lower", "ci_upper", "adjusted_p_value", "sample_size", "phenotype", "stressor",
+  "tissue", "life_stage", "quality_flags", "source_file", "workflow_version"]})}` : html``
+```
+
+## Candidates
+
+```{ojs}
+//| echo: false
+viewof candFilters = Inputs.form({
+  phenotype: Inputs.select(meta.facets.candidates.phenotype ?? [], {label: "Phenotype", multiple: true, format: phenoLabel}),
+  tier: Inputs.select(meta.facets.candidates.tier ?? [], {label: "Tier", multiple: true}),
+  evidence_class: Inputs.select(meta.facets.candidates.evidence_class ?? [], {label: "Evidence class", multiple: true}),
+  feature: Inputs.text({label: "Feature contains", placeholder: "optional"}),
+  includeSim: Inputs.toggle({label: "Include simulated", value: false})
+})
+```
+
+```{ojs}
+//| echo: false
+candidates = sql(`
+  SELECT feature_id_standardized, feature_type, phenotype, simulated, species_taxid, tier, evidence_class,
+         context_replication, score, k_studies, n_supporting_layers, direction_consistency,
+         pooled_effect, i_squared, adjusted_p_value, studies
+  FROM candidates
+  WHERE TRUE ${inList("phenotype", candFilters.phenotype)} ${inList("tier", candFilters.tier)}
+        ${inList("evidence_class", candFilters.evidence_class)} ${simClause(candFilters.includeSim)}
+        ${candFilters.feature.trim() ? `AND lower(feature_id_standardized) LIKE ${lit(`%${candFilters.feature.trim().toLowerCase()}%`)}` : ""}
+  ORDER BY CASE tier WHEN 'high_priority_cross_study' THEN 0 WHEN 'multi_omics_convergence' THEN 1
+                     WHEN 'metabolite_linked_convergence' THEN 2 ELSE 3 END, score DESC
+  LIMIT 20000`)
+```
+
+```{ojs}
+//| echo: false
+html`<p>${candidates.length.toLocaleString()} candidates ${candidates.length === 20000 ? "(first 20,000)" : ""}
+  ${downloadButton(candidates, "aree_candidates.csv")}</p>
+  ${Inputs.table(candidates, {rows: 20, format: {phenotype: phenoLabel}})}`
+```
+
+**Tiers.** *high_priority_cross_study*: ≥2 independent studies, consistent direction, acceptable
+quality, BH-adjusted pooled p ≤ 0.05. *multi_omics_convergence*: significant in ≥2 molecular layers
+for the same feature and phenotype. *metabolite_linked_convergence*: linked only through KEGG
+reaction annotation (weaker). *emerging*: single-study or unconfirmed, **requires replication**.
+`evidence_class` says what the evidence is *of*: only `resilience_associated` rests on a measured
+resilience outcome. See [Interpreting candidate scores](interpreting_candidate_scores.md).
+
+## Filter evidence
+
+```{ojs}
+//| echo: false
+viewof evFilters = Inputs.form({
+  phenotype: Inputs.select(meta.facets.evidence.phenotype ?? [], {label: "Phenotype", multiple: true, format: phenoLabel}),
+  stressor: Inputs.select(meta.facets.evidence.stressor ?? [], {label: "Stressor", multiple: true, format: stressorLabel}),
+  species: Inputs.select(meta.facets.evidence.species ?? [], {label: "Species", multiple: true}),
+  feature_type: Inputs.select(meta.facets.evidence.feature_type ?? [], {label: "Feature type", multiple: true}),
+  tissue: Inputs.select(meta.facets.evidence.tissue ?? [], {label: "Tissue", multiple: true}),
+  maxP: Inputs.select([0.001, 0.01, 0.05, 0.1, 1], {label: "Adjusted p ≤", value: 0.05}),
+  includeSim: Inputs.toggle({label: "Include simulated", value: false})
+})
+```
+
+```{ojs}
+//| echo: false
+// Runs only on click: a broad filter scans the whole evidence file, which should never
+// happen just because the page loaded (Observable cells run even in hidden tabs).
+viewof evApplied = Inputs.button("Apply filters", {value: null, reduce: () => (viewof evFilters).value})
+```
+
+```{ojs}
+//| echo: false
+evResult = {
+  if (evApplied === null) return null;
+  const f = evApplied;
+  const where = `WHERE TRUE ${inList("phenotype", f.phenotype)} ${inList("stressor", f.stressor)}
+    ${inList("species", f.species)} ${inList("feature_type", f.feature_type)}
+    ${inList("tissue", f.tissue)} ${simClause(f.includeSim)}
+    ${f.maxP < 1 ? `AND adjusted_p_value <= ${f.maxP}` : ""}`;
+  const [count] = await sql(`SELECT count(*) AS n, count(DISTINCT study_id) AS studies,
+    count(DISTINCT feature_id_standardized) AS features FROM evidence ${where}`);
+  const rows = await sql(`SELECT * FROM evidence ${where} ORDER BY adjusted_p_value NULLS LAST LIMIT 10000`);
+  return {count, rows};
+}
+```
+
+```{ojs}
+//| echo: false
+evResult === null
+  ? html`<p class="text-muted">Choose filters and press <strong>Apply filters</strong>. Broad filters read most of the evidence file (~${Math.round(meta.tables.evidence.total / 1000).toLocaleString()}k records) and can take a few seconds.</p>`
+  : html`<p><strong>${evResult.count.n.toLocaleString()}</strong> records · ${evResult.count.features.toLocaleString()} features ·
+  ${evResult.count.studies} studies ${evResult.count.n > 10000 ? "· table and download hold the 10,000 most significant" : ""}
+  ${downloadButton(evResult.rows, "aree_evidence_filtered.csv")}</p>
+  ${Inputs.table(evResult.rows, {rows: 20, columns: ["study_id", "comparison_id", "simulated", "feature_id_standardized",
+    "feature_id_original", "feature_type", "molecular_direction", "effect_size", "effect_size_type",
+    "adjusted_p_value", "phenotype", "stressor", "tissue", "life_stage", "species", "mapping_confidence",
+    "quality_flags"]})}`
+```
+
+## Studies
+
+```{ojs}
+//| echo: false
+studies = sql(`SELECT * FROM studies ORDER BY simulated, study_id`)
+html`${downloadButton(studies, "aree_studies.csv")}
+  ${Inputs.table(studies, {rows: 25, columns: ["study_id", "simulated", "species_accepted", "assay_type",
+    "analysis_mode", "stressors", "phenotypes", "tissues", "life_stages", "n_comparisons", "qc_status",
+    "analysis_status", "doi", "bioproject"]})}`
+```
+
+## SQL
+
+Tables: `evidence`, `candidates`, `studies`. Queries run locally in your browser
+(DuckDB SQL dialect); results display up to 5,000 rows.
+
+```{ojs}
+//| echo: false
+examples = new Map([
+  ["Genes significant in ≥3 real studies", `SELECT feature_id_standardized, phenotype,
+       count(DISTINCT study_id) AS n_studies,
+       sum(CASE WHEN molecular_direction = 'up' THEN 1 ELSE 0 END) AS n_up,
+       sum(CASE WHEN molecular_direction = 'down' THEN 1 ELSE 0 END) AS n_down
+FROM evidence
+WHERE NOT simulated AND feature_type = 'gene' AND adjusted_p_value <= 0.05
+GROUP BY ALL
+HAVING n_studies >= 3
+ORDER BY n_studies DESC, feature_id_standardized
+LIMIT 200`],
+  ["Features with conflicting significant directions", `SELECT feature_id_standardized, feature_type,
+       list(DISTINCT study_id) AS studies,
+       count(*) FILTER (WHERE molecular_direction = 'up') AS n_up,
+       count(*) FILTER (WHERE molecular_direction = 'down') AS n_down
+FROM evidence
+WHERE adjusted_p_value <= 0.05 AND NOT simulated
+GROUP BY ALL
+HAVING n_up > 0 AND n_down > 0
+ORDER BY n_up + n_down DESC
+LIMIT 200`],
+  ["Evidence volume by phenotype and stressor", `SELECT phenotype, stressor, simulated,
+       count(DISTINCT study_id) AS studies, count(*) AS records,
+       count(*) FILTER (WHERE adjusted_p_value <= 0.05) AS significant
+FROM evidence
+GROUP BY ALL
+ORDER BY records DESC`],
+  ["Resilience-associated high-priority candidates", `SELECT *
+FROM candidates
+WHERE tier = 'high_priority_cross_study' AND evidence_class = 'resilience_associated'
+ORDER BY score DESC`],
+  ["Mapping confidence of significant records", `SELECT mapping_confidence, count(*) AS records
+FROM evidence
+WHERE adjusted_p_value <= 0.05
+GROUP BY ALL
+ORDER BY records DESC`]
+])
+viewof example = Inputs.select(examples, {label: "Example"})
+```
+
+```{ojs}
+//| echo: false
+viewof sqlText = Inputs.textarea({value: example, rows: 12, width: Math.min(width, 900),
+  spellcheck: false, monospace: true})
+viewof sqlRun = Inputs.button("Run query", {value: null, reduce: () => (viewof sqlText).value})
+```
+
+```{ojs}
+//| echo: false
+sqlResult = sqlRun === null ? null : sql(sqlRun).then(rows => ({rows}), error => ({error}))
+```
+
+```{ojs}
+//| echo: false
+sqlResult === null ? html`<p class="text-muted">Edit the query (or pick an example) and press <strong>Run query</strong>.</p>`
+  : sqlResult.error
+  ? html`<div class="alert alert-danger"><pre style="white-space: pre-wrap; margin: 0">${sqlResult.error.message}</pre></div>`
+  : html`<p>${sqlResult.rows.length.toLocaleString()} rows ${downloadButton(sqlResult.rows, "aree_query.csv")}</p>
+    ${Inputs.table(sqlResult.rows.slice(0, 5000), {rows: 20})}`
+```
+
+:::
