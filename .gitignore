@@ -46,6 +46,9 @@ results/
 # Dashboard data + copied evidence cards (regenerate via `aree build-dashboard` / `make dashboard`)
 docs/dashboard/
 
+# Parquet tables for the site's Explore page (regenerate via `aree export-site-data`)
+docs/explore/data/
+
 # Genome/transcriptome bundles live on external storage; see docs/first_raw_reanalysis.md.
 # No trailing slash: on most machines these are symlinks to a drive, and a
 # pattern ending in / does not match a symlink.
