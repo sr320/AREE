@@ -291,10 +291,12 @@ This is a functioning MVP. See [docs/roadmap.md](docs/roadmap.md) for a candid
 breakdown of what is **complete and runnable** (schemas, registry, harmonization
 for all four assay types, meta-analysis, prioritization, evidence cards, CLI,
 Streamlit app, Quarto docs, tests, CI) versus **scaffolded but not yet
-production-ready** (the Nextflow raw-data workflows, which are structurally
-complete but have not been executed against real sequencing data in this build)
-versus **planned** (real ortholog mapping, additional species, hosted
-deployment).
+production-ready** (container execution and some assay-specific raw paths).
+Real RNA-seq, methylation and quantified-proteomics results have been harmonized;
+real oyster and Manila clam studies, orthogroup mapping and cross-species
+analysis are implemented. See the generated [dashboard](https://sr320.github.io/AREE/)
+for current coverage and [implementation status](docs/implementation_status.md)
+for the remaining limitations.
 
 ## License
 

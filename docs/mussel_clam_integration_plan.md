@@ -359,8 +359,8 @@ by the workflow rather than kept in the bundle.
   in [first_raw_reanalysis.md](first_raw_reanalysis.md). Salmon indexes are
   built by the workflow on first run.
 - For the methylation workflow, extend the bundle with the genomic FASTA and
-  a Bismark index, which the oyster bundle does not yet carry because no
-  methylation run has completed.
+  a reusable Bismark index. CIBNOR2021 completed a real methylation run on
+  2026-10-16; the workflow-built index is still separate from the bundle.
 - Storage: roughly 2 to 5 GB per species bundle before Salmon indexes; FASTQ
   volumes follow the chosen studies (the Manila clam deposits alone are
   several TB in aggregate, so stage per study as now).

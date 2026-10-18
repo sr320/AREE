@@ -66,3 +66,20 @@ def test_app_on_the_demo_filters_by_species(app_on):
     shown = [d.value for d in at.dataframe
              if {"species_accepted", "feature_id_standardized"} <= set(d.value.columns)]
     assert shown and set(shown[0]["species_accepted"]) == {"Mytilus galloprovincialis"}
+
+
+def test_candidate_loader_orders_stronger_tiers_before_emerging(app_on, monkeypatch):
+    import data_access
+    import pandas as pd
+
+    monkeypatch.setattr(data_access, "load_evidence", lambda **kwargs: pd.DataFrame({
+        "feature_type": ["gene"],
+    }))
+    monkeypatch.setattr(data_access, "run_meta_analysis", lambda **kwargs: pd.DataFrame({"x": [1]}))
+    monkeypatch.setattr(data_access, "build_candidates", lambda *args: pd.DataFrame({
+        "tier": ["emerging", "multi_omics_convergence", "high_priority_cross_study"],
+        "score": [90.0, 70.0, 60.0], "simulated": [False, False, False],
+    }))
+    assert data_access.load_candidates()["tier"].tolist() == [
+        "high_priority_cross_study", "multi_omics_convergence", "emerging",
+    ]

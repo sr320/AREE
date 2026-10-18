@@ -14,7 +14,7 @@ Frontiers in Immunology 15:1380089.
 [doi:10.3389/fimmu.2024.1380089](https://doi.org/10.3389/fimmu.2024.1380089)
 (open access, CC BY 4.0).
 
-Registered as [`HESSER2024_VCOR`](../registry/studies/HESSER2024_VCOR.yaml).
+Registered as [`HESSER2024_VCOR`](https://github.com/sr320/AREE/blob/main/registry/studies/HESSER2024_VCOR.yaml).
 
 It was chosen because it is a genuine resilience study — larval survival under a
 pathogen challenge, with and without a protective intervention — and because its

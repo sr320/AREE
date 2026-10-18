@@ -23,8 +23,10 @@ phenotype, stressor, tissue, life stage, and assay type, so that terms such
 as "thermal tolerance" or "ocean acidification" carry a fixed, shared
 definition across independently curated studies. Each phenotype term is
 additionally tagged with a `resilience_relevance` classification —
-resilience, stress_response, disease, or exposure_only — that is propagated
-into every downstream comparison and evidence record, so that a measured
+resilience, stress_response, disease, or exposure_only. Each comparison records
+its own `resilience_classification`, which may differ from the ontology default;
+candidate relevance uses the most conservative classification among its
+contributing records. This ensures that a measured
 change under stressor exposure is never structurally conflated with a
 validated measure of organismal resilience.
 
@@ -62,7 +64,13 @@ identifier-level pooling, since no stable shared identity exists to group on.
 ## Meta-analysis
 
 Evidence records are grouped for pooling by the combination of standardized
-feature identifier, phenotype, and feature type; pooling is never performed
+feature identifier, phenotype, feature type, simulation status, species taxid
+and contrast type. Baseline phenotype differences and responses to exposure
+remain separate. Only records with a resolved identifier, finite effect and
+positive finite standard error can contribute. Repeated contrasts from one
+study are rejected unless a primary comparison is prespecified within the
+contrast type; other contrasts remain visible but do not add replication.
+Pooling is never performed
 across feature types, since effect-size scales (for example, log2 fold
 change for expression versus percent methylation difference) are not
 directly comparable. Within each group, study-level effect sizes are
@@ -78,14 +86,14 @@ a two-sided z-test p-value. Higgins' I² (the proportion of total variation
 attributable to between-study heterogeneity rather than sampling error) is
 reported alongside every pooled estimate. When a contributing record lacks a
 directly reported standard error, one is approximated from the reported
-effect size and p-value under a normal approximation
+effect size and unadjusted p-value under a normal approximation
 (*se = |effect| / Φ⁻¹(1 − p/2)*), a documented fallback rather than a silent
 assumption. A single-study group falls back to that study's own estimate
 (tau² = 0, I² = 0) rather than a degenerate random-effects computation.
 Because a genome-wide reanalysis contributes one pooled test per gene, pooled
 p-values are adjusted for multiple testing with the Benjamini–Hochberg
 procedure within each test family, defined as all features pooled for one
-phenotype, feature type, data origin, and species; both the raw and adjusted
+phenotype, feature type, data origin, species and contrast type; both the raw and adjusted
 values and the family size are reported. Direction consistency is reported
 separately as the fraction of contributing
 records whose effect-size sign agrees with the majority sign across the
@@ -100,7 +108,7 @@ Candidates are assigned a transparent score computed as a weighted sum of
 ten independently inspectable 0–1 components — number of independent
 studies, total biological sample size, effect magnitude, adjusted
 significance, direction consistency, phenotype relevance (derived from the
-resilience-relevance classification of the phenotype), breadth across
+most conservative comparison-level resilience classification), breadth across
 tissues and life stages, assay-type diversity, identifier mapping
 confidence, and data-quality flag burden — with weights fixed and documented
 in source (`src/prioritize/scoring.py`), less a penalty proportional to I².
@@ -108,15 +116,16 @@ The scoring function is pure, so identical inputs deterministically produce
 an identical score.
 
 Critically, the numeric score does not by itself determine tier membership.
-Three tiers are defined with explicit, score-independent gating conditions.
+Four tiers are defined with explicit, score-independent gating conditions.
 A candidate is assigned to the high-priority cross-study tier only if it is
 supported by at least two independent studies, has a phenotype relevance
 above the exposure-only floor, has a direction consistency of at least 0.7,
-and clears a minimum data-quality threshold. A candidate lacking sufficient
+clears a minimum data-quality threshold, and has a BH-adjusted pooled p-value
+≤ 0.05. A candidate lacking sufficient
 independent-study support but showing convergent evidence across at least
 two distinct molecular layers (for example, transcriptomic and methylation
 evidence for the same standardized feature), each significant after
-adjustment and each measured under the same phenotype, is assigned to a
+adjustment and each measured under the same phenotype and contrast type, is assigned to a
 multi-omics convergence tier, with the specific cross-layer linkage shown
 explicitly; the link is shared gene identity, not a measured regulatory
 relationship, and evidence for the same feature under a different phenotype
