@@ -45,6 +45,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "percent_survival_at_salinity"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 15
     biological_replicates: 5
     results_file: "data/demo/proteomics/GIGAS_SAL04_low_salinity_vs_control_protein_abundance_demo.tsv"

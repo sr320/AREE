@@ -74,6 +74,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "percent_survival"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 24
     biological_replicates: 3
     results_file: "data/demo/rnaseq/GIGAS_HEAT01_acute_heat_vs_control_dge_demo.tsv"
@@ -83,7 +84,12 @@ Each comparison needs its own `comparison_id` (unique within the study),
 `tissue` and `life_stage` (from the controlled vocabularies), a
 `stressor_original` (exact free text from the source — never discard this)
 alongside a `stressor_standardized` ontology term, a `phenotype` term, a
-`phenotype_direction`, a `resilience_classification`, and sample-size fields.
+`phenotype_direction`, a `resilience_classification`, a `contrast_type`, and
+sample-size fields. `contrast_type` says whether the arms are a treatment and
+its control (`exposure_response`) or groups that differ in resilience, and if
+so whether they were sampled at baseline or under the challenge; see
+[contrast_types.md](contrast_types.md). If a study has both kinds, choose
+`meta_analysis_primary` separately within each contrast type.
 `results_file` points at the processed results table for that comparison when
 `analysis_mode` is `processed_results_harmonization` (or when raw-mode output
 has already been produced and staged, as in the demo).

@@ -31,7 +31,7 @@ from prioritize.cross_species import (
     build_cross_species_candidates,
     species_estimates_for,
 )
-from prioritize.rank import _partition_value
+from prioritize.rank import _partition_value, contrast_suffix
 
 from . import evidence_cards as _cards
 from .evidence_cards import (
@@ -264,7 +264,8 @@ def card_markdown(candidate: dict, species_rows: list[dict], phenotype_label: st
 
 def card_slug(candidate: dict) -> str:
     origin = "simulated" if _partition_value(candidate["simulated"]) == "true" else "real"
-    return _slug(f"{candidate['orthogroup_id']}_{candidate['phenotype']}_{candidate['feature_type']}_{origin}")
+    return _slug(f"{candidate['orthogroup_id']}_{candidate['phenotype']}_{candidate['feature_type']}_{origin}"
+                 f"{contrast_suffix(candidate)}")
 
 
 def build_cross_species_cards_report(
@@ -300,8 +301,8 @@ def build_cross_species_cards_report(
         path.write_text(card_markdown(candidate, species_rows, label, run_ref))
         card_files.append(str(path))
         written.append({k: candidate.get(k) for k in (
-            "orthogroup_id", "phenotype", "feature_type", "simulated", "copy_class", "species_taxids",
-            "tier", "evidence_class", "score", "k_studies_by_species", "adjusted_p_value", "gates_failed")}
+            "orthogroup_id", "phenotype", "feature_type", "simulated", "contrast_type", "copy_class",
+            "species_taxids", "tier", "evidence_class", "score", "k_studies_by_species", "adjusted_p_value", "gates_failed")}
             | {"card_file": str(path)})
 
     candidates = candidates.assign(card_file=card_files)

@@ -114,6 +114,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "seed size distribution on 450-1320 um sorting screens at 24 dpf (larger at 29 C); settlement 30.9% at 29 C vs 29.7% at 23 C; one measurement per silo"
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 1
     results_file: null

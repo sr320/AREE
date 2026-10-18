@@ -207,6 +207,19 @@ was recorded — and only then gives the tier-appropriate validation advice.
 Confirming an expression difference that was never tied to an outcome does not
 turn it into a biomarker.
 
+## Contrast type: predictive baseline candidates
+
+Evidence class says what was measured; `contrast_type` says between whom and
+when. A `resilience_associated` candidate can rest on a difference between
+resilient and susceptible animals under unstressed conditions
+(`baseline_phenotype_difference`) or on how animals respond to the stress.
+Only the first could be read before any stress, which is what a breeder needs,
+so those candidates carry `is_predictive_baseline = True` and get their own
+section at the top of `aree top-candidates`. Baseline and response evidence
+never pool together. The flag changes neither tier nor score; for a baseline
+candidate, replication means independent resistant-vs-susceptible group pairs.
+See [contrast_types.md](contrast_types.md).
+
 ## Reading the output
 
 `aree build-evidence-cards` ranks every candidate and writes two things under

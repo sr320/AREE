@@ -96,6 +96,7 @@ comparisons:
     phenotype_direction: "no_change"
     phenotype_unit: "gill mitochondrial electron-transport and OXPHOS capacity maintained (PRIDE description)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null
@@ -114,6 +115,7 @@ comparisons:
     phenotype_direction: "mixed"
     phenotype_unit: "OXPHOS capacity maintained; cytochrome c oxidase (Complex IV) activity slightly but significantly lower after reoxygenation (PRIDE description)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: null

@@ -94,6 +94,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_post_challenge (final mortality 23 C vs 30 C: F11N 100% vs 11.7%; F14R 75.5% vs 3.4%; H2D, not sequenced, 27.1% vs 1.4%)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 3
     results_file: null
@@ -113,6 +114,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "final mortality at 30 C (F11N 11.7%, F14R 3.4%); viral load and transcription reported in the paper"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 3
     results_file: null

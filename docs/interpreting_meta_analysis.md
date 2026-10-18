@@ -28,21 +28,24 @@ treated as independent observations. The curator's way out is to set
 `meta_analysis_primary: true` on one comparison in the study YAML, chosen
 before looking at results. Only flagged comparisons from that study are then
 pooled; the others stay in the evidence table and on evidence cards, and are
-counted in `n_excluded_non_primary`.
+counted in `n_excluded_non_primary`. The choice is made within each
+`contrast_type`: comparisons of different contrast types never share a group,
+so a primary heat response does not exclude the same study's baseline
+contrast ([contrast_types.md](contrast_types.md)).
 
 ## Multiple testing
 
 Every pooled p-value is adjusted with the Benjamini–Hochberg procedure within
 its **test family**: all features pooled for the same
-`(phenotype, feature_type, simulated, species_taxid)`. A genome-wide
+`(phenotype, feature_type, simulated, species_taxid, contrast_type)`. A genome-wide
 reanalysis contributes one test per gene to that family — the first real
 OsHV-1 pool (`CALLA2026_OSHV` + `DELISLE2020_OSHV_TEMP`) has 23,094 — and at
 that scale 4,687 genes were nominally significant at `p < 0.05` by chance and
 signal together. `adjusted_p_value` is the number to read; `p_value` is kept
 for transparency.
 
-The family is deliberately the same set of keys the CLI can filter on
-(`--phenotype`, `--feature-type`), so a feature's `adjusted_p_value` is
+Both CLI filters (`--phenotype`, `--feature-type`) are family keys, so they
+select whole families, and a feature's `adjusted_p_value` is
 identical whether you ran one phenotype or all of them. Filtering never
 shrinks the denominator.
 
