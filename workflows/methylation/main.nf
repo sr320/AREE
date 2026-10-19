@@ -52,6 +52,7 @@ def paramsAsJson() {
         unit_min_coverage    : params.methylation?.unit_min_coverage,
         tile_min_cpgs        : params.methylation?.tile_min_cpgs,
         replicate_unit       : params.methylation?.replicate_unit ?: null,
+        block_by             : params.methylation?.block_by ?: null,
         design_sheet         : params.methylation?.design_sheet ?: null,
         bismark_align_args   : params.methylation?.bismark_align_args ?: '',
         extractor_args       : params.methylation?.extractor_args ?: '',
@@ -132,7 +133,17 @@ workflow {
         if (replicate_unit && !params.methylation.design_sheet) {
             error "methylation.replicate_unit '${replicate_unit}' needs methylation.design_sheet naming a TSV with that column"
         }
-        design_sheet_ch = replicate_unit
+        // Matched sets (limma only): block_by names a design-sheet column, e.g.
+        // the population contributing one animal to each arm, or the animal
+        // sampled before and after; the test is then ~ block + treatment.
+        def block_by = params.methylation.block_by ?: ''
+        if (block_by && !params.methylation.design_sheet) {
+            error "methylation.block_by '${block_by}' needs methylation.design_sheet naming a TSV with that column"
+        }
+        if (block_by && (params.methylation.dmr_engine ?: 'methylkit') != 'limma') {
+            error "methylation.block_by is supported only with methylation.dmr_engine = 'limma'"
+        }
+        design_sheet_ch = (replicate_unit || block_by)
             ? Channel.fromPath(params.methylation.design_sheet, checkIfExists: true).first()
             : Channel.value(file("${projectDir}/assets/NO_DESIGN_SHEET"))
 
@@ -153,6 +164,7 @@ workflow {
             params.methylation.tile_size,
             params.methylation.tile_min_cpgs,
             replicate_unit,
+            block_by,
             design_sheet_ch,
             dmr_engine,
             params.methylation.dmr_features ?: 'tiles',
