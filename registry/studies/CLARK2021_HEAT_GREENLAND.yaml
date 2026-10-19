@@ -1,7 +1,23 @@
 # FIRST REAL MUSSEL STUDY CLAIMED IN AREE. Claimed 2026-10-17 from the WP5
 # backlog (docs/candidate_studies_mussels_clams.md, pool C: Mytilus edulis
 # heat), with PRJEB48959 (Barrett et al. 2022) as its intended partner for a
-# within-species pool on thermal_tolerance. NOT YET RUN.
+# within-species pool on thermal_tolerance.
+#
+# REANALYZED 2026-10-18 on Pori (two of three comparisons; the inner-fjord
+# comparison is not run yet). Both ran cleanly: design ~ condition, standard
+# length offsets, 4 vs 5 mussels, residual df 7, reference matching the
+# bundle, no warnings. Replicate dispersion passes in every group.
+#   heat_32c_vs_subtidal_control (primary): 17,873 of 33,579 genes at
+#     padj < 0.05 (6,200 up, 11,673 down). REVIEW BEFORE POOLING: half of all
+#     genes differing after a 2 h heat shock is not a heat response. The field
+#     controls are three times as variable as either lab group (median
+#     dispersion 0.25 vs 0.08-0.09) and map at a different rate (mean 76% vs
+#     70% for 32 C and 62% for 22 C), so this contrast is dominated by
+#     field-vs-lab sampling (limitation 2), as feared before it was run.
+#   heat_32c_vs_22c: 3,516 of 29,624 genes (898 up, 2,618 down).
+# The primary designation was prespecified and is left unchanged here;
+# switching it after seeing results is a curation decision to record
+# explicitly, not to make silently.
 #
 # Registered from deposited metadata and the publication, which is CONFIRMED:
 # Clark, Peck and Thyrring (2021), Science of the Total Environment 767:144366,
@@ -30,7 +46,9 @@
 #   heat_32c_vs_22c (M32 vs M22) removes that confound (both lab-held, same
 #     protocol) but its reference is itself a 22 C exposure. Not pooled.
 #   inner_fjord_warm_day_vs_subtidal_control (MI vs MC) is the in-situ
-#     acclimatization contrast. Not pooled.
+#     acclimatization contrast. Not pooled. Its contrast_type is
+#     exposure_response, though its arms also differ in habitat (intertidal vs
+#     subtidal), so it is not a clean exposure contrast either.
 # CLASSIFICATION. All three are stress_response, following the phenotype
 # ontology's definition ("molecular/physiological response to a stressor, not
 # itself an outcome measure"): each compares the gill transcriptome of exposed
@@ -84,8 +102,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 24 libraries are public in ENA under PRJEB41447 (first public 2020-11-25), brokered from ArrayExpress E-MTAB-9786, whose sample table and BioSample attributes ('environmental history', 'stimulus') carry the design. Only the libraries in registered comparisons need staging. The authors' FPKM tables from a de novo assembly are not reused. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "in_progress"
 
 comparisons:
   - comparison_id: "heat_32c_vs_subtidal_control"
@@ -102,6 +120,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 9
     biological_replicates: 4
     results_file: "data/studies/CLARK2021_HEAT_GREENLAND/CLARK2021_HEAT_GREENLAND_heat_32c_vs_subtidal_control_dge_standardized.tsv"
@@ -120,6 +139,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 9
     biological_replicates: 4
     results_file: "data/studies/CLARK2021_HEAT_GREENLAND/CLARK2021_HEAT_GREENLAND_heat_32c_vs_22c_dge_standardized.tsv"
@@ -137,6 +157,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 10
     biological_replicates: 5
     results_file: "data/studies/CLARK2021_HEAT_GREENLAND/CLARK2021_HEAT_GREENLAND_inner_fjord_warm_day_vs_subtidal_control_dge_standardized.tsv"
@@ -184,6 +205,25 @@ provenance:
     keyed by run accession, so the spaces are only labels.
     PUBLICATION: the backlog listed it; the open copy used for curation is
     Aarhus University's repository PDF of the submitted version.
+    REANALYSIS (Pori, 2026-10-17 to 18): the 14 libraries of the first two
+    comparisons (48.5 GB) were downloaded fresh over HTTPS from ENA and
+    accepted only at manifest size and ENA MD5; ENA closed transfers early
+    repeatedly, so files needed 2 to 7 attempts. Both comparisons ran natively
+    (-profile local,workstation, 8 GB resource config), one at a time with the
+    work directory cleared between them, building and saving the
+    GCF_963676685.1 Salmon index: 33 and 32 tasks, about 1 h each, no
+    failures. Manifests record design ~condition, length_model "tximport
+    average transcript length offsets", 9 libraries, residual df 7, every
+    reference file matching the bundle provenance, and no warnings. Salmon
+    mapped 47.0-84.6% of read pairs (means by group: controls 76.2%, 22 C
+    61.5%, 32 C 69.5%). Replicate dispersion QC (replicate_dispersion_qc.tsv)
+    passes: median dispersion 0.255 (controls), 0.085 (22 C), 0.088 (32 C).
+    Harmonized per comparison against medul_gene_id_crosswalk.tsv: all 63,203
+    records exact; 55,770 carry an orthogroup. DESeq2 calls at padj < 0.05:
+    17,873 for heat_32c_vs_subtidal_control (see the header), 3,516 for
+    heat_32c_vs_22c. The inner-fjord comparison needs 5 more libraries
+    (18.6 GB) and is pending. contrast_type (added on main after the claim) is
+    exposure_response for all three.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB41447"
     - "https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-9786"
