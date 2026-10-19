@@ -284,11 +284,17 @@ Every process uses the exact image tags declared in `containers/README.md`:
 `quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0`,
 `quay.io/biocontainers/trim-galore:0.6.10--hdfd78af_0`,
 `quay.io/biocontainers/bismark:0.24.2--hdfd78af_0`,
-`bioconductor/bioconductor_docker:RELEASE_3_18` (methylKit DMR calling,
-GenomicRanges/rtracklayer annotation), `python:3.11-slim` (standardize/
-manifest steps, stdlib only), `ghcr.io/quarto-dev/quarto:1.5.57` (report).
-None of these images have been pulled or run as part of this task — see
-`containers/README.md` "What is real vs. aspirational here."
+`quay.io/biocontainers/seqkit:2.8.2--h9ee0642_0` (chunk splitting),
+`quay.io/biocontainers/bioconductor-dss:2.58.0--r45h01b2380_0` (limma/DSS
+pooled DMRs), `quay.io/biocontainers/bioconductor-methylkit:1.36.0--r45ha27e39d_0`
+(methylKit DMRs, GenomicRanges/rtracklayer annotation),
+`quay.io/biocontainers/python:3.12.12` (standardize/manifest steps, stdlib
+only; it has the `ps` Nextflow needs, which `python:3.11-slim` lacks) and
+`rocker/verse:4.5.2` (report: R, knitr and quarto). All of them ran under
+Apptainer on Klone in October 2026 (see
+[docs/running_on_klone.md](../../docs/running_on_klone.md)). The earlier
+`bioconductor/bioconductor_docker:RELEASE_3_18` had limma but not
+data.table, DSS or methylKit, and the quarto image had no R.
 
 ## Running
 
@@ -311,9 +317,8 @@ nextflow run main.nf -profile docker \
 **Neither of the above commands has actually been executed in this build.**
 The `docker,demo` invocation is expected to be runnable on a machine with
 Docker and Nextflow installed, since `processed_results_harmonization` mode
-only depends on `python:3.11-slim` and `ghcr.io/quarto-dev/quarto:1.5.57`,
-both lightweight, real, pullable images — but that has not been verified
-here.
+only depends on `quay.io/biocontainers/python:3.12.12` and
+`rocker/verse:4.5.2` — but that has not been verified here.
 
 ## What has and has not been run (honesty statement)
 
