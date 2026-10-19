@@ -83,6 +83,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     meta_analysis_primary: true
@@ -102,6 +103,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/ZWU2022_VIBRIO_TIMECOURSE/ZWU2022_VIBRIO_TIMECOURSE_vibrio_12h_vs_control_dge_standardized.tsv"
@@ -120,6 +122,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/ZWU2022_VIBRIO_TIMECOURSE/ZWU2022_VIBRIO_TIMECOURSE_vibrio_6h_vs_control_dge_standardized.tsv"
@@ -138,6 +141,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/ZWU2022_VIBRIO_TIMECOURSE/ZWU2022_VIBRIO_TIMECOURSE_vibrio_3h_vs_control_dge_standardized.tsv"
@@ -156,6 +160,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/ZWU2022_VIBRIO_TIMECOURSE/ZWU2022_VIBRIO_TIMECOURSE_vibrio_1h_vs_control_dge_standardized.tsv"

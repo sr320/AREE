@@ -10,8 +10,8 @@
 #   pip install -e ".[dev,app,intake]"
 #
 # This is a convenience for native runs. The workflows still declare their own
-# containers, and a manifest from a native run records the declared container
-# versions, not the ones in this environment (see docs/implementation_status.md).
+# containers. Current RNA-seq manifests collect observed process versions;
+# older manifests record declared versions (see docs/implementation_status.md).
 name: aree
 channels:
   - conda-forge

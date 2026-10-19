@@ -88,6 +88,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "OsHV-1 DNA copies per ng total DNA (qPCR); mortality 9/60 vs 1/60 at 6 dpi"
     resilience_classification: "disease"
+    contrast_type: "phenotype_difference_under_exposure"
     sample_size: 10
     biological_replicates: 5
     results_file: null

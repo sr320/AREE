@@ -43,9 +43,19 @@ def test_app_without_evidence_still_lists_every_species(app_on):
     assert species["n_evidence_records_real"].sum() == 0
 
 
+def test_app_hides_simulated_demo_data_until_asked(app_on):
+    harmonize_all_demo_studies()
+    at = _run()
+    table = at.dataframe[0].value.set_index("species")
+    assert table["n_evidence_records_simulated"].sum() == 0
+    assert not any("feature_id_standardized" in d.value.columns for d in at.dataframe)
+
+
 def test_app_on_the_demo_filters_by_species(app_on):
     harmonize_all_demo_studies()
     at = _run()
+    at.sidebar.checkbox(key="include_simulated").check().run()
+    assert not at.exception, at.exception
     table = at.dataframe[0].value.set_index("species")
     assert table.loc["Mytilus galloprovincialis", "n_evidence_records_simulated"] > 0
     assert table.loc["Mytilus galloprovincialis", "complex"] == "mytilus_edulis_complex"
@@ -56,3 +66,20 @@ def test_app_on_the_demo_filters_by_species(app_on):
     shown = [d.value for d in at.dataframe
              if {"species_accepted", "feature_id_standardized"} <= set(d.value.columns)]
     assert shown and set(shown[0]["species_accepted"]) == {"Mytilus galloprovincialis"}
+
+
+def test_candidate_loader_orders_stronger_tiers_before_emerging(app_on, monkeypatch):
+    import data_access
+    import pandas as pd
+
+    monkeypatch.setattr(data_access, "load_evidence", lambda **kwargs: pd.DataFrame({
+        "feature_type": ["gene"],
+    }))
+    monkeypatch.setattr(data_access, "run_meta_analysis", lambda **kwargs: pd.DataFrame({"x": [1]}))
+    monkeypatch.setattr(data_access, "build_candidates", lambda *args: pd.DataFrame({
+        "tier": ["emerging", "multi_omics_convergence", "high_priority_cross_study"],
+        "score": [90.0, 70.0, 60.0], "simulated": [False, False, False],
+    }))
+    assert data_access.load_candidates()["tier"].tolist() == [
+        "high_priority_cross_study", "multi_omics_convergence", "emerging",
+    ]

@@ -436,7 +436,7 @@ Three ways a source study might report this feature, and what AREE resolves:
    even though it happens to be unambiguous in this crosswalk).
 3. **Source reports the symbol `hsp70-like2`** (as used by
    `GIGAS_LARV05`'s legacy gene-symbol-only annotation — see
-   `registry/studies/GIGAS_LARV05.yaml`, which deliberately exercises this
+   `registry/demo_studies/GIGAS_LARV05.yaml`, which deliberately exercises this
    path). This does not match any `gene_symbol` value in the crosswalk
    directly, so resolution falls through to
    `data/mappings/ambiguous_symbol_map.yaml`:

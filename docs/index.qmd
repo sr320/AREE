@@ -63,13 +63,13 @@ ${missing.length ? html`<p><strong>Pipeline outputs missing from this build:</st
 html`<div class="kpi-grid">
   <div class="kpi"><div class="kpi-label">Real studies</div>
     <div class="kpi-value">${k.n_studies_real}</div>
-    <div class="kpi-note">${k.n_studies_simulated} simulated demo studies kept separate</div></div>
+    <div class="kpi-note">${data.includes_simulated ? `${k.n_studies_simulated} simulated demo studies kept separate` : "simulated demo studies not shown"}</div></div>
   <div class="kpi"><div class="kpi-label">Comparisons harmonized</div>
     <div class="kpi-value">${k.n_comparisons_real_harmonized} / ${k.n_comparisons_real}</div>
     <div class="kpi-note">registered contrasts with evidence in the table</div></div>
   <div class="kpi"><div class="kpi-label">Evidence records</div>
     <div class="kpi-value">${fmt(k.n_evidence_records_real)}</div>
-    <div class="kpi-note">one row per gene × comparison</div></div>
+    <div class="kpi-note">one row per molecular feature × comparison</div></div>
   <div class="kpi"><div class="kpi-label">High-priority candidates</div>
     <div class="kpi-value">${fmt(k.n_candidates_real_high_priority)}</div>
     <div class="kpi-note">from ${k.n_real_pools_k2plus} cross-study pool${k.n_real_pools_k2plus === 1 ? "" : "s"}</div></div>
@@ -86,7 +86,7 @@ html`<div class="kpi-grid">
   const list = (xs) => xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
   // Lower-case a label mid-sentence, leaving acronyms like "pH" alone.
   const lc = (s) => s.split(" ").map(w => w.length > 1 && w[1] === w[1].toLowerCase() ? w[0].toLowerCase() + w.slice(1) : w).join(" ");
-  const relevance = (id) => data.vocab.phenotype_resilience_relevance?.[id];
+  const contrast = (id) => (id ?? "unspecified contrast").replace(/_/g, " ");
 
   const real = data.studies.filter(s => !s.simulated);
   const withEvidence = real.filter(s => s.n_evidence_records > 0);
@@ -115,6 +115,7 @@ html`<div class="kpi-grid">
       : "None has harmonized evidence yet."}</p>`;
 
   const poolItems = cross.map(p => html`<li><strong>${phen(p.phenotype)}</strong>, <em>${p.species}</em>
+    — ${contrast(p.contrast_type)}
     (${p.studies.length} studies: ${p.studies.join(", ")}): ${fmt(p.n_features_k2plus)} genes measured in at
     least two studies, ${fmt(p.n_features_k2plus_significant)} with a pooled effect significant after
     multiple-testing correction.</li>`);
@@ -122,12 +123,12 @@ html`<div class="kpi-grid">
     ? html`<p>Cross-study pools, where the same gene can be compared between independent studies:</p><ul>${poolItems}</ul>`
     : html`<p>No cross-study pool has formed yet; every phenotype is supported by a single study.</p>`;
   const singleText = single.length
-    ? html`<p>${list(single.map((p, i) => `${i ? lc(phen(p.phenotype)) : phen(p.phenotype)} in ${p.species}`))} ${single.length === 1 ? "has" : "have"} evidence from one
+    ? html`<p>${list(single.map((p, i) => `${i ? lc(phen(p.phenotype)) : phen(p.phenotype)} (${contrast(p.contrast_type)}) in ${p.species}`))} ${single.length === 1 ? "has" : "have"} evidence from one
       study only (${list(single.flatMap(p => p.studies))}), so ${single.length === 1 ? "its" : "their"} genes stay
       <em>emerging</em> until a second study replicates them.</p>`
     : "";
 
-  const tierText = html`<p>${fmt(nRanked)} gene × phenotype candidates are ranked:
+  const tierText = html`<p>${fmt(nRanked)} feature × phenotype × species × contrast candidates are listed:
     ${fmt(k.n_candidates_real_high_priority)} high priority (replicated across studies),
     ${fmt(k.n_candidates_real_multi_omics)} multi-omics, ${fmt(k.n_candidates_real_metabolite_linked)} metabolite-linked,
     ${fmt(k.n_candidates_real_emerging)} emerging.
@@ -135,12 +136,13 @@ html`<div class="kpi-grid">
 
   const caveats = [];
   caveats.push(`${k.n_real_comparisons_with_resilience_phenotype} of ${k.n_comparisons_real} real comparisons
-    measure a resilience outcome; the rest measure disease, stress response, or exposure alone.`);
-  if (topPhens.length === 1 && relevance(topPhens[0]) !== "resilience")
-    caveats.push(`The top-ranked candidates all come from the <em>${lc(phen(topPhens[0]))}</em> pool, so they describe the response to ${relevance(topPhens[0]) === "disease" ? "infection" : "the stressor"},
+    are registered as resilience-associated; this includes comparisons awaiting analysis.
+    The rest are classified as disease, stress response, or exposure-only.`);
+  if (top.length && topPhens.length === 1 && top.every(r => r.evidence_class === "disease_associated"))
+    caveats.push(`The top-ranked candidates all come from the <em>${lc(phen(topPhens[0]))}</em> pool, so they describe the response to infection,
       not resistance to it; each pool's own top candidates are listed below.`);
   if (k.n_candidates_real_multi_omics === 0)
-    caveats.push(`The multi-omics tier is empty because no non-RNA-seq study has been harmonized yet.`);
+    caveats.push(`No candidate currently meets the multi-omics gate: significant evidence in at least two molecular layers for the same feature, phenotype and contrast type.`);
   caveats.push(`A candidate here is an association across the available evidence, not a validated biomarker.`);
 
   const next = [];
@@ -184,7 +186,7 @@ candidateTable = (rows, {showPhenotype = false, maxRows = 15} = {}) => Inputs.ta
   format: {
     feature_id_standardized: (v, i, rows) => rows[i].card_page ? htl.html`<a href="${rows[i].card_page}">${v}</a>` : v,
     gene_description: v => clip(v, 38),
-    tier: v => TIER.get(v) ?? v,
+    tier: (v, i, rows) => (TIER.get(v) ?? v) + (rows[i].pooling_status === "unpooled" ? " (unpooled)" : ""),
     pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
     adjusted_p_value: fmtP
   },
@@ -225,6 +227,34 @@ candidateTable(data.candidates.top_real, {showPhenotype: !topPhen})
       by tier, then score${overallHead(rows) ? `: the same as the first ${rows.length} rows of the overall table above.` : "."}</p>
     ${overallHead(rows) ? "" : candidateTable(rows, {maxRows: rows.length})}`;
   })}`;
+}
+```
+
+### Predictive baseline candidates
+
+```{ojs}
+{
+  // Genes that differ between groups of measured, differing resilience sampled under
+  // common unstressed conditions (contrast_type = baseline_phenotype_difference).
+  const pb = data.candidates.predictive_baseline ?? {n: 0, n_significant: 0, top: [], studies: []};
+  const why = html`<p>A gene that responds to stress tells you an animal is stressed. A gene that already
+    differs between resilient and susceptible animals <em>before</em> any stress could be read on animals
+    that are then kept, which is what a breeder needs. These candidates come from comparisons of groups
+    that differ in resilience by origin (line, family, population, ploidy or age), sampled under the same
+    unstressed conditions (<a href="contrast_types.html">contrast types</a>).</p>`;
+  if (!pb.n) return html`${why}<p>No harmonized study contributes a baseline contrast yet.</p>`;
+  const single = pb.n_significant_replicated === 0;
+  const meta = html`<p>${fmt(pb.n_significant)} of ${fmt(pb.n)} baseline candidates are significant after
+    multiple-testing correction, from ${pb.studies.join(", ")}${single ? html`. All rest on a
+    <strong>single study</strong>: groups that differ in origin differ in more than resilience, so each needs
+    an independent resistant-vs-susceptible pair, and ideally pre-challenge sampling of individuals whose
+    survival is then recorded, before it is more than a lead` : ""}.
+    ${pb.top.length < pb.n_significant ? `Top ${pb.top.length} shown, by tier then score; ` : ""}click a gene
+    for its evidence card. log2FC compares each study's registered treatment arm with its control arm
+    (for LI2018, intertidal relative to subtidal); the card's comparison column names both.</p>`;
+  return html`${why}${meta}${pb.top.length
+    ? candidateTable(pb.top, {showPhenotype: pb.phenotypes.length > 1, maxRows: pb.top.length})
+    : html`<p>None is significant yet.</p>`}`;
 }
 ```
 
@@ -385,7 +415,7 @@ Inputs.table(shownStudies, {
 ```
 
 ```{ojs}
-html`<p class="dash-meta">${data.tests.n_tests} automated tests, ${data.activity.n_commits} commits since ${data.activity.first_commit_date}.
+html`<p class="dash-meta">${data.tests.n_tests} test functions (parameterized cases counted separately by pytest), ${data.activity.n_commits} commits since ${data.activity.first_commit_date}.
   Details: <a href="implementation_status.html">implementation status</a> ·
   <a href="${data.repo_url}">source repository</a>.
   Built by <code>aree build-dashboard</code> and <code>quarto render docs</code> on every push to <code>main</code>.</p>`

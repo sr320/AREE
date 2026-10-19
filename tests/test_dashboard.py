@@ -42,7 +42,9 @@ def test_builder_reports_missing_outputs_instead_of_failing(tmp_path, monkeypatc
     assert present["evidence_table"] is False
     assert present["candidates"] is False
     # Registry-derived counts still come through; pipeline-derived counts are zero.
-    assert data["kpis"]["n_studies_simulated"] >= 6
+    # The simulated demo studies are fixtures, left out unless asked for.
+    assert data["includes_simulated"] is False
+    assert data["kpis"]["n_studies_simulated"] == 0
     assert data["kpis"]["n_studies_real"] >= 1
     assert data["kpis"]["n_evidence_records_real"] == 0
     assert data["candidates"]["top_real"] == []
@@ -51,11 +53,16 @@ def test_builder_reports_missing_outputs_instead_of_failing(tmp_path, monkeypatc
     # Nothing fabricated: no cards were copied when there were none to copy.
     assert not (out.parent / "cards").exists()
 
+    with_demo = build_dashboard_data(out, include_simulated=True)
+    assert with_demo["includes_simulated"] is True
+    assert with_demo["kpis"]["n_studies_simulated"] >= 6
+    assert with_demo["kpis"]["n_studies_real"] == data["kpis"]["n_studies_real"]
+
 
 def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_registry, tmp_path, monkeypatch):
     runner = CliRunner()
     for study_id in ALL_DEMO_STUDY_IDS:
-        assert runner.invoke(main, ["register-study", f"registry/studies/{study_id}.yaml"]).exit_code == 0
+        assert runner.invoke(main, ["register-study", f"registry/demo_studies/{study_id}.yaml"]).exit_code == 0
         assert runner.invoke(main, ["harmonize", "--study", study_id, "--date", "2026-01-01"]).exit_code == 0
     assert runner.invoke(main, ["meta-analyze", "--feature-type", "gene"]).exit_code == 0
     assert runner.invoke(main, ["build-evidence-cards"]).exit_code == 0
@@ -64,7 +71,7 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     _point_at_reports(monkeypatch, reports_dir)
     out = tmp_path / "site" / "dashboard" / "data.json"
 
-    data = build_dashboard_data(out)
+    data = build_dashboard_data(out, include_simulated=True)
 
     assert data["artifacts_present"]["evidence_table"] is True
     assert data["artifacts_present"]["candidates"] is True
@@ -86,7 +93,8 @@ def test_builder_summarizes_a_demo_pipeline_run(isolated_reports, isolated_regis
     for phen, rows in by_phen.items():
         assert 0 < len(rows) <= dashboard.TOP_N_PER_PHENOTYPE
         assert all(r["phenotype"] == phen and r["simulated"] for r in rows)
-        keys = [(tier_rank[r["tier"]], -r["score"]) for r in rows]
+        # Unpooled candidates carry no score and sort after every scored one.
+        keys = [(tier_rank[r["tier"]], r["score"] is None, -(r["score"] or 0)) for r in rows]
         assert keys == sorted(keys)
 
     by_study = {r["study_id"]: r for r in data["evidence"]["by_study"]}
@@ -131,6 +139,9 @@ def test_cli_build_dashboard_writes_json(tmp_path, monkeypatch):
     result = CliRunner().invoke(main, ["build-dashboard", "--out", str(out)])
     assert result.exit_code == 0, result.output
     assert "Pipeline outputs not found" in result.output
+    assert json.loads(out.read_text())["kpis"]["n_studies_simulated"] == 0
+    result = CliRunner().invoke(main, ["build-dashboard", "--out", str(out), "--include-simulated"])
+    assert result.exit_code == 0, result.output
     assert json.loads(out.read_text())["kpis"]["n_studies_simulated"] >= 6
 
 
@@ -141,3 +152,46 @@ def test_cli_build_dashboard_writes_json(tmp_path, monkeypatch):
 ])
 def test_short_citation(citation, expected):
     assert dashboard._short_citation(citation) == expected
+
+
+def _candidate_row(feature, contrast, adj_p, k=1, predictive=None, score=50.0):
+    return {
+        "feature_id_standardized": feature, "feature_type": "gene", "phenotype": "thermal_tolerance",
+        "tier": "emerging", "evidence_class": "resilience_associated", "context_replication": "single_study",
+        "contrast_type": contrast, "is_predictive_baseline": contrast == "baseline_phenotype_difference"
+        if predictive is None else predictive,
+        "score": score, "pooling_status": "pooled", "k_studies": k, "studies": "BASE_STUDY",
+        "total_sample_size": 11, "pooled_effect": -1.5, "adjusted_p_value": adj_p,
+        "direction_consistency": 1.0, "i_squared": 0.0, "n_supporting_layers": 1, "mapping_confidences": "exact",
+        "simulated": False, "species_taxid": 29159, "orthogroup_id": "", "card_file": "",
+    }
+
+
+def test_predictive_baseline_section_lists_significant_baseline_candidates(tmp_path, monkeypatch):
+    import pandas as pd
+
+    rows = [
+        _candidate_row("111", "baseline_phenotype_difference", 1e-6, score=55.0),
+        _candidate_row("222", "baseline_phenotype_difference", 0.3, score=60.0),  # not significant
+        _candidate_row("333", "exposure_response", 1e-9, score=70.0),  # a response, not a baseline
+        # A missing flag must read as False, not as bool(nan).
+        _candidate_row("444", "baseline_phenotype_difference", 1e-6, predictive=float("nan")),
+    ]
+    table = tmp_path / "candidates.tsv"
+    pd.DataFrame(rows).to_csv(table, sep="\t", index=False)
+    monkeypatch.setattr(dashboard, "CANDIDATES_TABLE", table)
+
+    pb = dashboard._candidate_summary({"thermal_tolerance": "Thermal tolerance"})["predictive_baseline"]
+    assert pb["n"] == 2 and pb["n_significant"] == 1 and pb["n_significant_replicated"] == 0
+    assert [r["feature_id_standardized"] for r in pb["top"]] == ["111"]
+    assert pb["top"][0]["is_predictive_baseline"] is True
+    assert pb["top"][0]["contrast_type"] == "baseline_phenotype_difference"
+    assert pb["studies"] == ["BASE_STUDY"] and pb["phenotypes"] == ["thermal_tolerance"]
+    json.dumps(pb)  # serializable as data.json
+
+
+def test_predictive_baseline_section_is_present_when_there_is_none(tmp_path, monkeypatch):
+    _point_at_reports(monkeypatch, tmp_path / "empty_reports")
+    data = build_dashboard_data(tmp_path / "data.json")
+    assert data["candidates"]["predictive_baseline"] == {
+        "n": 0, "n_significant": 0, "n_significant_replicated": 0, "studies": [], "phenotypes": [], "top": []}

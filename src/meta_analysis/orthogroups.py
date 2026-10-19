@@ -39,11 +39,15 @@ from .pooling import benjamini_hochberg, dersimonian_laird
 from .run import _direction_consistency
 
 POOLABLE_COPY_CLASSES = {"single_copy_all", "single_copy", "demo_crosswalk"}
-FAMILY_KEYS = ["phenotype", "feature_type", "simulated"]
-OG_GROUP_KEYS = ["orthogroup_id", "phenotype", "feature_type", "simulated"]
+# contrast_type, as at gene level: a baseline contrast in one species never
+# pools with an exposure response in another.
+FAMILY_KEYS = ["phenotype", "feature_type", "simulated", "contrast_type"]
+OG_GROUP_KEYS = ["orthogroup_id", "phenotype", "feature_type", "simulated", "contrast_type"]
+# Gene-level rows built by hand (tests) may omit it; real runs always carry it.
+DEFAULT_CONTRAST_TYPE = "exposure_response"
 
 RESULT_COLUMNS = [
-    "orthogroup_id", "copy_class", "phenotype", "feature_type", "simulated",
+    "orthogroup_id", "copy_class", "phenotype", "feature_type", "simulated", "contrast_type",
     "n_species", "species_taxids", "genes", "k_studies_by_species", "k_studies_total",
     "species_with_k2", "meets_replication_gate",
     "pooled_effect", "pooled_se", "ci_lower", "ci_upper", "z", "p_value",
@@ -52,7 +56,7 @@ RESULT_COLUMNS = [
     "direction_consistency_species", "species_effects",
 ]
 SPECIES_COLUMNS = [
-    "orthogroup_id", "phenotype", "feature_type", "simulated", "species_taxid",
+    "orthogroup_id", "phenotype", "feature_type", "simulated", "contrast_type", "species_taxid",
     "feature_id_standardized", "k_studies", "studies", "pooled_effect", "pooled_se",
     "p_value", "adjusted_p_value",
     # Carried from the gene-level row so cross-species prioritization can judge
@@ -122,13 +126,15 @@ def run_orthogroup_meta_analysis(
     genes = gene_results.copy()
     genes["_sim"] = genes["simulated"].map(_key)
     genes["_taxid"] = genes["species_taxid"].map(_key)
+    if "contrast_type" not in genes.columns:
+        genes["contrast_type"] = DEFAULT_CONTRAST_TYPE
     genes["orthogroup_id"] = [og_of.get((f, s, t)) for f, s, t in
                               zip(genes["feature_id_standardized"], genes["_sim"], genes["_taxid"])]
     genes = genes[genes["orthogroup_id"].notna()]
 
     rows, species_rows = [], []
-    for (og, pheno, ftype, sim), g in genes.groupby(["orthogroup_id", "phenotype", "feature_type", "_sim"],
-                                                   sort=True):
+    for (og, pheno, ftype, sim, contrast), g in genes.groupby(
+            ["orthogroup_id", "phenotype", "feature_type", "_sim", "contrast_type"], sort=True):
         summary["orthogroup_groups"] += 1
         if g["_taxid"].nunique() < 2:
             summary["single_species"] += 1
@@ -157,7 +163,7 @@ def run_orthogroup_meta_analysis(
         summary["pooled"] += 1
         rows.append({
             "orthogroup_id": og, "copy_class": copy_class, "phenotype": pheno,
-            "feature_type": ftype, "simulated": sim,
+            "feature_type": ftype, "simulated": sim, "contrast_type": contrast,
             "n_species": len(g), "species_taxids": "|".join(str(t) for t in g["_taxid"]),
             "genes": "|".join(f"{t}:{f}" for t, f in zip(g["_taxid"], g["feature_id_standardized"])),
             "k_studies_by_species": "|".join(f"{t}:{n}" for t, n in zip(g["_taxid"], k)),
@@ -177,7 +183,7 @@ def run_orthogroup_meta_analysis(
         for _, r in g.iterrows():
             species_rows.append({
                 "orthogroup_id": og, "phenotype": pheno, "feature_type": ftype, "simulated": sim,
-                "species_taxid": r["_taxid"], "feature_id_standardized": r["feature_id_standardized"],
+                "contrast_type": contrast, "species_taxid": r["_taxid"], "feature_id_standardized": r["feature_id_standardized"],
                 "k_studies": int(r["k_studies"]), "studies": r["studies"],
                 "pooled_effect": r["pooled_effect"], "pooled_se": r["pooled_se"],
                 "p_value": r["p_value"], "adjusted_p_value": r.get("adjusted_p_value"),

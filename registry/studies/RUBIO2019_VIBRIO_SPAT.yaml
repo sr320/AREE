@@ -91,6 +91,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "mortality per strain in a separate infection of the same family (virulent strains: ~60% dead by 3 d; non-virulent: none); not measured on the sequenced pools"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     meta_analysis_primary: true
@@ -110,6 +111,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "mortality per strain in a separate infection of the same family; not measured on the sequenced pools"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vtasma_lgp32_virulent_vs_mock_8h_dge_standardized.tsv"
@@ -128,6 +130,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "virulent strain caused mortality, non-virulent none (separate infection of the same family)"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vcrass_virulent_vs_nonvirulent_8h_dge_standardized.tsv"
@@ -146,6 +149,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "virulent strain caused mortality, non-virulent none (separate infection of the same family)"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/RUBIO2019_VIBRIO_SPAT/RUBIO2019_VIBRIO_SPAT_vtasma_virulent_vs_nonvirulent_8h_dge_standardized.tsv"

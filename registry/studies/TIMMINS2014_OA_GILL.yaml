@@ -119,6 +119,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "shell fracture toughness at the growing edge, lower at 2800 uatm (n = 5-7 shells per treatment); growth, glycogen, fatty acids and heat-shock mortality unchanged"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 8
     biological_replicates: 4
     results_file: "data/studies/TIMMINS2014_OA_GILL/TIMMINS2014_OA_GILL_pco2_2800_vs_400_protein_abundance_standardized.tsv"
@@ -137,6 +138,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "no phenotype measured for the mechanical stress"
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 8
     biological_replicates: 4
     results_file: "data/studies/TIMMINS2014_OA_GILL/TIMMINS2014_OA_GILL_mech_stress_vs_none_at_400_protein_abundance_standardized.tsv"
@@ -154,6 +156,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: "no phenotype measured for the mechanical stress"
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 8
     biological_replicates: 4
     results_file: "data/studies/TIMMINS2014_OA_GILL/TIMMINS2014_OA_GILL_mech_stress_vs_none_at_2800_protein_abundance_standardized.tsv"

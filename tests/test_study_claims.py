@@ -11,7 +11,7 @@ import subprocess
 import pytest
 import yaml
 
-from common import REPO_ROOT, STUDIES_DIR
+from common import DEMO_STUDIES_DIR, REPO_ROOT, STUDIES_DIR
 
 TEMPLATE = (STUDIES_DIR / "_TEMPLATE.yaml").read_text()
 
@@ -160,16 +160,18 @@ def test_rebuild_registry_indexes_valid_studies_and_reports_invalid(tmp_path, is
 
     studies = tmp_path / "studies"
     studies.mkdir()
-    shutil.copy(STUDIES_DIR / "GIGAS_HEAT01.yaml", studies)
+    no_demo = tmp_path / "demo_studies"
+    no_demo.mkdir()
+    shutil.copy(DEMO_STUDIES_DIR / "GIGAS_HEAT01.yaml", studies)
     shutil.copy(STUDIES_DIR / "_TEMPLATE.yaml", studies)
     (studies / "BROKEN.yaml").write_text("study_id: BROKEN\n")
 
-    rows, invalid = rebuild_registry(studies)
+    rows, invalid = rebuild_registry(studies, no_demo)
     assert [r["study_id"] for r in rows] == ["GIGAS_HEAT01"]
     assert list(invalid) == [str(studies / "BROKEN.yaml")]
     assert [r["study_id"] for r in list_studies()] == ["GIGAS_HEAT01"]
 
-    rebuild_registry(studies)  # replaces rather than appends
+    rebuild_registry(studies, no_demo)  # replaces rather than appends
     assert len(list_studies()) == 1
 
 

@@ -139,6 +139,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_post_challenge (final mortality per family x diet: F14R 34.8% starved vs 75.5% fed; F11N 93.3% vs 100%)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 3
     results_file: null

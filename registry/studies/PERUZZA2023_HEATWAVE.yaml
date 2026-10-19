@@ -93,6 +93,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 40
     biological_replicates: 4
     results_file: "data/studies/PERUZZA2023_HEATWAVE/PERUZZA2023_HEATWAVE_heatwave_30c_vs_control_20c_dge_standardized.tsv"
