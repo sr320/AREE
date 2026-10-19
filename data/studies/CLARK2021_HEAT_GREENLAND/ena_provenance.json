@@ -1,0 +1,47 @@
+{
+  "study_id": "CLARK2021_HEAT_GREENLAND",
+  "bioproject": "PRJEB41447",
+  "date_generated": "2026-10-17",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB41447&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "environmental history",
+    "stimulus"
+  ],
+  "n_runs": 24,
+  "n_samples": 24,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "collected_from_inner_fjord_on_warm_day_none": 5,
+    "collected_from_outer_fjord_none": 5,
+    "collected_from_outer_fjord_on_warm_day_none": 5,
+    "collected_from_outer_fjord_warmed_to_22_degrees": 5,
+    "collected_from_outer_fjord_warmed_to_32_degrees": 4
+  },
+  "min_group_size": 4,
+  "total_fastq_bytes": 84920482144,
+  "fastq_sources": {
+    "fastq_ftp": 24,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/CLARK2021_HEAT_GREENLAND/samplesheet.tsv": "2af60fd6cf9c94ea4eba705afdc323a46e1d87d28da1a38a3df8df5eb9ffe2ba",
+    "data/studies/CLARK2021_HEAT_GREENLAND/fastq_manifest.tsv": "1d8b101a90ff83fdd2be27751800bc519651dd56a3da8e88dd715d23d1032984"
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 24
+    }
+  }
+}

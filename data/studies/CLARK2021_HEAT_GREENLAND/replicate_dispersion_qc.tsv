@@ -1,0 +1,4 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+collected_from_outer_fjord_none	5	E-MTAB-9786:Sample 1,E-MTAB-9786:Sample 2,E-MTAB-9786:Sample 3,E-MTAB-9786:Sample 4,E-MTAB-9786:Sample 5	5017	0.25468	True
+collected_from_outer_fjord_warmed_to_32_degrees	4	E-MTAB-9786:Sample 21,E-MTAB-9786:Sample 22,E-MTAB-9786:Sample 23,E-MTAB-9786:Sample 24	4004	0.08813	True
+collected_from_outer_fjord_warmed_to_22_degrees	5	E-MTAB-9786:Sample 16,E-MTAB-9786:Sample 17,E-MTAB-9786:Sample 18,E-MTAB-9786:Sample 19,E-MTAB-9786:Sample 20	4040	0.08483	True
