@@ -16,7 +16,8 @@
 process ANNOTATE_REGIONS {
     tag "${study_id}:${comparison_id}"
     label 'process_medium'
-    container 'bioconductor/bioconductor_docker:RELEASE_3_18'
+    // GenomicRanges and rtracklayer (methylKit dependencies), R 4.5.2.
+    container 'quay.io/biocontainers/bioconductor-methylkit:1.36.0--r45ha27e39d_0'
     publishDir "${params.outdir}/methylation/annotated", mode: params.publish_mode
 
     input:

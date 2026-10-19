@@ -11,7 +11,9 @@
 process RENDER_REPORT {
     tag "${study_id}:${comparison_id}"
     label 'process_low'
-    container 'ghcr.io/quarto-dev/quarto:1.5.57'
+    // The template runs R chunks (knitr, jsonlite): quarto's own image has
+    // no R. rocker/verse bundles R 4.5.2, quarto, knitr and jsonlite.
+    container 'rocker/verse:4.5.2'
     publishDir "${params.outdir}/methylation/report", mode: params.publish_mode
 
     input:

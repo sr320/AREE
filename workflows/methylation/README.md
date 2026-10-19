@@ -106,7 +106,14 @@ that many read pairs (e.g. `20000000`):
 Deduplication and extraction then run on the merged BAM, as before. Duplicates
 that fall in different chunks are still removed. Bismark aligns each pair
 independently, so the merged BAM holds the same alignments as an unchunked
-run's. The per-chunk reports are published next to the merged one. Unset or
+run's, but in a different record order. `deduplicate_bismark` keeps the first
+read of each duplicate set it meets, so a few CpG calls can come from a
+different (equally valid) read of a duplicate set. On 4 EM-seq libraries of
+`VALDIVIESO2025_POMS_RS_EMSEQ` (400k pairs each, 4 chunks per library),
+mapped pairs, mapping efficiency, CpG methylation and duplicates removed were
+identical to an unchunked run. Two CpG reports were byte-identical, and the
+other two differed in 2 and 1 of about 1 million covered CpGs, by one read
+each. The per-chunk reports are published next to the merged one. Unset or
 `0` keeps one alignment task per library. See
 [docs/running_on_klone.md](../../docs/running_on_klone.md).
 
