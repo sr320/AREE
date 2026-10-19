@@ -31,11 +31,22 @@
 //   5. the chosen test on the tiles, treatment units vs control units.
 //      meth_diff_percent is treatment minus control mean methylation (%);
 //      qvalue is the Benjamini-Hochberg FDR (limma) or DSS's FDR.
+//
+// Blocking (limma only): block_by names a design-sheet column that groups
+// units into matched sets, e.g. the population that contributes one
+// resistant and one susceptible animal, or the animal sampled before and
+// after a challenge. limma then fits ~ block + treatment, a paired /
+// randomized-block test, and meth_diff_percent is the mean within-block
+// difference (equal to the difference of arm means when every block is
+// complete). Every block must be complete (both arms), and at least two
+// blocks are needed.
 
 process DMR_POOLED_TILES {
     tag "${study_id}:${comparison_id}"
     label 'process_high'
-    container 'bioconductor/bioconductor_docker:RELEASE_3_18'
+    // limma 3.66.0, data.table 1.17.8, DSS 2.58.0, bsseq 1.46.0 (R 4.5.2).
+    // bioconductor_docker had limma only.
+    container 'quay.io/biocontainers/bioconductor-dss:2.58.0--r45h01b2380_0'
     publishDir "${params.outdir}/methylation/dmr", mode: params.publish_mode
 
     input:
@@ -50,6 +61,7 @@ process DMR_POOLED_TILES {
     val tile_size
     val tile_min_cpgs
     val replicate_unit
+    val block_by              // design-sheet column of matched sets, or '' (limma only)
     path design_sheet
     val dmr_test              // 'limma' or 'dss'
     val feature_units         // 'tiles' or 'genes' (gene bodies + promoters; intergenic tiles)
@@ -83,6 +95,7 @@ process DMR_POOLED_TILES {
     annotation_gtf <- "${annotation_gtf}"
     promoter_bp   <- as.integer(${promoter_upstream_bp})
     unit_col      <- trimws("${replicate_unit}")
+    block_col     <- trimws("${block_by}")
     design_path   <- "${design_sheet}"
 
     stopifnot(length(sample_ids) == length(treatments), length(sample_ids) == length(cx_files))
@@ -95,10 +108,12 @@ process DMR_POOLED_TILES {
     }, character(1))
 
     units <- sample_ids
-    if (nzchar(unit_col)) {
+    if (nzchar(unit_col) || nzchar(block_col)) {
         design <- read.delim(design_path, colClasses = "character", check.names = FALSE)
-        if (!unit_col %in% names(design)) stop("replicate_unit column '", unit_col, "' is not in the design sheet")
         key <- if ("run_accession" %in% names(design)) "run_accession" else "sample_id"
+    }
+    if (nzchar(unit_col)) {
+        if (!unit_col %in% names(design)) stop("replicate_unit column '", unit_col, "' is not in the design sheet")
         units <- design[[unit_col]][match(sample_ids, design[[key]])]
         if (any(is.na(units) | !nzchar(units))) {
             stop("no '", unit_col, "' for: ", paste(sample_ids[is.na(units) | !nzchar(units)], collapse = ", "))
@@ -113,6 +128,27 @@ process DMR_POOLED_TILES {
     if (any(table(factor(unit_trt, levels = c(0, 1))) < 2)) {
         stop("each arm needs at least 2 replicate units; got ",
              paste(sprintf("%s=%d", unit_levels, unit_trt), collapse = ", "))
+    }
+
+    unit_block <- NULL
+    if (nzchar(block_col)) {
+        if (dmr_test != "limma") stop("block_by is supported only with dmr_engine = 'limma'")
+        if (!block_col %in% names(design)) stop("block_by column '", block_col, "' is not in the design sheet")
+        lib_block <- design[[block_col]][match(sample_ids, design[[key]])]
+        if (any(is.na(lib_block) | !nzchar(lib_block))) {
+            stop("no '", block_col, "' for: ", paste(sample_ids[is.na(lib_block) | !nzchar(lib_block)], collapse = ", "))
+        }
+        blocks_per_unit <- tapply(lib_block, units, function(x) length(unique(x)))
+        if (any(blocks_per_unit > 1)) {
+            stop("replicate unit(s) spanning more than one block: ", paste(names(blocks_per_unit)[blocks_per_unit > 1], collapse = ", "))
+        }
+        unit_block <- as.character(tapply(lib_block, units, function(x) x[1])[unit_levels])
+        arms_per_block <- tapply(unit_trt, unit_block, function(x) length(unique(x)))
+        if (any(arms_per_block < 2)) {
+            stop("block(s) missing an arm: ", paste(names(arms_per_block)[arms_per_block < 2], collapse = ", "))
+        }
+        if (length(arms_per_block) < 2) stop("block_by needs at least 2 blocks")
+        message(sprintf("blocking on '%s': %d blocks", block_col, length(arms_per_block)))
     }
 
     read_destranded <- function(f) {
@@ -190,11 +226,23 @@ process DMR_POOLED_TILES {
         suppressPackageStartupMessages(library(limma))
         beta <- (M + 0.5) / (Cov + 1)
         mval <- log2(beta / (1 - beta))
-        X <- model.matrix(~ factor(unit_trt, levels = c(0, 1)))
+        trt <- factor(unit_trt, levels = c(0, 1))
+        if (is.null(unit_block)) {
+            X <- model.matrix(~ trt)
+            diff <- rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE])
+        } else {
+            X <- model.matrix(~ factor(unit_block) + trt)
+            # Mean within-block difference (treatment minus control) on the
+            # beta scale, averaging over each block's units per arm.
+            blk <- sort(unique(unit_block))
+            diff <- rowMeans(sapply(blk, function(b) {
+                rowMeans(beta[, unit_block == b & unit_trt == 1, drop = FALSE]) -
+                    rowMeans(beta[, unit_block == b & unit_trt == 0, drop = FALSE])
+            }))
+        }
         fit <- eBayes(lmFit(mval, X))
-        tt <- topTable(fit, coef = 2, number = Inf, sort.by = "none")
+        tt <- topTable(fit, coef = "trt1", number = Inf, sort.by = "none")
         df_prior <- fit\$df.prior
-        diff <- rowMeans(beta[, treat_units, drop = FALSE]) - rowMeans(beta[, control_units, drop = FALSE])
         # treatment minus control, as for methylKit's meth.diff. diff.se is
         # chosen so that a normal (Wald) test of diff / se - which is what
         # inverse-variance meta-analysis applies - reproduces limma's own
@@ -228,7 +276,8 @@ process DMR_POOLED_TILES {
         qvalue            = signif(res\$fdr, 4),
         pvalue            = signif(res\$pval, 4),
         se_meth_diff_percent = signif(100 * res\$diff.se, 4),
-        analysis_method   = paste0(ifelse(dmr_test == "limma", "limma", "DSS"), "_pooled_", feature_units),
+        analysis_method   = paste0(ifelse(dmr_test == "limma", "limma", "DSS"), ifelse(is.null(unit_block), "", "_blocked"),
+                                   "_pooled_", feature_units),
         n_samples         = length(sample_ids),
         n_replicate_units = length(unit_levels),
         passes_significance_filter = !is.na(res\$fdr) & res\$fdr <= qvalue_cut &
@@ -251,8 +300,13 @@ process DMR_POOLED_TILES {
         meth_diff_cutoff      = meth_diff_cut,
         replicate_unit        = ifelse(nzchar(unit_col), unit_col, NA),
         n_replicate_units     = length(unit_levels),
+        block_by              = ifelse(nzchar(block_col), block_col, NA),
+        n_blocks              = ifelse(is.null(unit_block), NA_integer_, length(unique(unit_block))),
         overdispersion        = ifelse(dmr_test == "limma", "empirical-Bayes moderated variance", "DSS shrunken beta-binomial"),
-        test                  = ifelse(dmr_test == "limma", "limma moderated t on unit M-values, BH", "DSS::DMLtest (Wald)"),
+        test                  = ifelse(dmr_test == "limma",
+                                       ifelse(is.null(unit_block), "limma moderated t on unit M-values, BH",
+                                              paste0("limma moderated t on unit M-values, ~ ", block_col, " + treatment, BH")),
+                                       "DSS::DMLtest (Wald)"),
         engine                = dmr_test,
         df_prior              = df_prior,
         destranded            = TRUE,

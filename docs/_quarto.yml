@@ -53,6 +53,8 @@ website:
             href: candidate_studies_mussels_clams.md
           - text: "Running studies on several machines"
             href: parallel_study_runs.md
+          - text: "Running a study on Klone (UW Hyak)"
+            href: running_on_klone.md
           - text: "First raw reanalysis"
             href: first_raw_reanalysis.md
           - text: "Reference bundles"
