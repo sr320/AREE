@@ -44,7 +44,9 @@
 process DMR_POOLED_TILES {
     tag "${study_id}:${comparison_id}"
     label 'process_high'
-    container 'bioconductor/bioconductor_docker:RELEASE_3_18'
+    // limma 3.66.0, data.table 1.17.8, DSS 2.58.0, bsseq 1.46.0 (R 4.5.2).
+    // bioconductor_docker had limma only.
+    container 'quay.io/biocontainers/bioconductor-dss:2.58.0--r45h01b2380_0'
     publishDir "${params.outdir}/methylation/dmr", mode: params.publish_mode
 
     input:
