@@ -86,6 +86,30 @@ default mapped 15.5% of pairs uniquely, and `--score_min L,0,-0.6` mapped
 Use `extractor_args` for M-bias trimming (e.g. `--ignore_r2 N`) after
 checking the M-bias plot.
 
+#### Chunked alignment (`methylation.align_chunk_pairs`)
+
+A deep library is one long Bismark task: about 20 h for 224 M read pairs on
+a 10-core workstation. On a scheduler with short or preemptible jobs, such
+as Klone's ckpt partitions, it never finishes. Set
+`methylation.align_chunk_pairs` to split each trimmed library into chunks of
+that many read pairs (e.g. `20000000`):
+
+- `SPLIT_FASTQ_PAIRS` splits R1/R2 in step with `seqkit split2`.
+- `BISMARK_ALIGN_CHUNK` aligns each chunk with the same Bismark command as
+  `BISMARK_ALIGN`.
+- `BISMARK_MERGE_CHUNKS` concatenates the chunk BAMs in chunk order with
+  `samtools cat`, so mates stay adjacent. It also sums the chunk reports
+  into one per-library `*_PE_report.txt` in Bismark's own layout
+  (`bin/sum_bismark_pe_reports.sh`); percentages are recomputed from the
+  summed counts.
+
+Deduplication and extraction then run on the merged BAM, as before. Duplicates
+that fall in different chunks are still removed. Bismark aligns each pair
+independently, so the merged BAM holds the same alignments as an unchunked
+run's. The per-chunk reports are published next to the merged one. Unset or
+`0` keeps one alignment task per library. See
+[docs/running_on_klone.md](../../docs/running_on_klone.md).
+
 #### Replication unit (`methylation.replicate_unit`)
 
 When the phenotype or treatment belongs to a group of libraries, such as a
