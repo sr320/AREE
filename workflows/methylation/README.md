@@ -115,6 +115,32 @@ a region's estimated overdispersion falls below 1, methylKit resets it to 1,
 so a few null regions can still get small q-values; the `meth_diff_cutoff`
 filter is the second guard.
 
+#### Matched sets (`methylation.block_by`, limma only)
+
+Some designs pair units across the two arms: a population contributing one
+resistant and one susceptible animal, or the same animal sampled before and
+after a challenge. An unpaired test then treats the population (or animal)
+effect as noise. Set `methylation.block_by` to the design-sheet column that
+names the matched set, with `dmr_engine = 'limma'`:
+
+```
+methylation.dmr_engine   = 'limma'
+methylation.block_by     = 'population'
+methylation.design_sheet = 'data/studies/<STUDY_ID>/samplesheet.tsv'
+```
+
+limma then fits `~ block + treatment` (a paired / randomized-block test), and
+`meth_diff_percent` is the mean within-block difference. Each block must hold
+both arms, at least two blocks are needed, and a replicate unit may not span
+blocks. `analysis_method` becomes `limma_blocked_pooled_<features>`, and the
+QC table records `block_by` and `n_blocks`.
+
+On synthetic data with 5 blocks × 2 arms, a block effect (SD 0.8 on the logit
+scale) shared within each block and a ±1 logit effect on 20 of 400 tiles, the
+unpaired fit called none of the 20 at q < 0.05 in five seeds. The blocked fit
+called 12–19, with 0–2 of 380 null tiles at q < 0.05 and 3.4–6.6% of null
+tiles at p < 0.05 (`tests/test_dmr_pooled_tiles_block.py`).
+
 #### DMR engines (`methylation.dmr_engine`)
 
 - `methylkit` (default): `DMR_METHYLKIT`, as above.
