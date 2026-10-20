@@ -98,13 +98,14 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 5
     biological_replicates: 2
     results_file: "data/studies/LI2024_VIBRIO_GILL/LI2024_VIBRIO_GILL_valginolyticus_48h_vs_0h_dge_standardized.tsv"
     excluded_samples:
       - sample_id: "0h_replicate3"
         reason: "Not gill: the library's expression is that of mantle (shell-forming) tissue, or gill heavily contaminated with it, so it is not a valid gill baseline."
-        evidence: "Tissue-identity check on the full-depth Salmon quantification (data/studies/LI2024_VIBRIO_GILL/tissue_identity_check/, 2026-10-17). Mantle and shell-matrix genes (tyrosinase-like tyr-3, per-hexamer repeat protein 5, calcium-binding LPS1-beta, tryptase-2) are at 1,530-8,374 TPM in this library vs 0-31 TPM in the other eight. Prestin, which the other gill libraries express at 106-2,761 TPM, is at 17. On VST expression of the 2,000 most variable genes, this library alone defines PC1 (70.6% of variance), and its Spearman r with every other library is negative (-0.08 with the other 0 h, -0.27 with 6 h, -0.20 with 48 h). Library composition is normal (rRNA 0.4% of TPM), so this is not a failed library. These measure tissue identity, not the infection contrast."
+        evidence: "Tissue-identity check on the full-depth Salmon quantification (data/studies/LI2024_VIBRIO_GILL/tissue_identity_check/, 2026-10-17). Mantle and shell-matrix genes (tyrosinase-like tyr-3, per-hexamer repeat protein 5, calcium-binding LPS1-beta, tryptase-2) are at 1,530-8,374 TPM in this library vs 0-31 TPM in seven of the other eight; the eighth, 48h_replicate3, carries a faint version of the signal (15-106 TPM, about 1% of this library's level) and is kept (see curation_notes). Prestin, which the other gill libraries express at 106-2,761 TPM, is at 17. On VST expression of the 2,000 most variable genes, this library alone defines PC1 (70.6% of variance), and its Spearman r with every other library is negative (-0.08 with the other 0 h, -0.27 with 6 h, -0.20 with 48 h). Library composition is normal (rRNA 0.4% of TPM), so this is not a failed library. These measure tissue identity, not the infection contrast."
     meta_analysis_primary: true
 
   - comparison_id: "valginolyticus_6h_vs_0h"
@@ -121,13 +122,14 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 5
     biological_replicates: 2
     results_file: "data/studies/LI2024_VIBRIO_GILL/LI2024_VIBRIO_GILL_valginolyticus_6h_vs_0h_dge_standardized.tsv"
     excluded_samples:
       - sample_id: "0h_replicate3"
         reason: "Not gill: the library's expression is that of mantle (shell-forming) tissue, or gill heavily contaminated with it, so it is not a valid gill baseline."
-        evidence: "Tissue-identity check on the full-depth Salmon quantification (data/studies/LI2024_VIBRIO_GILL/tissue_identity_check/, 2026-10-17). Mantle and shell-matrix genes (tyrosinase-like tyr-3, per-hexamer repeat protein 5, calcium-binding LPS1-beta, tryptase-2) are at 1,530-8,374 TPM in this library vs 0-31 TPM in the other eight. Prestin, which the other gill libraries express at 106-2,761 TPM, is at 17. On VST expression of the 2,000 most variable genes, this library alone defines PC1 (70.6% of variance), and its Spearman r with every other library is negative (-0.08 with the other 0 h, -0.27 with 6 h, -0.20 with 48 h). Library composition is normal (rRNA 0.4% of TPM), so this is not a failed library. These measure tissue identity, not the infection contrast."
+        evidence: "Tissue-identity check on the full-depth Salmon quantification (data/studies/LI2024_VIBRIO_GILL/tissue_identity_check/, 2026-10-17). Mantle and shell-matrix genes (tyrosinase-like tyr-3, per-hexamer repeat protein 5, calcium-binding LPS1-beta, tryptase-2) are at 1,530-8,374 TPM in this library vs 0-31 TPM in seven of the other eight; the eighth, 48h_replicate3, carries a faint version of the signal (15-106 TPM, about 1% of this library's level) and is kept (see curation_notes). Prestin, which the other gill libraries express at 106-2,761 TPM, is at 17. On VST expression of the 2,000 most variable genes, this library alone defines PC1 (70.6% of variance), and its Spearman r with every other library is negative (-0.08 with the other 0 h, -0.27 with 6 h, -0.20 with 48 h). Library composition is normal (rRNA 0.4% of TPM), so this is not a failed library. These measure tissue identity, not the infection contrast."
 
 quality_flags:
   - raw_data_available
