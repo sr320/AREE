@@ -102,6 +102,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent mortality over 12 d per salinity group (measured: 100% at 10 ppt vs 33% at 30 ppt; not per sequenced oyster)"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     meta_analysis_primary: true
@@ -121,6 +122,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent mortality over 12 d per salinity group (measured: 100% at 10 ppt vs 33% at 30 ppt; not per sequenced oyster)"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/LI2022_LOWSAL_VIBRIO/LI2022_LOWSAL_VIBRIO_lowsal_10ppt_vs_30ppt_vibrio_12h_dge_standardized.tsv"

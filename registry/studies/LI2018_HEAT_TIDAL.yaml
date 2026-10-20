@@ -115,6 +115,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 23
     biological_replicates: 11
     meta_analysis_primary: true
@@ -138,6 +139,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
     sample_size: 23
     biological_replicates: 11
     excluded_samples:
@@ -160,6 +162,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "survival after acute heat stress (42 C, 1 h; 14 d), higher in intertidal F1 at both sites (Kaplan-Meier, log-rank p < 0.05); measured per population, in 4-month-olds from the same cohorts"
     resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
     sample_size: 11
     biological_replicates: 2
     excluded_samples:

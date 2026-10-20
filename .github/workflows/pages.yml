@@ -4,9 +4,11 @@ name: Deploy dashboard to GitHub Pages
 # publishes it at https://sr320.github.io/AREE/.
 #
 # The dashboard is generated from the pipeline's real outputs, so this workflow
-# runs the same steps a curator runs locally: register every study, harmonize
-# the simulated studies against the demo crosswalk and the real studies against
-# the real crosswalk, pool, rank, then `aree build-dashboard`.
+# runs the same steps a curator runs locally: register every real study,
+# harmonize each against its species' crosswalk, pool, rank, then
+# `aree build-dashboard`. The simulated demo studies (registry/demo_studies/)
+# are pipeline fixtures exercised by CI, not findings, so the published site
+# leaves them out.
 
 on:
   push:
@@ -39,21 +41,15 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[intake]"
+          pip install -e ".[intake,site]"
 
-      - name: Register every study
+      - name: Register every real study
         run: |
           for f in registry/studies/*.yaml; do
             case "$(basename "$f")" in _*) continue ;; esac
             aree register-study "$f" --update
           done
           aree list-studies
-
-      - name: Harmonize simulated demo studies (demo crosswalk)
-        run: |
-          for sid in $(aree study-ids --simulated); do
-            aree harmonize --study "$sid"
-          done
 
       # Every committed results_file of every real study that has not failed QC,
       # one comparison at a time, read from the registry. A newly merged study
@@ -67,10 +63,14 @@ jobs:
         run: |
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
+          aree build-cross-species-cards --feature-type gene
           aree top-candidates
 
       - name: Build dashboard data
         run: aree build-dashboard
+
+      - name: Export Explore-page tables (Parquet for DuckDB-WASM)
+        run: aree export-site-data
 
       - uses: quarto-dev/quarto-actions/setup@v2
 

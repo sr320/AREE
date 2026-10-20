@@ -2,16 +2,18 @@
 // schema consumed by `aree harmonize` (src/harmonize/proteomics.py) and
 // matching data/demo/proteomics/*_protein_abundance_demo.tsv:
 //
-//     protein_accession  gene_symbol  log2FC  pvalue  padj  missingness_percent
+//     protein_accession  gene_symbol  log2FC  lfcSE  pvalue  padj
+//     missingness_percent  analysis_method
 //
-// STATUS: structurally complete DSL2 process with a real pandas script. Two
-// call sites exist in main.nf: raw_reanalysis mode passes the
-// id-translated + missingness tables (real reshape/merge below); the
+// raw_reanalysis passes the id-translated limma table plus the missingness
+// report; lfcSE and analysis_method come from limma. The
 // processed_results_harmonization branch passes an already-shaped external
-// table straight through this same validation logic, computing
-// missingness_percent from raw values when present in that file, or leaving
-// existing values as-is / null when the source study does not report them
-// (never silently imputed). NOT executed against real data in this build.
+// table through the same validation; lfcSE, missingness_percent and
+// analysis_method are kept when the source reports them and left null when it
+// does not (never imputed).
+//
+// STATUS: processed mode runs in the demo CI; raw mode in the raw-mode CI
+// smoke test (tests/fixtures/proteomics_raw).
 
 process STANDARDIZE_OUTPUT {
     tag "${study_id}:${comparison_id}"
@@ -40,7 +42,8 @@ process STANDARDIZE_OUTPUT {
     mode = "${mode}"
     missingness_path = "${missingness_per_protein_optional}"
 
-    target_cols = ["protein_accession", "gene_symbol", "log2FC", "pvalue", "padj", "missingness_percent"]
+    target_cols = ["protein_accession", "gene_symbol", "log2FC", "lfcSE", "pvalue", "padj",
+                   "missingness_percent", "analysis_method"]
     log_lines = []
 
     def log(msg):
@@ -55,7 +58,7 @@ process STANDARDIZE_OUTPUT {
     if mode == "raw_reanalysis":
         # Expect id_translation output: protein_accession, gene_symbol,
         # log2FC, pvalue, padj, ave_expr, t_stat, id_mapping_confidence, ...
-        required = {"protein_accession", "gene_symbol", "log2FC", "pvalue", "padj"}
+        required = {"protein_accession", "gene_symbol", "log2FC", "lfcSE", "pvalue", "padj", "analysis_method"}
         missing = required - set(df.columns)
         if missing:
             log(f"ERROR: raw_reanalysis standardize_output missing columns {sorted(missing)}")
@@ -91,9 +94,10 @@ process STANDARDIZE_OUTPUT {
         if "gene_symbol" not in df.columns:
             log("WARNING: input has no gene_symbol column; falling back to protein_accession as placeholder")
             df["gene_symbol"] = df["protein_accession"]
-        if "missingness_percent" not in df.columns:
-            log("WARNING: input has no missingness_percent column; source study did not report it -> set to null")
-            df["missingness_percent"] = pd.NA
+        for col in ("lfcSE", "missingness_percent", "analysis_method"):
+            if col not in df.columns:
+                log(f"WARNING: input has no {col} column; source study did not report it -> set to null")
+                df[col] = pd.NA
     else:
         log(f"ERROR: unknown mode '{mode}'")
         sys.exit(1)
@@ -101,7 +105,7 @@ process STANDARDIZE_OUTPUT {
     out = df[target_cols].copy()
 
     # Type coercion / sanity checks, without silently dropping rows.
-    for col in ["log2FC", "pvalue", "padj", "missingness_percent"]:
+    for col in ["log2FC", "lfcSE", "pvalue", "padj", "missingness_percent"]:
         out[col] = pd.to_numeric(out[col], errors="coerce")
 
     n_bad_pvalue = int(((out["pvalue"] < 0) | (out["pvalue"] > 1)).sum(skipna=True))

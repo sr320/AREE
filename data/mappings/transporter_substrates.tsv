@@ -1,0 +1,54 @@
+# Curated transporter KO -> substrate compound assignments for metabolite -> gene TRANSPORTER links.
+# KEGG BRITE ko02000 (Transporters) classifies KOs into transporter families but records NO substrate
+# compounds, so the substrate is a curation step, recorded here row by row. `aree build-metabolite-links`
+# checks every KO below against ko02000 (a KO absent from ko02000 is rejected and listed in provenance).
+# substrate_basis:
+#   ko_definition    the KEGG KO definition itself names the compound (e.g. "facilitated glucose transporter")
+#   substrate_class  the definition names a substrate class (e.g. "monocarboxylic acid"); the compound is the
+#                    curator's call from the characterized human members, given in human_ortholog
+# Every transporter link is 'inferred': substrate specificity of the oyster ortholog has not been measured.
+# Only compounds that are also in metabolite_compound_map.tsv are used. See docs/metabolite_gene_links.md.
+ko	kegg_compound	substrate_basis	human_ortholog	note	curator	date_curated
+K07299	C00031	ko_definition	SLC2A1/GLUT1	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K07593	C00031	ko_definition	SLC2A2/GLUT2	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08142	C00031	ko_definition	SLC2A3/GLUT3	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K07191	C00031	ko_definition	SLC2A4/GLUT4	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08144	C00031	ko_definition	SLC2A6/GLUT6	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08145	C00031	ko_definition	SLC2A8/GLUT8	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08147	C00031	ko_definition	SLC2A10/GLUT10	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08148	C00031	ko_definition	SLC2A11/GLUT11	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08149	C00031	ko_definition	SLC2A12/GLUT12	KO definition: facilitated glucose transporter.	aree_curator	2026-10-17
+K08143	C00031	ko_definition	SLC2A5/GLUT5	KO definition: glucose/fructose; human GLUT5 is mainly a fructose transporter.	aree_curator	2026-10-17
+K12201	C00031	ko_definition	SLC2A7/GLUT7	KO definition: glucose/fructose.	aree_curator	2026-10-17
+K08146	C00031	ko_definition	SLC2A9/GLUT9	KO definition names glucose, but human GLUT9 is chiefly a urate transporter.	aree_curator	2026-10-17
+K14158	C00031	ko_definition	SLC5A1/SGLT1	KO definition: sodium/glucose cotransporter.	aree_curator	2026-10-17
+K14382	C00031	ko_definition	SLC5A2/SGLT2	KO definition: sodium/glucose cotransporter.	aree_curator	2026-10-17
+K14389	C00031	ko_definition	SLC5A9/SGLT4	KO definition: sodium/glucose cotransporter.	aree_curator	2026-10-17
+K14390	C00031	ko_definition	SLC5A10/SGLT5	KO definition: sodium/glucose cotransporter.	aree_curator	2026-10-17
+K14384	C00031	ko_definition	SLC5A4/SGLT3	KO definition: low-affinity sodium-glucose cotransporter; human SGLT3 acts mainly as a glucose sensor.	aree_curator	2026-10-17
+K08175	C00031	ko_definition	SLC60A2/MFSD4B/NaGLT1	KO definition: Na+-dependent glucose transporter.	aree_curator	2026-10-17
+K08179	C00186	substrate_class	SLC16A1/MCT1	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08179	C00256	substrate_class	SLC16A1/MCT1	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08179	C00022	substrate_class	SLC16A1/MCT1	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08184	C00186	substrate_class	SLC16A7/MCT2	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08184	C00256	substrate_class	SLC16A7/MCT2	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08184	C00022	substrate_class	SLC16A7/MCT2	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08185	C00186	substrate_class	SLC16A8/MCT3	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08185	C00256	substrate_class	SLC16A8/MCT3	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08185	C00022	substrate_class	SLC16A8/MCT3	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08180	C00186	substrate_class	SLC16A3/MCT4	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08180	C00256	substrate_class	SLC16A3/MCT4	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K08180	C00022	substrate_class	SLC16A3/MCT4	KO definition says 'monocarboxylic acid transporter'; MCT1-4 are the characterized proton-linked lactate/pyruvate carriers in vertebrates. Other SLC16 members (thyroid hormone, aromatic amino acid, creatine) are deliberately excluded. Lactate stereoisomers both mapped: MCTs carry L- and D-lactate.	aree_curator	2026-10-17
+K14388	C00186	substrate_class	SLC5A8/SLC5A12 (SMCT1/2)	KO definition: sodium-coupled monocarboxylate transporter; human SMCTs carry lactate and pyruvate.	aree_curator	2026-10-17
+K14388	C00256	substrate_class	SLC5A8/SLC5A12 (SMCT1/2)	KO definition: sodium-coupled monocarboxylate transporter; human SMCTs carry lactate and pyruvate.	aree_curator	2026-10-17
+K14388	C00022	substrate_class	SLC5A8/SLC5A12 (SMCT1/2)	KO definition: sodium-coupled monocarboxylate transporter; human SMCTs carry lactate and pyruvate.	aree_curator	2026-10-17
+K08178	C00186	ko_definition	JEN (fungal)	KO definition: lactate transporter.	aree_curator	2026-10-17
+K14445	C00042	substrate_class	SLC13A2/3/5 (NaDC1, NaDC3, NaCT)	KO definition: sodium-dependent dicarboxylate transporter; NaDC1/3 carry succinate (NaCT prefers citrate).	aree_curator	2026-10-17
+K13577	C00042	substrate_class	SLC25A10/DIC	KO definition: mitochondrial dicarboxylate transporter; human DIC exchanges malate/succinate for phosphate.	aree_curator	2026-10-17
+K05045	C00719	ko_definition	SLC6A12/BGT1	KO definition: betaine/GABA transporter.	aree_curator	2026-10-17
+K14990	C00041	substrate_class	SLC38A1/SNAT1	KO definition: sodium-coupled neutral amino acid transporter; system A members, for which alanine is the canonical substrate. System N members (SNAT3/5) excluded.	aree_curator	2026-10-17
+K14207	C00041	substrate_class	SLC38A2/SNAT2	KO definition: sodium-coupled neutral amino acid transporter; system A members, for which alanine is the canonical substrate. System N members (SNAT3/5) excluded.	aree_curator	2026-10-17
+K14991	C00041	substrate_class	SLC38A4/SNAT4	KO definition: sodium-coupled neutral amino acid transporter; system A members, for which alanine is the canonical substrate. System N members (SNAT3/5) excluded.	aree_curator	2026-10-17
+K05615	C00041	substrate_class	SLC1A4/ASCT1	KO definition: neutral amino acid transporter; ASC system (alanine, serine, cysteine).	aree_curator	2026-10-17
+K05616	C00041	substrate_class	SLC1A5/ASCT2	KO definition: neutral amino acid transporter; ASC system (alanine, serine, cysteine).	aree_curator	2026-10-17
+K14209	C00041	substrate_class	SLC36A/PAT	KO definition: proton-coupled amino acid transporter; PAT1/2 carry alanine, proline and glycine.	aree_curator	2026-10-17

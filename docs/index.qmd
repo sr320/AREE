@@ -26,7 +26,7 @@ fmt = (n) => (n == null ? "—" : n.toLocaleString("en-US"))
 fmtP = (p) => (p == null ? "—" : p < 1e-3 ? p.toExponential(1) : p.toFixed(3))
 phen = (id) => data.vocab.phenotype_labels[id] ?? id
 stress = (id) => data.vocab.stressor_labels[id] ?? id
-TIER = new Map([["high_priority_cross_study", "High priority"], ["multi_omics_convergence", "Multi-omics"], ["emerging", "Emerging"]])
+TIER = new Map([["high_priority_cross_study", "High priority"], ["multi_omics_convergence", "Multi-omics"], ["metabolite_linked_convergence", "Metabolite-linked"], ["emerging", "Emerging"]])
 clip = (v, n) => (v && v.length > n ? htl.html`<span title="${v}">${v.slice(0, n - 1).trimEnd()}…</span>` : v ?? "")
 // "Calla B, Thompson NF, Burge CA (2026)" -> "Calla et al. (2026)"
 shortCite = (c) => {
@@ -47,8 +47,12 @@ missing = Object.entries(data.artifacts_present).filter(([, v]) => !v).map(([n])
 ```
 
 ```{ojs}
-html`<p class="dash-meta">Generated ${data.commit.date} from commit
-  <a href="${data.repo_url}/commit/${data.commit.sha}"><code>${data.commit.short}</code></a>.
+builtDate = data.generated_at?.slice(0, 10) ?? data.commit.date
+```
+
+```{ojs}
+html`<p class="dash-meta">Generated ${builtDate} (UTC) from commit
+  <a href="${data.repo_url}/commit/${data.commit.sha}"><code>${data.commit.short}</code></a>${data.commit.date && data.commit.date !== builtDate ? ` (committed ${data.commit.date})` : ""}.
   AREE turns public oyster omics datasets into comparable resilience-biomarker evidence
   (<a href="about.html">about the resource</a>). Every number is computed from the repository and the pipeline's outputs.
   Simulated demo studies are excluded from the numbers and tables below unless marked.</p>
@@ -59,13 +63,13 @@ ${missing.length ? html`<p><strong>Pipeline outputs missing from this build:</st
 html`<div class="kpi-grid">
   <div class="kpi"><div class="kpi-label">Real studies</div>
     <div class="kpi-value">${k.n_studies_real}</div>
-    <div class="kpi-note">${k.n_studies_simulated} simulated demo studies kept separate</div></div>
+    <div class="kpi-note">${data.includes_simulated ? `${k.n_studies_simulated} simulated demo studies kept separate` : "simulated demo studies not shown"}</div></div>
   <div class="kpi"><div class="kpi-label">Comparisons harmonized</div>
     <div class="kpi-value">${k.n_comparisons_real_harmonized} / ${k.n_comparisons_real}</div>
     <div class="kpi-note">registered contrasts with evidence in the table</div></div>
   <div class="kpi"><div class="kpi-label">Evidence records</div>
     <div class="kpi-value">${fmt(k.n_evidence_records_real)}</div>
-    <div class="kpi-note">one row per gene × comparison</div></div>
+    <div class="kpi-note">one row per molecular feature × comparison</div></div>
   <div class="kpi"><div class="kpi-label">High-priority candidates</div>
     <div class="kpi-value">${fmt(k.n_candidates_real_high_priority)}</div>
     <div class="kpi-note">from ${k.n_real_pools_k2plus} cross-study pool${k.n_real_pools_k2plus === 1 ? "" : "s"}</div></div>
@@ -82,7 +86,7 @@ html`<div class="kpi-grid">
   const list = (xs) => xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
   // Lower-case a label mid-sentence, leaving acronyms like "pH" alone.
   const lc = (s) => s.split(" ").map(w => w.length > 1 && w[1] === w[1].toLowerCase() ? w[0].toLowerCase() + w.slice(1) : w).join(" ");
-  const relevance = (id) => data.vocab.phenotype_resilience_relevance?.[id];
+  const contrast = (id) => (id ?? "unspecified contrast").replace(/_/g, " ");
 
   const real = data.studies.filter(s => !s.simulated);
   const withEvidence = real.filter(s => s.n_evidence_records > 0);
@@ -110,7 +114,8 @@ html`<div class="kpi-grid">
          ${list([...assaysWithEvidence].map(assay))}.`
       : "None has harmonized evidence yet."}</p>`;
 
-  const poolItems = cross.map(p => html`<li><strong>${phen(p.phenotype)}</strong>
+  const poolItems = cross.map(p => html`<li><strong>${phen(p.phenotype)}</strong>, <em>${p.species}</em>
+    — ${contrast(p.contrast_type)}
     (${p.studies.length} studies: ${p.studies.join(", ")}): ${fmt(p.n_features_k2plus)} genes measured in at
     least two studies, ${fmt(p.n_features_k2plus_significant)} with a pooled effect significant after
     multiple-testing correction.</li>`);
@@ -118,24 +123,26 @@ html`<div class="kpi-grid">
     ? html`<p>Cross-study pools, where the same gene can be compared between independent studies:</p><ul>${poolItems}</ul>`
     : html`<p>No cross-study pool has formed yet; every phenotype is supported by a single study.</p>`;
   const singleText = single.length
-    ? html`<p>${list(single.map((p, i) => i ? lc(phen(p.phenotype)) : phen(p.phenotype)))} ${single.length === 1 ? "has" : "have"} evidence from one
+    ? html`<p>${list(single.map((p, i) => `${i ? lc(phen(p.phenotype)) : phen(p.phenotype)} (${contrast(p.contrast_type)}) in ${p.species}`))} ${single.length === 1 ? "has" : "have"} evidence from one
       study only (${list(single.flatMap(p => p.studies))}), so ${single.length === 1 ? "its" : "their"} genes stay
       <em>emerging</em> until a second study replicates them.</p>`
     : "";
 
-  const tierText = html`<p>${fmt(nRanked)} gene × phenotype candidates are ranked:
+  const tierText = html`<p>${fmt(nRanked)} feature × phenotype × species × contrast candidates are listed:
     ${fmt(k.n_candidates_real_high_priority)} high priority (replicated across studies),
-    ${fmt(k.n_candidates_real_multi_omics)} multi-omics, ${fmt(k.n_candidates_real_emerging)} emerging.
+    ${fmt(k.n_candidates_real_multi_omics)} multi-omics, ${fmt(k.n_candidates_real_metabolite_linked)} metabolite-linked,
+    ${fmt(k.n_candidates_real_emerging)} emerging.
     By evidence class: ${classes.map(d => `${fmt(d.n)} ${d.evidence_class.replace(/_/g, " ")}`).join(", ")}.</p>`;
 
   const caveats = [];
   caveats.push(`${k.n_real_comparisons_with_resilience_phenotype} of ${k.n_comparisons_real} real comparisons
-    measure a resilience outcome; the rest measure disease, stress response, or exposure alone.`);
-  if (topPhens.length === 1 && relevance(topPhens[0]) !== "resilience")
-    caveats.push(`The top-ranked candidates all come from the <em>${lc(phen(topPhens[0]))}</em> pool, so they describe the response to ${relevance(topPhens[0]) === "disease" ? "infection" : "the stressor"},
+    are registered as resilience-associated; this includes comparisons awaiting analysis.
+    The rest are classified as disease, stress response, or exposure-only.`);
+  if (top.length && topPhens.length === 1 && top.every(r => r.evidence_class === "disease_associated"))
+    caveats.push(`The top-ranked candidates all come from the <em>${lc(phen(topPhens[0]))}</em> pool, so they describe the response to infection,
       not resistance to it; each pool's own top candidates are listed below.`);
   if (k.n_candidates_real_multi_omics === 0)
-    caveats.push(`The multi-omics tier is empty because no non-RNA-seq study has been harmonized yet.`);
+    caveats.push(`No candidate currently meets the multi-omics gate: significant evidence in at least two molecular layers for the same feature, phenotype and contrast type.`);
   caveats.push(`A candidate here is an association across the available evidence, not a validated biomarker.`);
 
   const next = [];
@@ -144,7 +151,7 @@ html`<div class="kpi-grid">
       .filter(a => !assaysWithEvidence.has(a)))].map(assay))} studies (${awaiting.map(s => s.study_id).join(", ")})
       to open the multi-omics tier`);
   if (single.length)
-    next.push(`find a second study for ${list(single.map(p => lc(phen(p.phenotype))))}`);
+    next.push(`find a second study for ${list(single.map(p => `${lc(phen(p.phenotype))} in ${p.species}`))}`);
   if (failed.length)
     next.push(`resolve the QC failures in ${failed.map(s => s.study_id).join(", ")}`);
 
@@ -179,7 +186,7 @@ candidateTable = (rows, {showPhenotype = false, maxRows = 15} = {}) => Inputs.ta
   format: {
     feature_id_standardized: (v, i, rows) => rows[i].card_page ? htl.html`<a href="${rows[i].card_page}">${v}</a>` : v,
     gene_description: v => clip(v, 38),
-    tier: v => TIER.get(v) ?? v,
+    tier: (v, i, rows) => (TIER.get(v) ?? v) + (rows[i].pooling_status === "unpooled" ? " (unpooled)" : ""),
     pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
     adjusted_p_value: fmtP
   },
@@ -198,32 +205,204 @@ candidateTable(data.candidates.top_real, {showPhenotype: !topPhen})
   // The overall list above is dominated by the pool with the most studies, so each
   // cross-study pool also shows its own best candidates.
   const byPhen = data.candidates.top_real_by_phenotype ?? {};
-  const pools = data.pools
-    .filter(p => !p.simulated && p.feature_type === "gene" && p.max_k >= 2 && byPhen[p.phenotype]?.length)
+  // Pools are per species; a phenotype pooled in several species gets one section.
+  const byKey = new Map();
+  for (const p of data.pools.filter(p => !p.simulated && p.feature_type === "gene" && p.max_k >= 2
+                                         && byPhen[p.phenotype]?.length)) {
+    const m = byKey.get(p.phenotype) ?? {phenotype: p.phenotype, studies: [], species: []};
+    m.studies.push(...p.studies); m.species.push(p.species);
+    byKey.set(p.phenotype, m);
+  }
+  const pools = [...byKey.values()]
     .sort((a, b) => b.studies.length - a.studies.length || a.phenotype.localeCompare(b.phenotype));
   if (!pools.length) return html`<p>No cross-study pool has ranked candidates yet.</p>`;
-  return html`${pools.map(p => html`
+  // A pool whose list is exactly the head of the overall table gets a pointer, not a repeat.
+  const key = (r) => `${r.phenotype}|${r.feature_id_standardized}`;
+  const overallHead = (rows) => rows.every((r, i) => key(r) === key(data.candidates.top_real[i] ?? {}));
+  return html`${pools.map(p => {
+    const rows = byPhen[p.phenotype];
+    return html`
     <h4>${phen(p.phenotype)}</h4>
-    <p class="dash-meta">${p.studies.length} studies (${p.studies.join(", ")}); top ${byPhen[p.phenotype].length}
-      by tier, then score.</p>
-    ${candidateTable(byPhen[p.phenotype], {maxRows: byPhen[p.phenotype].length})}`)}`;
+    <p class="dash-meta">${p.studies.length} studies (${p.studies.join(", ")})${p.species.length > 1 ? html`, ${p.species.length} species, each ranked within its own species` : ""}; top ${rows.length}
+      by tier, then score${overallHead(rows) ? `: the same as the first ${rows.length} rows of the overall table above.` : "."}</p>
+    ${overallHead(rows) ? "" : candidateTable(rows, {maxRows: rows.length})}`;
+  })}`;
 }
+```
+
+### Predictive baseline candidates
+
+```{ojs}
+{
+  // Genes that differ between groups of measured, differing resilience sampled under
+  // common unstressed conditions (contrast_type = baseline_phenotype_difference).
+  const pb = data.candidates.predictive_baseline ?? {n: 0, n_significant: 0, top: [], studies: []};
+  const why = html`<p>A gene that responds to stress tells you an animal is stressed. A gene that already
+    differs between resilient and susceptible animals <em>before</em> any stress could be read on animals
+    that are then kept, which is what a breeder needs. These candidates come from comparisons of groups
+    that differ in resilience by origin (line, family, population, ploidy or age), sampled under the same
+    unstressed conditions (<a href="contrast_types.html">contrast types</a>).</p>`;
+  if (!pb.n) return html`${why}<p>No harmonized study contributes a baseline contrast yet.</p>`;
+  const single = pb.n_significant_replicated === 0;
+  const meta = html`<p>${fmt(pb.n_significant)} of ${fmt(pb.n)} baseline candidates are significant after
+    multiple-testing correction, from ${pb.studies.join(", ")}${single ? html`. All rest on a
+    <strong>single study</strong>: groups that differ in origin differ in more than resilience, so each needs
+    an independent resistant-vs-susceptible pair, and ideally pre-challenge sampling of individuals whose
+    survival is then recorded, before it is more than a lead` : ""}.
+    ${pb.top.length < pb.n_significant ? `Top ${pb.top.length} shown, by tier then score; ` : ""}click a gene
+    for its evidence card. log2FC compares each study's registered treatment arm with its control arm
+    (for LI2018, intertidal relative to subtidal); the card's comparison column names both.</p>`;
+  return html`${why}${meta}${pb.top.length
+    ? candidateTable(pb.top, {showPhenotype: pb.phenotypes.length > 1, maxRows: pb.top.length})
+    : html`<p>None is significant yet.</p>`}`;
+}
+```
+
+## Across species
+
+```{ojs}
+{
+  // WP6 gate: pooled cross-species results appear only for a phenotype where at
+  // least two species each have a within-species pool with k >= 2. Before that
+  // the page offers only the ortholog lookup below.
+  const xs = data.cross_species ?? {gate: [], top_real: [], withheld: []};
+  const gate = xs.gate.filter(g => !g.simulated);
+  const sp = (s) => { const [g, ...rest] = s.split(" "); return rest.length ? `${g[0]}. ${rest.join(" ")}` : s; };
+  if (!gate.length) return html`<p>No phenotype has real evidence from more than one species yet, so nothing
+    can be compared across species. The lookup below shows where each top candidate's ortholog sits.</p>`;
+  const items = gate.map(g => html`<li><strong>${phen(g.phenotype)}</strong>:
+    ${g.species.map((s, i) => html`${i ? ", " : ""}<em>${sp(s.species)}</em> k = ${s.max_k}`)}.
+    ${g.open ? html`Gate open: cross-species estimates shown below.`
+             : html`Gate closed (${g.reason}): lookup only, no pooled estimate.`}</li>`);
+  const held = xs.withheld.filter(w => !w.simulated).reduce((s, w) => s + w.n, 0);
+  return html`<p>Genes are compared across species through orthogroups. A pooled cross-species estimate is shown
+    for a phenotype only once at least two species each have a pool of two or more studies of their own.</p>
+    <ul>${items}</ul>
+    ${held ? html`<p class="dash-meta">${fmt(held)} cross-species rows for gated phenotypes are withheld.</p>` : ""}`;
+}
+```
+
+```{ojs}
+CROSS_TIER = new Map([["cross_species_convergence", "Convergence"], ["cross_species_emerging", "Emerging"],
+                      ["cross_species_discordant", "Discordant"], ["cross_species_unsupported", "Unsupported"]])
+spShort = (s) => { const [g, ...rest] = (s ?? "").split(" "); return rest.length ? `${g[0]}. ${rest.join(" ")}` : s; }
+crossRows = data.cross_species?.top_real ?? []
+```
+
+```{ojs}
+{
+  if (!crossRows.length) return html``;
+  const exposureOnly = crossRows.filter(r => r.evidence_class === "exposure_only").length;
+  return html`<p>Top cross-species rows, by tier, then score. Click an orthogroup to open its card,
+    which shows each species' estimate side by side.
+    ${exposureOnly === crossRows.length
+      ? "Every row shown rests on exposure-only evidence in at least one species, so none is a tolerance claim."
+      : `${exposureOnly} of ${crossRows.length} rows rest on exposure-only evidence in at least one species.`}</p>`;
+}
+```
+
+```{ojs}
+crossRows.length ? Inputs.table(crossRows, {
+  columns: ["orthogroup_id", "species_genes", "phenotype_label", "tier", "pooled_effect", "adjusted_p_value",
+            "i_squared_between_species"],
+  header: {orthogroup_id: "Orthogroup", species_genes: "Genes (studies)", phenotype_label: "Phenotype",
+           tier: "Tier", pooled_effect: "log2FC", adjusted_p_value: "Adj. p", i_squared_between_species: "I² between species"},
+  format: {
+    orthogroup_id: (v, i, rows) => rows[i].card_page ? htl.html`<a href="${rows[i].card_page}">${v}</a>` : v,
+    species_genes: v => htl.html`${v.map((g, i) => htl.html`${i ? "; " : ""}<em>${spShort(g.species)}</em> ${g.gene} (${g.k_studies})`)}`,
+    tier: v => CROSS_TIER.get(v) ?? v,
+    pooled_effect: v => (v == null ? "—" : v.toFixed(2)),
+    adjusted_p_value: fmtP,
+    i_squared_between_species: v => (v == null ? "—" : `${v.toFixed(0)}%`)
+  },
+  rows: 15, layout: "auto"
+}) : html``
+```
+
+### Orthologs of the top candidates
+
+```{ojs}
+{
+  const rows = data.candidates.top_real.filter(r => r.orthogroup_id);
+  if (!rows.length) return html`<p>No top candidate has an orthogroup yet.</p>`;
+  const withOrtho = rows.filter(r => r.orthologs?.length).length;
+  return html`<p>Where each top candidate's ortholog sits in other species, and whether that species tested it.
+    ${withOrtho} of ${rows.length} have an ortholog with evidence in another species. This is a lookup, not a pooled estimate.</p>
+    ${Inputs.table(rows, {
+      columns: ["feature_id_standardized", "species", "orthogroup_id", "orthologs"],
+      header: {feature_id_standardized: "Gene", species: "Species", orthogroup_id: "Orthogroup", orthologs: "Tested in other species"},
+      format: {
+        feature_id_standardized: (v, i, rs) => rs[i].card_page ? htl.html`<a href="${rs[i].card_page}">${v}</a>` : v,
+        species: v => htl.html`<em>${spShort(v)}</em>`,
+        orthologs: v => v?.length
+          ? htl.html`${v.map((o, i) => htl.html`${i ? "; " : ""}<em>${spShort(o.species)}</em> ${o.genes.join(", ")}: ${o.phenotypes.map(phen).join(", ")} (${o.studies.length} ${o.studies.length === 1 ? "study" : "studies"}, ${o.n_significant_records} significant)`)}`
+          : "not tested"
+      },
+      rows: 15, layout: "auto"
+    })}`;
+}
+```
+
+## Species
+
+```{ojs}
+ROUTE = new Map([["ncbi_gene", "NCBI Gene"], ["gff_homology", "authors' GFF + homology"]])
+speciesRows = (data.species ?? []).filter(s => s.n_studies_real || s.n_studies_simulated || s.crosswalk_built)
+```
+
+```{ojs}
+html`<p>${speciesRows.filter(s => s.n_evidence_records_real).length} of ${speciesRows.length} registered species
+  have real evidence. A species' genes are identified through its own crosswalk; the route says where its
+  gene identifiers come from (<a href="identifier_mapping.html">identifier mapping</a>). Simulated demo studies
+  are counted separately.</p>`
+```
+
+```{ojs}
+Inputs.table(speciesRows, {
+  columns: ["species", "label", "crosswalk_route", "crosswalk_genes", "n_studies_real",
+            "n_studies_real_harmonized", "n_evidence_records_real", "n_studies_simulated"],
+  header: {species: "Species", label: "Common name", crosswalk_route: "Gene IDs from",
+           crosswalk_genes: "Genes", n_studies_real: "Real studies", n_studies_real_harmonized: "With evidence",
+           n_evidence_records_real: "Records", n_studies_simulated: "Demo studies"},
+  format: {
+    species: (v, i, rows) => htl.html`<em>${v}</em>${rows[i].complex ? htl.html` <span title="member of a hybridizing species complex; see Species identity">†</span>` : ""}`,
+    crosswalk_route: v => ROUTE.get(v) ?? (v ?? "not built"),
+    crosswalk_genes: fmt, n_evidence_records_real: fmt
+  },
+  rows: 12, layout: "auto"
+})
+```
+
+```{ojs}
+html`<p class="dash-meta">† Member of a hybridizing complex: a study's species label is only as good as its
+  basis (genotyped, morphology, collection site, ...), shown in the studies table below.
+  See <a href="species_identity.html">species identity</a>.</p>`
 ```
 
 ## Studies
 
 ```{ojs}
-html`<p>${realStudies.length} real ${realStudies.length === 1 ? "study" : "studies"}${studyStress ? html`, all <em>${studyStress.toLowerCase()}</em> experiments` : ""}.
+viewof studySpecies = Inputs.select(["All species", ...new Set(realStudies.map(s => s.species_canonical))], {label: "Species"})
+shownStudies = studySpecies === "All species" ? realStudies : realStudies.filter(s => s.species_canonical === studySpecies)
+showIdentity = shownStudies.some(s => s.species_complex)
+```
+
+```{ojs}
+html`<p>${shownStudies.length} real ${shownStudies.length === 1 ? "study" : "studies"}${studyStress ? html`, all <em>${studyStress.toLowerCase()}</em> experiments` : ""}.
   Hover a citation for the full reference.</p>`
 ```
 
 ```{ojs}
-Inputs.table(realStudies, {
-  columns: ["study_id", "citation", ...(studyStress ? [] : ["stressors"]), "phenotypes",
+Inputs.table(shownStudies, {
+  columns: ["study_id", "citation", "species_canonical", ...(showIdentity ? ["species_identity_basis"] : []),
+            ...(studyStress ? [] : ["stressors"]), "phenotypes",
             "n_comparisons_harmonized", "n_evidence_records"],
-  header: {study_id: "Study", citation: "Citation", stressors: "Stressor", phenotypes: "Phenotype",
+  header: {study_id: "Study", citation: "Citation", species_canonical: "Species", species_identity_basis: "Species identity",
+           stressors: "Stressor", phenotypes: "Phenotype",
            n_comparisons_harmonized: "Harmonized", n_evidence_records: "Records"},
   format: {
+    species_canonical: v => htl.html`<em>${spShort(v)}</em>`,
+    species_identity_basis: (v, i, rows) => rows[i].species_complex ? (v ?? "not recorded") : "—",
     study_id: (v, i, rows) => htl.html`<a href="${data.repo_url}/blob/main/${rows[i].registry_file}">${v}</a>`,
     citation: (v, i, rows) => rows[i].doi ? htl.html`<a href="https://doi.org/${rows[i].doi}" title="${v}">${shortCite(v)}</a>` : shortCite(v),
     stressors: v => v.map(stress).join(", "),
@@ -236,7 +415,7 @@ Inputs.table(realStudies, {
 ```
 
 ```{ojs}
-html`<p class="dash-meta">${data.tests.n_tests} automated tests, ${data.activity.n_commits} commits since ${data.activity.first_commit_date}.
+html`<p class="dash-meta">${data.tests.n_tests} test functions (parameterized cases counted separately by pytest), ${data.activity.n_commits} commits since ${data.activity.first_commit_date}.
   Details: <a href="implementation_status.html">implementation status</a> ·
   <a href="${data.repo_url}">source repository</a>.
   Built by <code>aree build-dashboard</code> and <code>quarto render docs</code> on every push to <code>main</code>.</p>`

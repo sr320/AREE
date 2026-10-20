@@ -16,6 +16,33 @@ def test_approximate_se_recovers_z_relationship():
     assert math.isclose(se, 1.0 / 1.959963985, rel_tol=1e-3)
 
 
+@pytest.mark.parametrize("p", [1e-20, 1e-100, 1e-300, 0.0])
+def test_approximate_se_preserves_extreme_significance(p):
+    from scipy.stats import norm
+
+    from meta_analysis.run import effective_standard_errors
+
+    expected = 2.0 / norm.isf(max(p, 1e-300) / 2)
+    scalar = approximate_se(2.0, p)
+    vector = effective_standard_errors(pd.DataFrame({
+        "effect_size": [2.0], "standard_error": [None], "p_value": [p],
+    }))[0]
+    assert scalar > 0
+    assert scalar == pytest.approx(expected)
+    assert vector == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("p", [1.0, -0.1, 1.1, float("inf"), float("nan")])
+def test_approximate_se_rejects_unusable_p_values(p):
+    from meta_analysis.run import effective_standard_errors
+
+    assert approximate_se(1.0, p) is None
+    vector = effective_standard_errors(pd.DataFrame({
+        "effect_size": [1.0], "standard_error": [None], "p_value": [p],
+    }))[0]
+    assert math.isnan(vector)
+
+
 def test_dersimonian_laird_single_study_is_fixed_effect():
     result = dersimonian_laird([1.5], [0.3])
     assert result.k == 1
@@ -157,7 +184,7 @@ def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, m
         "  - comparison_id: contrast_b\n"
         "    meta_analysis_primary: true\n"
     )
-    monkeypatch.setattr(meta_run, "STUDIES_DIR", studies_dir)
+    monkeypatch.setattr(meta_run, "study_files", lambda: sorted(studies_dir.glob("*.yaml")))
 
     result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
     assert result["k_studies"] == 1

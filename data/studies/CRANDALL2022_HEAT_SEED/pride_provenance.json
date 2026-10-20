@@ -1,0 +1,99 @@
+{
+  "study_id": "CRANDALL2022_HEAT_SEED",
+  "accession": "PXD015434",
+  "repository": "PRIDE",
+  "license": "Creative Commons Public Domain (CC0)",
+  "submission_type": "PARTIAL",
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/CRANDALL2022_HEAT_SEED/build_samplesheet.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD015434",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD015434/files/all",
+    "https://zenodo.org/api/records/5708415"
+  ],
+  "pride_reference": "Crandall G, Elliott Thompson R, Eudeline B, Vadopalas B, Timmins-Schiffman E, Roberts S. Proteomic response of early juvenile Pacific oysters (<i>Crassostrea gigas</i>) to temperature. PeerJ. 2022 10:e14158",
+  "pride_instrument": [
+    "Q Exactive"
+  ],
+  "pride_files_by_category": {
+    "RAW": 16,
+    "SEARCH": 16
+  },
+  "input_sha256": {
+    "paper-pacific.oyster-larvae-v2.1.0.zip": "614b0307a2a6cf794103e67979f22b77a84e6934f1a02e972a2f4a71e6fc5bb8",
+    "zip:data/20190403-MSstats-report.csv": "98cc0fd17e5727fa754daac0ecd2c94cb6eba3dbaa8b03f6843f8aa03dca783e",
+    "zip:data/20190403-2015Cgseed-protcomp.csv": "8b759dec990cff53c1781fc6803724cfcdd1544b0cd55bcd1c9c2c80b091dff7",
+    "zip:data/2015X15P8LargescaleSeed29CtoAmbient.xlsx": "7bb5873bee4e5dca9182cff0b85fb7855fa906159c944f00e5b83685a4de065e"
+  },
+  "zenodo": {
+    "doi": "10.5281/zenodo.5708415",
+    "version": "v2.1.0",
+    "license": "other-open",
+    "file": "grace-ac/paper-pacific.oyster-larvae-v2.1.0.zip",
+    "md5": "b5b97b6a8f0f805720263312e516e9d9",
+    "size_bytes": 68330592
+  },
+  "n_runs": 16,
+  "n_pools": 4,
+  "injections_per_pool": 4,
+  "pools": {
+    "Oysterseed_01": {
+      "condition": "23C",
+      "silo": "9",
+      "date": "2015-09-11",
+      "day_of_exposure": 5
+    },
+    "Oysterseed_02": {
+      "condition": "29C",
+      "silo": "8",
+      "date": "2015-09-11",
+      "day_of_exposure": 5
+    },
+    "Oysterseed_13": {
+      "condition": "23C",
+      "silo": "9",
+      "date": "2015-09-14",
+      "day_of_exposure": 8
+    },
+    "Oysterseed_14": {
+      "condition": "29C",
+      "silo": "8",
+      "date": "2015-09-14",
+      "day_of_exposure": 8
+    }
+  },
+  "silos_by_temperature_C": {
+    "23": [
+      "9"
+    ],
+    "29": [
+      "8"
+    ]
+  },
+  "msstats_result": {
+    "n_proteins": 2808,
+    "label": [
+      "23C-29C"
+    ],
+    "contrast_vector_23C_29C": [
+      -1,
+      1
+    ],
+    "n_adj_p_below_0.05": 0,
+    "df_counts": {
+      "1": 1245,
+      "4": 635,
+      "8": 392,
+      "12": 328,
+      "0": 109,
+      "7": 61,
+      "11": 30,
+      "3": 4,
+      "10": 2,
+      "6": 2
+    }
+  },
+  "outputs": {
+    "data/studies/CRANDALL2022_HEAT_SEED/samplesheet.tsv": "d9f40e0f528963a7eb7c3fc792c2fa60543384e66888ac459836ce81f395089b"
+  }
+}

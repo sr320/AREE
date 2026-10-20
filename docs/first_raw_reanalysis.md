@@ -385,7 +385,7 @@ The deposited metadata record no viral load, so AREE measures it: the RNA-seq
 workflow's optional `--viral_reference` step maps every read pair of every
 library to the OsHV-1 genome (RefSeq `NC_005881.2`,
 `data/reference/pathogens/OsHV-1/`) and reports viral pairs per million
-([workflows/rnaseq/README.md](../workflows/rnaseq/README.md)). It was first run
+([workflows/rnaseq/README.md](https://github.com/sr320/AREE/blob/main/workflows/rnaseq/README.md)). It was first run
 by hand on 2M-pair subsamples (2026-09-24), then on all reads by the workflow
 (2026-09-30).
 

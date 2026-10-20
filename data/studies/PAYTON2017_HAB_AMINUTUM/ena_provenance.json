@@ -1,0 +1,89 @@
+{
+  "study_id": "PAYTON2017_HAB_AMINUTUM",
+  "bioproject": "PRJEB18614",
+  "date_generated": "2026-10-11",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB18614&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "growth condition"
+  ],
+  "n_runs": 52,
+  "n_samples": 26,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "Alexandrium_minutum": 26,
+    "Heterocapsa_triquetra": 26
+  },
+  "min_group_size": 26,
+  "total_fastq_bytes": 274235903248,
+  "outputs": {
+    "data/studies/PAYTON2017_HAB_AMINUTUM/samplesheet.tsv": "fa6584202b67c3afaf73047fb9b0fd4baed0b44d0ecda6a991ee7dae160a15ba",
+    "data/studies/PAYTON2017_HAB_AMINUTUM/fastq_manifest.tsv": "9ff5f98fa0c9bff25ca61624366bca783796e82046eafa0fdf8bf2feaf409be2"
+  },
+  "run_labels": {
+    "field": "run_accession",
+    "pattern": "^(?P<run>ERR\\d+)$",
+    "labels": {
+      "ERR1758942": "ERR1758942",
+      "ERR1758943": "ERR1758943",
+      "ERR1758944": "ERR1758944",
+      "ERR1758945": "ERR1758945",
+      "ERR1758946": "ERR1758946",
+      "ERR1758947": "ERR1758947",
+      "ERR1758948": "ERR1758948",
+      "ERR1758949": "ERR1758949",
+      "ERR1758950": "ERR1758950",
+      "ERR1758951": "ERR1758951",
+      "ERR1758952": "ERR1758952",
+      "ERR1758953": "ERR1758953",
+      "ERR1758954": "ERR1758954",
+      "ERR1758955": "ERR1758955",
+      "ERR1758956": "ERR1758956",
+      "ERR1758957": "ERR1758957",
+      "ERR1758958": "ERR1758958",
+      "ERR1758959": "ERR1758959",
+      "ERR1758960": "ERR1758960",
+      "ERR1758961": "ERR1758961",
+      "ERR1758962": "ERR1758962",
+      "ERR1758963": "ERR1758963",
+      "ERR1758964": "ERR1758964",
+      "ERR1758965": "ERR1758965",
+      "ERR1758966": "ERR1758966",
+      "ERR1758967": "ERR1758967",
+      "ERR1758968": "ERR1758968",
+      "ERR1758969": "ERR1758969",
+      "ERR1758970": "ERR1758970",
+      "ERR1758971": "ERR1758971",
+      "ERR1758972": "ERR1758972",
+      "ERR1758973": "ERR1758973",
+      "ERR1758974": "ERR1758974",
+      "ERR1758975": "ERR1758975",
+      "ERR1758976": "ERR1758976",
+      "ERR1758977": "ERR1758977",
+      "ERR1758978": "ERR1758978",
+      "ERR1758979": "ERR1758979",
+      "ERR1758980": "ERR1758980",
+      "ERR1758981": "ERR1758981",
+      "ERR1758982": "ERR1758982",
+      "ERR1758983": "ERR1758983",
+      "ERR1758984": "ERR1758984",
+      "ERR1758985": "ERR1758985",
+      "ERR1758986": "ERR1758986",
+      "ERR1758987": "ERR1758987",
+      "ERR1758988": "ERR1758988",
+      "ERR1758989": "ERR1758989",
+      "ERR1758990": "ERR1758990",
+      "ERR1758991": "ERR1758991",
+      "ERR1758992": "ERR1758992",
+      "ERR1758993": "ERR1758993"
+    }
+  }
+}

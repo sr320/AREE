@@ -16,7 +16,9 @@ import jsonschema
 
 from common import (
     DATA_DIR,
+    DEMO_STUDIES_DIR,
     SCHEMAS_DIR,
+    STUDIES_DIR,
     assembly_crosswalk_path,
     load_json,
     load_vocab,
@@ -64,6 +66,22 @@ def validate_study_file(path) -> ValidationResult:
     if stem not in ("_TEMPLATE",) and study.get("study_id") != stem:
         errors.append(
             f"study_id {study.get('study_id')!r} does not match filename stem {stem!r}"
+        )
+
+    # Real and simulated studies are kept in separate directories so the study
+    # registry never lists demo fixtures as studies. A file in the wrong one is
+    # an error rather than something to infer around.
+    parent = path.resolve().parent
+    simulated = bool(study.get("simulated", False))
+    if parent == STUDIES_DIR.resolve() and simulated:
+        errors.append(
+            "simulated: true study is in registry/studies/; simulated demo studies "
+            "belong in registry/demo_studies/"
+        )
+    elif parent == DEMO_STUDIES_DIR.resolve() and not simulated:
+        errors.append(
+            "study in registry/demo_studies/ is not simulated: true; real studies "
+            "belong in registry/studies/"
         )
 
     phenotype_vocab = load_vocab("phenotype_ontology")
@@ -203,6 +221,18 @@ def validate_study_file(path) -> ValidationResult:
                     f"phenotype_ontology default ({expected_relevance!r}) for phenotype "
                     f"{phenotype_id!r}. Confirm this override is intentional and documented."
                 )
+        # A baseline contrast compares groups that differ in resilience under
+        # common unstressed conditions; that is resilience evidence by
+        # construction. Any other classification usually means the groups
+        # differ by a treatment, which makes it an exposure_response.
+        if (comp.get("contrast_type") == "baseline_phenotype_difference"
+                and comp.get("resilience_classification") != "resilience"):
+            warnings.append(
+                f"comparison {cid!r}: contrast_type 'baseline_phenotype_difference' with "
+                f"resilience_classification={comp.get('resilience_classification')!r}. A baseline "
+                "contrast compares groups that differ in resilience; if the groups differ by a "
+                "treatment, use 'exposure_response' (docs/contrast_types.md)."
+            )
 
     # If a sample sheet was generated for this study, the BioProject it was
     # generated from must be the one the study claims. This catches a study

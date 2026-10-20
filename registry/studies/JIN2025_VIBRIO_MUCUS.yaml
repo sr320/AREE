@@ -1,0 +1,125 @@
+# Real proteomics study, unpublished: mucus of Pacific oysters infected with
+# Vibrio ZJ-51 versus controls, IBT 16-plex isobaric labelling. Registered
+# from PRIDE PXD064651 (CC0, PARTIAL submission, public 2025-07-29) only; no
+# publication is linked in PRIDE or found in Europe PMC (searched
+# 2026-10-17). The submitting lab (Jin X, Mao F; South China Sea Institute
+# of Oceanology) published a C. gigas mucus peptide study (Song et al. 2024,
+# Mar Drugs 22:385) with the same fractionation method, but it does not use
+# this infection contrast.
+#
+# REGISTERED, CANNOT BE REANALYZED (2026-10-17, sr320). The deposit names six
+# samples (C1-C3 control, T1-T3 infected) but not which of the 16 reporter
+# channels carries which sample, and the quantification (IQuant) was not
+# deposited. The Mascot search was run with QUANTITATION=None (read from the
+# .dat header by build_provenance.py), so the reporter ions are only in the
+# MGF/raw files, unlabelled. Re-quantifying them would produce channels that
+# cannot be assigned to control or infected. Nothing about the infection
+# (dose, route, time to sampling), the animals, or whether a sample is one
+# oyster or a pool is in the deposit.
+#
+# The search database (gigas.u.fa, 134,653 sequences) came from a commercial
+# BGI pipeline (2023); its origin and identifiers are not documented.
+#
+# If the authors publish, or supply the channel map and the IQuant output,
+# this becomes the only mucus proteome under pathogen challenge in AREE.
+
+study_id: JIN2025_VIBRIO_MUCUS
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: "PXD064651"
+  other: null
+
+citation: "Jin X, Mao F (South China Sea Institute of Oceanology, CAS) (2025) Proteomic analysis of Pacific oyster (Crassostrea gigas) mucus during Vibrio infection. PRIDE PXD064651 (CC0), unpublished dataset. The study_id uses the submitter's name and the PRIDE release year because there is no publication."
+
+species: "Magallana gigas"
+strain_or_population: null
+
+# Database of unknown origin (gigas.u.fa, 134,653 sequences, BGI commercial
+# pipeline). This records the annotation a mapping would target.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "raw_reanalysis"
+platform: "IBT 16-plex isobaric labelling, 20 high-pH reversed-phase fractions, Thermo Q Exactive HF-X (PRIDE lists Q Exactive HF), 60 min gradient; Mascot 2.3.02 against gigas.u.fa (fixed IBT16plex on K and N-term), IQuant with VSN normalization; differential proteins at fold change > 1.5 and Q < 0.05 (PRIDE protocol)."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "PRIDE PXD064651 (CC0, PARTIAL): Rawdata_1-3.tar.gz (9.1 GB), mgf_1.tar.gz (1.1 GB), dat.tar.gz (1.0 GB; first member Data_Analysis/DATA1/dat/F23A040000436_J230221064_rep1.dat, Mascot run with QUANTITATION=None). No channel-to-sample key, no quantification table, no publication. Details in data/studies/JIN2025_VIBRIO_MUCUS/pride_provenance.json."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# ONE COMPARISON, the only one the deposit describes: infected vs control,
+# 3 vs 3 samples. Whether a sample is one oyster or a pool is unknown, so
+# biological_replicates is recorded as 3 samples per arm.
+#
+# TISSUE. Mucus has no term in tissue_types.yaml; recorded as mixed_tissue,
+# with the actual material in stressor_original and the conditions.
+#
+# PHENOTYPE. None reported. pathogen_load / disease outcome unknown, so the
+# comparison is exposure_only on disease_susceptibility, direction
+# not_applicable.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "vibrio_zj51_vs_control"
+    tissue: "mixed_tissue"
+    life_stage: "adult"
+    stressor_original: "Infection with Vibrio ZJ-51 (dose, route and time to sampling not stated); mucus collected from control (C1-C3) and infected (T1-T3) oysters (PRIDE PXD064651 description). Life stage not stated; adult assumed for mucus sampling."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Uninfected: mucus samples C1, C2, C3"
+    treatment_condition: "Vibrio ZJ-51 infected: mucus samples T1, T2, T3"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "no phenotype reported"
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+quality_flags:
+  - raw_data_available
+  - ambiguous_phenotype_definition
+  - single_timepoint
+  - identifier_mapping_uncertain
+
+limitations: >
+  (1) No channel-to-sample key: the isobaric reporter channels cannot be
+  assigned to control or infected samples, so the data cannot be
+  re-quantified into a usable contrast. (2) No quantification table and no
+  publication; the authors' IQuant results are not available. (3) Infection
+  dose, route, timing, animal origin, size and life stage, and whether
+  samples are individuals or pools, are not documented. (4) Search database
+  of unknown provenance (commercial BGI pipeline). (5) Mucus is not a
+  tissue in AREE's vocabulary; recorded as mixed_tissue. (6) No phenotype.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-17"
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD064651 --study-id
+    JIN2025_VIBRIO_MUCUS` (branch study/PXD064651/JIN2025_VIBRIO_MUCUS).
+    Registered from the PRIDE v3 project and file records and the parameter
+    header of the first Mascot .dat in dat.tar.gz (first 3 MB of the
+    archive), retrieved 2026-10-17 by build_provenance.py. Europe PMC was
+    searched for the accession, the strain name and the submitting lab; the
+    only related paper (Song et al. 2024, Mar Drugs, PMC11432763) does not
+    report this contrast. Decision (2026-10-17, sr320): register only,
+    because the channel map needed for any reanalysis is not deposited.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD064651"
+    - "https://doi.org/10.3390/md22090385"

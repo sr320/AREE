@@ -17,10 +17,18 @@
 # (2021-01-09), following IOCAS2022_OA_ENERGY. Rename it only if a methylation
 # publication is found.
 #
-# Raw reads are public; no results have been computed yet. results_file is
-# null until the methylation workflow is run (see
-# config/CIBNOR2021_HEAT_RRSS.config), and that run should not happen until the
-# DMR step models family (see limitations).
+# REANALYZED 2026-10-10..16 on Chlo: AREE's first complete real methylation
+# run. All 12 libraries were aligned with Bismark (--score_min L,0,-0.6;
+# 50.0-53.9% unique mapping), deduplicated, and extracted with the read-2
+# end-repair bias trimmed (--ignore_r2 20). Then CpGs were destranded, pooled by
+# FAMILY, kept at >= 10x in all 4 families, summed into 1 kb tiles (>= 10
+# CpGs), and tested with limma's moderated t, 2 RR vs 2 SS families
+# (methylation.dmr_engine = 'limma', dmr_features = 'genes', PR #67): one unit
+# per gene (body + 1.5 kb promoter, 31,166 genes) plus 101,421 intergenic
+# 1 kb tiles. RESULT: none significant (smallest q = 0.57). At 2 families per class this design
+# cannot distinguish phenotype-class differences from family-to-family
+# variation, so this is a null at very low power, not evidence of no effect.
+# See limitations (1) and (9).
 
 study_id: CIBNOR2021_HEAT_RRSS
 simulated: false
@@ -55,8 +63,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 12 runs are public in ENA/SRA under PRJNA690951 (first public 2022-02-09). No methylation calls, DMR table, or methylation publication is available. Sample sheet, methylKit sample sheet, and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. ENA library_selection is RANDOM and the sample alias is 'RAC-Cg-Methyl-Seq'; the bisulfite library kit is not stated."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # One comparison: RR vs SS families, both after 30 d of the same challenge.
@@ -107,9 +115,10 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
     sample_size: 12
     biological_replicates: 2
-    results_file: null
+    results_file: "data/studies/CIBNOR2021_HEAT_RRSS/CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_dmr_standardized.tsv.gz"
     meta_analysis_primary: true
 
 quality_flags:
@@ -123,14 +132,21 @@ limitations: >
   (1) Pseudo-replication risk: thermal tolerance is a family property and each
   class has only two families, so the effective sample size is 2 vs 2. The
   current DMR_METHYLKIT step fits RR vs SS with no family term and would treat
-  6 vs 6 libraries as independent, overstating precision. Family must be
-  modeled, or libraries aggregated to family, before any result is pooled.
+  6 vs 6 libraries as independent, overstating precision. The registered
+  result therefore pools each family's three libraries and tests 2 vs 2
+  families (limma moderated t on family M-values). That is the honest error,
+  and it leaves almost no power: limma's prior df is 3.3, so most tiles rest
+  on their own 2 residual df.
   Family genetic background is fully confounded with phenotype class, so
   family-specific methylation (including cytosine variation from SNPs, which
   bisulfite data cannot separate from C-to-T methylation calls without
   genotype-aware filtering) can look like a phenotype effect. (2) All 12
-  libraries share one BioSample; the deposit does not establish that
-  replicates are distinct animals. (3) There is no ambient-temperature control,
+  libraries share one BioSample, so the deposit does not establish that
+  replicates are distinct animals. The data are consistent with distinct
+  animals: within each family, tile methylation varies between libraries
+  6.7-8.1x more than binomial sampling predicts (replicate_dispersion_qc.tsv;
+  1 kb tiles on NC_088853.1 at >= 30x in all three libraries). Technical
+  replicates would give about 1. (3) There is no ambient-temperature control,
   so the comparison is tolerant vs susceptible genotype under heat, not heat
   response. (4) The phenotype is assigned by pedigree and breeding-program
   performance; no organismal outcome for these animals is deposited, and the
@@ -143,6 +159,32 @@ limitations: >
   to GCF_963853765.1 and must be lifted over, not relabeled, if the reference
   changes. (8) Until a second real thermal methylation study is registered
   (candidate: PRJNA562805), this study cannot contribute to any k >= 2 pool.
+  (9) No unit is significant at FDR 0.05 (smallest q 0.572). 809 of 31,166
+  genes and 3,363 of 101,421 intergenic tiles differ by >= 10 points between
+  classes. Units are genes (all CpGs in body + promoter) so that each gene
+  gives one record and links to RNA-seq. An earlier tile-only pass (319,088
+  1 kb tiles, smallest q 0.336) gave several records per gene, which collide
+  in meta-analysis. The 17 "DMRs" from
+  a first family-level methylKit pass (2026-10-16) were artifacts: with 2
+  families per arm, methylKit's per-region overdispersion collapsed to the
+  binomial for 296 of its 397 q < 0.05 tiles. Unadjusted p < 0.001: 25 genes
+  (~31 expected by chance, so no excess at gene level) and 197 intergenic
+  tiles (~101 expected), so what signal there is looks local and mostly
+  outside genes. Every unit carries a standard error
+  (se_meth_diff_percent = |diff / moderated t|) and an unadjusted p-value, so
+  it can pool: use the effect sizes and standard errors, not the per-study
+  calls. (10) Methylation calls
+  ignore read-2 positions 1-20 and the last base of each read (M-bias:
+  read-2 CpG methylation 84% at position 1, settling to ~14% by 15-20).
+  Without this, CHH methylation read 2.9%; after it, 0.6-1.1%, i.e. >= 99%
+  bisulfite conversion. (11) Unique mapping is 50-54% even with relaxed
+  scoring (13-15% at Bismark's default), so heterozygous or diverged regions
+  are under-represented. (12) The manifest records an empty Bismark version
+  for deduplication and extraction (a version-string mismatch, fixed in
+  PR #67 after this run). All three steps used the same Bismark 0.24.2. To
+  keep the deduplication and extraction cache, the run held those two module
+  files at their pre-fix version (faecd31~1). They differ from PR #67 only in
+  that version line.
 
 provenance:
   registered_by: sr320
@@ -168,6 +210,25 @@ provenance:
     Because sr320 is a co-author on that paper, the replicate identity and
     phenotyping questions in the limitations can be put directly to the
     corresponding author (C. Escobedo-Fregoso, CIBNOR); see issue #6.
+    REANALYSIS (Chlo, 2026-10-09..16; draft PR #14): 24 FASTQ (129 GB),
+    all matching ENA MD5. Twelve resumed transfers came out corrupt at full
+    size and were re-fetched. Nextflow session
+    cdc10126-dbdf-465e-b876-71efcae13f47. First real run of
+    workflows/methylation; first-run fixes went to main in PR #15 (zcat on
+    macOS, CpG-only extraction, .fa genome name, --basename vs --multicore,
+    per-study Bismark options) and PR #67 (limma/DSS pooled-tile engines,
+    report table cap, version capture). Tools: Bismark 0.24.2, bowtie2
+    2.5.5, Trim Galore 0.6.10 (cutadapt 5.2), limma 3.66.0, R 4.5.1. ALIGNMENT
+    SCORE: a 50k-pair test on SRR13482032 mapped 15.5% of pairs at the
+    default --score_min L,0,-0.2, 53.9% at L,0,-0.6, 15.5% non-directional
+    and 15.8% with -X 1000 (bismark_scoring_diagnostic.txt). The library is
+    directional, and the threshold was the cause. The full default run
+    (13.3-14.0%) was discarded. DMR TEST: chosen on synthetic 2-vs-2-family
+    data with real family-level variance (workflows/methylation/README.md).
+    limma was calibrated (1/380 false positives, 5.0% of null p < 0.05); DSS
+    gave 57/380 false positives; methylKit MN collapses. Per-library QC is in
+    library_qc.tsv. Decisions by sr320: native toolchain, relaxed scoring and
+    realignment (2026-10-12), DSS-or-better pooled test (2026-10-16).
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA690951"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA690951"

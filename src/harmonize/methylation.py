@@ -52,9 +52,15 @@ def harmonize_methylation(
             feature_id_original = r["region_id"]
 
         meth_diff = float(r["meth_diff_percent"]) if pd.notna(r.get("meth_diff_percent")) else None
+        # Present when the DMR step reports them (pooled-tile engines), absent
+        # for methylKit tables, which then stay unpoolable as before.
+        se = r.get("se_meth_diff_percent")
+        pval = r.get("pvalue")
+        method = r.get("analysis_method")
+        method = method if isinstance(method, str) and method.strip() else analysis_method
 
         rows.append({
-            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], feature_id_original, analysis_method),
+            "evidence_id": make_evidence_id(study["study_id"], comparison["comparison_id"], feature_id_original, method),
             "study_id": study["study_id"],
             "comparison_id": comparison["comparison_id"],
             "simulated": bool(study.get("simulated", False)),
@@ -67,10 +73,10 @@ def harmonize_methylation(
             "molecular_direction": DIRECTION_MAP.get(r.get("direction"), "ambiguous"),
             "effect_size": meth_diff,
             "effect_size_type": "methylation_diff_percent",
-            "standard_error": None,
+            "standard_error": float(se) if pd.notna(se) else None,
             "ci_lower": None,
             "ci_upper": None,
-            "p_value": None,
+            "p_value": float(pval) if pd.notna(pval) else None,
             "adjusted_p_value": float(r["qvalue"]) if pd.notna(r.get("qvalue")) else None,
             "sample_size": comparison["sample_size"],
             "tissue": comparison["tissue"],
@@ -79,7 +85,8 @@ def harmonize_methylation(
             "phenotype": comparison["phenotype"],
             "phenotype_direction": comparison["phenotype_direction"],
             "resilience_classification": comparison.get("resilience_classification"),
-            "analysis_method": analysis_method,
+            "contrast_type": comparison["contrast_type"],
+            "analysis_method": method,
             "mapping_confidence": resolved.mapping_confidence,
             "quality_flags": compute_quality_flags(study, comparison, resolved.mapping_confidence),
             "source_file": source_ref,
