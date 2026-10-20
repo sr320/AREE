@@ -1,0 +1,53 @@
+# Expressed-SNP replicate check, 2026-10-13: scripts/check_replicate_genotypes.py from sr320/AREE-co, on the 23 libraries at 0 h and 24 h
+# (first 4M read pairs each). Names are <population>_<hours>_<tank>; run accessions in libs below.
+#   BYQJ_0_1	SRR6057012
+#   BYQJ_0_2	SRR6058486
+#   BYQJ_0_3	SRR6058506
+#   BYQJ_24_1	SRR6058518
+#   BYQJ_24_2	SRR6058519
+#   BYQJ_24_3	SRR6058521
+#   BYQX_0_1	SRR6058529
+#   BYQX_0_2	SRR6058530
+#   BYQX_0_3	SRR6058531
+#   BYQX_24_1	SRR6058534
+#   BYQX_24_2	SRR6058535
+#   BYQX_24_3	SRR6058536
+#   LTJ_0_1	SRR6058609
+#   LTJ_0_3	SRR6058612
+#   LTJ_24_1	SRR6058613
+#   LTJ_24_2	SRR6058614
+#   LTJ_24_3	SRR6058615
+#   LTX_0_1	SRR6058619
+#   LTX_0_2	SRR6058620
+#   LTX_0_3	SRR6058621
+#   LTX_24_1	SRR6058622
+#   LTX_24_2	SRR6058623
+#   LTX_24_3	SRR6058625
+1925 sites with pooled minor-allele frequency >= 0.15 and depth >= 30 in all 23 libraries
+per-library allele-frequency histogram (0-1 in tenths); one diploid animal peaks at 0, 0.5 and 1:
+  BYQJ_0_1             [258 401 399 359 220 154  84  28  16   6]
+  BYQJ_0_2             [348 405 353 276 222 156  88  33  31  13]
+  BYQJ_0_3             [360 327 361 297 241 177  84  51  19   8]
+  BYQJ_24_1            [372 337 392 257 210 162 102  58  20  15]
+  BYQJ_24_2            [411 359 328 236 176 177 114  58  44  22]
+  BYQJ_24_3            [312 375 361 354 231 147  88  34  17   6]
+  BYQX_0_1             [366 338 350 291 222 177  91  55  23  12]
+  BYQX_0_2             [316 349 407 308 232 158  85  43  19   8]
+  BYQX_0_3             [300 413 376 311 226 158  88  31  12  10]
+  BYQX_24_1            [288 372 373 352 241 156  79  44  16   4]
+  BYQX_24_2            [302 339 408 302 258 169  86  42  19   0]
+  BYQX_24_3            [298 362 412 331 233 150  81  39  14   5]
+  LTJ_0_1              [400 349 322 280 222 138 111  58  32  13]
+  LTJ_0_3              [286 387 395 310 245 161  79  40  20   2]
+  LTJ_24_1             [358 372 385 309 221 132  82  41  15  10]
+  LTJ_24_2             [369 322 365 320 213 168  87  42  22  17]
+  LTJ_24_3             [403 333 342 277 218 149 101  62  22  18]
+  LTX_0_1              [334 376 350 310 232 161  83  47  24   8]
+  LTX_0_2              [422 292 334 271 228 164 108  55  36  15]
+  LTX_0_3              [345 321 340 301 245 178 107  60  20   8]
+  LTX_24_1             [322 384 347 298 234 159 101  54  19   7]
+  LTX_24_2             [350 318 384 297 243 174  86  45  18  10]
+  LTX_24_3             [307 365 401 296 200 188  97  46  16   9]
+mean |allele-frequency difference| (observed, same-RNA simulation, correlation):
+  within   pairs= 22 observed 0.177 (0.112-0.228) noise 0.047 r 0.37
+  between  pairs=231 observed 0.202 (0.152-0.240) noise 0.048 r 0.21

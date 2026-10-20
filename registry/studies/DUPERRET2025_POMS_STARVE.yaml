@@ -1,0 +1,236 @@
+# Real metabolomics study: 16 days of starvation vs ad libitum feeding before
+# OsHV-1 µVar cohabitation challenge. Starvation reduced POMS mortality in
+# both families, and that survival was measured in the same tanks.
+#
+# Registered from the MetaboLights ISA-Tab of MTBLS13313 (public 2025-11-14,
+# CC0) and the published paper, Duperret et al. 2025, iScience 29:114333
+# (PMID 41541659, open access PMC12803857).
+#
+# THE MetaboLights TABLES ARE EMPTY, as in DECICOMP2025_POMS_AGE. The four
+# Metabolite Assignment Files list 328 metabolites but hold no abundance
+# values, and the deposited raw files are Agilent targeted-dMRM .d files no
+# AREE workflow reads. The paper's Table S12 (mmc13.xlsx) does hold per-sample
+# peak areas, and the study was reanalyzed from it on 2026-10-16 (below).
+#
+# DIET IS FULLY CONFOUNDED WITH MS BATCH. On all four platforms the fed and
+# starved samples were acquired in separate runs months apart, with no
+# overlap. Fed samples ran Dec 2023 to Feb 2024; starved samples ran May to
+# June 2024 (see ms_batches_by_diet in metabolights_provenance.json). A
+# fed-vs-starved difference in these data cannot be separated from
+# instrument drift or batch. This is the main reason the study should not
+# contribute to a pooled estimate without an explicit batch caveat.
+#
+# The same experiment's RNA-seq (ENA PRJEB86618 starved, PRJEB86525 fed) is
+# registered and reanalyzed as DUPERRET2025_STARVE_RNASEQ (PR #23, merged
+# 2026-10-13). Its primary comparison, starved_vs_fed_0hpc, is this study's
+# comparison on the same tanks, so the two are the study's paired omics
+# layers. That pairing will only count once this study has abundances.
+# Neither RNA-seq project is listed under `accessions` here; both are
+# DUPERRET2025_STARVE_RNASEQ's accessions, and the 16S data are cited only.
+#
+# MERGED AS A REGISTRATION (2026-10-13), not analyzable: the MAFs are still
+# empty. Re-fetched 2026-10-13: the GM MAF is byte-identical to the registered
+# copy (still 0 abundance values), and the MetaboLights files API lists the
+# same four MAFs. The other three MAFs could not be re-fetched (EBI FTP
+# unreachable that day).
+#
+# REANALYZED FROM TABLE S12 (2026-10-16), QC FAILED. Table S12 ("Raw
+# metabolomic data") gives peak areas for 310 metabolites and 10 internal
+# standards (green in the sheet) in all 48 samples. The paper is CC BY-NC-ND
+# 4.0, so the table is not committed: build_feature_table.py fetches it from
+# Europe PMC, checks its SHA-256 and writes the workflow inputs
+# (table_s12_provenance.json). The 0 hpc contrast was run with the metabolomics
+# workflow in raw_reanalysis mode: internal-standard normalization within each
+# platform (the authors' own first step), 0.0001/0 placeholders as below
+# detection, families averaged within tank (3 vs 3 tanks), limma. 122 of 310
+# metabolites were detected often enough to test; 68 have padj < 0.05.
+#
+# Why it fails QC. The internal standards themselves differ by diet, i.e. by MS
+# batch: on GM the per-sample IS offset is about +0.8 log2 in fed and -0.9 in
+# starved samples, and on NUCs, which uses the same MES spike, the shift has
+# the opposite sign. Re-running with median normalization ranks metabolites
+# identically within GM, NUCs and TCA (r = 1.00) but shifts every log2FC by
+# about 1 (GM +1.14, NUCs -0.84, TCA +0.98), and on PUFAs the two disagree
+# outright (r = 0.40, mean shift 5.9). Only 61% of tested metabolites keep
+# their direction across the two normalizations (normalization_sensitivity.tsv).
+# A starved-vs-fed direction cannot be separated from the batch, and direction
+# is what an evidence record asserts. QC decision (2026-10-16, sr320): mark
+# qc_status failed, keep results_file null, do not harmonize or pool. The
+# standardized table, missingness report, manifest, report and sensitivity
+# table are committed as provenance for the decision.
+
+study_id: DUPERRET2025_POMS_STARVE
+simulated: false
+
+accessions:
+  doi: "10.1016/j.isci.2025.114333"
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: null
+  other: "MTBLS13313"
+
+citation: "Duperret L, Valdivieso A, Petton B, Morga B, Faury N, de Lorgeril J, Corporeau C, Degremont L, Allienne JF, Henry S, Turtoi A, Pouzadoux J, Romatif O, Courtay G, Monaco CJ, Toulza E, Lagorce A, Pernet F, Vidal-Dupiol J, Mitta G (2025) Food deprivation enhances disease resistance: Underlying mechanisms in oysters confronted with Pacific oyster mortality syndrome. iScience 29(1):114333. https://doi.org/10.1016/j.isci.2025.114333 (PMID 41541659). Metabolomics: MetaboLights MTBLS13313 (CC0). Same experiment: RNA-seq ENA PRJEB86618 (starved) and PRJEB86525 (fed), registered as AREE study DUPERRET2025_STARVE_RNASEQ; 16S PRJEB86589/PRJEB86519; umbrella BioProject PRJEB86647 (Ifremer DECICOMP)."
+
+species: "Magallana gigas"
+strain_or_population: "Ifremer first-generation full-sib families F11N and F14R (produced 11 May 2020 from G0 families F11 and F14, whose parents were wild Dellec oysters; both G0 families highly POMS-susceptible). Pathogen-free recipients, 3 months old at the start of the diet treatment (9 Aug 2020)."
+
+# Metabolomics is not aligned to a genome; see DECICOMP2025_POMS_AGE. The
+# validator requires a known assembly, so this records the annotation any
+# metabolite -> enzyme-gene link would use. The paper's KEGG mapping used the
+# crg (C. gigas) organism code.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["metabolomics"]
+analysis_mode: "raw_reanalysis"
+platform: "Targeted metabolomics on four platforms: (1) general metabolites (GM), Agilent 1290 Infinity II UHPLC, Discovery HS F5, Agilent 6495 triple quadrupole, dynamic MRM (111 metabolites listed); (2) nucleotides (NUCs), InfinityLab Poroshell HPH-C18, 6495 (21); (3) polyunsaturated fatty acids and oxylipins (PUFAs), Kinetex C8, 6495 (183); (4) TCA-cycle intermediates, Agilent 8890 GC with 5977B MSD, methoxyamine/MSTFA derivatization (13, including the d27-myristic acid internal standard). The paper reports 148 detected metabolites."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "MetaboLights MTBLS13313 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,PUFAs_RAW,TCA_RAW}/, one per sample per platform (192 files). The four MAFs name 328 metabolites but contain no abundance values; checked 2026-10-11, and the GM MAF re-checked unchanged 2026-10-13. No metabolite has a database identifier or MSI reliability level. The authors' processed data (internal-standard normalized, IQR filtered, quantile normalized, log10 in MetaboAnalystR 4.0.0) are not deposited. The paper's Table S12 (mmc13.xlsx, CC BY-NC-ND 4.0) has the un-normalized peak areas for all 48 samples and four platforms; it is fetched from Europe PMC (PMC12803857 supplementary files) by data/studies/DUPERRET2025_POMS_STARVE/build_feature_table.py, not committed."
+
+# See the 2026-10-16 note at the top: direction is confounded with MS batch.
+qc_status: "failed"
+analysis_status: "in_progress"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. 48 samples = 2 families (F11N, F14R) x 2 diets
+# (fed ad libitum, code 3; starved, code 5) x 4 times (0, 3, 6, 12 hpc) x 3.
+# Sample IDs are <family>-<diet code>-<hpc>-<replicate>.
+#
+# THE SAMPLE UNIT IS A POOL. Per the paper, each sample is a pool of 10 live
+# oysters from one tank and one family, and each diet had three 400-L tanks
+# holding both families. Replicates 1-3 are therefore the three tanks of a diet
+# (inferred: the deposit does not name tanks, but nothing else gives three
+# replicates). The diet was applied per tank, so the effective n is 3 tanks per
+# diet. The two families share tanks, so family is a within-tank factor, not a
+# replicate.
+#
+# PHENOTYPE. Starvation lowered final POMS mortality: F14R 34.8% starved vs
+# 75.5% fed; F11N 93.3% vs 100% (log-rank P < 0.05 for both). Onset was also
+# delayed (120 hpc starved vs 72/96 hpc fed). This was measured on the
+# populations of the same tanks the pools came from, so the contrast is
+# classified `resilience` on disease_resistance, direction `increase` for
+# starved relative to fed. Note how uneven it is: F11N barely benefits.
+#
+# ONE COMPARISON. The paper's metabolomic analysis is fed vs starved at 0 hpc,
+# after 16 days of diet treatment and before infection (WMCNA modules
+# correlated with diet, then KEGG enrichment). That is the only metabolomic
+# contrast the source reports, so it is the only one registered. The 3, 6 and
+# 12 hpc samples are deposited and listed in samplesheet.tsv for any later
+# diet x infection-time analysis.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "starved_vs_fed_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Food deprivation: food supply stopped for 16 days (acclimation) at 23 C before OsHV-1 µVar cohabitation challenge, versus ad libitum feeding (1,500 µm3/µL Tisochrysis lutea + Skeletonema costatum, 50/50). Challenge: cohabitation with OsHV-1 µVar-injected donors at 1:1 biomass, flow stopped for the first 125 hpc."
+    stressor_standardized: "nutritional_limitation"
+    exposure_intensity: "complete food deprivation (food supply stopped)"
+    exposure_duration: "16 d before challenge"
+    exposure_timing: "sampled at 0 hpc: end of the 16 d diet treatment, start of cohabitation, before infection"
+    control_condition: "Fed ad libitum, 3 tanks, families F11N and F14R, one pool of 10 oysters per tank x family at 0 hpc (6 samples)"
+    treatment_condition: "Starved for 16 d, 3 tanks, families F11N and F14R, one pool of 10 oysters per tank x family at 0 hpc (6 samples)"
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_post_challenge (final mortality per family x diet: F14R 34.8% starved vs 75.5% fed; F11N 93.3% vs 100%)"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+quality_flags:
+  - raw_data_available
+  - tank_level_replication
+  - low_replication
+  - single_timepoint
+  - identifier_mapping_uncertain
+
+limitations: >
+  (1) MS batch is fully confounded with diet on all four platforms. Fed
+  samples were acquired Dec 2023 to Feb 2024 and starved samples May to June
+  2024, in separate runs, so the diet effect cannot be separated from batch
+  or instrument drift. Internal-standard and quantile normalization reduce
+  but do not remove this. AREE has no quality flag for batch confounding
+  yet; it is recorded here. The 2026-10-16 reanalysis shows the consequence:
+  the internal standards themselves shift with diet, and internal-standard and
+  median normalization disagree on the direction of 39% of tested metabolites
+  (normalization_sensitivity.tsv), so the study failed QC and is not
+  harmonized. (2) The MAFs hold no abundance values; the analyzable data are
+  the paper's Table S12 peak areas, which are not redistributable (CC BY-NC-ND
+  4.0) and are fetched by build_feature_table.py. 188 of 310 metabolites
+  were below detection in too many tanks to test (missingness report). (3) Replication is 3 tanks per diet. Each sample is
+  a pool of 10 oysters, so between-oyster variance is averaged away and the
+  replicate unit is the tank (replicate = tank is inferred). (4) Starvation
+  is a strong physiological manipulation. Metabolite differences at 0 hpc
+  will mostly reflect fasting itself (metabolic depression), not resistance
+  mechanisms. The comparison associates metabolites with a treatment that
+  raised survival; it does not identify resistance markers that would
+  generalize to fed animals. (5) The resistance effect is family-dependent:
+  large in F14R, marginal in F11N (93.3% vs 100% mortality). Pooling
+  families dilutes it. (6) The F14R family and the 2020 Ifremer production
+  are shared with DECICOMP2025_POMS_AGE (MTBLS13463), and that study's MAFs
+  carry this study's sample columns. If the fed arm here shares a challenge
+  trial with DECICOMP's 4-month cohort, the two studies are not independent.
+  Confirm before pooling them. The RNA-seq arm (DUPERRET2025_STARVE_RNASEQ)
+  shares this study's tanks, so it is convergent evidence, not replication.
+  Its 0 hpc diet contrast calls 38% of genes DE, mostly fasting response,
+  and this study's metabolites will share that interpretation. (7) Targeted
+  panel of about 330 metabolites
+  with no database identifiers or MSI levels in the deposit. The
+  reanalysis records them as MSI level 2 (named by the targeted method,
+  identity not confirmed in the deposit). No metabolite maps to a gene, so
+  even a usable result would not link to DUPERRET2025_STARVE_RNASEQ's genes
+  without a metabolite-to-enzyme map.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-11"
+  curation_notes: >
+    Claimed with `aree start-study --accession MTBLS13313 --study-id
+    DUPERRET2025_POMS_STARVE` (branch study/MTBLS13313/DUPERRET2025_POMS_STARVE).
+    Registered from the MetaboLights ISA-Tab files (i_Investigation.txt,
+    s_MTBLS13313.txt, four a_*.txt, four m_*_maf.tsv), retrieved 2026-10-11
+    from the public FTP. Checksums, MAF checks and per-diet MS acquisition
+    dates are in data/studies/DUPERRET2025_POMS_STARVE/metabolights_provenance.json.
+    samplesheet.tsv was derived from the sample and assay files; diet codes
+    (3 = fed, 5 = starved) were checked against Factor Value[Treatment] for
+    every sample. Design, pooling, tank numbers, survival values and the
+    0 hpc metabolomic contrast come from the open-access full text
+    (PMC12803857), Methods and Results, read 2026-10-11. Linked accessions
+    come from its Data and code availability section, and PRJEB86618/PRJEB86525
+    were confirmed public in ENA the same day. The study_id follows the
+    first-author convention because the paper is published. One comparison is
+    registered (the paper's own metabolomic contrast), flagged
+    meta_analysis_primary before any result was computed. Fed is the reference
+    level, so positive effects mean higher in starved oysters.
+    2026-10-16 reanalysis: Table S12 (mmc13.xlsx, SHA-256
+    451eb13e2da9db56ac984ee432632af2ced6ef9fc483183c62ba38c7c7f9c61d) fetched
+    from the Europe PMC supplementary-files API (PMC's direct file link does
+    not serve the file to scripts) and converted by build_feature_table.py
+    (table_s12_provenance.json). Internal standards are the ten green rows,
+    checked against the names in the Methods. One blank cell triple (TXB3, the
+    three F11N fed 12 hpc samples) is kept missing; those samples are not in
+    the 0 hpc contrast. Workflow run on Hete with -profile local:
+    --mode raw_reanalysis --metabolomics.normalization internal_standard
+    --metabolomics.detection_limit 0.001 --metabolomics.replicate_unit tank
+    --metabolomics.acquisition targeted (min_detected_per_arm 2, the
+    default); the sample sheet maps fed to control and starved to treatment
+    and sets tank = <diet>_t<replicate>. Sensitivity: the same run with
+    --metabolomics.normalization median, compared per metabolite in
+    normalization_sensitivity.tsv. QC decision (2026-10-16, sr320): failed,
+    for the batch confounding described at the top of this file.
+  source_links:
+    - "https://www.ebi.ac.uk/metabolights/MTBLS13313"
+    - "https://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public/MTBLS13313/"
+    - "https://doi.org/10.1016/j.isci.2025.114333"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC12803857/"
+    - "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12803857/supplementaryFiles"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86618"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"

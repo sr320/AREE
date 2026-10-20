@@ -5,11 +5,29 @@
 # that, so a typo or an undocumented assembly is caught at registration rather
 # than surfacing later as evidence that cannot be compared.
 #
-# Accessions below were verified against the NCBI Datasets API on 2026-08-28.
-# When adding an assembly, look the accession up yourself and record the date —
-# do not copy one from another entry. See docs/handling_genome_versions.md.
-version: "0.2.0"
-verified_against: "NCBI Datasets API (api.ncbi.nlm.nih.gov/datasets/v2alpha), 2026-08-28"
+# `metabolite_gene_links` (optional) is the metabolite -> enzyme gene link table
+# that metabolomics evidence on this species is linked through for the
+# `metabolite_linked_convergence` tier. It is built locally by
+# `aree build-metabolite-links` and NOT committed (KEGG terms); until it is built,
+# real candidates report `link_table_status: not_built`. See
+# docs/metabolite_gene_links.md.
+#
+# `identifier_crosswalk` is the crosswalk that evidence from studies on this
+# assembly is standardized against (repo-relative path, or null if none has been
+# built yet). Harmonizing a real study reads it from here, so a mussel study and
+# an oyster study in the same run each resolve against their own species'
+# crosswalk. The crosswalk follows the ASSEMBLY, not the study's species: a study
+# that mapped reads to a related species' genome (quality flag
+# `reference_species_mismatch`) reports that genome's gene identifiers. A real
+# study on an assembly with a null crosswalk can be registered but not
+# harmonized. See docs/identifier_mapping.md.
+#
+# Accessions were verified against the NCBI Datasets API on the date recorded in
+# each entry's `verified`. When adding an assembly, look the accession up
+# yourself and record the date — do not copy one from another entry. See
+# docs/handling_genome_versions.md.
+version: "0.3.0"
+verified_against: "NCBI Datasets API (api.ncbi.nlm.nih.gov/datasets/v2alpha); per-entry date in `verified`"
 
 assemblies:
   - assembly_id: "xbMagGiga1.1"
@@ -22,6 +40,9 @@ assemblies:
     is_ncbi_reference: true
     annotation_release: "GCF_963853765.1-RS_2024_06"
     annotation_release_date: "2024-06-20"
+    identifier_crosswalk: "data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    metabolite_gene_links: "data/mappings/metabolite_gene_links_mgigas.tsv"
+    verified: "2026-08-28"
     notes: >-
       Current NCBI reference genome for the Pacific oyster. AREE's identifier
       crosswalk (data/reference/crosswalk/) is built from the NCBI Gene records
@@ -38,6 +59,9 @@ assemblies:
     submitter: "The Roslin Institute"
     is_ncbi_reference: false
     annotation_release: null
+    identifier_crosswalk: "data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    metabolite_gene_links: "data/mappings/metabolite_gene_links_mgigas.tsv"
+    verified: "2026-08-28"
     notes: >-
       The assembly most C. gigas studies published before ~2024 were mapped
       against, including HESSER2024_VCOR. It is no longer the NCBI reference.
@@ -46,3 +70,161 @@ assemblies:
       evidence record in `identifier_annotation_release`. The demo studies also
       carry this label, but their coordinates and effect sizes are fabricated —
       the assembly record here is real, the demo data referencing it is not.
+
+  # ------------------------------------------------------------------------- #
+  # Mussels and clams (added 2026-10-11; docs/mussel_clam_integration_plan.md).
+  # All are NCBI RefSeq-annotated. Their crosswalks were built 2026-10-11 with
+  # `aree build-crosswalk --taxid <ncbi_taxid> --slug <slug>` (WP2).
+  # ------------------------------------------------------------------------- #
+
+  - assembly_id: "xbMytGall1.hap1.1"
+    species: "Mytilus galloprovincialis"
+    ncbi_taxid: 29158
+    ncbi_assembly_accession: "GCF_965363235.1"
+    genbank_accession: "GCA_965363235.1"
+    assembly_level: "Chromosome"
+    submitter: "Wellcome Sanger Institute"
+    is_ncbi_reference: true
+    annotation_release: "GCF_965363235.1-RS_2025_08"
+    annotation_release_date: "2025-08-13"
+    identifier_crosswalk: "data/reference/crosswalk/mgall_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      Haplotype 1 of a Darwin Tree of Life assembly; haplotype 2
+      (GCA_965363225.1) is scaffold-level and not annotated. Several older
+      M. galloprovincialis assemblies exist (MGAL_10, MytGallo_primary_0.1,
+      MgalMED) with no NCBI RefSeq annotation; studies mapped to them can only
+      be standardized through this annotation by sequence, not by identifier.
+
+  - assembly_id: "xbMytEdul2.2"
+    species: "Mytilus edulis"
+    ncbi_taxid: 6550
+    ncbi_assembly_accession: "GCF_963676685.1"
+    genbank_accession: "GCA_963676685.2"
+    assembly_level: "Chromosome"
+    submitter: "Wellcome Sanger Institute"
+    is_ncbi_reference: true
+    annotation_release: "GCF_963676685.1-RS_2025_02"
+    annotation_release_date: "2025-02-12"
+    identifier_crosswalk: "data/reference/crosswalk/medul_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      The RefSeq copy (.1) pairs with GenBank version .2; the version numbers
+      differ, which is NCBI's pairing, not a typo.
+
+  - assembly_id: "PNRI_Mtr1.1.1.hap1"
+    species: "Mytilus trossulus"
+    ncbi_taxid: 6551
+    ncbi_assembly_accession: "GCF_036588685.1"
+    genbank_accession: "GCA_036588685.1"
+    assembly_level: "Chromosome"
+    submitter: "Pacific Northwest Research Institute"
+    is_ncbi_reference: true
+    annotation_release: "GCF_036588685.1-RS_2024_02"
+    annotation_release_date: "2024-02-29"
+    identifier_crosswalk: "data/reference/crosswalk/mtros_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      A newer GenBank version, GCA_036588685.2 (PNRI_Mtr1.2.1.hap1), is flagged
+      by NCBI as the reference genome but carries no RefSeq annotation as of
+      the verification date. AREE standardizes against the annotated .1 until
+      RefSeq annotates a newer version.
+
+  - assembly_id: "xbMytCali1.0.p"
+    species: "Mytilus californianus"
+    ncbi_taxid: 6549
+    ncbi_assembly_accession: "GCF_021869535.1"
+    genbank_accession: "GCA_021869535.1"
+    assembly_level: "Scaffold"
+    submitter: "UCLA"
+    is_ncbi_reference: true
+    annotation_release: "NCBI Mytilus californianus Annotation Release 100"
+    annotation_release_date: "2022-11-09"
+    identifier_crosswalk: "data/reference/crosswalk/mcali_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      Scaffold-level primary assembly. Gene-level evidence is unaffected;
+      methylation regions on it may not lift over to a later
+      chromosome-level assembly.
+
+  - assembly_id: "MCOR1.1"
+    species: "Mytilus coruscus"
+    ncbi_taxid: 42192
+    ncbi_assembly_accession: "GCA_011752425.2"
+    genbank_accession: "GCA_011752425.2"
+    assembly_level: "Scaffold"
+    submitter: "Ningbo University"
+    is_ncbi_reference: false
+    annotation_release: "GenBank annotation submitted by Ningbo University"
+    annotation_release_date: "2020-07-08"
+    identifier_crosswalk: "data/reference/crosswalk/mcoru_gene_id_crosswalk.tsv"
+    verified: "2026-10-17"
+    notes: >-
+      GenBank-only (GCA_) assembly: NCBI has not annotated this species, so
+      there are no NCBI Gene records and no RefSeq reference bundle. The
+      authors' annotation (58,540 genes, 64,639 proteins, locus tags MCOR_<n>)
+      is the only gene model set, and the crosswalk is built from it by the
+      GFF route with a recorded DIAMOND search against Swiss-Prot. Not in the
+      orthogroup run yet. Two later chromosome-level assemblies
+      (GCA_017311375.1, GCA_059745995.1) carry no annotation on NCBI.
+
+  - assembly_id: "MADL_Memer_1"
+    species: "Mercenaria mercenaria"
+    ncbi_taxid: 6596
+    ncbi_assembly_accession: "GCF_021730395.1"
+    genbank_accession: "GCA_021730395.1"
+    assembly_level: "Chromosome"
+    submitter: "Stony Brook University"
+    is_ncbi_reference: true
+    annotation_release: "GCF_021730395.1-RS_2023_01"
+    annotation_release_date: "2023-01-14"
+    identifier_crosswalk: "data/reference/crosswalk/mmerc_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      Current NCBI reference genome for the hard clam. A second assembly,
+      ASM1480567v1.1, also has a RefSeq annotation (see the next entry).
+
+  - assembly_id: "ASM1480567v1.1"
+    species: "Mercenaria mercenaria"
+    ncbi_taxid: 6596
+    ncbi_assembly_accession: "GCF_014805675.1"
+    genbank_accession: "GCA_014805675.2"
+    assembly_level: "Chromosome"
+    submitter: "Institute of Oceanology, Chinese Academy of Sciences"
+    is_ncbi_reference: false
+    annotation_release: "NCBI Mercenaria mercenaria Annotation Release 100.20221206"
+    annotation_release_date: "2022-12-06"
+    identifier_crosswalk: "data/reference/crosswalk/mmerc_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      Second RefSeq-annotated hard clam assembly, sharing the taxid crosswalk
+      with MADL_Memer_1. Checked 2026-10-11 against the NCBI feature tables of
+      both annotations and NCBI gene_history: of the 43,960 GeneIDs annotated
+      on this assembly, 31,226 are live, 3,656 were discontinued on 2023-02-10
+      and remapped by NCBI to a current GeneID (resolved through
+      mmerc_retired_gene_ids.tsv), and 9,078 were discontinued with no
+      replacement. A study mapped to this assembly will therefore leave up to
+      about 21% of its genes unresolved, and genes that NCBI split or merged
+      between the two annotations will not pool with MADL_Memer_1 evidence as
+      the same feature. Prefer MADL_Memer_1 for raw reanalysis.
+
+  - assembly_id: "ASM2657151v2"
+    species: "Ruditapes philippinarum"
+    ncbi_taxid: 129788
+    ncbi_assembly_accession: "GCF_026571515.1"
+    genbank_accession: "GCA_026571515.2"
+    assembly_level: "Contig"
+    submitter: "University of Bologna"
+    is_ncbi_reference: true
+    annotation_release: "GCF_026571515.1-RS_2023_10"
+    annotation_release_date: "2023-10-30"
+    identifier_crosswalk: "data/reference/crosswalk/rphil_gene_id_crosswalk.tsv"
+    verified: "2026-10-11"
+    notes: >-
+      The only RefSeq-annotated Manila clam assembly is contig-level (contig
+      N50 about 183 kb), although several chromosome-level GenBank assemblies
+      exist without RefSeq annotation (e.g. xbRudPhil6.1, GCA_964294305.1).
+      Gene-level evidence keyed on NCBI GeneID is unaffected. Coordinate-based
+      evidence on this assembly will be fragmented and is unlikely to lift
+      over to a future chromosome-level RefSeq annotation; see
+      docs/handling_genome_versions.md.

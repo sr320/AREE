@@ -1,13 +1,13 @@
 """Orchestrate meta-analysis over the harmonized evidence table.
 
 Groups evidence records by standardized feature, phenotype, feature type,
-simulation status, and species. Only statistically poolable records contribute
+simulation status, species, and contrast type. Only statistically poolable records contribute
 to the estimate or replication metadata. Records with unresolved identifiers
 remain visible in the evidence table, while repeated within-study contrasts
 fail closed because AREE does not yet model their covariance. A study with
 several comparisons can mark one as `meta_analysis_primary` in its registry
-YAML; its other comparisons are then left out of the pool and counted in
-`n_excluded_non_primary`.
+YAML, within each contrast type; its other comparisons of that type are then
+left out of the pool and counted in `n_excluded_non_primary`.
 
 Every pooled p-value is then adjusted for multiple testing (Benjamini-Hochberg)
 within its test family — the set of features pooled for one phenotype, feature
@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
-from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, STUDIES_DIR, load_yaml
+from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, load_yaml, study_files
 
 from .effect_sizes import MIN_P
 from .pooling import benjamini_hochberg, dersimonian_laird
@@ -35,14 +35,20 @@ META_ANALYSIS_DIR = REPORTS_DIR / "meta_analysis"
 # grouping on the free-text name would both split one species across its accepted
 # synonyms (Crassostrea gigas / Magallana gigas) and, once a second species is
 # registered, silently pool across species. Cross-species evidence is only ever
-# meant to combine through orthogroups, which are not yet populated.
-GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid"]
+# meant to combine through the separate orthogroup-level analysis.
+#
+# `contrast_type` keeps a baseline difference between resilient and susceptible
+# groups apart from a response to exposure. Both can be filed under one
+# phenotype (thermal_tolerance), but one asks "which animals are tolerant?" and
+# the other "what does heat do to an oyster?"; pooling them answers neither.
+GROUP_KEYS = ["feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid",
+              "contrast_type"]
 
 # The multiple-testing family is everything in GROUP_KEYS except the feature
 # itself. Because the CLI can only filter on phenotype and feature type — both
 # family keys — the adjusted p-value of a given feature is the same whether the
 # run covered one phenotype or all of them.
-FAMILY_KEYS = ["phenotype", "feature_type", "simulated", "species_taxid"]
+FAMILY_KEYS = ["phenotype", "feature_type", "simulated", "species_taxid", "contrast_type"]
 
 MAPPING_CONFIDENCE_RANK = {
     "exact": 5,
@@ -64,7 +70,7 @@ _ID_COLUMNS = {
 
 RESULT_COLUMNS = [
     "feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid",
-    "k_studies", "studies", "n_evidence_records", "n_available_records",
+    "contrast_type", "k_studies", "studies", "n_evidence_records", "n_available_records",
     "n_excluded_unpoolable", "n_excluded_duplicate_mappings", "n_excluded_non_primary",
     "excluded_studies",
     "contributing_evidence_ids", "total_sample_size",
@@ -93,21 +99,22 @@ def effective_standard_errors(evidence: pd.DataFrame) -> np.ndarray:
     use_reported = np.isfinite(reported) & (reported > 0)
     out[use_reported] = reported[use_reported]
 
-    need = ~use_reported & np.isfinite(effect) & np.isfinite(p) & (effect != 0)
+    need = (~use_reported & np.isfinite(effect) & np.isfinite(p)
+            & (effect != 0) & (p >= 0) & (p < 1))
     if need.any():
         p_clipped = np.clip(p[need], MIN_P, 1.0 - 1e-16)
-        z = norm.ppf(1 - p_clipped / 2)
+        z = norm.isf(p_clipped / 2)
         approx = np.where(z > 0, np.abs(effect[need]) / z, np.nan)
         out[need] = approx
     return out
 
 
 def _describe_group(keys: tuple) -> str:
-    feature_id, phenotype, feature_type, simulated, species_taxid = keys
+    feature_id, phenotype, feature_type, simulated, species_taxid, contrast_type = keys
     return (
         f"Group feature={feature_id!r}, phenotype={phenotype!r}, "
         f"feature_type={feature_type!r}, simulated={simulated!r}, "
-        f"species_taxid={species_taxid!r}"
+        f"species_taxid={species_taxid!r}, contrast_type={contrast_type!r}"
     )
 
 
@@ -181,23 +188,49 @@ def _direction_consistency(effects: np.ndarray) -> float:
 def _non_primary_comparisons() -> set[tuple[str, str]]:
     """(study_id, comparison_id) pairs a study has prespecified out of pooling.
 
-    A study that flags none of its comparisons `meta_analysis_primary` restricts
-    nothing, so the within-study guard still sees every comparison it contributes.
+    The primary comparison is chosen within each contrast type: comparisons of
+    different types never share a pool, so flagging a primary exposure response
+    says nothing about the study's baseline contrast. A contrast type with no
+    flagged comparison restricts nothing, so the within-study guard still sees
+    every comparison of that type.
     """
     excluded = set()
-    for path in sorted(STUDIES_DIR.glob("*.yaml")):
+    for path in study_files():
         study = load_yaml(path)
-        comparisons = study.get("comparisons") or []
-        if any(c.get("meta_analysis_primary") for c in comparisons):
-            excluded |= {
-                (study["study_id"], c["comparison_id"])
-                for c in comparisons if not c.get("meta_analysis_primary")
-            }
+        by_type: dict[str, list] = {}
+        for c in study.get("comparisons") or []:
+            by_type.setdefault(c.get("contrast_type"), []).append(c)
+        for comparisons in by_type.values():
+            if any(c.get("meta_analysis_primary") for c in comparisons):
+                excluded |= {
+                    (study["study_id"], c["comparison_id"])
+                    for c in comparisons if not c.get("meta_analysis_primary")
+                }
     return excluded
 
 
+def require_contrast_type(evidence: pd.DataFrame) -> pd.DataFrame:
+    """Fail if any record lacks a contrast_type rather than guess one.
+
+    Evidence harmonized before contrast types existed has none. Defaulting it
+    to exposure_response would silently pool a baseline contrast with stress
+    responses, which is the error the field exists to prevent.
+    """
+    missing = (evidence["contrast_type"].isna() if "contrast_type" in evidence.columns
+               else pd.Series(True, index=evidence.index))
+    if missing.any():
+        studies = sorted(set(evidence.loc[missing, "study_id"].astype(str)))
+        raise ValueError(
+            f"{int(missing.sum())} evidence records have no contrast_type (studies: "
+            f"{', '.join(studies[:10])}{', ...' if len(studies) > 10 else ''}). The evidence "
+            "table was harmonized by older code; re-harmonize those studies."
+        )
+    return evidence
+
+
 def _load_evidence_for_pooling() -> pd.DataFrame:
-    return pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False, dtype=_ID_COLUMNS)
+    evidence = pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", low_memory=False, dtype=_ID_COLUMNS)
+    return require_contrast_type(evidence)
 
 
 def _joined(values) -> str:
@@ -285,7 +318,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
         _reject_correlated_within_study_effects(cols["study_id"][pool_pos], cols["comparison_id"][pool_pos], keys)
 
         pooled = dersimonian_laird(effect[pool_pos], se[pool_pos])
-        feature_id, pheno, ftype, simulated, species_taxid = keys
+        feature_id, pheno, ftype, simulated, species_taxid, contrast_type = keys
 
         results.append({
             "feature_id_standardized": feature_id,
@@ -293,6 +326,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "feature_type": ftype,
             "simulated": simulated,
             "species_taxid": species_taxid,
+            "contrast_type": contrast_type,
             "k_studies": len(set(cols["study_id"][pool_pos])),
             "studies": _joined(cols["study_id"][pool_pos]),
             "n_evidence_records": len(pool_pos),
@@ -335,6 +369,31 @@ def _parse_flags(value) -> list[str]:
         import ast
         return ast.literal_eval(value)
     return []
+
+
+def write_orthogroup_meta_analysis(phenotype: str | None, feature_type: str | None,
+                                   include_multi_copy: bool = False):
+    """Cross-species meta-analysis through orthogroups (see meta_analysis/orthogroups.py).
+
+    Writes <label>_orthogroup_meta_analysis.tsv (one row per orthogroup,
+    phenotype and feature type) and <label>_orthogroup_species_estimates.tsv
+    (the per-species estimates behind each row). Returns
+    (results, species estimates, exclusion summary, results path).
+    """
+    from mappings.orthogroups import active_copy_classes
+
+    from .orthogroups import run_orthogroup_meta_analysis
+
+    gene_results = run_meta_analysis(phenotype, feature_type)
+    evidence = _load_evidence_for_pooling()
+    result, species, summary = run_orthogroup_meta_analysis(
+        gene_results, evidence, active_copy_classes(), include_multi_copy=include_multi_copy)
+    META_ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
+    label = f"{phenotype or 'all_phenotypes'}_{feature_type or 'all_features'}"
+    out_path = META_ANALYSIS_DIR / f"{label}_orthogroup_meta_analysis.tsv"
+    result.to_csv(out_path, sep="\t", index=False)
+    species.to_csv(META_ANALYSIS_DIR / f"{label}_orthogroup_species_estimates.tsv", sep="\t", index=False)
+    return result, species, summary, out_path
 
 
 def write_meta_analysis(phenotype: str | None, feature_type: str | None) -> pd.DataFrame | None:

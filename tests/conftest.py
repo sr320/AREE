@@ -6,6 +6,28 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from common import EVIDENCE_TABLE_PATH, study_ids  # noqa: E402
+
+
+def _stat(path: Path):
+    return path.stat().st_mtime_ns if path.exists() else None
+
+
+@pytest.fixture(autouse=True)
+def _real_evidence_table_is_untouched():
+    """Fail any test that writes the real reports/evidence/evidence_table.tsv.
+
+    A harmonize call without `isolated_reports` upserts its fixture rows into the
+    working evidence table, where they silently replace real or demo records
+    until someone re-harmonizes (a stray GIGAS_GROW06 fixture once broke the
+    full meta-analysis this way).
+    """
+    before = _stat(EVIDENCE_TABLE_PATH)
+    yield
+    assert _stat(EVIDENCE_TABLE_PATH) == before, (
+        "this test modified the real evidence table; request the `isolated_reports` fixture"
+    )
+
 
 @pytest.fixture
 def isolated_reports(tmp_path, monkeypatch):
@@ -35,19 +57,39 @@ def isolated_reports(tmp_path, monkeypatch):
 
 @pytest.fixture
 def isolated_registry(tmp_path, monkeypatch):
-    """Redirect the study registry CSV to a temp file so tests never mutate
-    the real registry/study_registry.csv."""
+    """Redirect the study registry CSVs (real and demo) to temp files so tests
+    never mutate registry/study_registry.csv or registry/demo_study_registry.csv.
+    Returns the real-study registry path; the demo index sits beside it."""
     import intake.registry as registry_mod
 
     registry_path = tmp_path / "study_registry.csv"
     monkeypatch.setattr(registry_mod, "STUDY_REGISTRY_CSV", registry_path)
+    monkeypatch.setattr(registry_mod, "DEMO_REGISTRY_CSV", tmp_path / "demo_study_registry.csv")
     return registry_path
 
 
-ALL_DEMO_STUDY_IDS = [
-    "GIGAS_HEAT01", "GIGAS_OA02", "GIGAS_PATH03",
-    "GIGAS_SAL04", "GIGAS_LARV05", "GIGAS_GROW06",
-]
+# Every simulated study in the registry, oyster and mussel alike. Derived, not
+# listed, so a new demo study is exercised by every demo-pipeline test.
+ALL_DEMO_STUDY_IDS = study_ids(simulated=True)
+
+
+# The demo now holds two species that share feature identifiers on purpose
+# (MYTGAL_HEAT01 reuses the oyster demo's IDs). Tests about oyster results must
+# select the oyster partition explicitly rather than take the first row for a gene.
+OYSTER_TAXID = 29159
+
+
+def oyster(df):
+    """Rows of a meta-analysis, candidate or evidence table in the oyster partition."""
+    return df[df["species_taxid"].astype(int) == OYSTER_TAXID]
+
+
+def oyster_card(index, feature_id):
+    """The oyster evidence-card index entry for a feature."""
+    return next(
+        e for e in index
+        if e["feature_id_standardized"] == feature_id and int(e["species_taxid"]) == OYSTER_TAXID
+    )
 
 
 def harmonize_all_demo_studies(date_generated="2026-01-01"):

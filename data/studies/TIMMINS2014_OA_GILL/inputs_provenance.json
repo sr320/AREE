@@ -1,0 +1,92 @@
+{
+  "study_id": "TIMMINS2014_OA_GILL",
+  "accession": "PXD000835",
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/TIMMINS2014_OA_GILL/build_inputs.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4531390/supplementaryFiles",
+    "https://api.figshare.com/v2/articles/894323",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD000835/files/all"
+  ],
+  "license": "CC BY 4.0 (paper and supplementary files; figshare workflow); PRIDE: EBI terms of use",
+  "input_sha256": {
+    "12864_2014_7071_MOESM3_ESM.xlsx": "353b8dd18fec62530290d725d4ed6d4b9bb7448622e2b598542372abc6d9da43",
+    "12864_2014_7071_MOESM4_ESM.txt": "6d1988d09ad5164d115a4fd2b7e22abd874b7fbef8b1c1f43fb17aac890b8d7b",
+    "NSAFworkflow.rtf": "bb3c5cb5775c5af342b427eac9adb568bf78ec61fd728d2cdd21058c8a6ac4e6"
+  },
+  "n_proteins": 1616,
+  "n_oysters": 16,
+  "oysters_by_group": {
+    "2800 uatm": [
+      2,
+      5,
+      8,
+      11
+    ],
+    "2800 uatm + mech": [
+      26,
+      29,
+      32,
+      35
+    ],
+    "400 uatm": [
+      221,
+      224,
+      227,
+      230
+    ],
+    "400 uatm + mech": [
+      242,
+      245,
+      248,
+      251
+    ]
+  },
+  "column_mapping_check": "each Table S3 column's per-protein log deviations from the 16-oyster mean correlate best with exactly the expected oyster's Table S2 spectral counts",
+  "min_mapping_margin_r": 0.496,
+  "n_runs": 48,
+  "acquisition_window": [
+    "2012-08-21T11:29:16",
+    "2012-08-26T01:51:02"
+  ],
+  "technical_replicate_1_order": [
+    "400",
+    "400",
+    "400",
+    "400",
+    "400",
+    "400",
+    "400",
+    "400",
+    "2800",
+    "2800",
+    "2800",
+    "2800",
+    "2800",
+    "2800",
+    "2800",
+    "2800"
+  ],
+  "comparisons": {
+    "pco2_2800_vs_400": {
+      "control": "400 uatm",
+      "treatment": "2800 uatm"
+    },
+    "mech_stress_vs_none_at_400": {
+      "control": "400 uatm",
+      "treatment": "400 uatm + mech"
+    },
+    "mech_stress_vs_none_at_2800": {
+      "control": "2800 uatm",
+      "treatment": "2800 uatm + mech"
+    }
+  },
+  "outputs_sha256": {
+    "data/studies/TIMMINS2014_OA_GILL/nsaf_matrix.tsv": "569a7a6ff0708d61aa2f961f56ec0598aa830166879ad155b37ad26e044ab0c9",
+    "data/studies/TIMMINS2014_OA_GILL/run_order.tsv": "7bb966571f69990a5690a5c911450afa0274667be3b468977c2ceec70cec5aec",
+    "data/studies/TIMMINS2014_OA_GILL/samplesheet.tsv": "2182c3bb0ace1a25299171aa814ce70c4b1dd335806e5c408b3b86f196c2f236",
+    "data/studies/TIMMINS2014_OA_GILL/samplesheet_mech_stress_vs_none_at_2800.tsv": "f713f05d0360ddc77169137db1b2eb18d4028e41278192eb51e699188c4ee8ec",
+    "data/studies/TIMMINS2014_OA_GILL/samplesheet_mech_stress_vs_none_at_400.tsv": "69e8e297f9b59aff307f89cb1d2453bf8b8ba1ad7dca0fbe91dec159b2769e14",
+    "data/studies/TIMMINS2014_OA_GILL/samplesheet_pco2_2800_vs_400.tsv": "31062fd1aae672e7edf6c1a1c881cbd85456f7994460347b15eb53fd1a071e6b"
+  }
+}

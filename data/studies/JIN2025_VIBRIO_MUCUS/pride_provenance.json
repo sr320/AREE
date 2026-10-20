@@ -1,0 +1,76 @@
+{
+  "study_id": "JIN2025_VIBRIO_MUCUS",
+  "accession": "PXD064651",
+  "repository": "PRIDE",
+  "license": "Creative Commons Public Domain (CC0)",
+  "submission_type": "PARTIAL",
+  "submission_date": "2025-06-05",
+  "publication_date": "2025-07-29",
+  "references": [],
+  "submitter_affiliation": [
+    "South China Sea Institute of Oceanology,Chinese Academy of Sciences"
+  ],
+  "pride_instrument": [
+    "Q Exactive HF"
+  ],
+  "pride_quantification_methods": [
+    "iTRAQ"
+  ],
+  "pride_files": {
+    "Rawdata_1.tar.gz": {
+      "category": "RAW",
+      "bytes": 3319037384
+    },
+    "Rawdata_2.tar.gz": {
+      "category": "RAW",
+      "bytes": 3839444147
+    },
+    "Rawdata_3.tar.gz": {
+      "category": "RAW",
+      "bytes": 1916576334
+    },
+    "dat.tar.gz": {
+      "category": "SEARCH",
+      "bytes": 1016216568
+    },
+    "mgf_1.tar.gz": {
+      "category": "PEAK",
+      "bytes": 1071111583
+    }
+  },
+  "pride_files_by_category": {
+    "PEAK": 1,
+    "RAW": 3,
+    "SEARCH": 1
+  },
+  "samples_named_in_pride": [
+    "C1",
+    "C2",
+    "C3",
+    "T1",
+    "T2",
+    "T3"
+  ],
+  "channel_to_sample_key_deposited": false,
+  "quantification_table_deposited": false,
+  "mascot_dat_first_member": "Data_Analysis/DATA1/dat/F23A040000436_J230221064_rep1.dat",
+  "mascot_dat_parameters": {
+    "COM": "Protein",
+    "DB": "gigas.u.fa",
+    "MODS": "Carbamidomethyl (C),IBT16plex (K),IBT16plex (N-term)",
+    "IT_MODS": "Oxidation (M),Deamidated (NQ),IBT16plex (Y)",
+    "QUANTITATION": "None",
+    "INSTRUMENT": "ESI-FTICR",
+    "FILE": "mgf/F23A040000436_J230221064_rep1.mgf",
+    "sequences": "134653",
+    "queries": "388065",
+    "fastafile": "/ldfssz1/SP_MSI/CommercialProjects/2023/iTRAQ/20230222_F23A040000436_J230221064_Crassostrea-gigas_QE-HFX_IBT_lff/db/gigas.u.fa"
+  },
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/JIN2025_VIBRIO_MUCUS/build_provenance.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD064651",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD064651/files/all",
+    "https://ftp.pride.ebi.ac.uk/pride/data/archive/2025/07/PXD064651/dat.tar.gz (bytes 0-3000000)"
+  ]
+}

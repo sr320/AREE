@@ -1,0 +1,9 @@
+A_default            map=15.5%  CpG=16.5%  CHG=2.6%   CHH=3.0%  
+B_score_L0_-0.6      map=53.9%  CpG=14.4%  CHG=2.8%   CHH=2.9%  
+C_non_directional    map=15.5%  CpG=16.5%  CHG=2.6%   CHH=3.0%  
+D_maxins_1000        map=15.8%  CpG=16.5%  CHG=2.6%   CHH=3.0%  
+E_R1_single          map=37.2%  CpG=14.3%  CHG=0.8%   CHH=0.8%  
+F_R2_single_pbat     map=17.2%  CpG=17.7%  CHG=4.1%   CHH=5.0%  
+
+[exited with code 0]
+# 50k trimmed pairs of SRR13482032, Bismark 0.24.2 / bowtie2 2.5.5; script /Volumes/blue-block/aree/tmp/bismark_diag/diag.sh

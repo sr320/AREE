@@ -1,0 +1,5 @@
+sample_id	run_accession	condition
+control1	ERR0000001	control
+control2	ERR0000002	control
+treatment1	ERR0000003	treatment
+treatment2	ERR0000004	treatment

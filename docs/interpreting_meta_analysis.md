@@ -8,8 +8,8 @@ than a summary you should trust.
 ## How pooling works
 
 `src/meta_analysis/run.py` groups the evidence table by
-`(feature_id_standardized, phenotype, feature_type, simulated, species_taxid)`
-— never across feature types, demo/real origins, or species, since those are
+`(feature_id_standardized, phenotype, feature_type, simulated, species_taxid, contrast_type)`
+— never across feature types, demo/real origins, species or contrast types, since those are
 not comparable pools. Records with `mapping_confidence == "unresolved"` are
 excluded from pooling (no stable identity to group on) but remain visible in
 the raw evidence table. Within each group, effect sizes and standard errors
@@ -28,21 +28,24 @@ treated as independent observations. The curator's way out is to set
 `meta_analysis_primary: true` on one comparison in the study YAML, chosen
 before looking at results. Only flagged comparisons from that study are then
 pooled; the others stay in the evidence table and on evidence cards, and are
-counted in `n_excluded_non_primary`.
+counted in `n_excluded_non_primary`. The choice is made within each
+`contrast_type`: comparisons of different contrast types never share a group,
+so a primary heat response does not exclude the same study's baseline
+contrast ([contrast_types.md](contrast_types.md)).
 
 ## Multiple testing
 
 Every pooled p-value is adjusted with the Benjamini–Hochberg procedure within
 its **test family**: all features pooled for the same
-`(phenotype, feature_type, simulated, species_taxid)`. A genome-wide
+`(phenotype, feature_type, simulated, species_taxid, contrast_type)`. A genome-wide
 reanalysis contributes one test per gene to that family — the first real
 OsHV-1 pool (`CALLA2026_OSHV` + `DELISLE2020_OSHV_TEMP`) has 23,094 — and at
 that scale 4,687 genes were nominally significant at `p < 0.05` by chance and
 signal together. `adjusted_p_value` is the number to read; `p_value` is kept
 for transparency.
 
-The family is deliberately the same set of keys the CLI can filter on
-(`--phenotype`, `--feature-type`), so a feature's `adjusted_p_value` is
+Both CLI filters (`--phenotype`, `--feature-type`) are family keys, so they
+select whole families, and a feature's `adjusted_p_value` is
 identical whether you ran one phenotype or all of them. Filtering never
 shrinks the denominator.
 
@@ -64,7 +67,7 @@ pool and a 23,000-gene real pool are corrected against their own sizes.
 | `pooled_effect` | random-effects pooled estimate of the effect size |
 | `pooled_se` | standard error of the pooled effect |
 | `ci_lower` / `ci_upper` | 95% CI on the pooled effect (`pooled_effect ± 1.96 × pooled_se`) |
-| `z`, `p_value` | test statistic and two-sided p-value for the pooled effect (computed with the normal survival function, so it stays strictly positive even for very large |z|) |
+| `z`, `p_value` | test statistic and two-sided p-value for the pooled effect (computed with the normal survival function to avoid cancellation; sufficiently extreme tails can still underflow in floating-point arithmetic) |
 | `adjusted_p_value` | Benjamini–Hochberg false-discovery-rate adjusted `p_value`, computed within the test family described below |
 | `n_tests_in_family` | number of features tested in that family — the denominator the adjustment was made against |
 | `q_statistic` | Cochran's Q, the weighted sum of squared deviations from the fixed-effect estimate |
@@ -112,7 +115,7 @@ effects for the same gene under the same phenotype (`larval_viability`):
 under ocean acidification (log2FC ≈ -1.00, adjusted p = 0.03), while
 `GIGAS_LARV05` finds it **up**-regulated under nutritional limitation
 (log2FC ≈ 0.60). This is intentional in the demo data — the curation note in
-`registry/studies/GIGAS_OA02.yaml` states the study "deliberately includes an
+`registry/demo_studies/GIGAS_OA02.yaml` states the study "deliberately includes an
 antioxidant-pathway gene (sod1) that is down-regulated here but up-regulated
 in GIGAS_LARV05 under the same larval_viability phenotype, to demonstrate how
 AREE surfaces conflicting same-phenotype cross-study evidence in
@@ -148,6 +151,61 @@ subtracted as an explicit penalty — see
 candidate would score low on both counts and, separately, fails the
 `high_priority_cross_study` hard gate (`direction_consistency >= 0.7`)
 regardless of its overall score.
+
+## Cross-species results (`--level orthogroup`)
+
+Gene-level pooling never crosses species. `aree meta-analyze --level orthogroup`
+does, through orthogroups, in two stages:
+
+1. **Within species.** Each species' estimate for an orthogroup is its
+   gene-level pooled estimate, unchanged, so every gene-level rule (primary
+   comparisons, real standard errors, duplicate mappings) still holds.
+2. **Across species.** Those estimates are pooled with the same
+   DerSimonian-Laird random-effects model. Its heterogeneity is now *between
+   species*: `q_between_species`, `i_squared_between_species`,
+   `tau_squared_between_species`.
+
+It writes `<label>_orthogroup_meta_analysis.tsv` (one row per orthogroup,
+phenotype and feature type) and `<label>_orthogroup_species_estimates.tsv`
+(the per-species rows behind each one).
+
+What may pool:
+
+- **Single-copy orthogroups only, by default** (`single_copy_all`,
+  `single_copy`). In a multi-copy orthogroup one species' gene is compared
+  with another species' different paralog; those are counted and set aside.
+  `--include-multi-copy` pools them only where each species has evidence for
+  exactly one gene, and the row keeps its `multi_copy` label.
+- **Orthogroups from the active run only.** Evidence harmonized under an
+  earlier run is set aside until it is re-harmonized.
+- **Simulated and real evidence never pool together**, as at gene level. The
+  demo's illustrative orthogroups are classed `demo_crosswalk`; their IDs
+  collide with real OrthoFinder IDs, so they are never looked up in the run.
+
+How to read a row:
+
+- `k_studies_by_species` and `species_with_k2` say how much each species
+  contributes. **`meets_replication_gate` is true only when at least two
+  species each have k >= 2 studies.** A row below the gate is a pairing of
+  single-study estimates, not replicated cross-species evidence.
+- `direction_consistency_species` is the share of species agreeing with the
+  majority sign. With two species, 0.5 means they disagree.
+- A high `i_squared_between_species` means the species respond differently;
+  the pooled effect then describes no species well.
+- `adjusted_p_value` is Benjamini-Hochberg within each phenotype, feature type
+  and origin family of orthogroup-level tests.
+
+The first real cross-species rows came on 2026-10-16, once the first real
+clam study reached `main`: oyster and Manila clam thermal-tolerance evidence
+pooled through 5,681 single-copy orthogroups, none past the gate with one
+clam study. With the second clam study (2026-10-17) it pools through 5,975
+(5,152 multi-copy orthogroups set aside), and 5,633 meet the replication
+gate. The demo adds
+oyster and mussel larval rows sharing demo orthogroups, also below the gate.
+
+`aree build-cross-species-cards` tiers these rows and writes a card for each
+one that shows every species side by side; see
+[interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates).
 
 ## Related documentation
 

@@ -1,5 +1,5 @@
 # Retired NCBI GeneIDs for taxid 29159, from NCBI gene_history.
-# Built by src/mappings/build_crosswalk.py v1.0.0 on 2026-08-27
+# Built by src/mappings/build_crosswalk.py v1.1.0 on 2026-10-17
 # Studies analysed against an older annotation report these identifiers; each row
 # records the authoritative NCBI replacement. Resolution through this table is
 # labelled 'inferred', not 'exact', because it crosses an annotation version.

@@ -1,0 +1,27 @@
+run_id	pool_id	condition	temperature_C	silo	day_of_exposure	dpf	technical_replicate	uwpr_alternate_id	sample_unit	raw_file	raw_sha1	raw_bytes	peak_file	search_file
+1	pool0	baseline	16		0	19	1	60	pool of ~12,500 pediveliger larvae before transfer to silos	20161205_Sample_1.raw	d4592b2ca3310fb34811a0ab6e6ba97feab1a82d	1683574160	20161205_sample_1.mzXML	20161205_sample_1.pep.xml
+1A	pool0	baseline	16		0	19	2	61	pool of ~12,500 pediveliger larvae before transfer to silos	20161205_Sample_1A.raw	4605fd044a8c5378f6479d56aea8eb9cf5617d32	1646452660	20161205_Sample_1A.mzXML	20161205_Sample_1A.pep.xml
+4	S3CD3	control	23	3	3	21	1	64	pool of ~12,500 larvae/seed from one silo	20161205_Sample_4.raw	44fe1f872087229cfaabc5921d9c6b7c78f54cec	1736778684	20161205_Sample_4.mzXML	20161205_Sample_4.pep.xml
+4A	S3CD3	control	23	3	3	21	2	65	pool of ~12,500 larvae/seed from one silo	20161205_Sample_4A.raw	030b6ba501965603075d586574c856fd20d6c4e7	1754957850	20161205_Sample_4A.mzXML	20161205_Sample_4A.pep.xml
+8	S9HD3	treatment	29	9	3	21	1	66	pool of ~12,500 larvae/seed from one silo	20161205_Sample_8.raw	78750aad94b85d303fb2c918ee30daa87f92ac4d	1802112478	20161205_Sample_8.mzXML	20161205_Sample_8.pep.xml
+8A	S9HD3	treatment	29	9	3	21	2	67	pool of ~12,500 larvae/seed from one silo	20161205_Sample_8A.raw	96d8ad2755c893772f1b1bd1fb3a0b5aa6e55a85	1795973900	20161205_Sample_8A.mzXML	20161205_Sample_8A.pep.xml
+12	S3CD5	control	23	3	5	23	1	70	pool of ~12,500 larvae/seed from one silo	20161205_Sample_12.raw	e15952a71f5fcd7b0571c0d9c47c8a92c627c473	1814239504	20161205_Sample_12.mzXML	20161205_Sample_12.pep.xml
+12A	S3CD5	control	23	3	5	23	2	71	pool of ~12,500 larvae/seed from one silo	20161205_Sample_12A.raw	d4322cc31da59a057afcd3985a2246d6e5dba3ea	1798197268	20161205_Sample_12A.mzXML	20161205_Sample_12A.pep.xml
+16	S9HD5	treatment	29	9	5	23	1	72	pool of ~12,500 larvae/seed from one silo	20161205_Sample_16.raw	d9093035a514d7458c87df37ff7489d1bb240998	1818365066	20161205_Sample_16.mzXML	20161205_Sample_16.pep.xml
+16A	S9HD5	treatment	29	9	5	23	2	73	pool of ~12,500 larvae/seed from one silo	20161205_Sample_16A.raw	2b3e319b9cc9c305f9b59447d4a297c467b39961	1844415008	20161205_Sample_16A.mzXML	20161205_Sample_16A.pep.xml
+20	S3CD7	control	23	3	7	25	1	76	pool of ~12,500 larvae/seed from one silo	20161205_Sample_20.raw	da87e92712ebf0f981aea68f79a4cfcb1853f3e2	1800981040	20161205_Sample_20.mzXML	20161205_Sample_20.pep.xml
+20A	S3CD7	control	23	3	7	25	2	77	pool of ~12,500 larvae/seed from one silo	20161205_Sample_20A.raw	f06d548be772acade527376ad1f489f33d1750ed	1784162130	20161205_Sample_20A.mzXML	20161205_Sample_20A.pep.xml
+24	S9HD7	treatment	29	9	7	25	1	78	pool of ~12,500 larvae/seed from one silo	20161205_Sample_24.raw	2c742c763ecef64a1b955c9045328719b6d553e5	1820830410	20161205_Sample_24.mzXML	20161205_Sample_24.pep.xml
+24A	S9HD7	treatment	29	9	7	25	2	79	pool of ~12,500 larvae/seed from one silo	20161205_Sample_24A.raw	92f189bf6ea3842f3728bb53da1fb2466c85a7bc	1842279768	20161205_Sample_24A.mzXML	20161205_Sample_24A.pep.xml
+28	S3CD9	control	23	3	9	27	1	82	pool of ~12,500 larvae/seed from one silo	20161205_Sample_28.raw	413dac040b02650a37e3740771c0bb3de1f51c68	1760277082	20161205_Sample_28.mzXML	20161205_Sample_28.pep.xml
+28A	S3CD9	control	23	3	9	27	2	83	pool of ~12,500 larvae/seed from one silo	20161205_Sample_28A.raw	0d8a2b68b64a9231a8884e9853e62fbad2d206df	1804655448	20161205_Sample_28A.mzXML	20161205_Sample_28A.pep.xml
+32	S9HD9	treatment	29	9	9	27	1	84	pool of ~12,500 larvae/seed from one silo	20161205_Sample_32.raw	914478bf7bf0f1a5f67bea374ab51c2b219d6ad1	1835014904	20161205_Sample_32.mzXML	20161205_Sample_32.pep.xml
+32A	S9HD9	treatment	29	9	9	27	2	85	pool of ~12,500 larvae/seed from one silo	20161205_Sample_32A.raw	b2d9180d403d9a969757fdddb27c12628c512522	1846498808	20161205_Sample_32A.mzXML	20161205_Sample_32A.pep.xml
+36	S3CD11	control	23	3	11	29	1	88	pool of ~12,500 larvae/seed from one silo	20161205_Sample_36.raw	251e9cd9adf8df77597984ed093af6d31217e539	1813321038	20161205_Sample_36.mzXML	20161205_Sample_36.pep.xml
+36A	S3CD11	control	23	3	11	29	2	89	pool of ~12,500 larvae/seed from one silo	20161205_Sample_36A.raw	cb6f3d563b17288d9105d99e089d29cb7ac0088c	1841268696	20161205_Sample_36A.mzXML	20161205_Sample_36A.pep.xml
+40	S9HD11	treatment	29	9	11	29	1	90	pool of ~12,500 larvae/seed from one silo	20161205_Sample_40.raw	493ff229b681464862af0f29a85c057ec953490d	1732043384	20161205_Sample_40.mzXML	20161205_Sample_40.pep.xml
+40A	S9HD11	treatment	29	9	11	29	2	91	pool of ~12,500 larvae/seed from one silo	20161205_Sample_40A.raw	7d697b5c110dac5a9c144b135155a38d130952ec	1752653732	20161205_Sample_40A.mzXML	20161205_Sample_40A.pep.xml
+44	S3CD13	control	23	3	13	31	1	94	pool of ~12,500 larvae/seed from one silo	20161205_Sample_44.raw	f232dca2b00fc44bfffe48da52a28f7504dfcbfc	1823628546	20161205_Sample_44.mzXML	20161205_Sample_44.pep.xml
+44A	S3CD13	control	23	3	13	31	2	95	pool of ~12,500 larvae/seed from one silo	20161205_Sample_44A.raw	dd9d2d7d6e7f6ca7b7736b30f428c535614286d5	1812432896	20161205_Sample_44A.mzXML	20161205_Sample_44A.pep.xml
+48	S9HD13	treatment	29	9	13	31	1	96	pool of ~12,500 larvae/seed from one silo	20161205_Sample_48.raw	6eb431ba97f710cf6827187ff2c154c1436b0c8b	1810822724	20161205_Sample_48.mzXML	20161205_Sample_48.pep.xml
+48A	S9HD13	treatment	29	9	13	31	2	97	pool of ~12,500 larvae/seed from one silo	20161205_Sample_48A.raw	18cb034db733b1a7e9ac8445fec38d8202643980	1831864176	20161205_Sample_48A.mzXML	20161205_Sample_48A.pep.xml

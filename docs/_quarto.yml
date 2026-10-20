@@ -1,6 +1,10 @@
 project:
   type: website
   output-dir: _site
+  # Parquet tables for explore.qmd, fetched by DuckDB-WASM rather than linked,
+  # so Quarto must be told to copy them (written by `aree export-site-data`).
+  resources:
+    - explore/data/
 
 website:
   title: "AREE"
@@ -11,6 +15,8 @@ website:
     left:
       - text: "Progress"
         href: index.qmd
+      - text: "Explore"
+        href: explore.qmd
       - text: "About"
         href: about.qmd
       - text: "Docs"
@@ -27,6 +33,10 @@ website:
             href: index.qmd
           - text: "About AREE"
             href: about.qmd
+          - text: "Explore the evidence"
+            href: explore.qmd
+          - text: "Querying AREE (explorer + MCP)"
+            href: querying_aree.md
           - text: "Installation"
             href: installation.md
           - text: "Why this resource matters"
@@ -39,18 +49,28 @@ website:
             href: adding_a_study.md
           - text: "Candidate studies to curate"
             href: candidate_studies.md
+          - text: "Candidate mussel and clam studies"
+            href: candidate_studies_mussels_clams.md
           - text: "Running studies on several machines"
             href: parallel_study_runs.md
+          - text: "Running a study on Klone (UW Hyak)"
+            href: running_on_klone.md
           - text: "First raw reanalysis"
             href: first_raw_reanalysis.md
+          - text: "Reference bundles"
+            href: reference_bundles.md
           - text: "Defining a phenotype"
             href: defining_a_phenotype.md
           - text: "Resilience vs. exposure-only"
             href: resilience_vs_exposure.md
+          - text: "Contrast types"
+            href: contrast_types.md
           - text: "Raw vs. processed harmonization"
             href: raw_vs_processed.md
           - text: "Identifier mapping"
             href: identifier_mapping.md
+          - text: "Metabolite–gene links"
+            href: metabolite_gene_links.md
       - section: "Interpreting results"
         contents:
           - text: "Meta-analysis outputs"
@@ -61,6 +81,10 @@ website:
         contents:
           - text: "Adding a new species"
             href: adding_a_species.md
+          - text: "Species identity"
+            href: species_identity.md
+          - text: "Plan: mussel and clam datasets"
+            href: mussel_clam_integration_plan.md
           - text: "Handling genome-version changes"
             href: handling_genome_versions.md
           - text: "Contributing code and data"

@@ -40,7 +40,7 @@ facts about what was done — species, genome assembly, assay type, treatment
 vs. control, sample sizes, data availability — never derived results. See
 [adding_a_study.md](adding_a_study.md).
 
-## Layer 2: Standardized Reanalysis Workflows
+## Layer 2: Standardized Reanalysis Workflows {#layer-2-standardized-reanalysis}
 
 **Directories:** `workflows/{rnaseq,methylation,proteomics,metabolomics}/`,
 `modules/`, `containers/`, `config/`.
@@ -50,10 +50,11 @@ pseudoalignment, quantification or methylation calling, differential
 analysis, and standardized result-table emission, per assay type. Every
 workflow emits a machine-readable manifest (parameters, tool versions, input
 checksums, QC metrics) alongside its result table. The RNA-seq raw path has
-executed end to end against subsampled real FASTQ, and all four processed-result
+executed at full depth against real FASTQ, and all four processed-result
 paths execute end to end. Current-version CI runs those processed paths and
 structurally exercises the RNA-seq raw DAG with tiny fixtures and explicit
-stubs. Container profiles and the other raw paths remain unverified; see
+stubs. Real methylation and quantified-proteomics runs also exist; metabolomics
+has fixture execution. Container profiles remain unverified; see
 [roadmap.md](roadmap.md).
 
 ## Layer 3: Cross-study Harmonization

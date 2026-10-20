@@ -7,11 +7,15 @@
 # For that reason this file MUST NOT be merged with a real crosswalk — a union would
 # silently attach demo biology to real accessions.
 #
-# This file is the default only so that `make demo` and the test suite stay
-# self-contained. To harmonize real studies, build a real crosswalk and select it:
-#     aree build-crosswalk
-#     export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
-# See docs/identifier_mapping.md.
+# Every simulated study resolves against this file and every real study against the
+# crosswalk registered for its genome assembly (data/reference/genome_assemblies.yaml),
+# so `make demo` and the test suite stay self-contained. See docs/identifier_mapping.md.
+#
+# TWO DEMO SPECIES SHARE THESE IDENTIFIERS. The simulated mussel study MYTGAL_HEAT01
+# (Mytilus galloprovincialis) reports the same LOC numbers as the oyster demo studies.
+# That is a demo-only device to prove evidence is partitioned by species_taxid: the
+# same ID in two species forms two separate pools. These are NOT real mussel genes,
+# and real NCBI GeneIDs are never shared between species (tests/test_multi_species.py).
 ncbi_gene_id	ensembl_gene_id	uniprot_accession	locus_id	gene_symbol	orthogroup_id
 LOC105333935	ENSCGRG00000001	K1QN12	LOC105333935	hsp70	OG0000001
 LOC105331241	ENSCGRG00000002	K1QN45	LOC105331241	sod1	OG0000002
@@ -34,3 +38,6 @@ LOC105335777	ENSCGRG00000018	K1QQ18	LOC105335777	novel2	OG0000018
 LOC105340010	ENSCGRG00000019	K1QQ10	LOC105340010	aqp_like	OG0000019
 LOC105340020	ENSCGRG00000020	K1QQ20	LOC105340020	atp1a_nka	OG0000020
 LOC105341000	ENSCGRG00000021	K1QQ21	LOC105341000	actin	OG0000021
+LOC105342001	ENSCGRG00000022	K1QQ22	LOC105342001	ldh	OG0000022
+LOC105342002	ENSCGRG00000023	K1QQ23	LOC105342002	sdha	OG0000023
+LOC105342003	ENSCGRG00000024	K1QQ24	LOC105342003	glut1	OG0000024

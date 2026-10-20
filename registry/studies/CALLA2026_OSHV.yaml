@@ -89,6 +89,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 10
     biological_replicates: 5
     results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_midori_oshv1_australia_vs_control_dge_standardized.tsv"
@@ -111,6 +112,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 10
     biological_replicates: 5
     results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_midori_oshv1_france_vs_control_dge_standardized.tsv"
@@ -133,6 +135,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 10
     biological_replicates: 5
     results_file: null
@@ -155,6 +158,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 11
     biological_replicates: 5
     results_file: null
@@ -173,6 +177,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 11
     biological_replicates: 5
     results_file: null
@@ -191,6 +196,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 11
     biological_replicates: 5
     results_file: "data/studies/CALLA2026_OSHV/CALLA2026_OSHV_miyagi_oshv1_usa_vs_control_dge_standardized.tsv"

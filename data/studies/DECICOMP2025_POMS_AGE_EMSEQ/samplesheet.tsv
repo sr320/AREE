@@ -1,0 +1,61 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	cohort	group	family	replicate	phenotype	age	isolate	tissue_type	library_layout	instrument_model	read_count
+F14R_C3_T0_S4	ERR15996532	SAMEA120789610	sam_decicomp_methyl_age_F14R_C3_T0_S4	C3_T0	C3	T0	F14R	4	No infected (Basal)	4 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	165664306
+F14R_C8_T0_S5	ERR15996533	SAMEA120789635	sam_decicomp_methyl_age_F14R_C8_T0_S5	C8_T0	C8	T0	F14R	5	No infected (Basal)	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	173119628
+F14R_C8_S_S2	ERR15996534	SAMEA120789626	sam_decicomp_methyl_age_F14R_C8_S_S2	C8_S	C8	S	F14R	2	Susceptible	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	163916524
+F14R_C8_S_S1	ERR15996535	SAMEA120789625	sam_decicomp_methyl_age_F14R_C8_S_S1	C8_S	C8	S	F14R	1	Susceptible	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	178133034
+H2D_C8_R_S6	ERR15996536	SAMEA120789654	sam_decicomp_methyl_age_H2D_C8_R_S6	C8_R	C8	R	H2D	6	Resistant	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	188670438
+F14R_C8_T0_S6	ERR15996537	SAMEA120789636	sam_decicomp_methyl_age_F14R_C8_T0_S6	C8_T0	C8	T0	F14R	6	No infected (Basal)	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	188480740
+F14R_C7_T0_S5	ERR15996538	SAMEA120789617	sam_decicomp_methyl_age_F14R_C7_T0_S5	C7_T0	C7	T0	F14R	5	No infected (Basal)	16 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	207464298
+F14R_C8_S_S6	ERR15996539	SAMEA120789630	sam_decicomp_methyl_age_F14R_C8_S_S6	C8_S	C8	S	F14R	6	Susceptible	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	193335150
+F14R_C8_R_S4	ERR15996540	SAMEA120789622	sam_decicomp_methyl_age_F14R_C8_R_S4	C8_R	C8	R	F14R	4	Resistant	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	198908206
+H2D_C7_T0_S5	ERR15996541	SAMEA120789647	sam_decicomp_methyl_age_H2D_C7_T0_S5	C7_T0	C7	T0	H2D	5	No infected (Basal)	16 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	181159742
+H2D_C8_S_S5	ERR15996542	SAMEA120789659	sam_decicomp_methyl_age_H2D_C8_S_S5	C8_S	C8	S	H2D	5	Susceptible	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	182820042
+F14R_C8_S_S3	ERR15996543	SAMEA120789627	sam_decicomp_methyl_age_F14R_C8_S_S3	C8_S	C8	S	F14R	3	Susceptible	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	177296476
+F14R_C8_R_S2	ERR15996544	SAMEA120789620	sam_decicomp_methyl_age_F14R_C8_R_S2	C8_R	C8	R	F14R	2	Resistant	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	171243278
+F14R_C8_R_S6	ERR15996545	SAMEA120789624	sam_decicomp_methyl_age_F14R_C8_R_S6	C8_R	C8	R	F14R	6	Resistant	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	177742446
+H2D_C8_T0_S2	ERR15996546	SAMEA120789662	sam_decicomp_methyl_age_H2D_C8_T0_S2	C8_T0	C8	T0	H2D	2	No infected (Basal)	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	170993674
+H2D_C8_T0_S6	ERR15996547	SAMEA120789666	sam_decicomp_methyl_age_H2D_C8_T0_S6	C8_T0	C8	T0	H2D	6	No infected (Basal)	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	151013664
+F14R_C3_T0_S3	ERR15996548	SAMEA120789609	sam_decicomp_methyl_age_F14R_C3_T0_S3	C3_T0	C3	T0	F14R	3	No infected (Basal)	4 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	153646402
+H2D_C7_T0_S1	ERR15996549	SAMEA120789643	sam_decicomp_methyl_age_H2D_C7_T0_S1	C7_T0	C7	T0	H2D	1	No infected (Basal)	16 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	175541108
+F14R_C8_R_S1	ERR15996550	SAMEA120789619	sam_decicomp_methyl_age_F14R_C8_R_S1	C8_R	C8	R	F14R	1	Resistant	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	174420222
+H2D_C8_R_S5	ERR15996551	SAMEA120789653	sam_decicomp_methyl_age_H2D_C8_R_S5	C8_R	C8	R	H2D	5	Resistant	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	200433516
+H2D_C3_T0_S5	ERR15996552	SAMEA120789641	sam_decicomp_methyl_age_H2D_C3_T0_S5	C3_T0	C3	T0	H2D	5	No infected (Basal)	4 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	159826270
+H2D_C8_T0_S1	ERR15996553	SAMEA120789661	sam_decicomp_methyl_age_H2D_C8_T0_S1	C8_T0	C8	T0	H2D	1	No infected (Basal)	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	167325612
+F14R_C8_S_S4	ERR15996554	SAMEA120789628	sam_decicomp_methyl_age_F14R_C8_S_S4	C8_S	C8	S	F14R	4	Susceptible	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	195848508
+F14R_C3_T0_S1	ERR15996555	SAMEA120789607	sam_decicomp_methyl_age_F14R_C3_T0_S1	C3_T0	C3	T0	F14R	1	No infected (Basal)	4 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	160662438
+H2D_C8_R_S3	ERR15996556	SAMEA120789651	sam_decicomp_methyl_age_H2D_C8_R_S3	C8_R	C8	R	H2D	3	Resistant	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	184700520
+H2D_C8_R_S1	ERR15996557	SAMEA120789649	sam_decicomp_methyl_age_H2D_C8_R_S1	C8_R	C8	R	H2D	1	Resistant	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	173007940
+H2D_C8_S_S1	ERR15996558	SAMEA120789655	sam_decicomp_methyl_age_H2D_C8_S_S1	C8_S	C8	S	H2D	1	Susceptible	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	166421974
+F14R_C7_T0_S4	ERR15996559	SAMEA120789616	sam_decicomp_methyl_age_F14R_C7_T0_S4	C7_T0	C7	T0	F14R	4	No infected (Basal)	16 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	208935134
+F14R_C3_T0_S2	ERR15996560	SAMEA120789608	sam_decicomp_methyl_age_F14R_C3_T0_S2	C3_T0	C3	T0	F14R	2	No infected (Basal)	4 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	143462238
+F14R_C3_T0_S5	ERR15996561	SAMEA120789611	sam_decicomp_methyl_age_F14R_C3_T0_S5	C3_T0	C3	T0	F14R	5	No infected (Basal)	4 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	160938754
+H2D_C3_T0_S6	ERR15996562	SAMEA120789642	sam_decicomp_methyl_age_H2D_C3_T0_S6	C3_T0	C3	T0	H2D	6	No infected (Basal)	4 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	183080992
+H2D_C8_T0_S4	ERR15996563	SAMEA120789664	sam_decicomp_methyl_age_H2D_C8_T0_S4	C8_T0	C8	T0	H2D	4	No infected (Basal)	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	168812288
+H2D_C8_T0_S3	ERR15996564	SAMEA120789663	sam_decicomp_methyl_age_H2D_C8_T0_S3	C8_T0	C8	T0	H2D	3	No infected (Basal)	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	164878740
+F14R_C8_T0_S4	ERR15996565	SAMEA120789634	sam_decicomp_methyl_age_F14R_C8_T0_S4	C8_T0	C8	T0	F14R	4	No infected (Basal)	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	177518926
+F14R_C8_T0_S1	ERR15996566	SAMEA120789631	sam_decicomp_methyl_age_F14R_C8_T0_S1	C8_T0	C8	T0	F14R	1	No infected (Basal)	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	205618902
+H2D_C8_R_S2	ERR15996567	SAMEA120789650	sam_decicomp_methyl_age_H2D_C8_R_S2	C8_R	C8	R	H2D	2	Resistant	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	175981074
+F14R_C8_T0_S3	ERR15996568	SAMEA120789633	sam_decicomp_methyl_age_F14R_C8_T0_S3	C8_T0	C8	T0	F14R	3	No infected (Basal)	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	213199474
+F14R_C7_T0_S1	ERR15996569	SAMEA120789613	sam_decicomp_methyl_age_F14R_C7_T0_S1	C7_T0	C7	T0	F14R	1	No infected (Basal)	16 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	153932390
+H2D_C3_T0_S2	ERR15996570	SAMEA120789638	sam_decicomp_methyl_age_H2D_C3_T0_S2	C3_T0	C3	T0	H2D	2	No infected (Basal)	4 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	186029888
+H2D_C3_T0_S4	ERR15996571	SAMEA120789640	sam_decicomp_methyl_age_H2D_C3_T0_S4	C3_T0	C3	T0	H2D	4	No infected (Basal)	4 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	162499736
+H2D_C8_S_S2	ERR15996572	SAMEA120789656	sam_decicomp_methyl_age_H2D_C8_S_S2	C8_S	C8	S	H2D	2	Susceptible	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	163750370
+F14R_C7_T0_S3	ERR15996573	SAMEA120789615	sam_decicomp_methyl_age_F14R_C7_T0_S3	C7_T0	C7	T0	F14R	3	No infected (Basal)	16 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	153558926
+F14R_C7_T0_S2	ERR15996574	SAMEA120789614	sam_decicomp_methyl_age_F14R_C7_T0_S2	C7_T0	C7	T0	F14R	2	No infected (Basal)	16 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	155658448
+F14R_C8_R_S5	ERR15996575	SAMEA120789623	sam_decicomp_methyl_age_F14R_C8_R_S5	C8_R	C8	R	F14R	5	Resistant	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	190779602
+F14R_C7_T0_S6	ERR15996576	SAMEA120789618	sam_decicomp_methyl_age_F14R_C7_T0_S6	C7_T0	C7	T0	F14R	6	No infected (Basal)	16 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	159601836
+H2D_C3_T0_S3	ERR15996577	SAMEA120789639	sam_decicomp_methyl_age_H2D_C3_T0_S3	C3_T0	C3	T0	H2D	3	No infected (Basal)	4 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	174939170
+H2D_C7_T0_S3	ERR15996578	SAMEA120789645	sam_decicomp_methyl_age_H2D_C7_T0_S3	C7_T0	C7	T0	H2D	3	No infected (Basal)	16 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	161051362
+H2D_C7_T0_S2	ERR15996579	SAMEA120789644	sam_decicomp_methyl_age_H2D_C7_T0_S2	C7_T0	C7	T0	H2D	2	No infected (Basal)	16 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	168741544
+H2D_C8_T0_S5	ERR15996580	SAMEA120789665	sam_decicomp_methyl_age_H2D_C8_T0_S5	C8_T0	C8	T0	H2D	5	No infected (Basal)	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	167041286
+F14R_C8_S_S5	ERR15996581	SAMEA120789629	sam_decicomp_methyl_age_F14R_C8_S_S5	C8_S	C8	S	F14R	5	Susceptible	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	171277404
+H2D_C8_S_S3	ERR15996582	SAMEA120789657	sam_decicomp_methyl_age_H2D_C8_S_S3	C8_S	C8	S	H2D	3	Susceptible	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	181235350
+H2D_C7_T0_S6	ERR15996583	SAMEA120789648	sam_decicomp_methyl_age_H2D_C7_T0_S6	C7_T0	C7	T0	H2D	6	No infected (Basal)	16 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	159951026
+H2D_C3_T0_S1	ERR15996584	SAMEA120789637	sam_decicomp_methyl_age_H2D_C3_T0_S1	C3_T0	C3	T0	H2D	1	No infected (Basal)	4 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	179393484
+F14R_C8_T0_S2	ERR15996585	SAMEA120789632	sam_decicomp_methyl_age_F14R_C8_T0_S2	C8_T0	C8	T0	F14R	2	No infected (Basal)	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	193294612
+H2D_C8_S_S6	ERR15996586	SAMEA120789660	sam_decicomp_methyl_age_H2D_C8_S_S6	C8_S	C8	S	H2D	6	Susceptible	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	178021748
+F14R_C3_T0_S6	ERR15996587	SAMEA120789612	sam_decicomp_methyl_age_F14R_C3_T0_S6	C3_T0	C3	T0	F14R	6	No infected (Basal)	4 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	153820466
+H2D_C8_R_S4	ERR15996588	SAMEA120789652	sam_decicomp_methyl_age_H2D_C8_R_S4	C8_R	C8	R	H2D	4	Resistant	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	196446248
+H2D_C8_S_S4	ERR15996589	SAMEA120789658	sam_decicomp_methyl_age_H2D_C8_S_S4	C8_S	C8	S	H2D	4	Susceptible	28 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	171007772
+F14R_C8_R_S3	ERR15996590	SAMEA120789621	sam_decicomp_methyl_age_F14R_C8_R_S3	C8_R	C8	R	F14R	3	Resistant	28 months	Family F14R	whole organism	PAIRED	Illumina NovaSeq 6000	191003012
+H2D_C7_T0_S4	ERR15996591	SAMEA120789646	sam_decicomp_methyl_age_H2D_C7_T0_S4	C7_T0	C7	T0	H2D	4	No infected (Basal)	16 months	Family H2D	whole organism	PAIRED	Illumina NovaSeq 6000	151792558

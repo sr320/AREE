@@ -11,8 +11,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMAS_DIR = REPO_ROOT / "schemas"
 REGISTRY_DIR = REPO_ROOT / "registry"
 STUDIES_DIR = REGISTRY_DIR / "studies"
+# Simulated demo studies live apart from real ones: they are test fixtures for
+# code paths real data does not reach yet, not entries in the study registry.
+DEMO_STUDIES_DIR = REGISTRY_DIR / "demo_studies"
 VOCAB_DIR = REGISTRY_DIR / "controlled_vocabularies"
 STUDY_REGISTRY_CSV = REGISTRY_DIR / "study_registry.csv"
+DEMO_REGISTRY_CSV = REGISTRY_DIR / "demo_study_registry.csv"
 DATA_DIR = REPO_ROOT / "data"
 DEMO_DIR = DATA_DIR / "demo"
 MAPPINGS_DIR = DATA_DIR / "mappings"
@@ -75,7 +79,7 @@ GENOME_ASSEMBLIES_PATH = DATA_DIR / "reference" / "genome_assemblies.yaml"
 class SpeciesRecord:
     """A resolved species: what the study called it, and what it canonically is."""
 
-    __slots__ = ("term_id", "scientific_name", "ncbi_taxid", "as_reported", "is_synonym")
+    __slots__ = ("term_id", "scientific_name", "ncbi_taxid", "as_reported", "is_synonym", "complex")
 
     def __init__(self, term: dict, as_reported: str, is_synonym: bool):
         self.term_id = term["id"]
@@ -83,6 +87,8 @@ class SpeciesRecord:
         self.ncbi_taxid = term["ncbi_taxid"]
         self.as_reported = as_reported
         self.is_synonym = is_synonym
+        # Hybridizing species group (e.g. mytilus_edulis_complex), or None.
+        self.complex = term.get("complex")
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"SpeciesRecord({self.scientific_name!r}, taxid={self.ncbi_taxid})"
@@ -104,6 +110,18 @@ def resolve_species(name: str) -> SpeciesRecord | None:
         for synonym in term.get("accepted_synonyms") or []:
             if wanted == synonym.casefold():
                 return SpeciesRecord(term, name, is_synonym=True)
+    return None
+
+
+def species_term_for_taxid(taxid) -> dict | None:
+    """The species vocabulary term for an NCBI taxid, or None if not registered."""
+    try:
+        wanted = int(taxid)
+    except (TypeError, ValueError):
+        return None
+    for term in load_vocab("species").values():
+        if term["ncbi_taxid"] == wanted:
+            return term
     return None
 
 
@@ -143,3 +161,76 @@ def resolve_assembly(value: str) -> dict | None:
             if token in {c for c in candidates if c}:
                 return record
     return None
+
+
+def assembly_crosswalk_path(record: dict) -> Path | None:
+    """Absolute path of the identifier crosswalk registered for an assembly.
+
+    None when no crosswalk has been built for it yet (`identifier_crosswalk: null`).
+    The path is returned whether or not the file exists, so callers can tell
+    "not registered" from "registered but not built on this machine".
+    """
+    value = record.get("identifier_crosswalk")
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else REPO_ROOT / path
+
+
+def registered_crosswalks() -> list[dict]:
+    """One entry per distinct registered crosswalk, with the assemblies that use it.
+
+    Several assemblies of one species share a crosswalk (it is built per taxid
+    from NCBI Gene), so this de-duplicates on path.
+    """
+    by_path: dict[Path, dict] = {}
+    for record in load_assemblies().values():
+        path = assembly_crosswalk_path(record)
+        if path is None:
+            continue
+        entry = by_path.setdefault(path, {
+            "path": path,
+            "ncbi_taxid": record.get("ncbi_taxid"),
+            "species": record.get("species"),
+            "assemblies": [],
+        })
+        entry["assemblies"].append(record["assembly_id"])
+    return list(by_path.values())
+
+
+def study_files(include_demo: bool = True) -> list[Path]:
+    """Every study YAML, real (registry/studies/) then demo (registry/demo_studies/).
+
+    Files starting with `_` (templates) are skipped. Pass include_demo=False for
+    real studies only.
+    """
+    dirs = [STUDIES_DIR, DEMO_STUDIES_DIR] if include_demo else [STUDIES_DIR]
+    return [
+        path for d in dirs for path in sorted(d.glob("*.yaml"))
+        if not path.name.startswith("_")
+    ]
+
+
+def study_yaml_path(study_id: str) -> Path:
+    """Path of a study's YAML, real or demo. Falls back to the real-study path if neither exists."""
+    for d in (STUDIES_DIR, DEMO_STUDIES_DIR):
+        path = d / f"{study_id}.yaml"
+        if path.exists():
+            return path
+    return STUDIES_DIR / f"{study_id}.yaml"
+
+
+def study_ids(simulated: bool | None = None) -> list[str]:
+    """study_ids of every study YAML, sorted, optionally by `simulated`.
+
+    Read from registry/studies/ and registry/demo_studies/ directly (not the
+    generated CSV index), so it is the one source for "the demo studies"
+    (simulated=True) used by the Makefile, CI, the Pages build and the test
+    suite. A new demo study needs no list edits.
+    """
+    ids = []
+    for path in study_files(include_demo=simulated is not False):
+        study = load_yaml(path)
+        if simulated is None or bool(study.get("simulated", False)) == simulated:
+            ids.append(study["study_id"])
+    return sorted(ids)

@@ -1,0 +1,364 @@
+# EM-seq (DNA methylation) of gill and mantle biopsies from the SAME individual
+# oysters before (T0) and after (T1) an experimental POMS (OsHV-1 µVar)
+# cohabitation challenge, with each oyster's own outcome (resistant = survived,
+# susceptible = moribund) recorded afterwards. Valdivieso et al. 2025, Sci Total
+# Environ 962:178385 (IHPE / Ifremer; same group as DECICOMP2025_POMS_AGE_EMSEQ).
+#
+# Why it matters for AREE: the T0 resistant-vs-susceptible contrast is a
+# PROSPECTIVE, INDIVIDUAL-LEVEL design. Animals were biopsied non-lethally
+# before infection and classed by their own later outcome. That is the
+# validation design docs/contrast_types.md asks for ("sample animals
+# non-lethally before a challenge, record who survives"), here at n = 5 per
+# class.
+#
+# Registered from the deposited ENA metadata (PRJEB81880) and the published
+# paper (HAL hal-04901984, CC BY 4.0, which states the PRJEB81880 accession;
+# methods read 2026-10-18). NOT YET RUN: 40 paired-end libraries, 624.9 GB of
+# FASTQ; see config/VALDIVIESO2025_POMS_RS_EMSEQ.config.
+
+study_id: VALDIVIESO2025_POMS_RS_EMSEQ
+simulated: false
+
+accessions:
+  doi: "10.1016/j.scitotenv.2025.178385"
+  bioproject: "PRJEB81880"
+  geo: null
+  sra: "ERR13913462-ERR13913501"
+  ena: "PRJEB81880"
+  proteomexchange: null
+  other: "PMID 39799647; HAL hal-04901984 (accepted manuscript, CC BY 4.0); SSRN preprint 4971857; BioSamples SAMEA116339642-SAMEA116339681"
+
+citation: "Valdivieso A, Morga B, Degremont L, Mege M, Courtay G, Dorant Y, Escoubas JM, Gawra J, de Lorgeril J, Mitta G, Cosseau C, Vidal-Dupiol J (2025). DNA methylation landscapes before and after Pacific Oyster Mortality Syndrome are different within and between resistant and susceptible Magallana gigas. Science of the Total Environment 962:178385. https://doi.org/10.1016/j.scitotenv.2025.178385"
+
+species: "Magallana gigas"
+strain_or_population: "Five hatchery-produced F1 populations (20 females x 10 males each; mass crosses, not full-sib families): #1 Thau Lagoon, #2 Arcachon Bay, #3 La Floride, #4 Logonna Daoulas (wild progenitors from POMS-affected basins), and #5 SC18 (Ifremer La Tremblade line kept biosecured since 2007, never POMS-exposed). Reared biosecured, never exposed to POMS before the challenge. BioSample calls these 'Family 1-5' (sample_alias prefix GT1-GT5); that they are the paper's populations #1-5 in the same order is inferred from the matching count and numbering, not stated."
+
+# The paper aligned to cgigas_uk_roslin_v1 (GCA_902806645.1). AREE reanalyzes
+# against its current reference; region coordinates are assembly-specific
+# (docs/handling_genome_versions.md).
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["methylation"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end 150 bp NEBNext Enzymatic Methyl-seq (EM-seq), libraries and sequencing by IntegraGen; unmethylated lambda spike-in (paper: conversion 99.90 +/- 0.09%). 40 libraries; ENA read_count 148-336 M per run (the paper reports 111.9 +/- 19.8 M raw PE reads per sample; not reconciled). ENA library_strategy Bisulfite-Seq. 624.9 GB of FASTQ reported by ENA."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 40 runs are public in ENA under PRJEB81880 (first public 2024-11-06), all with ENA-generated FASTQ and MD5s. The paper's supplementary tables (S5-S18) list DSS DMRs and genes per comparison; they were not retrieved or inspected for this registration. They are significance-filtered DMR calls on cgigas_uk_roslin_v1 coordinates, so this study is registered for raw reanalysis. Sample sheet, methylKit sample sheet and FASTQ manifest were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED AND PUBLISHED. 40 libraries, parsed from
+# experiment_title ('... sequencing: GT1_09_T0_G_R' = population GT1, oyster
+# code 09, time T0, tissue G(ill)/M(antle), phenotype R/S). Parsed phenotype
+# and tissue agree with the BioSample `phenotype` and `tissue_type` for all 40
+# runs. 10 oysters (one R and one S from each of the 5 populations) x 2 tissues
+# x 2 times = 40; each oyster contributes 4 libraries. Every cell
+# (tissue x phenotype x time) holds 5 libraries, one per population.
+#
+# Paper (section 2.3): 100 tagged recipients (20 per population) were
+# anaesthetized and biopsied (5-6 mm2 of gill and of mantle) = T0, recovered
+# 30 days, then cohabited with OsHV-1 µVar-injected donors (5 tanks of 20, 4
+# per population per tank). Checked every 2 h: an oyster that could not close
+# its valves within 30 s of emersion was called susceptible, removed and
+# biopsied again (T1). When no mortality occurred for 48 h, all survivors were
+# called resistant and biopsied (T1). One R and one S per population were
+# selected for EM-seq.
+#
+# So R/S is an INDIVIDUAL outcome, not a family or line property, and T0 and
+# T1 are repeated biopsies of the same animal. The candidate-list note "5
+# resistant vs 5 susceptible families" was wrong on both counts.
+#
+# REPLICATION. Replicates are individual oysters: 5 per phenotype class. The
+# design is paired twice over: R and S are matched by population (the paper's
+# PCA clusters samples by population of origin), and T1 is paired with T0
+# within each animal. The registered DMR engines fit an unpaired two-group
+# contrast with no blocking term, so a run as configured would ignore both
+# pairings. See limitations (1).
+#
+# PRIMARY COMPARISONS (chosen before any AREE result; see curation_notes):
+# gill within each contrast type, and the susceptible arm for the response.
+# ---------------------------------------------------------------------------
+comparisons:
+  # --- baseline_phenotype_difference: resistant vs susceptible at T0 ---------
+  - comparison_id: "resistant_vs_susceptible_gill_t0"
+    tissue: "gill"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS: cohabitation with donor oysters (F14 family and NSI spat) injected with 20 µL OsHV-1 µVar suspension (6.0E7 genomic units), 20 donors and 20 recipients per 10 L tank, donors removed at 24 hpc; 20-21 C, 34 g/L. T0 biopsies taken before infection, 30 days before cohabitation."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "until no mortality for 48 h in all five tanks (total duration not stated in the text read)"
+    exposure_timing: "T0: non-lethal biopsy before infection (followed by 30 d recovery); phenotype assigned afterwards from each animal's own outcome"
+    control_condition: "Gill biopsies at T0 from the 5 oysters later classed susceptible (moribund during the challenge), one per population #1-5. Reference group; not an unexposed control."
+    treatment_condition: "Gill biopsies at T0 from the 5 oysters later classed resistant (survived the challenge), one per population #1-5."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "individual outcome class (survived vs moribund: valves not closed within 30 s of emersion)"
+    resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "resistant_vs_susceptible_mantle_t0"
+    tissue: "mantle"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors (as for the gill comparison). T0 biopsies taken before infection, 30 days before cohabitation."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "until no mortality for 48 h in all five tanks (total duration not stated in the text read)"
+    exposure_timing: "T0: non-lethal biopsy before infection; phenotype assigned afterwards from each animal's own outcome"
+    control_condition: "Mantle biopsies at T0 from the 5 oysters later classed susceptible, one per population. Reference group; not an unexposed control."
+    treatment_condition: "Mantle biopsies at T0 from the 5 oysters later classed resistant, one per population."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "individual outcome class (survived vs moribund)"
+    resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: false
+
+  # --- phenotype_difference_under_exposure: resistant vs susceptible at T1 --
+  - comparison_id: "resistant_vs_susceptible_gill_t1"
+    tissue: "gill"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors. T1 biopsies: susceptible oysters when found moribund (first recipient deaths at 52 hpc); resistant oysters when the experiment ended (no mortality for 48 h)."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "susceptible: from cohabitation to moribundity (>= 52 hpc, individual times not deposited); resistant: to the end of the experiment"
+    exposure_timing: "T1, after infection; R and S sampled at different times post-cohabitation"
+    control_condition: "Gill biopsies at T1 from the 5 susceptible oysters, taken when moribund. Reference group; not an unexposed control."
+    treatment_condition: "Gill biopsies at T1 from the 5 resistant oysters, taken at the end of the challenge."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "individual outcome class (survived vs moribund)"
+    resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "resistant_vs_susceptible_mantle_t1"
+    tissue: "mantle"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors. T1 biopsies: susceptible oysters when moribund; resistant oysters at the end of the experiment."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "susceptible: to moribundity (>= 52 hpc); resistant: to the end of the experiment"
+    exposure_timing: "T1, after infection; R and S sampled at different times post-cohabitation"
+    control_condition: "Mantle biopsies at T1 from the 5 susceptible oysters, taken when moribund. Reference group; not an unexposed control."
+    treatment_condition: "Mantle biopsies at T1 from the 5 resistant oysters, taken at the end of the challenge."
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "individual outcome class (survived vs moribund)"
+    resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: false
+
+  # --- exposure_response: T1 vs T0 within each phenotype and tissue ---------
+  # Paired: the same 5 animals at both times.
+  - comparison_id: "susceptible_t1_vs_t0_gill"
+    tissue: "gill"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors. T0: pre-infection biopsy; T1: biopsy of the same oyster when moribund."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "from cohabitation to moribundity (>= 52 hpc; individual times not deposited)"
+    exposure_timing: "T1 at moribundity vs T0 about 30 d before cohabitation, same animals"
+    control_condition: "Gill biopsies at T0 (pre-infection) of the 5 susceptible oysters."
+    treatment_condition: "Gill biopsies at T1 (moribund, POMS-infected) of the same 5 oysters."
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "moribund (valves not closed within 30 s of emersion)"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "resistant_t1_vs_t0_gill"
+    tissue: "gill"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors. T0: pre-infection biopsy; T1: biopsy of the same oyster after surviving the challenge."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "to the end of the experiment (no mortality for 48 h)"
+    exposure_timing: "T1 at the end of the challenge vs T0 about 30 d before cohabitation, same animals"
+    control_condition: "Gill biopsies at T0 (pre-infection) of the 5 resistant oysters."
+    treatment_condition: "Gill biopsies at T1 (survived the challenge) of the same 5 oysters."
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "survived; exposed but did not become moribund"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: false
+
+  - comparison_id: "susceptible_t1_vs_t0_mantle"
+    tissue: "mantle"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors. T0: pre-infection biopsy; T1: biopsy of the same oyster when moribund."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "from cohabitation to moribundity (>= 52 hpc)"
+    exposure_timing: "T1 at moribundity vs T0 about 30 d before cohabitation, same animals"
+    control_condition: "Mantle biopsies at T0 (pre-infection) of the 5 susceptible oysters."
+    treatment_condition: "Mantle biopsies at T1 (moribund, POMS-infected) of the same 5 oysters."
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "moribund (valves not closed within 30 s of emersion)"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: false
+
+  - comparison_id: "resistant_t1_vs_t0_mantle"
+    tissue: "mantle"
+    life_stage: "juvenile"
+    stressor_original: "Experimental POMS by cohabitation with OsHV-1 µVar-injected donors. T0: pre-infection biopsy; T1: biopsy of the same oyster after surviving the challenge."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with 20 OsHV-1 µVar-injected donors per tank for 24 h"
+    exposure_duration: "to the end of the experiment (no mortality for 48 h)"
+    exposure_timing: "T1 at the end of the challenge vs T0 about 30 d before cohabitation, same animals"
+    control_condition: "Mantle biopsies at T0 (pre-infection) of the 5 resistant oysters."
+    treatment_condition: "Mantle biopsies at T1 (survived the challenge) of the same 5 oysters."
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "survived; exposed but did not become moribund"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: null
+    meta_analysis_primary: false
+
+quality_flags:
+  - raw_data_available
+
+limitations: >
+  (1) Pairing not modeled. R and S are matched one-to-one by population, and
+  T1 is a repeat biopsy of the same animal as T0. The registered DMR engines
+  (methylKit, limma, DSS pooled tiles) fit an unpaired two-group contrast with
+  no blocking term. For R vs S this leaves population (which dominates the
+  paper's PCA) as unmodeled variance; for T1 vs T0 it discards the
+  within-animal pairing. A population-blocked / animal-paired design needs a
+  workflow change (a separate code PR) before results are treated as final.
+  (2) Small n: 5 animals per class, one per population, each population
+  contributing exactly one R and one S. Effective n is 5 individuals per
+  class, not 5 families: R/S is an individual outcome, and populations are
+  mass crosses, not families. How the 10 animals were chosen from the
+  survivors and moribund animals of each population (and from which tanks)
+  is not stated. (3) Individual phenotype from one challenge. Resistance is
+  survival of one cohabitation challenge; with population survival from 15%
+  (#5 SC18) to 85% (#1 Thau), an individual's outcome has a stochastic
+  component (exposure dose, tank) that a single challenge cannot separate
+  from predisposition. Per-individual viral load at T1 is reported only as a
+  group difference (S > R, Mann-Whitney P = 0.032). (4) T1 contrasts are not
+  like-for-like in time: S animals were biopsied when moribund (from 52 hpc
+  onward), R animals at the end of the experiment, so a T1 R-vs-S difference
+  mixes outcome with sampling time and disease state (dying tissue), and may
+  be a consequence of the outcome rather than a cause. (5) T1 vs T0 is
+  confounded with everything that changed over about five weeks besides
+  infection: growth, the 30 d recovery, possible regeneration at the T0
+  biopsy site (whether T1 was taken from the same site is not stated), and
+  the move to the challenge tanks. There is no uninfected control kept
+  through the same period, so these are not clean infection responses. For
+  the resistant arm the disease phenotype direction is recorded as
+  not_applicable because those animals survived. (6) Identifier anomaly:
+  oyster code 21 appears for both the resistant (GT4_21_*_R) and the
+  susceptible (GT4_21_*_S) population-4 oyster. Codes are otherwise distinct
+  within a population, and an oyster cannot be both, so either codes are not
+  unique tags or a label is wrong. The four libraries per animal should be
+  checked for genotype concordance (C/T-neutral SNPs) before running, which
+  also confirms T0/T1 and gill/mantle pairing for all ten animals. BioSample
+  sample_description says 'susceptible (R)' for all ten susceptible mantle
+  libraries; the phenotype attribute and titles say susceptible, and are used.
+  (7) Sources conflict on details: recovery after biopsy is 30 days in the
+  methods but three weeks in the results; acclimation reached 21 C but tanks
+  are reported at 20 C; progenitors were collected in 2022 and F1 grown one
+  year, yet every BioSample gives collection date 2022-03-01 and age 10
+  months; ENA read counts (148-336 M per run) exceed the paper's 111.9 +/-
+  19.8 M. Figure 4A reports n = 4 (ST0, RT0) and n = 3 (RT1) samples for one
+  CpG, unexplained. life_stage is juvenile by inference from age (10 months
+  per BioSample, about one year per the paper); sex and maturity are not
+  reported. (8) EM-seq, like bisulfite data, cannot separate C/T SNPs from
+  methylation; five genetically distinct populations make genotype-aware
+  filtering important. (9) Coordinate-based region evidence is tied to
+  GCF_963853765.1 and must be lifted over, not relabeled, if the reference
+  changes; the paper's own coordinates are on cgigas_uk_roslin_v1.
+  (10) Shares lab, funding and infection protocol (the cohabitation model of
+  Gawra et al. 2023) with the group's other POMS studies, but no animals or
+  populations with DECICOMP2025_POMS_AGE_EMSEQ (see curation_notes).
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-18"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB81880 --study-id
+    VALDIVIESO2025_POMS_RS_EMSEQ` (branch
+    study/PRJEB81880/VALDIVIESO2025_POMS_RS_EMSEQ). Sample sheet, methylKit
+    sample sheet and FASTQ manifest generated from live ENA metadata
+    (2026-10-18) with `aree fetch-samplesheet --bioproject PRJEB81880 --study
+    VALDIVIESO2025_POMS_RS_EMSEQ --label-field experiment_title
+    --label-pattern
+    '(?P<population>GT[1-5])_(?P<code>\d{2})_(?P<time>T[01])_(?P<tissue_code>[GM])_(?P<phenotype_class>[RS])$'
+    --condition-attribute tissue_code --condition-attribute phenotype_class
+    --condition-attribute time --attribute population --attribute code
+    --attribute phenotype --attribute tissue_type --attribute age --attribute
+    sample_description --methylkit-levels G_S_T0 G_R_T0`. Cross-checks on all
+    40 runs: parsed phenotype matches BioSample `phenotype`, parsed tissue
+    matches `tissue_type`, and population, code and time match
+    sample_description. All 40 runs have ENA FASTQ (no submitted_ftp
+    fallback). Group sizes: 5 in each of the 8 tissue x phenotype x time
+    cells; 10 (population, code, phenotype) animals with 4 libraries each.
+    DESIGN SOURCE: the experimental design, the R/S definition and the
+    meaning of T0/T1 were read from the accepted manuscript on HAL
+    (hal-04901984, CC BY 4.0; Materials and methods, first Results section,
+    Fig. 1 legend), which also names PRJEB81880 as the data accession. The
+    SSRN preprint (Archimer 00915/102671) describes the same design.
+    PRIMARY COMPARISONS, chosen 2026-10-18 before any AREE result was
+    computed: gill within each contrast type, to match the gill comparisons
+    already registered (CIBNOR2021_HEAT_RRSS, LI2018_HEAT_TIDAL); and, among
+    the four exposure responses, the susceptible arm, because its T1 was
+    taken during active disease, the state sampled by the other registered
+    POMS exposure responses (CALLA2026_OSHV, DELISLE2020_OSHV_TEMP), whereas
+    the resistant arm's T1 is a post-outbreak survivor state with no
+    counterpart. The paper's own DMR counts per comparison were seen while
+    reading it; the choice rests on tissue and sampling state, not on them.
+    The methylKit sheet codes the primary baseline contrast only (G_S_T0 = 0,
+    G_R_T0 = 1), keyed by run, so positive differences mean higher
+    methylation in later-resistant oysters. OVERLAP WITH
+    DECICOMP2025_POMS_AGE_EMSEQ (PRJEB105019): same group (IHPE / Ifremer,
+    J. Vidal-Dupiol), same first author, shared ANR DECICOMP funding, and the
+    same cohabitation infection model. No animals or families are shared:
+    DECICOMP sequenced whole animals of full-sib families F14R and H2D (2020
+    Argenton production) at 4, 16 and 28 months; this study sequenced gill
+    and mantle biopsies of 10-month F1 mass-cross populations from four wild
+    basins plus SC18. The F14 family appears here only as virus donors, which
+    were not sequenced; whether DECICOMP's F14R descends from the same F14
+    line is not stated. The two studies are independent replication units.
+    Open questions for the submitters (J. Vidal-Dupiol): the code-21
+    duplication; how the 10 animals were chosen; per-animal T1 sampling times
+    and viral loads; whether T1 biopsies were taken from the T0 site.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB81880"
+    - "https://doi.org/10.1016/j.scitotenv.2025.178385"
+    - "https://hal.science/hal-04901984"
+    - "https://pubmed.ncbi.nlm.nih.gov/39799647"

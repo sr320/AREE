@@ -32,6 +32,10 @@ process EMIT_MANIFEST {
     path standardized_tsv
     path input_files_for_checksum
     path qc_json_files
+    // Every upstream process's versions.yml (mixed + collected in main.nf),
+    // renamed on staging because they all share one file name.
+    path process_versions, stageAs: 'process_versions/versions_*.yml'
+    path collect_versions_py  // modules/shared/collect_versions.py
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
@@ -42,7 +46,12 @@ process EMIT_MANIFEST {
     // mode never produces intake/annotation/normalization QC JSON since
     // those steps do not run) — the Python script tolerates zero, one, or
     // many QC files.
+    //
+    // software_versions is built from the versions.yml each upstream process
+    // wrote, i.e. from the tools that actually ran, native or containerized.
     """
+    python3 ${collect_versions_py} software_versions.json process_versions/*.yml
+
     cat <<-'EOF' > emit_manifest.py
     #!/usr/bin/env python3
     ${'"""'}
@@ -52,6 +61,7 @@ process EMIT_MANIFEST {
     import hashlib
     import json
     import os
+    import platform
     from datetime import datetime, timezone
 
     STUDY_ID = "${study_id}"
@@ -76,8 +86,15 @@ process EMIT_MANIFEST {
         if os.path.isfile(f) and not f.endswith(".json") and not f.endswith(".py")
     }
 
+    with open("software_versions.json") as fh:
+        collected = json.load(fh)
+    software_versions = collected["software_versions"]
+    # This process's own interpreter; its versions.yml is written after the
+    # manifest, so it cannot be among the collected files.
+    software_versions["EMIT_MANIFEST"] = {"python": platform.python_version()}
+
     qc_metrics = {}
-    warnings = []
+    warnings = list(collected["warnings"])
 
     for qc_path in sorted(glob.glob("*_qc.json")) + sorted(glob.glob("*_qc_metrics.json")):
         try:
@@ -132,8 +149,19 @@ process EMIT_MANIFEST {
                              "separately by src/harmonize/metabolomics.py",
         "parameters": {
             "mode": MODE,
+            # Every params.metabolomics value this run used (normalization,
+            # detection_limit, replicate_unit, ...), not just the mode.
+            "metabolomics": json.loads(r'''${groovy.json.JsonOutput.toJson(params.metabolomics)}'''),
         },
         "input_checksums_sha256": checksums,
+        # Tools as reported by each process that ran, keyed by process name.
+        "software_versions": software_versions,
+        "software_versions_not_captured": {
+            "RENDER_REPORT": "renders this manifest, so it runs afterwards",
+        },
+        # Null for a native run (-profile local); the images a container
+        # profile would pull are declared on each process in modules/metabolomics/.
+        "container_engine": "${workflow.containerEngine ?: ''}" or None,
         "qc_metrics": {
             "n_features": n_features,
             "n_annotation_confidence_level_1_or_2": n_conf_1_or_2,
@@ -154,11 +182,6 @@ process EMIT_MANIFEST {
     cat <<-END_VERSIONS > versions.yml
     ${task.process}:
         python: \$(python3 --version | sed 's/Python //')
-        workflow_mode: "${mode}"
-        pipeline_software_versions:
-            python_utility_layer: "python:3.11-slim"
-            r_differential_abundance: "bioconductor/bioconductor_docker:RELEASE_3_18"
-            report_render: "ghcr.io/quarto-dev/quarto:1.5.57"
     END_VERSIONS
     """
 

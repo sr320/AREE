@@ -1,0 +1,142 @@
+{
+  "run_id": "orthofinder3.1.5_2026-10-13",
+  "builder": "src/mappings/orthogroups.py",
+  "builder_version": "1.0.0",
+  "date_generated": "2026-10-13",
+  "method": "OrthoFinder 3.1.5",
+  "command": [
+    "/Users/sr320/miniforge3/envs/orthofinder/bin/orthofinder",
+    "-f",
+    "/Users/sr320/aree-data/orthogroups/orthofinder3.1.5_2026-10-13/proteomes",
+    "-t",
+    "6",
+    "-a",
+    "6",
+    "-M",
+    "dendroblast"
+  ],
+  "results_source": "/Users/sr320/aree-data/orthogroups/orthofinder3.1.5_2026-10-13/proteomes/OrthoFinder/Results_Oct13",
+  "inference_scope": "OrthoFinder orthogroups (Orthogroups/Orthogroups.tsv): MCL clusters of the all-vs-all DIAMOND graph. Gene trees (dendroblast) and hierarchical orthogroups were also produced by the run but are not used.",
+  "species": [
+    {
+      "slug": "mcali",
+      "ncbi_taxid": 6549,
+      "species": "Mytilus californianus",
+      "assembly_id": "xbMytCali1.0.p",
+      "ncbi_assembly_accession": "GCF_021869535.1",
+      "annotation_release": "NCBI Mytilus californianus Annotation Release 100",
+      "proteome_file": "mcali.fa",
+      "proteome_sha256": "23aca03f7c8a0b4369db4026883cffe5997e567f946649f68cde967a4974aa12",
+      "proteins": 26243
+    },
+    {
+      "slug": "medul",
+      "ncbi_taxid": 6550,
+      "species": "Mytilus edulis",
+      "assembly_id": "xbMytEdul2.2",
+      "ncbi_assembly_accession": "GCF_963676685.1",
+      "annotation_release": "GCF_963676685.1-RS_2025_02",
+      "proteome_file": "medul.fa",
+      "proteome_sha256": "df2ce09238aa3b66b26e28c3dfe8447f9dbe0a34d4ec870622a24498c25dd798",
+      "proteins": 35875
+    },
+    {
+      "slug": "mgall",
+      "ncbi_taxid": 29158,
+      "species": "Mytilus galloprovincialis",
+      "assembly_id": "xbMytGall1.hap1.1",
+      "ncbi_assembly_accession": "GCF_965363235.1",
+      "annotation_release": "GCF_965363235.1-RS_2025_08",
+      "proteome_file": "mgall.fa",
+      "proteome_sha256": "1e97160b3f80a2a15986944d0e963a467c75ee84147393206bb8ccbfb29246bc",
+      "proteins": 27168
+    },
+    {
+      "slug": "mgigas",
+      "ncbi_taxid": 29159,
+      "species": "Magallana gigas",
+      "assembly_id": "xbMagGiga1.1",
+      "ncbi_assembly_accession": "GCF_963853765.1",
+      "annotation_release": "GCF_963853765.1-RS_2024_06",
+      "proteome_file": "mgigas.fa",
+      "proteome_sha256": "448d2ee24321b2053d602158c4916e58ffaaba9161195b0735e41b2ef3907e84",
+      "proteins": 26073
+    },
+    {
+      "slug": "mmerc",
+      "ncbi_taxid": 6596,
+      "species": "Mercenaria mercenaria",
+      "assembly_id": "MADL_Memer_1",
+      "ncbi_assembly_accession": "GCF_021730395.1",
+      "annotation_release": "GCF_021730395.1-RS_2023_01",
+      "proteome_file": "mmerc.fa",
+      "proteome_sha256": "f9c79371e2d555b2796ae72d954a69bdfecf6dc0df31de15dc4ef25c2e4cc766",
+      "proteins": 38330
+    },
+    {
+      "slug": "mtros",
+      "ncbi_taxid": 6551,
+      "species": "Mytilus trossulus",
+      "assembly_id": "PNRI_Mtr1.1.1.hap1",
+      "ncbi_assembly_accession": "GCF_036588685.1",
+      "annotation_release": "GCF_036588685.1-RS_2024_02",
+      "proteome_file": "mtros.fa",
+      "proteome_sha256": "34c36441004141fb8d379a58d6ec58627371087f0ecd814ac524963a3c28d2f2",
+      "proteins": 34235
+    },
+    {
+      "slug": "rphil",
+      "ncbi_taxid": 129788,
+      "species": "Ruditapes philippinarum",
+      "assembly_id": "ASM2657151v2",
+      "ncbi_assembly_accession": "GCF_026571515.1",
+      "annotation_release": "GCF_026571515.1-RS_2023_10",
+      "proteome_file": "rphil.fa",
+      "proteome_sha256": "8058677b9529e9bfd6684c14d3f3ca5b3227c0f581046f34f6de1fa0ff4910fa",
+      "proteins": 40909
+    }
+  ],
+  "per_species": {
+    "mcali": {
+      "genes": 26243,
+      "in_multi_species_orthogroups": 25183
+    },
+    "medul": {
+      "genes": 35875,
+      "in_multi_species_orthogroups": 34274
+    },
+    "mgall": {
+      "genes": 27168,
+      "in_multi_species_orthogroups": 26634
+    },
+    "mgigas": {
+      "genes": 26073,
+      "in_multi_species_orthogroups": 20159
+    },
+    "mmerc": {
+      "genes": 38330,
+      "in_multi_species_orthogroups": 33590
+    },
+    "mtros": {
+      "genes": 34235,
+      "in_multi_species_orthogroups": 32228
+    },
+    "rphil": {
+      "genes": 40909,
+      "in_multi_species_orthogroups": 35533
+    }
+  },
+  "orthogroups": {
+    "total": 38507,
+    "by_copy_class": {
+      "multi_copy": 11877,
+      "single_copy": 7031,
+      "single_copy_all": 5552,
+      "species_specific": 14047
+    }
+  },
+  "outputs": {
+    "gene_orthogroups.tsv": "cf9adab641f9fa686b551dd931da6c911a9928913332b86b34ee305d83828bec",
+    "orthogroups.tsv": "ac6dbefd0b47a11853b4a818eef37c454fd932f8a249fb56783fdc2f12214e8c"
+  }
+}

@@ -14,7 +14,7 @@ Frontiers in Immunology 15:1380089.
 [doi:10.3389/fimmu.2024.1380089](https://doi.org/10.3389/fimmu.2024.1380089)
 (open access, CC BY 4.0).
 
-Registered as [`HESSER2024_VCOR`](../registry/studies/HESSER2024_VCOR.yaml).
+Registered as [`HESSER2024_VCOR`](https://github.com/sr320/AREE/blob/main/registry/studies/HESSER2024_VCOR.yaml).
 
 It was chosen because it is a genuine resilience study — larval survival under a
 pathogen challenge, with and without a protective intervention — and because its
@@ -124,6 +124,12 @@ enforce the separation:
   selected. This matters because the demo LOC numbers collide with real GeneIDs
   denoting different genes — harmonizing the demo studies against the real
   crosswalk attaches real NCBI GeneIDs to fabricated effect sizes.
+* **Demo studies live in `registry/demo_studies/` and are hidden by default.**
+  They index into `registry/demo_study_registry.csv`, not the study registry,
+  and `aree list-studies`, `aree top-candidates`, `aree build-dashboard` and the
+  Streamlit app leave them out unless asked (`--include-simulated`, or the
+  app's sidebar toggle). The published site never harmonizes them. They stay in
+  the repository as fixtures for the test suite, CI and `make demo`.
 
 ## The study contributes no pooled estimate — by design
 
@@ -145,7 +151,7 @@ was run.
 
 ```bash
 aree build-crosswalk                       # once; ~380 MB streamed from NCBI
-export AREE_CROSSWALK=data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
+# The study's genome assembly selects this crosswalk; no environment variable needed.
 
 # The published spreadsheet -> the two result tables AREE harmonizes.
 aree intake-supplementary data/studies/HESSER2024_VCOR/intake.yaml --check

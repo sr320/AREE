@@ -1,0 +1,13 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	origin	temperature	replicate	tissue	library_layout	instrument_model	read_count
+SubH_1	SRR10065364	SAMN12651045	gill tissue from Crassostrea gigas	Sub_H	Sub	H	1	gill	PAIRED	HiSeq X Ten	79818903
+SubC_3	SRR10065365	SAMN12651045	gill tissue from Crassostrea gigas	Sub_C	Sub	C	3	gill	PAIRED	HiSeq X Ten	70095226
+SubC_2	SRR10065366	SAMN12651045	gill tissue from Crassostrea gigas	Sub_C	Sub	C	2	gill	PAIRED	HiSeq X Ten	81490382
+SubC_1	SRR10065367	SAMN12651045	gill tissue from Crassostrea gigas	Sub_C	Sub	C	1	gill	PAIRED	HiSeq X Ten	74770544
+InH_3	SRR10065368	SAMN12651045	gill tissue from Crassostrea gigas	In_H	In	H	3	gill	PAIRED	HiSeq X Ten	65976313
+InH_2	SRR10065369	SAMN12651045	gill tissue from Crassostrea gigas	In_H	In	H	2	gill	PAIRED	HiSeq X Ten	70186712
+InH_1	SRR10065370	SAMN12651045	gill tissue from Crassostrea gigas	In_H	In	H	1	gill	PAIRED	HiSeq X Ten	73706359
+InC_3	SRR10065371	SAMN12651045	gill tissue from Crassostrea gigas	In_C	In	C	3	gill	PAIRED	HiSeq X Ten	91076777
+SubH_3	SRR10065372	SAMN12651045	gill tissue from Crassostrea gigas	Sub_H	Sub	H	3	gill	PAIRED	HiSeq X Ten	74905667
+SubH_2	SRR10065373	SAMN12651045	gill tissue from Crassostrea gigas	Sub_H	Sub	H	2	gill	PAIRED	HiSeq X Ten	84868974
+InC_2	SRR10065374	SAMN12651045	gill tissue from Crassostrea gigas	In_C	In	C	2	gill	PAIRED	HiSeq X Ten	76534362
+InC_1	SRR10065375	SAMN12651045	gill tissue from Crassostrea gigas	In_C	In	C	1	gill	PAIRED	HiSeq X Ten	81453846

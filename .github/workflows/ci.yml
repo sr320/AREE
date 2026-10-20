@@ -20,38 +20,42 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,app,intake]"
+          pip install -e ".[dev,app,intake,site,mcp]"
 
       - name: Lint (ruff)
-        run: ruff check src tests
+        run: ruff check src tests scripts modules/shared
 
       - name: Run tests
         run: pytest -q
 
       - name: Validate all demo studies
         run: |
-          for f in registry/studies/GIGAS_*.yaml; do
-            aree validate-study "$f"
+          for sid in $(aree study-ids --simulated); do
+            aree validate-study "registry/demo_studies/$sid.yaml"
           done
 
-      # The registry CSV is generated, not committed. Every study YAML on the
-      # branch, demo and real, must still validate into it.
+      # The registry CSVs are generated, not committed. Every study YAML on the
+      # branch, real (registry/studies/) and demo (registry/demo_studies/), must
+      # still validate into them, each in its own directory.
       - name: Rebuild the registry index from every study YAML
         run: aree build-registry --strict
 
       - name: Run full demo pipeline end-to-end
         run: |
-          for f in registry/studies/GIGAS_*.yaml; do
-            aree register-study "$f" --update
+          for sid in $(aree study-ids --simulated); do
+            aree register-study "registry/demo_studies/$sid.yaml" --update
           done
-          for sid in GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06; do
+          for sid in $(aree study-ids --simulated); do
             aree harmonize --study "$sid"
           done
           aree meta-analyze --feature-type gene
           aree build-evidence-cards
-          aree top-candidates
+          aree build-cross-species-cards --feature-type gene
+          aree top-candidates --include-simulated
+          aree build-dashboard --include-simulated --out "$RUNNER_TEMP/dashboard.json"
           test -f reports/evidence/evidence_table.tsv
           test -d reports/evidence_cards
+          test -f reports/evidence_cards/cross_species/candidates.tsv
           test -f reports/top_candidates_summary.md
 
   study-pr-scope:
@@ -101,10 +105,9 @@ jobs:
           aree register-study registry/studies/HESSER2024_VCOR.yaml --update
 
       # Runs against the real 33k-gene NCBI/UniProt crosswalk committed to the repo,
-      # not the synthetic demo crosswalk.
+      # not the synthetic demo crosswalk. The study's genome assembly selects it
+      # (data/reference/genome_assemblies.yaml); no environment variable is needed.
       - name: Harmonize against the real crosswalk
-        env:
-          AREE_CROSSWALK: data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
         run: aree harmonize --study HESSER2024_VCOR
 
       - name: Check the harmonized output
@@ -141,6 +144,14 @@ jobs:
             any::jsonlite
             any::knitr
             any::rmarkdown
+
+      # Not through setup-r-dependencies: pak cannot solve bioc::limma there
+      # (limma suggests vsn, which imports limma). Hard dependencies only.
+      - name: Install limma
+        run: |
+          Rscript -e 'install.packages("BiocManager", repos = "https://cloud.r-project.org")' \
+                  -e 'BiocManager::install("limma", update = FALSE, ask = FALSE, dependencies = c("Depends", "Imports", "LinkingTo"))' \
+                  -e 'stopifnot(requireNamespace("limma", quietly = TRUE)); cat("limma", as.character(packageVersion("limma")), "\n")'
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
@@ -179,8 +190,91 @@ jobs:
             --treatment_level treatment \
             --viral_reference data/reference/pathogens/OsHV-1/NC_005881.2.fasta \
             --exclude_samples control2 \
+            --exclude_genes data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt \
             --outdir /tmp/aree-smoke/rnaseq-raw \
             -work-dir /tmp/aree-smoke/work-rnaseq-raw
+
+      - name: Exercise the RNA-seq raw DAG with single-end FASTQ fixtures
+        run: |
+          nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
+            --mode raw_reanalysis \
+            --single_end \
+            --study_id CI_RNASEQ_SE \
+            --comparison_id treatment_vs_control \
+            --reads 'tests/fixtures/rnaseq_raw_se/ERR*.fastq' \
+            --transcript_fasta tests/fixtures/rnaseq_raw/reference.fa \
+            --gtf tests/fixtures/rnaseq_raw/annotation.gtf \
+            --tx2gene tests/fixtures/rnaseq_raw/tx2gene.tsv \
+            --sample_sheet tests/fixtures/rnaseq_raw_se/samples.tsv \
+            --control_level control \
+            --treatment_level treatment \
+            --viral_reference data/reference/pathogens/OsHV-1/NC_005881.2.fasta \
+            --outdir /tmp/aree-smoke/rnaseq-raw-se \
+            -work-dir /tmp/aree-smoke/work-rnaseq-raw-se
+
+      - name: Exercise the RNA-seq raw DAG single-end, as 3' Tag-seq
+        run: |
+          nextflow run workflows/rnaseq -profile local,ci_stub -stub-run \
+            --mode raw_reanalysis \
+            --single_end --tag_seq \
+            --study_id CI_TAGSEQ \
+            --comparison_id treatment_vs_control \
+            --reads 'tests/fixtures/rnaseq_raw_se/ERR*.fastq' \
+            --transcript_fasta tests/fixtures/rnaseq_raw/reference.fa \
+            --gtf tests/fixtures/rnaseq_raw/annotation.gtf \
+            --tx2gene tests/fixtures/rnaseq_raw/tx2gene.tsv \
+            --sample_sheet tests/fixtures/rnaseq_raw_se/samples.tsv \
+            --control_level control \
+            --treatment_level treatment \
+            --outdir /tmp/aree-smoke/rnaseq-tagseq \
+            -work-dir /tmp/aree-smoke/work-rnaseq-tagseq
+          # One trimmed file per library, none for a second mate.
+          test "$(ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R1.fastq.gz | wc -l)" -eq 4
+          ! ls /tmp/aree-smoke/rnaseq-raw-se/rnaseq/trimmed/*_trimmed_R2.fastq.gz 2>/dev/null
+
+      # A real (not stub) run: normalization, the detection filter, tank
+      # units and limma all execute on the simulated targeted-panel fixture.
+      - name: Run the metabolomics raw DAG on a targeted-panel fixture
+        run: |
+          nextflow run workflows/metabolomics -profile local \
+            --mode raw_reanalysis \
+            --metabolomics.raw_feature_table tests/fixtures/metabolomics_raw/features.tsv \
+            --metabolomics.sample_sheet tests/fixtures/metabolomics_raw/samplesheet.tsv \
+            --metabolomics.study_id CI_METAB \
+            --metabolomics.comparison_id treatment_vs_control \
+            --metabolomics.normalization internal_standard \
+            --metabolomics.detection_limit 0.001 \
+            --metabolomics.replicate_unit tank \
+            --metabolomics.acquisition targeted \
+            --outdir /tmp/aree-smoke/metabolomics-raw \
+            -work-dir /tmp/aree-smoke/work-metabolomics-raw
+          python scripts/check_metabolomics_raw_smoke.py /tmp/aree-smoke/metabolomics-raw
+
+      # A real run of the proteomics raw DAG on a spectral-count (NSAF-like)
+      # fixture: linear scale, zeros as not detected, the per-arm detection
+      # filter, sample-sheet subsetting and limma with lfcSE.
+      - name: Run the proteomics raw DAG on a spectral-count fixture
+        run: |
+          nextflow run workflows/proteomics -profile local \
+            --mode raw_reanalysis \
+            --proteomics.raw_abundance_matrix tests/fixtures/proteomics_raw/abundance_matrix.tsv \
+            --proteomics.sample_sheet tests/fixtures/proteomics_raw/samplesheet.tsv \
+            --proteomics.study_id CI_PROT \
+            --proteomics.comparison_id treatment_vs_control \
+            --proteomics.input_scale linear \
+            --proteomics.normalization none \
+            --proteomics.quantification spectral_count \
+            --outdir /tmp/aree-smoke/proteomics-raw \
+            -work-dir /tmp/aree-smoke/work-proteomics-raw
+          python scripts/check_proteomics_raw_smoke.py /tmp/aree-smoke/proteomics-raw
+
+      # Two stub runs differing only in comparison params, paired and single
+      # end: the second must take FASTQC, fastp, Salmon and viral quant from
+      # the -resume cache. Skipped in the Python job, which has no Nextflow.
+      - name: A second comparison reuses per-library RNA-seq tasks
+        run: |
+          pip install pytest
+          pytest -q tests/test_rnaseq_resume_across_comparisons.py
 
       - name: Assert workflow artifacts exist
         run: |
@@ -190,6 +284,34 @@ jobs:
           test -f /tmp/aree-smoke/metabolomics/metabolomics/standardized/GIGAS_GROW06_hypoxia_vs_control_metabolite_features_standardized.tsv
           test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/standardized/CI_RNASEQ_treatment_vs_control_dge_standardized.tsv
           test -f /tmp/aree-smoke/rnaseq-raw/rnaseq/viral_load/CI_RNASEQ_treatment_vs_control_viral_load.tsv
+          test -f /tmp/aree-smoke/rnaseq-raw-se/rnaseq/standardized/CI_RNASEQ_SE_treatment_vs_control_dge_standardized.tsv
+          test -f /tmp/aree-smoke/rnaseq-tagseq/rnaseq/standardized/CI_TAGSEQ_treatment_vs_control_dge_standardized.tsv
+
+      # Each manifest's software_versions must match the versions.yml every
+      # task of that run wrote, so it cannot fall back to declared pins.
+      - name: Manifest software_versions match what ran
+        run: |
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/rnaseq/rnaseq/manifests/GIGAS_HEAT01_acute_heat_vs_control_manifest.json \
+            /tmp/aree-smoke/work-rnaseq
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/methylation/methylation/manifest/GIGAS_PATH03_OsHV1_challenge_vs_sham_manifest.json \
+            /tmp/aree-smoke/work-methylation
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/proteomics/proteomics/manifest/GIGAS_SAL04_low_salinity_vs_control_manifest.json \
+            /tmp/aree-smoke/work-proteomics
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/metabolomics/metabolomics/manifest/GIGAS_GROW06_hypoxia_vs_control_manifest.json \
+            /tmp/aree-smoke/work-metabolomics
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/rnaseq-raw/rnaseq/manifests/CI_RNASEQ_treatment_vs_control_manifest.json \
+            /tmp/aree-smoke/work-rnaseq-raw
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/metabolomics-raw/metabolomics/manifest/CI_METAB_treatment_vs_control_manifest.json \
+            /tmp/aree-smoke/work-metabolomics-raw
+          python scripts/check_manifest_versions.py \
+            /tmp/aree-smoke/proteomics-raw/proteomics/manifest/CI_PROT_treatment_vs_control_manifest.json \
+            /tmp/aree-smoke/work-proteomics-raw
 
   schema-validation:
     name: JSON schema sanity

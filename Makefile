@@ -1,7 +1,9 @@
 # AREE task runner. Run `make help` for the list.
-.PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard docs app clean
+.PHONY: help registry install test lint demo demo-clean register harmonize meta cards crosswalk intake intake-check real-study real-pool dashboard site-data mcp docs app clean metabolite-links
 
-DEMO_STUDIES := GIGAS_HEAT01 GIGAS_OA02 GIGAS_PATH03 GIGAS_SAL04 GIGAS_LARV05 GIGAS_GROW06
+# Every simulated study in registry/demo_studies/, so a new demo study needs no edit here.
+# The demo studies are pipeline fixtures; register/harmonize/meta/cards run only them.
+DEMO_STUDIES = $(shell aree study-ids --simulated)
 
 help:
 	@echo "AREE make targets:"
@@ -11,12 +13,15 @@ help:
 	@echo "  lint         run ruff over src and tests"
 	@echo "  demo         run the full demo pipeline (register -> harmonize -> meta -> cards)"
 	@echo "  demo-clean   remove generated reports/ and the registry index, then run demo"
+	@echo "  metabolite-links  build the real C. gigas metabolite->gene link table from KEGG (git-ignored)"
 	@echo "  crosswalk    rebuild the real NCBI/UniProt identifier crosswalk (~380 MB download)"
 	@echo "  intake       regenerate the real study's result tables from the published source"
 	@echo "  intake-check verify the committed result tables still reproduce (no writes)"
 	@echo "  real-study   register + harmonize the real study (HESSER2024_VCOR) against the real crosswalk"
 	@echo "  real-pool    harmonize every committed result of every real study that passed QC"
-	@echo "  dashboard    build docs/dashboard/data.json from current outputs, then render the site"
+	@echo "  dashboard    build dashboard data + Explore tables from current outputs (real studies only), then render the site"
+	@echo "  site-data    export Parquet tables for the site's Explore page (docs/explore/data/)"
+	@echo "  mcp          serve AREE to MCP clients (Claude) over stdio"
 	@echo "  docs         render the Quarto documentation site"
 	@echo "  app          launch the Streamlit interface"
 	@echo "  clean        remove generated reports/ and caches"
@@ -25,7 +30,7 @@ registry:
 	aree build-registry
 
 install:
-	pip install -e ".[dev,app,intake]"
+	pip install -e ".[dev,app,intake,site,mcp]"
 
 test:
 	pytest -q
@@ -34,8 +39,8 @@ lint:
 	ruff check src tests
 
 register:
-	@for f in registry/studies/GIGAS_*.yaml; do aree register-study "$$f" --update; done
-	@aree list-studies
+	@for sid in $(DEMO_STUDIES); do aree register-study "registry/demo_studies/$$sid.yaml" --update; done
+	@aree list-studies --include-simulated
 
 harmonize:
 	@for sid in $(DEMO_STUDIES); do aree harmonize --study "$$sid"; done
@@ -45,7 +50,8 @@ meta:
 
 cards:
 	aree build-evidence-cards
-	aree top-candidates
+	aree build-cross-species-cards --feature-type gene
+	aree top-candidates --include-simulated
 
 demo: register harmonize meta cards
 	@echo ""
@@ -61,6 +67,9 @@ demo-clean: clean demo
 crosswalk:
 	aree build-crosswalk
 
+metabolite-links:
+	aree build-metabolite-links
+
 REAL_CROSSWALK := data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv
 REAL_INTAKE := data/studies/HESSER2024_VCOR/intake.yaml
 
@@ -72,21 +81,30 @@ intake-check:
 
 real-study: intake-check
 	@test -f $(REAL_CROSSWALK) || (echo "Real crosswalk missing. Run: make crosswalk" && exit 1)
-	AREE_CROSSWALK=$(REAL_CROSSWALK) aree register-study registry/studies/HESSER2024_VCOR.yaml --update
-	AREE_CROSSWALK=$(REAL_CROSSWALK) aree harmonize --study HESSER2024_VCOR
+	aree register-study registry/studies/HESSER2024_VCOR.yaml --update
+	aree harmonize --study HESSER2024_VCOR
 
 # Everything the Pages workflow does to populate the dashboard: every committed
 # results_file of every real study that has not failed QC, read from the
 # registry (scripts/harmonize_committed_results.py), so a newly merged study
-# needs no edit here.
+# needs no edit here. Each study resolves against the crosswalk registered for
+# its genome assembly in data/reference/genome_assemblies.yaml, so a study of a
+# new species needs no edit here either.
 real-pool:
 	@test -f $(REAL_CROSSWALK) || (echo "Real crosswalk missing. Run: make crosswalk" && exit 1)
 	aree build-registry
-	AREE_CROSSWALK=$(REAL_CROSSWALK) python scripts/harmonize_committed_results.py
+	python scripts/harmonize_committed_results.py
 
 dashboard:
 	aree build-dashboard
+	aree export-site-data
 	quarto render docs
+
+site-data:
+	aree export-site-data
+
+mcp:
+	aree mcp
 
 docs:
 	quarto render docs

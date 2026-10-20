@@ -43,6 +43,20 @@
     },
     "citation": {"type": "string", "description": "Full citation string for the source publication/dataset."},
     "species": {"type": "string", "description": "Scientific name, e.g. Crassostrea gigas."},
+    "species_identity": {
+      "type": ["object", "null"],
+      "description": "How the study animals were assigned to species. Required (by aree validate-study) for species whose vocabulary term has a `complex`, e.g. the hybridizing Mytilus edulis complex; optional otherwise.",
+      "additionalProperties": false,
+      "required": ["basis"],
+      "properties": {
+        "basis": {
+          "type": "string",
+          "enum": ["genotyped", "morphology", "collection_site", "authors_statement", "unstated"],
+          "description": "genotyped = species-diagnostic markers or sequence data on the study animals themselves; collection_site = inferred from where they were collected; authors_statement = the paper or deposit names the species with no stated basis; unstated = nothing recorded."
+        },
+        "notes": {"type": ["string", "null"], "description": "Markers used, hybrid-zone context, or why the label is doubted."}
+      }
+    },
     "strain_or_population": {
       "type": ["string", "null"],
       "description": "Strain, population, family, or breeding line where available."
@@ -94,7 +108,7 @@
         "required": [
           "comparison_id", "tissue", "life_stage", "stressor_original", "stressor_standardized",
           "control_condition", "treatment_condition", "phenotype", "phenotype_direction",
-          "sample_size", "biological_replicates"
+          "contrast_type", "sample_size", "biological_replicates"
         ],
         "additionalProperties": false,
         "properties": {
@@ -119,6 +133,11 @@
             "enum": ["resilience", "stress_response", "disease", "exposure_only"],
             "description": "Must agree with the phenotype ontology's resilience_relevance unless explicitly overridden with a note."
           },
+          "contrast_type": {
+            "type": "string",
+            "enum": ["baseline_phenotype_difference", "phenotype_difference_under_exposure", "exposure_response", "phenotype_by_exposure_interaction"],
+            "description": "What the two arms differ in, and under what conditions they were sampled. baseline_phenotype_difference: groups that differ in resilience by origin (line, family, population, ploidy, age), sampled under common unstressed conditions; the design for a predictive marker. phenotype_difference_under_exposure: groups that differ in resilience (by origin, outcome or prior conditioning), sampled during or after a challenge. exposure_response: treatment versus control, including conditioning treatments sampled before a later challenge. phenotype_by_exposure_interaction: the difference between two groups' responses to the same exposure (a 2 x 2 design). Evidence pools only within one contrast type. See docs/contrast_types.md."
+          },
           "sample_size": {"type": "integer", "minimum": 0, "description": "Number of samples analyzed in this comparison, after any excluded_samples are removed."},
           "biological_replicates": {"type": "integer", "minimum": 0},
           "results_file": {
@@ -141,7 +160,7 @@
           },
           "meta_analysis_primary": {
             "type": "boolean",
-            "description": "Prespecified comparison for cross-study pooling. When any comparison in a study sets this to true, meta-analysis pools only the flagged comparisons from that study; the rest stay in the evidence table and on evidence cards. Choose it before examining results, and record the rationale in provenance.curation_notes."
+            "description": "Prespecified comparison for cross-study pooling, chosen within its contrast_type. When any comparison of a given contrast_type in a study sets this to true, meta-analysis pools only the flagged comparisons of that type from that study; the rest stay in the evidence table and on evidence cards. Comparisons of other contrast types are unaffected, because they never pool with this one. Choose it before examining results, and record the rationale in provenance.curation_notes."
           }
         }
       }

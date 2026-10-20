@@ -61,6 +61,9 @@ process STANDARDIZE_OUTPUT {
         "pvalue",
         "padj",
     ]
+    # Carried through when present: the standard error of log2FC (lets the
+    # evidence record be pooled) and the method that produced the row.
+    OPTIONAL = ["lfcSE", "analysis_method"]
     IN_PATH = "${raw_results}"
     OUT_PATH = "${study_id}_${comparison_id}_metabolite_features_standardized.tsv"
 
@@ -76,6 +79,7 @@ process STANDARDIZE_OUTPUT {
         "log2FoldChange": "log2FC", "logFC": "log2FC",
         "p.value": "pvalue", "PValue": "pvalue", "p_value": "pvalue",
         "FDR": "padj", "adj.P.Val": "padj", "adjusted_p_value": "padj",
+        "standard_error": "lfcSE", "SE": "lfcSE", "se": "lfcSE",
     }
     df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
 
@@ -87,7 +91,7 @@ process STANDARDIZE_OUTPUT {
             f"input. Present columns: {list(df.columns)}"
         )
 
-    out = df[REQUIRED].copy()
+    out = df[REQUIRED + [c for c in OPTIONAL if c in df.columns]].copy()
 
     out["annotation_confidence_level"] = pd.to_numeric(
         out["annotation_confidence_level"], errors="coerce"
@@ -105,7 +109,7 @@ process STANDARDIZE_OUTPUT {
         out.loc[bad_mask, "annotation_confidence_level"] = 4
     out["annotation_confidence_level"] = out["annotation_confidence_level"].astype(int)
 
-    for col in ["log2FC", "pvalue", "padj"]:
+    for col in ["log2FC", "pvalue", "padj"] + (["lfcSE"] if "lfcSE" in out.columns else []):
         out[col] = pd.to_numeric(out[col], errors="coerce")
 
     out["metabolite_class"] = out["metabolite_class"].fillna("unknown")

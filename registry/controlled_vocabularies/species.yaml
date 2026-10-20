@@ -13,10 +13,24 @@
 # on the raw string would silently split one species into two.
 #
 # `accepted_synonyms` are alternative scientific names that denote the SAME
-# taxon. They are accepted on input and resolved to `ncbi_taxid`. Adding a
-# species means adding a term here plus a reference assembly in
-# data/reference/genome_assemblies.yaml — see docs/adding_a_species.md.
-version: "0.1.0"
+# taxon. They are accepted on input and resolved to `ncbi_taxid`. Only add a
+# synonym that NCBI Taxonomy itself lists for the taxid (E-utilities efetch,
+# OtherNames/Synonym); do not add a name because the literature sometimes uses
+# it for a related taxon. Adding a species means adding a term here plus a
+# reference assembly in data/reference/genome_assemblies.yaml — see
+# docs/adding_a_species.md.
+#
+# `complex` (optional) names a group of species that hybridize and are often
+# mislabelled in public deposits. It is a display and curation field only:
+# evidence is still partitioned by `ncbi_taxid`, never pooled by complex. A
+# study of a species with a `complex` must declare `species_identity` (how the
+# animals were assigned to species), and carry the quality flag
+# `species_assignment_unverified` unless they were genotyped. `aree
+# validate-study` enforces both.
+#
+# Mussel and clam terms (added 2026-10-11) were checked against NCBI Taxonomy
+# (E-utilities efetch) on that date. See docs/mussel_clam_integration_plan.md.
+version: "0.2.0"
 terms:
   - id: magallana_gigas
     label: Pacific oyster
@@ -32,3 +46,115 @@ terms:
       taxonomy lists Magallana gigas as the scientific name and Crassostrea
       gigas as a synonym under the same taxid, so both resolve here. AREE's
       reference crosswalk is built from NCBI Gene for this taxid.
+
+  # ------------------------------------------------------------------------- #
+  # Mussels
+  # ------------------------------------------------------------------------- #
+
+  - id: mytilus_galloprovincialis
+    label: Mediterranean mussel
+    scientific_name: "Mytilus galloprovincialis"
+    accepted_synonyms: []
+    common_names:
+      - "Mediterranean mussel"
+    ncbi_taxid: 29158
+    complex: mytilus_edulis_complex
+    notes: >-
+      Member of the Mytilus edulis species complex with M. edulis and M.
+      trossulus; the three hybridize where their ranges meet, and public
+      deposits are labelled by the depositor's assumption rather than by
+      genotype. NCBI Taxonomy lists no synonyms for this taxid. Names such as
+      "Mytilus edulis galloprovincialis" are deliberately not accepted here.
+
+  - id: mytilus_edulis
+    label: Blue mussel
+    scientific_name: "Mytilus edulis"
+    accepted_synonyms: []
+    common_names:
+      - "blue mussel"
+      - "edible mussel"
+    ncbi_taxid: 6550
+    complex: mytilus_edulis_complex
+    notes: >-
+      Member of the Mytilus edulis species complex. NCBI Taxonomy lists no
+      synonyms. It does list a child taxon, "Mytilus edulis balthicus"
+      (taxid 2991691), which is not resolved to this term: a study naming it
+      must be added deliberately.
+
+  - id: mytilus_trossulus
+    label: Pacific blue mussel
+    scientific_name: "Mytilus trossulus"
+    accepted_synonyms: []
+    common_names:
+      - "common blue mussel"
+      - "bay mussel"
+    ncbi_taxid: 6551
+    complex: mytilus_edulis_complex
+    notes: >-
+      Member of the Mytilus edulis species complex. NCBI Taxonomy lists no
+      synonyms.
+
+  - id: mytilus_californianus
+    label: California mussel
+    scientific_name: "Mytilus californianus"
+    accepted_synonyms: []
+    common_names:
+      - "California mussel"
+    ncbi_taxid: 6549
+    notes: >-
+      Not part of the Mytilus edulis complex. NCBI Taxonomy lists no synonyms.
+
+  - id: mytilus_coruscus
+    label: Korean mussel
+    scientific_name: "Mytilus coruscus"
+    accepted_synonyms: []
+    common_names:
+      - "Korean mussel"
+      - "hard-shelled mussel"
+    ncbi_taxid: 42192
+    notes: >-
+      Not part of the Mytilus edulis complex. NCBI has no Gene records for this
+      species: its only annotated assembly (MCOR1.1) carries a GenBank
+      annotation submitted by its authors, so its crosswalk is built by the GFF
+      route (mappings/gff_crosswalk.py, WP7) and anchored on the authors' locus
+      tags rather than NCBI GeneIDs.
+
+  # ------------------------------------------------------------------------- #
+  # Clams
+  # ------------------------------------------------------------------------- #
+
+  - id: mercenaria_mercenaria
+    label: Hard clam
+    scientific_name: "Mercenaria mercenaria"
+    accepted_synonyms:
+      - "Venus mercenaria"
+    common_names:
+      - "hard clam"
+      - "northern quahog"
+    ncbi_taxid: 6596
+    notes: >-
+      "Venus mercenaria" is the original combination and is listed by NCBI
+      Taxonomy as a synonym of this taxid.
+
+  - id: ruditapes_philippinarum
+    label: Manila clam
+    scientific_name: "Ruditapes philippinarum"
+    accepted_synonyms:
+      - "Venerupis philippinarum"
+      - "Tapes philippinarum"
+      - "Venus philippinarum"
+      - "Venerupis japonica"
+      - "Tapes japonica"
+      - "Ruditapes (Venerupis) philippinarum"
+      - "Venerupis (Ruditapes) philippinarum"
+    common_names:
+      - "Manila clam"
+      - "Japanese littleneck"
+    ncbi_taxid: 129788
+    notes: >-
+      The genus is unsettled in the literature (Ruditapes, Venerupis and Tapes
+      are all in current use), which is exactly the Crassostrea/Magallana
+      problem again. Every synonym above is listed by NCBI Taxonomy for this
+      taxid. NCBI has also merged four older taxids into this one (430757,
+      152465, 104384, 55422); a deposit carrying one of them is still this
+      species.

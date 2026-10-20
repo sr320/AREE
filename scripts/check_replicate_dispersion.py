@@ -37,7 +37,22 @@ DEFAULT_MIN_DISPERSION = 0.005
 MIN_MEAN_COUNT = 500
 
 
+def library_ids(samplesheet: pd.DataFrame) -> pd.DataFrame:
+    """Return the sheet with a sample_id that is unique per library.
+
+    Some deposits give every run of a group the same sample_alias (e.g.
+    PRJNA341808: three runs per BioSample, all 'Cg_Larvae_Heat'). Keyed by
+    that, gene_counts would silently merge a group's replicates into one
+    column. In that case each library is identified by its run accession.
+    """
+    if samplesheet["sample_id"].duplicated().any():
+        samplesheet = samplesheet.copy()
+        samplesheet["sample_id"] = samplesheet.index
+    return samplesheet
+
+
 def gene_counts(salmon_dirs: list[Path], samplesheet: pd.DataFrame, tx2gene: pd.DataFrame) -> pd.DataFrame:
+    samplesheet = library_ids(samplesheet)
     counts = {}
     for salmon_dir in salmon_dirs:
         for quant in sorted(salmon_dir.glob("*/quant.sf")):
@@ -82,7 +97,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
 
-    sheet = pd.read_csv(args.samplesheet, sep="\t", dtype=str).set_index("run_accession")
+    sheet = library_ids(pd.read_csv(args.samplesheet, sep="\t", dtype=str).set_index("run_accession"))
     tx2gene = pd.read_csv(args.tx2gene, sep="\t", header=None, names=["tx", "gene"], dtype=str)
     counts = gene_counts(args.salmon_dir, sheet, tx2gene)
     counts = counts.drop(columns=[s for s in args.exclude if s in counts.columns])

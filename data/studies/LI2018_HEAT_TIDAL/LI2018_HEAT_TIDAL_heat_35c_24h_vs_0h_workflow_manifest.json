@@ -1,0 +1,86 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "LI2018_HEAT_TIDAL",
+  "comparison_id": "heat_35c_24h_vs_0h",
+  "input_files": [
+    {
+      "name": "LI2018_HEAT_TIDAL_heat_35c_24h_vs_0h_dge_standardized.tsv",
+      "sha256": "7ee0991017e13382766947990bd276595058d2c3c1ea4342c9e5da5d712b516b"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "LI2018_HEAT_TIDAL",
+    "comparison_id": "heat_35c_24h_vs_0h",
+    "outdir": "results/rnaseq/LI2018_HEAT_TIDAL",
+    "exclude_samples": [
+      "LTJ02"
+    ],
+    "control_levels": [
+      "BYQ_J_0",
+      "BYQ_X_0",
+      "LT_J_0",
+      "LT_X_0"
+    ],
+    "treatment_levels": [
+      "BYQ_J_24",
+      "BYQ_X_24",
+      "LT_J_24",
+      "LT_X_24"
+    ],
+    "replicate_unit": null,
+    "single_end": false,
+    "se_adapter": null,
+    "viral_reference": null
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.42.1",
+      "bioconductor-tximport": "1.30.0",
+      "r-base": "4.3.2"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.9"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-12T23:07:53.333627-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": [
+    "samples_excluded_by_curation: LTJ02 (see the study registry for the reason)"
+  ]
+}

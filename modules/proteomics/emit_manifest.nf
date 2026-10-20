@@ -2,9 +2,11 @@
 // the proteomics workflow run, per docs/design.md section 4 (provenance
 // model) and section 7 (raw vs. processed modes).
 //
-// STATUS: structurally complete DSL2 process with a real Python script
-// (hashlib sha256 checksums, parameter dump, qc metrics read from upstream
-// JSON when available). NOT executed against real data in this build.
+// Records every params.proteomics value, sha256 of the workflow's input files
+// and of the standardized table, the missingness summary and (raw mode) the
+// limma QC.
+//
+// STATUS: runs in the demo CI (processed mode) and the raw-mode CI smoke test.
 //
 // Provenance note (docs/design.md section 4): this manifest documents
 // *infra-level* provenance (what ran, with what parameters/versions/inputs,
@@ -27,20 +29,47 @@ process EMIT_MANIFEST {
     val mode
     path standardized_table
     path missingness_summary_json_optional
+    path da_qc_optional, stageAs: 'da_qc/*'
+    path input_files, stageAs: 'input_files/*'
     val workflow_version
     val start_time_iso
+    // Every upstream process's versions.yml (mixed + collected in main.nf),
+    // renamed on staging because they all share one file name.
+    path process_versions, stageAs: 'process_versions/versions_*.yml'
+    path collect_versions_py  // modules/shared/collect_versions.py
 
     output:
     path "${study_id}_${comparison_id}_manifest.json", emit: manifest
     path "versions.yml", emit: versions
 
     script:
+    // software_versions is built from the versions.yml each upstream process
+    // wrote, i.e. from the tools that actually ran, native or containerized.
+    // It used to be a hard-coded copy of the container tags.
     """
     #!/usr/bin/env python3
+    import glob
     import hashlib
     import json
+    import platform
+    import subprocess
     import sys
     import pandas as pd
+
+    subprocess.run(
+        [sys.executable, "${collect_versions_py}", "software_versions.json"]
+        + sorted(glob.glob("process_versions/*.yml")),
+        check=True,
+    )
+    with open("software_versions.json") as fh:
+        collected = json.load(fh)
+    software_versions = collected["software_versions"]
+    # This process's own interpreter; its versions.yml is written after the
+    # manifest, so it cannot be among the collected files.
+    software_versions["EMIT_MANIFEST"] = {
+        "python": platform.python_version(),
+        "pandas": pd.__version__,
+    }
 
     study_id = "${study_id}"
     comparison_id = "${comparison_id}"
@@ -58,6 +87,15 @@ process EMIT_MANIFEST {
 
     standardized_path = "${standardized_table}"
     checksum = sha256_of(standardized_path)
+    input_checksums = {
+        p.split("/", 1)[1]: sha256_of(p)
+        for p in sorted(glob.glob("input_files/*"))
+        if not p.endswith("NO_FILE")
+    }
+    da_qc = None
+    if not "${da_qc_optional}".endswith("NO_FILE"):
+        with open("${da_qc_optional}") as fh:
+            da_qc = json.load(fh)
 
     df = pd.read_csv(standardized_path, sep="\\t")
     n_proteins = int(len(df))
@@ -68,9 +106,10 @@ process EMIT_MANIFEST {
     qc_metrics = {
         "n_proteins": n_proteins,
         "mean_missingness_percent": mean_missingness,
+        "differential_abundance_qc": da_qc,
     }
 
-    warnings = []
+    warnings = list(collected["warnings"])
     if mean_missingness is None:
         warnings.append(
             "missingness_percent unavailable or entirely null for this comparison; "
@@ -111,15 +150,21 @@ process EMIT_MANIFEST {
                 "path": standardized_path,
                 "sha256": checksum,
             },
+            "input_files_sha256": input_checksums,
         },
         "parameters": {
             "mode": mode,
+            # Every params.proteomics value this run used, not just the mode.
+            "proteomics": json.loads(r'''${groovy.json.JsonOutput.toJson(params.proteomics)}'''),
         },
-        "software_versions": {
-            "python": "3.11 (python:3.11-slim container)",
-            "pandas": pd.__version__,
-            "limma": "bioconductor RELEASE_3_18 (see containers/README.md; exact limma version pinned at container build time, not independently re-verified in this scaffold)",
+        # Tools as reported by each process that ran, keyed by process name.
+        "software_versions": software_versions,
+        "software_versions_not_captured": {
+            "RENDER_REPORT": "renders this manifest, so it runs afterwards",
         },
+        # Null for a native run (-profile local); the images a container
+        # profile would pull are declared on each process in modules/proteomics/.
+        "container_engine": "${workflow.containerEngine ?: ''}" or None,
         "qc_metrics": qc_metrics,
         "missingness_summary": missingness_summary,
         "warnings": warnings,

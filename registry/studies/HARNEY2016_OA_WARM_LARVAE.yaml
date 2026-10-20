@@ -1,0 +1,236 @@
+# Real proteomics study: Pacific oyster D-larvae reared 40 h under ocean
+# acidification (pH 7.9 vs 8.1) crossed with warming (22 vs 20 C), 3 tanks per
+# treatment, Coomassie 2-DE. Registered from PRIDE PXD002316 and the authors'
+# accepted manuscript on Ifremer Archimer (doc 00299/40985), Harney et al.
+# 2016, J Proteomics 135:151-161. The published version is not open access.
+#
+# REGISTERED, NOT HARMONIZED (2026-10-17). The design is sound (12 tanks, 3 per
+# treatment, one pooled cross split among them), but the data needed for a
+# reanalysis or a usable evidence record were never deposited:
+#   - Spot volumes were quantified from 16-bit gel images in Progenesis
+#     SameSpots (one gel per tank). Neither images nor volumes are public.
+#     PRIDE holds only the LC-MS/MS identification runs of excised spots
+#     (22 runs, named by SameSpots spot number), so there is nothing to
+#     requantify.
+#   - The only quantitative result is the paper's Table 2: fold change,
+#     direction and SameSpots ANOVA P for 12 spots, chosen from about 650 per
+#     gel because they reached P < 0.02 in at least one contrast. No standard
+#     error, no multiple-testing correction, and nothing for the other ~638
+#     spots. Such records could not enter a pooled estimate and would carry
+#     only selected directions.
+#   - 9 of the 11 C. gigas UniProt accessions behind the 12 spots have been
+#     deleted from UniProtKB ("not part of a reference proteome"); only
+#     actin-2 (K1QWP8 -> GeneID 105340468) and GAPDH (K1Q350 -> 105340512)
+#     still resolve to AREE gene IDs.
+# Decision (2026-10-17, sr320): register for the record with qc_status and
+# analysis_status not_started and every results_file null; do not transcribe
+# or harmonize Table 2. pride_provenance.json records the PRIDE files, the
+# manuscript checksum and each spot's UniProt status (build_provenance.py).
+# If the SameSpots volumes or gel images are ever released, this becomes a
+# tank-replicated OA x warming proteomic study worth reanalyzing.
+#
+# PRIDE's project description still reports the pre-revision analysis
+# (22 spots, 18 proteins, P < 0.05); the paper reports 12 spots at P < 0.02.
+# The PRIDE spot numbers (266_178 etc.) cannot be matched to the paper's spot
+# numbers 1-12 without the annotated gel (paper Fig. 3).
+
+study_id: HARNEY2016_OA_WARM_LARVAE
+simulated: false
+
+accessions:
+  doi: "10.1016/j.jprot.2015.12.001"
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: "PXD002316"
+  other: "Archimer 00299/40985 (accepted manuscript)"
+
+citation: "Harney E, Artigaud S, Le Souchu P, Miner P, Corporeau C, Essid H, Pichereau V, Nunes FLD (2016) Non-additive effects of ocean acidification in combination with warming on the larval proteome of the Pacific oyster, Crassostrea gigas. J Proteomics 135:151-161. https://doi.org/10.1016/j.jprot.2015.12.001 (PMID 26657130). Accepted manuscript: https://archimer.ifremer.fr/doc/00299/40985/. Proteomics: PRIDE PXD002316."
+
+species: "Magallana gigas"
+strain_or_population: "Two-year-old adults from the Ifremer Argenton hatchery conditioning program, held at the Ifremer Plouzané laboratory from July 2013 (Bay of Brest water). One cross: oocytes of 5 females pooled and fertilized with sperm of 4 males, then split equally among the 12 tanks."
+
+# Spots were identified against the 2012 UniProt C. gigas reference proteome
+# (UP000005408, April 2014 release), built on the oyster_v9 assembly that
+# AREE does not register. Most of those accessions are now deleted; the two
+# that survive carry NCBI GeneIDs in the current annotation. This records the
+# annotation any mapping would target. See identifier_mapping_uncertain.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "processed_results_harmonization"
+platform: "Coomassie-stained 2-DE (IEF pH 3-10 on IPGphor3, 12% SDS-PAGE, 15 x 15 cm gels, 500 ug protein), one gel per tank; image analysis in Progenesis SameSpots v3.3. Spot identification by nanoLC-MS/MS on an LTQ-Orbitrap XL, Mascot 2.2.07 / Proteome Discoverer 1.2 against UniProt UP000005408 (April 2014), 1% FDR."
+
+data_availability:
+  raw_data_available: false
+  processed_data_available: true
+  status: "available"
+  access_notes: "PRIDE PXD002316 (COMPLETE submission, EBI terms of use): 22 .RAW identification runs of excised spots with Mascot results, peak lists and mzTab; no gel images or spot volumes, so raw_data_available is false for quantification. Processed results: paper Table 2 (12 significance-selected spots x 5 contrasts, fold change and P only), in the publisher version (not open access) and the accepted manuscript on Ifremer Archimer. Not transcribed. Details in data/studies/HARNEY2016_OA_WARM_LARVAE/pride_provenance.json."
+
+# Registered only; see the header. Nothing was QC'd or harmonized.
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# FIVE COMPARISONS, the paper's Table 2 contrasts, so the registry shows what
+# the study tested. sample_size 6 = 3 tanks per arm, one gel per tank.
+#
+# PHENOTYPE. Size (area) and calcification (birefringence) of 30-50 D-larvae
+# per tank at 40 h, from the same tanks. The paper tested larvae as units
+# (Kruskal-Wallis, Dunn tests vs control and warm-acidified vs warm only):
+# acidified smaller than control (z = -8.58), warm larger (z = 3.15),
+# warm-acidified not different in size (z = 1.05); calcification higher in
+# warm (z = 8.61) and warm-acidified (z = 6.59) than control, lower in
+# warm-acidified than warm (z = -2.44), acidified not different (z = -1.31).
+# Directions below follow those tests; where the paper made no test the
+# direction is not_applicable. Classifications stay at the ontology default.
+#
+# meta_analysis_primary: acidified vs control at 20 C, the single-stressor OA
+# contrast comparable with other OA studies, chosen before any result was
+# examined. It carries no results, so the flag has no effect until data exist.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "ph7_9_vs_ph8_1_at_20c"
+    tissue: "whole_animal"
+    life_stage: "larva"
+    stressor_original: "Reduced pH: seawater acidified by CO2 bubbling (header-tank CO2 reactor) to pH 7.87 +/- 0.05 at 19.8 +/- 0.3 C ('acidified') versus pH 8.06 +/- 0.06 at 19.9 +/- 0.4 C ('control'); 5 L open-flow tanks, 80 mL/min, from 90 min post-fertilization to 40 h."
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "pH 7.87 vs 8.06 (about -0.2 pH units)"
+    exposure_duration: "40 h"
+    exposure_timing: "from fertilization through the D-veliger stage"
+    control_condition: "Control: pH 8.06, 19.9 C, 3 tanks"
+    treatment_condition: "Acidified: pH 7.87, 19.8 C, 3 tanks"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "decrease"
+    phenotype_unit: "D-larva size (area, um2) at 40 h: smaller under acidification (Dunn z = -8.58); birefringence not different (z = -1.31); larvae tested as units"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+  - comparison_id: "ph7_9_vs_ph8_1_at_22c"
+    tissue: "whole_animal"
+    life_stage: "larva"
+    stressor_original: "Reduced pH at elevated temperature: pH 7.87 +/- 0.03 at 21.8 +/- 0.5 C ('warm acidified') versus pH 8.09 +/- 0.05 at 21.7 +/- 0.5 C ('warm'); 40 h from fertilization."
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "pH 7.87 vs 8.09 at 22 C"
+    exposure_duration: "40 h"
+    exposure_timing: "from fertilization through the D-veliger stage"
+    control_condition: "Warm: pH 8.09, 21.7 C, 3 tanks"
+    treatment_condition: "Warm acidified: pH 7.87, 21.8 C, 3 tanks"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "decrease"
+    phenotype_unit: "D-larva birefringence (greyscale 0-255) at 40 h: lower in warm acidified than warm (Dunn z = -2.44); size not compared between these two arms"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+  - comparison_id: "22c_vs_20c_at_ph8_1"
+    tissue: "whole_animal"
+    life_stage: "larva"
+    stressor_original: "Warming: 21.7 +/- 0.5 C at pH 8.09 ('warm') versus 19.9 +/- 0.4 C at pH 8.06 ('control'); 40 h from fertilization."
+    stressor_standardized: "temperature"
+    exposure_intensity: "+2 C (21.7 vs 19.9 C)"
+    exposure_duration: "40 h"
+    exposure_timing: "from fertilization through the D-veliger stage"
+    control_condition: "Control: pH 8.06, 19.9 C, 3 tanks"
+    treatment_condition: "Warm: pH 8.09, 21.7 C, 3 tanks"
+    phenotype: "growth_under_stress"
+    phenotype_direction: "increase"
+    phenotype_unit: "D-larva size (area, um2) and birefringence at 40 h: both higher when warm (Dunn z = 3.15 and 8.61); larvae tested as units"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+  - comparison_id: "22c_vs_20c_at_ph7_9"
+    tissue: "whole_animal"
+    life_stage: "larva"
+    stressor_original: "Warming under acidification: 21.8 +/- 0.5 C at pH 7.87 ('warm acidified') versus 19.8 +/- 0.3 C at pH 7.87 ('acidified'); 40 h from fertilization."
+    stressor_standardized: "temperature"
+    exposure_intensity: "+2 C at pH 7.87"
+    exposure_duration: "40 h"
+    exposure_timing: "from fertilization through the D-veliger stage"
+    control_condition: "Acidified: pH 7.87, 19.8 C, 3 tanks"
+    treatment_condition: "Warm acidified: pH 7.87, 21.8 C, 3 tanks"
+    phenotype: "growth_under_stress"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "not tested between these two arms; relative to control, acidified larvae were smaller and warm-acidified larvae were not"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+  - comparison_id: "ph7_9_22c_vs_ph8_1_20c"
+    tissue: "whole_animal"
+    life_stage: "larva"
+    stressor_original: "Combined acidification and warming ('future scenario'): pH 7.87 +/- 0.03 at 21.8 +/- 0.5 C ('warm acidified') versus pH 8.06 +/- 0.06 at 19.9 +/- 0.4 C ('control'); 40 h from fertilization."
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: "pH 7.87 and +2 C vs pH 8.06 at 19.9 C"
+    exposure_duration: "40 h"
+    exposure_timing: "from fertilization through the D-veliger stage"
+    control_condition: "Control: pH 8.06, 19.9 C, 3 tanks"
+    treatment_condition: "Warm acidified: pH 7.87, 21.8 C, 3 tanks"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "mixed"
+    phenotype_unit: "D-larva size not different from control (Dunn z = 1.05); birefringence higher (z = 6.59)"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+quality_flags:
+  - processed_only
+  - no_multiple_testing_correction
+  - identifier_mapping_uncertain
+  - single_timepoint
+  - tank_level_replication
+
+limitations: >
+  (1) No quantitative proteomic data were deposited: spot volumes and gel
+  images are not public, so the study cannot be reanalyzed. (2) The only
+  published results are for 12 of about 650 spots, selected because they
+  reached SameSpots ANOVA P < 0.02 in at least one contrast, with fold change
+  and P but no standard error and no multiple-testing correction. The other
+  spots are unreported, so any record from Table 2 would show only selected
+  directions; it is not transcribed or harmonized. (3) 9 of 11 spot
+  accessions are deleted from UniProtKB; only actin-2 and GAPDH map to AREE
+  gene IDs. Two spots (5, 6) are the same protein (severin) at different pI.
+  2-DE spots are protein species, not genes. (4) Each treatment's three tanks
+  were fed from one treatment header tank (water chain: 22 C header -> 20 C
+  and acidified headers -> a second, cooled acidified header), so
+  treatment is confounded with its water supply; tanks are separate units for
+  the larvae. (5) Phenotype statistics treat individual larvae as units
+  (30-50 per tank) rather than tanks, so their P values are anticonservative.
+  (6) One cross (5 females x 4 males) and one 40 h time point.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-17"
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD002316 --study-id
+    HARNEY2016_OA_WARM_LARVAE` (branch study/PXD002316/HARNEY2016_OA_WARM_LARVAE).
+    Registered from the PRIDE v3 project and file records, the authors'
+    accepted manuscript on Ifremer Archimer (40076.pdf, SHA-256 in
+    pride_provenance.json, not committed: Elsevier copyright) and the
+    current UniProtKB records, all retrieved 2026-10-17 by
+    build_provenance.py. Design, rearing, phenotype tests, the 2-DE and
+    SameSpots procedure, the P < 0.02 selection and the spot table come
+    from the manuscript's Methods, Results and Tables 1-2. The C. gigas
+    accessions for spots 7 and 12 (K1QWT8, K1QVF8) come from the Results
+    text; Table 1 lists their nearest characterised homologs in other
+    species. Decision (2026-10-17, sr320): register only, as explained at
+    the top of this file. The study_id follows the first-author convention.
+    Five comparisons are registered (the paper's Table 2 contrasts); the
+    20 C acidification contrast is flagged meta_analysis_primary before any
+    result was examined.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD002316"
+    - "https://doi.org/10.1016/j.jprot.2015.12.001"
+    - "https://archimer.ifremer.fr/doc/00299/40985/"
+    - "https://pubmed.ncbi.nlm.nih.gov/26657130/"

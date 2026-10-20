@@ -1,0 +1,290 @@
+# Marine heatwave response of adult diploid and triploid M. gigas ctenidium,
+# reanalyzed from 72 single-end QuantSeq 3' Tag-seq libraries. Tier 2 #6 in
+# docs/candidate_studies.md, where it was listed as "No publication found":
+# it is George et al. 2023 (below). The BioProject description gives the
+# paper's three treatments verbatim (20 C control, 30 C seawater, 30 C then
+# 6 h emersion at 44 C), submitter University of Washington. The paper is not
+# open access and Europe PMC finds no full-text citation of PRJNA913164, so
+# the link rests on that match, the authors' own data repository (which
+# holds the NCBI submission sheet for these BioSamples), and the sample
+# counts.
+#
+# FIRST REAL RNA-SEQ STUDY IN AREE WITH A MEASURED SURVIVAL OUTCOME, AND ITS
+# FIRST REAL THERMAL RNA-SEQ. Mortality was scored per treatment x ploidy
+# group: after the multiple stressor, 36.4% of triploids vs 14.8% of
+# diploids died. It was NOT scored per sequenced oyster (the sequenced
+# animals are survivors sampled at the end), so no comparison here contrasts
+# tolerant with susceptible animals. See ON PHENOTYPE CLASSIFICATION below.
+
+study_id: GEORGE2023_HEATWAVE_PLOIDY
+simulated: false
+
+accessions:
+  doi: "10.1111/gcb.16880"
+  bioproject: "PRJNA913164"
+  geo: null
+  sra: "SRR22817776-SRR22817847"
+  ena: "PRJNA913164"
+  proteomexchange: null
+  other: "BioSamples SAMN32287689-SAMN32287760; PMID 37464471"
+
+citation: "George MN, Cattau O, Middleton MA, Lawson D, Vadopalas B, Gavery M, Roberts SB (2023). Triploid Pacific oysters exhibit stress response dysregulation and elevated mortality following heatwaves. Global Change Biology 29(24):6969-6987. https://doi.org/10.1111/gcb.16880"
+
+species: "Magallana gigas"
+strain_or_population: "2-year-old diploid and triploid oysters, Quilcene, Washington, USA (47.76 N, 122.85 W; BioSample geo_loc_name, lat_lon, age). Ploidy is the design factor; family/hatchery origin of each ploidy is not in the deposit."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, Lexogen QuantSeq 3' mRNA-Seq (Tag-seq), single-end 101 bp (72 libraries, 0.9-8.3 M reads each; 17.9 GB FASTQ reported by ENA)"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Raw single-end FASTQ for all 72 runs are public in ENA/SRA under PRJNA913164 (first public 2022-12-20). The authors' count tables and DESeq2 outputs are in github.com/mattgeorgephd/NOPP-gigas-ploidy-temp (202107_EXP2/tag-seq), against an older annotation; AREE reanalyzes from raw reads. The BioSamples carry no treatment or ploidy attribute: both come from the authors' NCBI submission sheet, committed here as authors_ncbi_attributes.tsv (pinned to commit 24e7abd) and joined by isolate (design.tsv). Sequence data are not committed."
+
+# QC PASSED WITH WARNINGS, 2026-10-11 (full-depth run, all 72 libraries).
+# - Replicates are real: median within-group dispersion 0.028-0.052 in all
+#   six retained groups (data/studies/GEORGE2023_HEATWAVE_PLOIDY/
+#   replicate_dispersion_qc.tsv), the same range as CALLA2026_OSHV and
+#   LUTIER2022_OA_TIPPING, against 0.001 for the two pseudo-replicated IOCAS
+#   studies.
+# - Agrees with the authors: of their published within-ploidy DEG lists
+#   (DEG_lists/*-sig-genes-apeglm-pval-only.csv, padj < 0.05, matched by
+#   GeneID), 88.4% (diploid 30 C), 96.4% (triploid 30 C), 96.9% (diploid
+#   30 C + 44 C) and 97.3% (triploid 30 C + 44 C) change in the same direction
+#   here, and 99.3-99.8% of those also significant here.
+# - Warnings: Salmon mapping to the annotated transcriptome is 20.8-50.1%
+#   (median 38.4%), normal for 3' tags (UTR reads past annotated ends) but low
+#   by full-length standards; and the effect sizes are on a 3' count scale.
+#   Salmon auto-detected one library (X42) as unstranded against SF for the
+#   other 71; X42 is one of the authors' exclusions and enters no comparison.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# Comparisons: each stressor against the ploidy-matched 20 C control, within
+# ploidy, 12 v 12 before exclusions. Prespecified 2026-10-11, before any
+# result was computed.
+#
+# Within-ploidy contrasts rather than a pooled ~ploidy + condition model: the
+# paper's finding is that the ploidies respond differently, AREE's DESeq2
+# step models one factor, and a within-ploidy contrast needs no blocking.
+#
+# meta_analysis_primary = diploid 30 C vs control. Temperature is AREE's
+# thermal stressor class; diploids are the standard stock in other thermal
+# studies (and the pool partner most likely to exist), and the 30 C seawater
+# arm is a single stressor, so it pools as `temperature` without a
+# multi-stressor caveat. The other three comparisons share animals or
+# controls with it and must not pool alongside it.
+#
+# EXCLUSIONS. The authors dropped eight libraries as outliers (MultiQC: D54,
+# N56, X44; PCA biplot/heatmap: R53, M43, N54, X42; and T62), in
+# 2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116. AREE follows them,
+# prespecified, rather than inventing its own rule; each comparison lists the
+# ones in its arms.
+#
+# ON PHENOTYPE CLASSIFICATION. thermal_tolerance is the axis, but these are
+# treatment-vs-control expression contrasts in survivors, so they are
+# stress_response, overriding the ontology default (`resilience`); the
+# validator's warning is expected. The measured mortality difference is a
+# ploidy-level phenotype; it is recorded in phenotype_unit and the
+# limitations, not claimed for any library.
+#
+# Duration of the 30 C seawater exposure before sampling, and tank structure
+# (how many tanks per treatment, and whether ploidies shared tanks), are not
+# in the deposit or the abstract, so exposure_duration for the single
+# stressor is null and tank_level_replication is not asserted either way.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "diploid_30c_vs_control_20c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'single stressor; elevated seawater temperature, 30C' (George et al. 2023; BioProject description), replicating seawater conditions of the June 2021 Pacific Northwest heatwave; authors' sheet description 'diploid, single stressor'"
+    stressor_standardized: "temperature"
+    exposure_intensity: "30 C seawater vs 20 C control"
+    exposure_duration: null
+    exposure_timing: "acute heatwave simulation; ctenidium sampled 2021-07-12 (BioSample collection_date)"
+    control_condition: "diploid, control: 20 C, submerged"
+    treatment_condition: "diploid, single stressor: 30 C seawater"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "percent mortality per ploidy x treatment group (measured; not per sequenced oyster)"
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 22
+    biological_replicates: 11
+    meta_analysis_primary: true
+    excluded_samples:
+      - sample_id: "D54"
+        reason: "Excluded by the authors as an outlier (MultiQC); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+      - sample_id: "M43"
+        reason: "Excluded by the authors as an outlier (PCA biplot); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_diploid_30c_vs_control_20c_dge_standardized.tsv"
+
+  - comparison_id: "triploid_30c_vs_control_20c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'single stressor; elevated seawater temperature, 30C' (George et al. 2023; BioProject description); authors' sheet description 'triploid, single stressor'"
+    stressor_standardized: "temperature"
+    exposure_intensity: "30 C seawater vs 20 C control"
+    exposure_duration: null
+    exposure_timing: "acute heatwave simulation; ctenidium sampled 2021-07-12 (BioSample collection_date)"
+    control_condition: "triploid, control: 20 C, submerged"
+    treatment_condition: "triploid, single stressor: 30 C seawater"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "percent mortality per ploidy x treatment group (measured; not per sequenced oyster)"
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 21
+    biological_replicates: 10
+    excluded_samples:
+      - sample_id: "T62"
+        reason: "Excluded by the authors as an outlier; AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+      - sample_id: "X44"
+        reason: "Excluded by the authors as an outlier (MultiQC); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+      - sample_id: "X42"
+        reason: "Excluded by the authors as an outlier (PCA biplot); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_triploid_30c_vs_control_20c_dge_standardized.tsv"
+
+  - comparison_id: "diploid_30c_44c_emersion_vs_control_20c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'multiple stressor; elevated seawater temperature followed by aerial emersion at 44C' (George et al. 2023); '30C + 44C for 6h' (BioProject description); authors' sheet description 'diploid, multiple stressor'"
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: "30 C seawater, then 6 h aerial emersion at 44 C, vs 20 C submerged control"
+    exposure_duration: "6 h emersion at 44 C after the 30 C seawater exposure (seawater duration not stated)"
+    exposure_timing: "acute; replicates conditions over one tidal cycle of the June 2021 heatwave; ctenidium sampled 2021-07-12"
+    control_condition: "diploid, control: 20 C, submerged"
+    treatment_condition: "diploid, multiple stressor: 30 C seawater then 6 h emersion at 44 C"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "percent mortality per ploidy x treatment group (measured: 14.8% in diploids after the multiple stressor; not per sequenced oyster)"
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 21
+    biological_replicates: 10
+    excluded_samples:
+      - sample_id: "D54"
+        reason: "Excluded by the authors as an outlier (MultiQC); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+      - sample_id: "N56"
+        reason: "Excluded by the authors as an outlier (MultiQC); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+      - sample_id: "N54"
+        reason: "Excluded by the authors as an outlier (PCA biplot); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_diploid_30c_44c_emersion_vs_control_20c_dge_standardized.tsv"
+
+  - comparison_id: "triploid_30c_44c_emersion_vs_control_20c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'multiple stressor; elevated seawater temperature followed by aerial emersion at 44C' (George et al. 2023); '30C + 44C for 6h' (BioProject description); authors' sheet description 'triploid, multiple stressor'"
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: "30 C seawater, then 6 h aerial emersion at 44 C, vs 20 C submerged control"
+    exposure_duration: "6 h emersion at 44 C after the 30 C seawater exposure (seawater duration not stated)"
+    exposure_timing: "acute; replicates conditions over one tidal cycle of the June 2021 heatwave; ctenidium sampled 2021-07-12"
+    control_condition: "triploid, control: 20 C, submerged"
+    treatment_condition: "triploid, multiple stressor: 30 C seawater then 6 h emersion at 44 C"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: "percent mortality per ploidy x treatment group (measured: 36.4% in triploids after the multiple stressor; not per sequenced oyster)"
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 22
+    biological_replicates: 11
+    excluded_samples:
+      - sample_id: "T62"
+        reason: "Excluded by the authors as an outlier; AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+      - sample_id: "R53"
+        reason: "Excluded by the authors as an outlier (PCA biplot and heatmap); AREE follows the authors' prespecified exclusions."
+        evidence: "2_DESeq2_analysis-gigas-filtered.Rmd lines 111-116, github.com/mattgeorgephd/NOPP-gigas-ploidy-temp at 24e7abd."
+    results_file: "data/studies/GEORGE2023_HEATWAVE_PLOIDY/GEORGE2023_HEATWAVE_PLOIDY_triploid_30c_44c_emersion_vs_control_20c_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - ambiguous_phenotype_definition   # survival measured per ploidy x treatment group, not per sequenced oyster
+
+limitations: >
+  (1) The design (treatment, ploidy) is not in the deposited BioSamples; it
+  comes from the authors' NCBI submission sheet, joined by isolate. (2)
+  Mortality was measured per ploidy x treatment group, not per sequenced
+  oyster: the sequenced animals are survivors, so these contrasts describe a
+  stress response, and the ploidy difference in survival (36.4% vs 14.8%
+  after the multiple stressor) cannot be attributed to any library or gene
+  here. (3) QuantSeq 3' Tag-seq gives about one read per transcript and
+  0.9-8.3 M reads per library: quantification ignores transcript length,
+  isoforms are not resolvable, and mapping to the annotated transcriptome is
+  lower than for full-length RNA-seq. Effect sizes are on a 3' count scale
+  that may not be directly comparable with full-length RNA-seq fold changes.
+  (4) The four comparisons share their ploidy-matched controls, so only the
+  prespecified primary may enter a pool. (5) Tank structure and the
+  duration of the 30 C exposure are not stated in the deposit or abstract.
+  (6) The two stressor arms are acute and single-timepoint; recovery was not
+  sequenced.
+
+provenance:
+  registered_by: "sr320"
+  date_registered: "2026-10-11"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA913164 --study-id
+    GEORGE2023_HEATWAVE_PLOIDY` (draft PR sr320/AREE#18). Note that sr320 is a
+    co-author of the source paper. Publication identified 2026-10-11 by PubMed
+    search (PMID 37464471) and matched on the BioProject description, not
+    on a full-text accession citation (Europe PMC: 0 hits for PRJNA913164;
+    paper not open access). Design from the authors' NCBI submission sheet
+    (description column, e.g. 'diploid, single stressor'), pinned to commit
+    24e7abd1c822504cdff9bbd5dab928f4106b38f9 of
+    github.com/mattgeorgephd/NOPP-gigas-ploidy-temp and committed as
+    authors_ncbi_attributes.tsv; design.tsv splits that column into ploidy and
+    treatment and is joined with the new `aree fetch-samplesheet
+    --design-table/--design-join` options (code PR on branch
+    workflow/tagseq-single-end). All 72 isolates matched exactly one row:
+    12 per ploidy x treatment cell. Comparisons, the meta_analysis_primary
+    flag and the exclusions were fixed before any result was computed. An
+    earlier, independent reanalysis of this BioProject in the sister
+    repository sr320/AREE-co (2026-10-03) found within-group dispersion of
+    0.03-0.14 on its Salmon quantifications, i.e. real biological replicates.
+    Runs (2026-10-11, Nextflow 26.04.7, native -profile local,workstation on
+    a 16 GB / 8-core Mac, work dir on an HFS+ external drive, with
+    --single_end --tag_seq): all 72 FASTQ verified against ENA MD5s (18 needed
+    re-download); first comparison 222/222 tasks, the other three reuse its
+    Salmon quantifications (-resume). Fold changes correlate
+    r = 0.24 (30 C) and 0.22 (30 C + 44 C) between ploidies across all genes,
+    the ploidy-specific response the paper reports. A first attempt at the three
+    non-primary comparisons was discarded unharmonized: the config then set
+    params.rnaseq.comparison_id, which overrides --comparison_id, so all four
+    runs wrote under the primary's name; the manifest's recorded arms showed
+    it. Fixed by leaving rnaseq.comparison_id null.
+    RERUN ON MAIN, 2026-10-15. The 2026-10-11 run used this branch's own
+    single-end code, in which fastp auto-detected the single-end adapter. main
+    then took a different single-end implementation (#25) that trims an
+    explicit adapter (--se_adapter, default Illumina TruSeq read 1), so the
+    committed results could not be reproduced from main. All four comparisons
+    were rerun on main (Nextflow 26.04.7, native; FastQC and the Salmon index
+    reused from cache, fastp, Salmon quant and DESeq2 rerun) and the committed
+    tables, manifests and reports replaced. The change is negligible: per
+    library a few reads differ (e.g. SRR22817776: 2 of 1.67 M mapped reads, 91
+    of ~60,000 transcripts); fold changes correlate r = 0.998-0.999 with the
+    first run; and DE counts move by 2-8 genes. DE at padj < 0.05 now: diploid
+    30 C 3,076 of 25,332 genes; triploid 30 C 2,258 of 24,898; diploid 30 C +
+    44 C 1,696 of 25,062; triploid 30 C + 44 C 1,621 of 24,953. Replicate
+    dispersion is unchanged. Harmonized 2026-10-15: 100,245 evidence records,
+    identifier mapping 100% exact. The manifests now record se_adapter and the
+    tools that actually ran (Salmon 2.3.4, fastp 1.3.6, MultiQC 1.9; #19), so
+    the separate process_versions.yml file is removed.
+  source_links:
+    - "https://doi.org/10.1111/gcb.16880"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA913164"
+    - "https://github.com/mattgeorgephd/NOPP-gigas-ploidy-temp/tree/24e7abd1c822504cdff9bbd5dab928f4106b38f9/202107_EXP2/tag-seq"

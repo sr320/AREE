@@ -212,7 +212,7 @@ def real_crosswalk():
     set_crosswalk_path(None)
 
 
-def test_evidence_records_the_annotation_actually_used(real_crosswalk):
+def test_evidence_records_the_annotation_actually_used(isolated_reports, real_crosswalk):
     """HESSER2024_VCOR declares the Roslin assembly but is standardized against
     the current NCBI annotation. That crossing must appear on every record."""
     from harmonize.core import harmonize_study
@@ -225,7 +225,7 @@ def test_evidence_records_the_annotation_actually_used(real_crosswalk):
     assert "xbMagGiga1.1" in releases.pop()
 
 
-def test_species_taxid_is_populated_for_every_record():
+def test_species_taxid_is_populated_for_every_record(isolated_reports):
     from harmonize.core import harmonize_study
 
     df = harmonize_study("GIGAS_HEAT01", date_generated="2026-01-01")
@@ -243,7 +243,7 @@ def test_meta_analysis_groups_on_canonical_species():
     assert "species" not in GROUP_KEYS
 
 
-def test_harmonizing_a_study_still_marked_not_started_warns(real_crosswalk, tmp_path, monkeypatch):
+def test_harmonizing_a_study_still_marked_not_started_warns(isolated_reports, real_crosswalk, tmp_path, monkeypatch):
     """analysis_status is curator-maintained and went stale once already."""
     import warnings as _warnings
 
@@ -260,7 +260,7 @@ def test_harmonizing_a_study_still_marked_not_started_warns(real_crosswalk, tmp_
     assert any("analysis_status" in str(w.message) for w in caught)
 
 
-def test_harmonizing_an_up_to_date_study_does_not_warn(real_crosswalk):
+def test_harmonizing_an_up_to_date_study_does_not_warn(isolated_reports, real_crosswalk):
     import warnings as _warnings
 
     from harmonize.core import harmonize_study

@@ -1,0 +1,105 @@
+{
+  "workflow_name": "aree/workflows/proteomics",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "TIMMINS2014_OA_GILL",
+  "comparison_id": "pco2_2800_vs_400",
+  "date_generated": "2026-10-17T12:03:55.774510-07:00",
+  "generated_by": "automated:aree-proteomics-workflow@0.1.0-scaffold",
+  "provenance_level": "infra-level (see docs/design.md section 4; distinct from per-row evidence-level provenance)",
+  "inputs": {
+    "standardized_table": {
+      "path": "TIMMINS2014_OA_GILL_pco2_2800_vs_400_protein_abundance_standardized.tsv",
+      "sha256": "366f814aa03de3f3f4f1d446422f5e4f7584575220c83e8940547e9108083107"
+    },
+    "input_files_sha256": {
+      "nsaf_matrix.tsv": "569a7a6ff0708d61aa2f961f56ec0598aa830166879ad155b37ad26e044ab0c9",
+      "samplesheet_pco2_2800_vs_400.tsv": "31062fd1aae672e7edf6c1a1c881cbd85456f7994460347b15eb53fd1a071e6b"
+    }
+  },
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "proteomics": {
+      "raw_abundance_matrix": "/Users/sr320/Documents/GitHub/AREE-TIMMINS2014_OA_GILL/data/studies/TIMMINS2014_OA_GILL/nsaf_matrix.tsv",
+      "sample_sheet": "/Users/sr320/Documents/GitHub/AREE-TIMMINS2014_OA_GILL/data/studies/TIMMINS2014_OA_GILL/samplesheet_pco2_2800_vs_400.tsv",
+      "study_id": "TIMMINS2014_OA_GILL",
+      "comparison_id": "pco2_2800_vs_400",
+      "input_scale": "linear",
+      "normalization": "none",
+      "quantification": "spectral_count",
+      "min_detected_per_arm": "3",
+      "id_mapping_table": "/Users/sr320/Documents/GitHub/AREE-proteomics-raw/data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv",
+      "detection_limit": null,
+      "processed_results": null
+    }
+  },
+  "software_versions": {
+    "DIFFERENTIAL_ABUNDANCE": {
+      "bioconductor-limma": "3.58.1",
+      "r-base": "4.3.2",
+      "r-jsonlite": "1.8.9"
+    },
+    "HARMONIZE_INPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "ID_TRANSLATION": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "MISSINGNESS_REPORT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "NORMALIZE": {
+      "numpy": "2.0.2",
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6",
+      "pandas": "2.3.3"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards"
+  },
+  "container_engine": null,
+  "qc_metrics": {
+    "n_proteins": 639,
+    "mean_missingness_percent": 4.831768388106417,
+    "differential_abundance_qc": {
+      "study_id": "TIMMINS2014_OA_GILL",
+      "comparison_id": "pco2_2800_vs_400",
+      "n_replicates_control": 4,
+      "n_replicates_treatment": 4,
+      "min_detected_per_arm": 3,
+      "n_proteins_in": 1616,
+      "n_proteins_tested": 639,
+      "n_proteins_not_tested": {
+        "detected_too_rarely_in_both_arms": 585,
+        "detected_too_rarely_in_control": 125,
+        "detected_too_rarely_in_treatment": 90,
+        "not_detected": 177
+      },
+      "n_padj_below_0.05": 0,
+      "n_padj_below_0.1": 0,
+      "limma_df_prior": 5.0822,
+      "analysis_method": "spectral_count_limma_moderated_t"
+    }
+  },
+  "missingness_summary": {
+    "study_id": "TIMMINS2014_OA_GILL",
+    "comparison_id": "pco2_2800_vs_400",
+    "n_proteins_total": 1616,
+    "n_samples_total": 8,
+    "mean_missingness_percent_per_protein": 45.59096534653465,
+    "max_missingness_percent_per_protein": 100.0,
+    "n_proteins_over_10pct_missing": 1167
+  },
+  "warnings": []
+}
