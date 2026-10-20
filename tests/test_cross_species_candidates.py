@@ -158,7 +158,7 @@ def test_dashboard_skips_orthogroup_results(isolated_reports, monkeypatch):
     harmonize_all_demo_studies()
     write_meta_analysis(None, "gene")
     write_orthogroup_meta_analysis(None, "gene")
-    pools = dashboard._pool_summary()
+    pools = dashboard._pool_summary(include_simulated=True)
     assert pools and all("k_studies" not in str(p.get("error", "")) for p in pools)
 
 

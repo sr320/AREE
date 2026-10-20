@@ -442,7 +442,7 @@ def _comparison(results_file):
         "stressor_original": "test", "stressor_standardized": "temperature",
         "control_condition": "ambient", "treatment_condition": "heat",
         "phenotype": "thermal_tolerance", "phenotype_direction": "decrease",
-        "resilience_classification": "resilience", "sample_size": 6,
+        "resilience_classification": "resilience", "contrast_type": "exposure_response", "sample_size": 6,
         "biological_replicates": 3, "results_file": str(results_file),
     }
 

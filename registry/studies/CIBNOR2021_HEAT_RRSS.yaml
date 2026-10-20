@@ -115,6 +115,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
     sample_size: 12
     biological_replicates: 2
     results_file: "data/studies/CIBNOR2021_HEAT_RRSS/CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_dmr_standardized.tsv.gz"

@@ -28,12 +28,13 @@ import yaml
 from common import (
     REPO_ROOT,
     REPORTS_DIR,
-    STUDIES_DIR,
     load_vocab,
     registered_crosswalks,
     resolve_species,
     species_term_for_taxid,
+    study_files,
 )
+from prioritize.rank import DEFAULT_CONTRAST_TYPE
 
 from .species import species_identity_basis, species_summary
 
@@ -59,6 +60,10 @@ TOP_N_CANDIDATES = 15
 # The overall top list is dominated by whichever pool has the most studies, so
 # each phenotype also gets its own short list.
 TOP_N_PER_PHENOTYPE = 5
+# Significant predictive baseline candidates shown on the home page: features
+# that differ between resilient and susceptible groups under unstressed
+# conditions (docs/contrast_types.md).
+TOP_N_PREDICTIVE_BASELINE = 25
 TOP_N_CROSS_SPECIES = 15
 # WP6 dashboard gate: a phenotype's cross-species pooled results are shown only
 # once at least this many species each have a within-species pool with k >= 2.
@@ -106,11 +111,15 @@ def _repo_relative(path: Path) -> str:
 # --------------------------------------------------------------------------- #
 
 
-def _load_studies() -> list[dict]:
+def _drop_simulated(df: pd.DataFrame, include_simulated: bool) -> pd.DataFrame:
+    """Normalize the `simulated` column and, unless asked to keep them, drop simulated rows."""
+    df["simulated"] = df["simulated"].map(_bool)
+    return df if include_simulated else df[~df["simulated"]].reset_index(drop=True)
+
+
+def _load_studies(include_simulated: bool = False) -> list[dict]:
     studies = []
-    for path in sorted(STUDIES_DIR.glob("*.yaml")):
-        if path.name.startswith("_"):
-            continue
+    for path in study_files(include_demo=include_simulated):
         with open(path) as fh:
             doc = yaml.safe_load(fh)
         if isinstance(doc, dict) and doc.get("study_id"):
@@ -239,12 +248,11 @@ def _study_rows(studies: list[dict], evidence: pd.DataFrame) -> tuple[list[dict]
 # --------------------------------------------------------------------------- #
 
 
-def _load_evidence() -> pd.DataFrame:
+def _load_evidence(include_simulated: bool = False) -> pd.DataFrame:
     if not EVIDENCE_TABLE.exists():
         return pd.DataFrame()
     df = pd.read_csv(EVIDENCE_TABLE, sep="\t", low_memory=False)
-    df["simulated"] = df["simulated"].map(_bool)
-    return df
+    return _drop_simulated(df, include_simulated)
 
 
 def _evidence_summary(evidence: pd.DataFrame) -> dict:
@@ -276,6 +284,20 @@ def _evidence_summary(evidence: pd.DataFrame) -> dict:
     return {"by_study": by_study, "mapping_confidence": mapping, "by_feature_type": by_feature_type}
 
 
+def gene_annotation_frame() -> pd.DataFrame:
+    """ncbi_gene_id, gene_symbol, gene_description for every gene in the built
+    crosswalks, one row per GeneID. Empty when no crosswalk is built (e.g. CI
+    without the reference download)."""
+    frames = [
+        pd.read_csv(cw, sep="\t", comment="#", dtype=str,
+                    usecols=["ncbi_gene_id", "gene_symbol", "gene_description"])
+        for cw in _built_crosswalks()
+    ]
+    if not frames:
+        return pd.DataFrame(columns=["ncbi_gene_id", "gene_symbol", "gene_description"])
+    return pd.concat(frames, ignore_index=True).dropna(subset=["ncbi_gene_id"]).drop_duplicates("ncbi_gene_id")
+
+
 def _gene_annotations(gene_ids: list[str]) -> dict[str, dict]:
     """Symbol and description for real NCBI GeneIDs, from the committed crosswalks.
 
@@ -302,12 +324,17 @@ def _gene_annotations(gene_ids: list[str]) -> dict[str, dict]:
     return out
 
 
-def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) -> dict:
+def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None,
+                       include_simulated: bool = False) -> dict:
+    empty = {"by_tier": [], "by_evidence_class": [], "top_real": [], "top_simulated": [],
+             "top_real_by_phenotype": {}, "top_simulated_by_phenotype": {}, "n_total": 0,
+             "n_real": 0, "n_simulated": 0, "predictive_baseline": _empty_predictive_baseline()}
     if not CANDIDATES_TABLE.exists():
-        return {"by_tier": [], "by_evidence_class": [], "top_real": [], "top_simulated": [],
-                "top_real_by_phenotype": {}, "top_simulated_by_phenotype": {}, "n_total": 0}
+        return empty
     df = pd.read_csv(CANDIDATES_TABLE, sep="\t", low_memory=False)
-    df["simulated"] = df["simulated"].map(_bool)
+    df = _drop_simulated(df, include_simulated)
+    if not len(df):
+        return empty
     by_tier = [
         {"simulated": bool(s), "tier": t, "n": int(n)}
         for (s, t), n in df.groupby(["simulated", "tier"]).size().items()
@@ -324,7 +351,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
     ranked = df.sort_values(["_tier_rank", "score"], ascending=[True, False])
 
     cols = ["feature_id_standardized", "feature_type", "phenotype", "tier", "evidence_class",
-            "context_replication", "score", "k_studies", "studies", "total_sample_size",
+            "context_replication", "contrast_type", "is_predictive_baseline",
+            "score", "pooling_status", "k_studies", "studies", "total_sample_size",
             "pooled_effect", "adjusted_p_value", "direction_consistency", "i_squared",
             "n_supporting_layers", "mapping_confidences", "simulated", "species_taxid",
             "orthogroup_id", "card_file"]
@@ -338,6 +366,8 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
                 r["species_taxid"] = _taxid(r["species_taxid"])
                 r["species"] = _species_label(r["species_taxid"])
             r["phenotype_label"] = phenotype_labels.get(r.get("phenotype"), r.get("phenotype"))
+            if "is_predictive_baseline" in r:
+                r["is_predictive_baseline"] = str(r["is_predictive_baseline"]).strip().lower() == "true"
             for k, v in list(r.items()):
                 if isinstance(v, float) and pd.isna(v):
                     r[k] = None
@@ -350,7 +380,28 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
                     for phen, grp in ranked[~ranked["simulated"]].groupby("phenotype", sort=True)}
     by_phen_sim = {phen: _top(grp, TOP_N_PER_PHENOTYPE)
                    for phen, grp in ranked[ranked["simulated"]].groupby("phenotype", sort=True)}
-    all_real = top_real + [r for rows in by_phen_real.values() for r in rows]
+    # Candidates whose evidence is a baseline difference between resilient and
+    # susceptible groups, and significant: the design for a predictive marker.
+    # Ranked like everything else (tier, then score); real studies only.
+    real_ranked = ranked[~ranked["simulated"]]
+    # Compared as text: a candidates.tsv round-trip gives "True"/"False", and a
+    # missing value must read as False (bool(nan) is True).
+    is_baseline = (real_ranked["is_predictive_baseline"].astype(str).str.strip().str.lower().eq("true")
+                   if "is_predictive_baseline" in real_ranked.columns
+                   else pd.Series(False, index=real_ranked.index))
+    baseline = real_ranked[is_baseline]
+    significant = baseline[pd.to_numeric(baseline["adjusted_p_value"], errors="coerce") <= SIGNIFICANCE_THRESHOLD]
+    top_baseline = _top(significant, TOP_N_PREDICTIVE_BASELINE)
+    predictive = {
+        "n": int(len(baseline)),
+        "n_significant": int(len(significant)),
+        "n_significant_replicated": int((pd.to_numeric(significant["k_studies"], errors="coerce") >= 2).sum()),
+        "studies": sorted({s for v in baseline["studies"].dropna() for s in str(v).split("|") if s}),
+        "phenotypes": sorted(baseline["phenotype"].dropna().unique().tolist()),
+        "top": top_baseline,
+    }
+
+    all_real = top_real + [r for rows in by_phen_real.values() for r in rows] + top_baseline
     all_rows = all_real + top_sim + [r for rows in by_phen_sim.values() for r in rows]
     for r in all_rows:
         r["card_page"] = _publish_card(r.pop("card_file", None), cards_dir)
@@ -369,7 +420,12 @@ def _candidate_summary(phenotype_labels: dict, cards_dir: Path | None = None) ->
         "n_total": int(len(df)),
         "n_real": int((~df["simulated"]).sum()),
         "n_simulated": int(df["simulated"].sum()),
+        "predictive_baseline": predictive,
     }
+
+
+def _empty_predictive_baseline() -> dict:
+    return {"n": 0, "n_significant": 0, "n_significant_replicated": 0, "studies": [], "phenotypes": [], "top": []}
 
 
 def _taxid(value):
@@ -427,7 +483,8 @@ CROSS_SPECIES_COLUMNS = [
 ]
 
 
-def _cross_species_summary(gate: list[dict], phenotype_labels: dict, cards_dir: Path | None = None) -> dict:
+def _cross_species_summary(gate: list[dict], phenotype_labels: dict, cards_dir: Path | None = None,
+                           include_simulated: bool = False) -> dict:
     """Cross-species candidates, shown only for phenotypes past the gate.
 
     Rows for a phenotype whose gate is closed are counted as withheld and never
@@ -440,9 +497,9 @@ def _cross_species_summary(gate: list[dict], phenotype_labels: dict, cards_dir: 
     if not CROSS_SPECIES_TABLE.exists():
         return empty
     df = pd.read_csv(CROSS_SPECIES_TABLE, sep="\t", low_memory=False, dtype={"species_taxids": str})
+    df = _drop_simulated(df, include_simulated)
     if not len(df):
         return empty
-    df["simulated"] = df["simulated"].map(_bool)
     open_keys = {(g["phenotype"], g["simulated"]) for g in gate if g["open"]}
     keys = list(zip(df["phenotype"], df["simulated"]))
     shown_mask = pd.Series([k in open_keys for k in keys], index=df.index)
@@ -545,7 +602,7 @@ def _publish_card(card_file, cards_dir: Path | None) -> str | None:
     return f"{cards_dir.parent.name}/{cards_dir.name}/{src.stem}.html"
 
 
-def _pool_summary() -> list[dict]:
+def _pool_summary(include_simulated: bool = False) -> list[dict]:
     """One row per (phenotype, feature_type, origin, species) pool actually formed.
 
     Gene-level pools never cross species, so a phenotype studied in two species
@@ -566,15 +623,21 @@ def _pool_summary() -> list[dict]:
         df = pd.read_csv(path, sep="\t", low_memory=False)
         if not len(df):
             continue
-        df["simulated"] = df["simulated"].map(_bool)
+        df = _drop_simulated(df, include_simulated)
+        if not len(df):
+            continue
         adj = pd.to_numeric(df["adjusted_p_value"], errors="coerce")
         k = pd.to_numeric(df["k_studies"], errors="coerce").fillna(0)
         if "species_taxid" not in df.columns:
             df["species_taxid"] = None
         df["_taxid"] = df["species_taxid"].map(_taxid)
-        for (phen, ftype, sim, taxid), grp in df.groupby(["phenotype", "feature_type", "simulated", "_taxid"],
-                                                         dropna=False):
-            key = (phen, ftype, bool(sim), taxid)
+        # A baseline contrast and an exposure response under one phenotype are
+        # separate pools (meta_analysis.run.GROUP_KEYS).
+        if "contrast_type" not in df.columns:
+            df["contrast_type"] = DEFAULT_CONTRAST_TYPE
+        for (phen, ftype, sim, taxid, contrast), grp in df.groupby(
+                ["phenotype", "feature_type", "simulated", "_taxid", "contrast_type"], dropna=False):
+            key = (phen, ftype, bool(sim), taxid, contrast)
             if key in seen:
                 continue
             seen.add(key)
@@ -587,6 +650,7 @@ def _pool_summary() -> list[dict]:
                 "feature_type": ftype,
                 "simulated": bool(sim),
                 "species_taxid": taxid,
+                "contrast_type": contrast,
                 "species": _species_label(taxid),
                 "studies": sorted(studies),
                 "n_features": int(len(grp)),
@@ -669,15 +733,20 @@ def _implementation_status() -> dict:
 # --------------------------------------------------------------------------- #
 
 
-def build_dashboard_data(out_path: Path | None = None) -> dict:
+def build_dashboard_data(out_path: Path | None = None, include_simulated: bool = False) -> dict:
+    """Summarize the registry, pipeline and findings into the dashboard's data.json.
+
+    Simulated demo studies and their evidence are left out unless
+    include_simulated is set: they are pipeline fixtures, not findings.
+    """
     out_path = Path(out_path) if out_path else DEFAULT_OUT_PATH
     phenotype_vocab = load_vocab("phenotype_ontology")
     phenotype_labels = {k: v["label"] for k, v in phenotype_vocab.items()}
     phenotype_relevance = {k: v.get("resilience_relevance") for k, v in phenotype_vocab.items()}
     stressor_labels = {k: v["label"] for k, v in load_vocab("stressor_ontology").items()}
 
-    studies = _load_studies()
-    evidence = _load_evidence()
+    studies = _load_studies(include_simulated)
+    evidence = _load_evidence(include_simulated)
     study_rows, comparison_rows = _study_rows(studies, evidence)
 
     real_studies = [s for s in study_rows if not s["simulated"]]
@@ -688,10 +757,11 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
     if cards_dir.exists():
         for stale in cards_dir.glob("*.md"):
             stale.unlink()
-    candidates = _candidate_summary(phenotype_labels, cards_dir=cards_dir)
-    pools = _pool_summary()
+    candidates = _candidate_summary(phenotype_labels, cards_dir=cards_dir, include_simulated=include_simulated)
+    pools = _pool_summary(include_simulated)
     gate = cross_species_gate(pools)
-    cross_species = _cross_species_summary(gate, phenotype_labels, cards_dir=cards_dir)
+    cross_species = _cross_species_summary(gate, phenotype_labels, cards_dir=cards_dir,
+                                           include_simulated=include_simulated)
     cross_species["gate"] = gate
     seen_rows: dict[int, dict] = {}
     for key in ("top_real", "top_simulated"):
@@ -760,6 +830,7 @@ def build_dashboard_data(out_path: Path | None = None) -> dict:
             }
             for entry in registered_crosswalks()
         ],
+        "includes_simulated": include_simulated,
         "kpis": kpis,
         "studies": study_rows,
         "comparisons": comparison_rows,

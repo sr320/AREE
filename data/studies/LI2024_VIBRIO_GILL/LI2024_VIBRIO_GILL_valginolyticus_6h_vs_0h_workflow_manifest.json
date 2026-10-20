@@ -1,0 +1,125 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "LI2024_VIBRIO_GILL",
+  "comparison_id": "valginolyticus_6h_vs_0h",
+  "input_files": [
+    {
+      "name": "LI2024_VIBRIO_GILL_valginolyticus_6h_vs_0h_dge_standardized.tsv",
+      "sha256": "0468b1e9dc7092e38b45b3d7acac679f951759cb46f175bb8c6d2d71359686a9"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "LI2024_VIBRIO_GILL",
+    "comparison_id": "valginolyticus_6h_vs_0h",
+    "outdir": "results/rnaseq/LI2024_VIBRIO_GILL/valginolyticus_6h_vs_0h",
+    "exclude_samples": [
+      "0h_replicate3"
+    ],
+    "control_levels": [
+      "0h"
+    ],
+    "treatment_levels": [
+      "6h"
+    ],
+    "replicate_unit": null,
+    "covariates": [],
+    "single_end": false,
+    "se_adapter": null,
+    "tag_seq": false,
+    "viral_reference": null,
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "tximport average transcript length offsets",
+    "exclude_genes": null,
+    "n_libraries_or_units": 5,
+    "residual_df": 3
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.3"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.35"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.17"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.4.0"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.17"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": "/Users/sr320/aree-data/reference/GCF_963853765.1/salmon_index",
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "reference_provenance.json",
+        "sha256": "61b2628562f4bb362789d95193c197ca77fbcc2b1c451227e37e3fde2bbbb3ec"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "170cae75beb05c1afd9b7b3dbed4bdeb4225c16f9aab757ccc00c2b449092d18",
+        "matches_bundle_provenance": true
+      }
+    ],
+    "bundle": {
+      "bundle": "GCF_963853765.1",
+      "assembly_id": "xbMagGiga1.1",
+      "ncbi_assembly_accession": "GCF_963853765.1",
+      "annotation_source": "NCBI RefSeq GCF_963853765.1-RS_2024_06",
+      "annotation_release_matches_registry": true,
+      "date_generated": "2026-10-13",
+      "bundler_version": "1.0.0"
+    }
+  },
+  "workflow_start": "2026-10-17T06:44:12.053312-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": [
+    "samples_excluded_by_curation: 0h_replicate3 (see the study registry for the reason)"
+  ]
+}

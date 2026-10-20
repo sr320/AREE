@@ -26,13 +26,14 @@ class PooledResult:
 
 
 def two_sided_p_from_z(z: float) -> float:
-    """Two-sided normal p-value that stays strictly positive for large |z|.
+    """Two-sided normal p-value computed without subtractive cancellation.
 
     `2 * (1 - norm.cdf(|z|))` underflows to exactly 0.0 once |z| exceeds ~8.3,
     which on a genome-wide pool happened for hundreds of genes and printed as
     "p = 0" on their evidence cards. The survival function keeps precision in
     the tail, so the ordering among very small p-values is preserved and the
-    BH adjustment downstream sees real numbers.
+    BH adjustment downstream sees real numbers. Extremely large |z| can still
+    underflow to zero at the floating-point limit.
     """
     return float(2.0 * norm.sf(abs(z)))
 

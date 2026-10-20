@@ -10,11 +10,11 @@ def test_full_demo_pipeline_via_cli(isolated_reports, isolated_registry, tmp_pat
     runner = CliRunner()
 
     for study_id in ALL_DEMO_STUDY_IDS:
-        result = runner.invoke(main, ["validate-study", f"registry/studies/{study_id}.yaml"])
+        result = runner.invoke(main, ["validate-study", f"registry/demo_studies/{study_id}.yaml"])
         assert result.exit_code == 0, result.output
 
     for study_id in ALL_DEMO_STUDY_IDS:
-        result = runner.invoke(main, ["register-study", f"registry/studies/{study_id}.yaml"])
+        result = runner.invoke(main, ["register-study", f"registry/demo_studies/{study_id}.yaml"])
         assert result.exit_code == 0, result.output
 
     for study_id in ALL_DEMO_STUDY_IDS:
@@ -31,8 +31,8 @@ def test_full_demo_pipeline_via_cli(isolated_reports, isolated_registry, tmp_pat
 
 def test_duplicate_registration_exits_nonzero_without_update_flag(isolated_registry):
     runner = CliRunner()
-    runner.invoke(main, ["register-study", "registry/studies/GIGAS_HEAT01.yaml"])
-    result = runner.invoke(main, ["register-study", "registry/studies/GIGAS_HEAT01.yaml"])
+    runner.invoke(main, ["register-study", "registry/demo_studies/GIGAS_HEAT01.yaml"])
+    result = runner.invoke(main, ["register-study", "registry/demo_studies/GIGAS_HEAT01.yaml"])
     assert result.exit_code != 0
 
 
@@ -41,7 +41,7 @@ def test_duplicate_registration_exits_nonzero_without_update_flag(isolated_regis
 # --------------------------------------------------------------------------- #
 
 
-def test_harmonize_accepts_an_explicit_comparison(tmp_path):
+def test_harmonize_accepts_an_explicit_comparison(isolated_reports, tmp_path):
     """The Nextflow workflow names its output for the pipeline stage that made
     it, not for any path in the registry, so the comparison cannot always be
     inferred from the filename. --comparison is how workflow output connects."""
@@ -72,7 +72,7 @@ def test_harmonize_accepts_an_explicit_comparison(tmp_path):
     assert df["standard_error"].notna().all()
 
 
-def test_metabolomics_handoff_carries_standard_error_and_method(tmp_path):
+def test_metabolomics_handoff_carries_standard_error_and_method(isolated_reports, tmp_path):
     """The metabolomics raw mode writes lfcSE and a per-row analysis_method;
     both must reach the evidence record. A processed table without them (the
     demo's) keeps the old defaults."""
@@ -145,7 +145,7 @@ def test_proteomics_handoff_carries_standard_error_method_and_legacy_ids(isolate
     assert set(df["analysis_method"]) == {"MSstats"}
 
 
-def test_harmonize_rejects_an_unknown_comparison(tmp_path):
+def test_harmonize_rejects_an_unknown_comparison(isolated_reports, tmp_path):
     import pandas as pd
     import pytest
 
@@ -161,7 +161,7 @@ def test_harmonize_rejects_an_unknown_comparison(tmp_path):
                                   comparison_id="no_such_comparison")
 
 
-def test_unmatched_filename_without_comparison_says_what_to_do(tmp_path):
+def test_unmatched_filename_without_comparison_says_what_to_do(isolated_reports, tmp_path):
     import pandas as pd
     import pytest
 

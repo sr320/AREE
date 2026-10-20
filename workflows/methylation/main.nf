@@ -9,6 +9,8 @@
  * Branches on params.mode:
  *   - raw_reanalysis:
  *       FASTQC -> TRIM_GALORE -> BISMARK_GENOME_PREPARATION + BISMARK_ALIGN
+ *       (or, with align_chunk_pairs, SPLIT_FASTQ_PAIRS -> BISMARK_ALIGN_CHUNK
+ *       -> BISMARK_MERGE_CHUNKS)
  *       -> BISMARK_DEDUPLICATE -> BISMARK_METHYLATION_EXTRACTOR
  *       -> COVERAGE_FILTER -> DMR_METHYLKIT -> ANNOTATE_REGIONS
  *       -> STANDARDIZE_OUTPUT -> EMIT_MANIFEST -> RENDER_REPORT
@@ -25,6 +27,9 @@ include { TRIM_GALORE }                     from '../../modules/methylation/trim
 include { BISMARK_GENOME_PREPARATION }      from '../../modules/methylation/bismark_align.nf'
 include { BISMARK_ALIGN }                   from '../../modules/methylation/bismark_align.nf'
 include { BISMARK_DEDUPLICATE }             from '../../modules/methylation/bismark_align.nf'
+include { SPLIT_FASTQ_PAIRS }               from '../../modules/methylation/bismark_chunked.nf'
+include { BISMARK_ALIGN_CHUNK }             from '../../modules/methylation/bismark_chunked.nf'
+include { BISMARK_MERGE_CHUNKS }            from '../../modules/methylation/bismark_chunked.nf'
 include { BISMARK_METHYLATION_EXTRACTOR }   from '../../modules/methylation/bismark_methylation_extractor.nf'
 include { COVERAGE_FILTER }                 from '../../modules/methylation/coverage_filter.nf'
 include { DMR_METHYLKIT }                   from '../../modules/methylation/dmr_methylkit.nf'
@@ -52,8 +57,10 @@ def paramsAsJson() {
         unit_min_coverage    : params.methylation?.unit_min_coverage,
         tile_min_cpgs        : params.methylation?.tile_min_cpgs,
         replicate_unit       : params.methylation?.replicate_unit ?: null,
+        block_by             : params.methylation?.block_by ?: null,
         design_sheet         : params.methylation?.design_sheet ?: null,
         bismark_align_args   : params.methylation?.bismark_align_args ?: '',
+        align_chunk_pairs    : params.methylation?.align_chunk_pairs ?: null,
         extractor_args       : params.methylation?.extractor_args ?: '',
         promoter_upstream_bp : params.methylation?.promoter_upstream_bp,
         genome_assembly      : params.genome_assembly,
@@ -84,12 +91,42 @@ workflow {
 
         BISMARK_GENOME_PREPARATION(genome_fasta_ch)
 
-        aligned_ch = BISMARK_ALIGN(
-            TRIM_GALORE.out.trimmed_reads,
-            BISMARK_GENOME_PREPARATION.out.genome_dir.first()
-        )
+        // align_chunk_pairs > 0 splits each trimmed library into chunks of
+        // that many read pairs, aligns the chunks as separate tasks and
+        // concatenates them before deduplication (modules/methylation/
+        // bismark_chunked.nf). Unset or 0: one alignment task per library.
+        def chunk_pairs = (params.methylation.align_chunk_pairs ?: 0) as long
+        def align_versions_ch
+        if (chunk_pairs > 0) {
+            SPLIT_FASTQ_PAIRS(TRIM_GALORE.out.trimmed_reads, chunk_pairs)
+            chunk_reads_ch = SPLIT_FASTQ_PAIRS.out.chunks.flatMap { sample_id, r1s, r2s ->
+                def r1 = (r1s instanceof List ? r1s : [r1s]).sort { it.name }
+                def r2 = (r2s instanceof List ? r2s : [r2s]).sort { it.name }
+                def key = groupKey(sample_id, r1.size())
+                [r1, r2].transpose().withIndex().collect { pair, i ->
+                    tuple(key, String.format('chunk%04d', i + 1), pair[0], pair[1])
+                }
+            }
+            BISMARK_ALIGN_CHUNK(chunk_reads_ch, BISMARK_GENOME_PREPARATION.out.genome_dir.first())
+            BISMARK_MERGE_CHUNKS(
+                BISMARK_ALIGN_CHUNK.out.chunk_bam
+                    .groupTuple()
+                    .map { key, chunk_ids, bams, reports -> tuple(key.toString(), chunk_ids, bams, reports) }
+            )
+            aligned_bam_ch = BISMARK_MERGE_CHUNKS.out.bam
+            align_versions_ch = SPLIT_FASTQ_PAIRS.out.versions
+                .mix(BISMARK_ALIGN_CHUNK.out.versions)
+                .mix(BISMARK_MERGE_CHUNKS.out.versions)
+        } else {
+            BISMARK_ALIGN(
+                TRIM_GALORE.out.trimmed_reads,
+                BISMARK_GENOME_PREPARATION.out.genome_dir.first()
+            )
+            aligned_bam_ch = BISMARK_ALIGN.out.bam
+            align_versions_ch = BISMARK_ALIGN.out.versions
+        }
 
-        deduped_ch = BISMARK_DEDUPLICATE(aligned_ch.bam)
+        deduped_ch = BISMARK_DEDUPLICATE(aligned_bam_ch)
 
         extracted_ch = BISMARK_METHYLATION_EXTRACTOR(
             deduped_ch.dedup_bam,
@@ -132,7 +169,17 @@ workflow {
         if (replicate_unit && !params.methylation.design_sheet) {
             error "methylation.replicate_unit '${replicate_unit}' needs methylation.design_sheet naming a TSV with that column"
         }
-        design_sheet_ch = replicate_unit
+        // Matched sets (limma only): block_by names a design-sheet column, e.g.
+        // the population contributing one animal to each arm, or the animal
+        // sampled before and after; the test is then ~ block + treatment.
+        def block_by = params.methylation.block_by ?: ''
+        if (block_by && !params.methylation.design_sheet) {
+            error "methylation.block_by '${block_by}' needs methylation.design_sheet naming a TSV with that column"
+        }
+        if (block_by && (params.methylation.dmr_engine ?: 'methylkit') != 'limma') {
+            error "methylation.block_by is supported only with methylation.dmr_engine = 'limma'"
+        }
+        design_sheet_ch = (replicate_unit || block_by)
             ? Channel.fromPath(params.methylation.design_sheet, checkIfExists: true).first()
             : Channel.value(file("${projectDir}/assets/NO_DESIGN_SHEET"))
 
@@ -153,6 +200,7 @@ workflow {
             params.methylation.tile_size,
             params.methylation.tile_min_cpgs,
             replicate_unit,
+            block_by,
             design_sheet_ch,
             dmr_engine,
             params.methylation.dmr_features ?: 'tiles',
@@ -203,7 +251,7 @@ workflow {
         versions_ch = FASTQC.out.versions
             .mix(TRIM_GALORE.out.versions)
             .mix(BISMARK_GENOME_PREPARATION.out.versions)
-            .mix(BISMARK_ALIGN.out.versions)
+            .mix(align_versions_ch)
             .mix(BISMARK_DEDUPLICATE.out.versions)
             .mix(BISMARK_METHYLATION_EXTRACTOR.out.versions)
             .mix(COVERAGE_FILTER.out.versions)

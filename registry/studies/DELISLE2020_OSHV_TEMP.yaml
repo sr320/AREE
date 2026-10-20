@@ -54,6 +54,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "survival / OsHV-1 DNA load reported in the source study"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/DELISLE2020_OSHV_TEMP/DELISLE2020_OSHV_TEMP_oshv1_21c_96h_vs_21c_0h_dge_standardized.tsv"

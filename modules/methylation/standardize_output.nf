@@ -16,7 +16,8 @@
 process STANDARDIZE_OUTPUT {
     tag "${study_id}:${comparison_id}"
     label 'process_low'
-    container 'python:3.11-slim'
+    // Nextflow needs ps (task metrics); python:3.11-slim has none.
+    container 'quay.io/biocontainers/python:3.12.12'
     publishDir "${params.outdir}/methylation/standardized", mode: params.publish_mode
 
     input:

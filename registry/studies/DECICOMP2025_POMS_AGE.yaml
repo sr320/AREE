@@ -121,6 +121,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_post_challenge (cohort level; values not deposited)"
     resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
     sample_size: 24
     biological_replicates: 6
     results_file: null
@@ -140,6 +141,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_post_challenge (cohort level; values not deposited)"
     resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
     sample_size: 24
     biological_replicates: 6
     results_file: null

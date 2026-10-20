@@ -116,6 +116,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival at 14 d of exposure (33 dpf): 86% at 29 C vs 0% at 23 C, one silo each; 23 C silo affected by ciliates from day 10"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 4
     biological_replicates: 1
     results_file: null

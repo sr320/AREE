@@ -21,13 +21,24 @@ def test_build_top_candidates_summary_writes_markdown(isolated_reports, tmp_path
     report = build_evidence_cards_report(phenotype="larval_viability", feature_type="gene", all_cards=True)
     out_path = tmp_path / "summary.md"
 
-    result_path = build_top_candidates_summary(n=3, candidates_path=report.candidates_path, out_path=out_path)
+    result_path = build_top_candidates_summary(n=3, candidates_path=report.candidates_path, out_path=out_path,
+                                               include_simulated=True)
 
     assert result_path == out_path
     content = out_path.read_text()
     assert "Top candidate biomarkers by phenotype" in content
     assert "larval_viability" in content
     assert "not validation" in content
+
+
+def test_summary_leaves_simulated_candidates_out_by_default(isolated_reports, tmp_path):
+    harmonize_all_demo_studies()
+    report = build_evidence_cards_report(phenotype="larval_viability", feature_type="gene", all_cards=True)
+    content = build_top_candidates_summary(n=3, candidates_path=report.candidates_path,
+                                           out_path=tmp_path / "summary.md").read_text()
+    assert "LOC105333935" not in content
+    assert "simulated demo studies are left out" in content
+    assert "No candidates from real studies yet." in content
 
 
 
@@ -37,7 +48,7 @@ def test_summary_names_the_species_of_every_row(isolated_reports, tmp_path):
     harmonize_all_demo_studies()
     report = build_evidence_cards_report(phenotype="larval_viability", feature_type="gene", all_cards=True)
     out = build_top_candidates_summary(n=50, candidates_path=report.candidates_path,
-                                       out_path=tmp_path / "summary.md")
+                                       out_path=tmp_path / "summary.md", include_simulated=True)
 
     hsp70_rows = [line for line in out.read_text().splitlines() if "| LOC105333935 " in line]
     assert len(hsp70_rows) == 2

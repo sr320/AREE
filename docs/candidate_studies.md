@@ -1,9 +1,10 @@
 # Candidate studies to curate
 
-A screened shortlist of real, public *M. gigas* datasets to register after
-`HESSER2024_VCOR`. Every accession here was verified against NCBI BioProject
-and the ENA read-run API on **2026-08-28**; sample counts and group structures
-come from the deposited run metadata, not from paper text.
+A working backlog of real, public *M. gigas* datasets, initially screened
+on **2026-08-28** and expanded in dated updates below. Sample counts and group
+structures come from deposited metadata unless a paper is explicitly cited.
+For current registration and harmonization status, use the [dashboard](index.qmd)
+and study YAMLs; historical screening notes below are not a live status table.
 
 This is a working backlog, not a commitment. Update it as studies are curated
 or rejected.
@@ -24,8 +25,8 @@ their supplementary files are richer will mostly reproduce the same dead end.
 **The reliable route to poolable evidence is raw reads in SRA.** When AREE
 reanalyzes raw data itself, its own DESeq2 run produces `lfcSE` and an
 unadjusted p-value by construction — the study becomes poolable regardless of
-what the authors chose to publish. It also finally exercises the
-`raw_reanalysis` Nextflow path, which has never been run against real data
+what the authors chose to publish. The
+`raw_reanalysis` Nextflow path has now run at full depth on real data
 (see [implementation_status.md](implementation_status.md)).
 
 So the screen applied here, in priority order:
@@ -49,8 +50,8 @@ So the screen applied here, in priority order:
 
 ## Tier 1 — curate these first
 
-> **#1 is registered** as `CALLA2026_OSHV` — design verified, sample sheet and
-> FASTQ manifest generated, reanalysis not yet run. See
+> **#1 is registered** as `CALLA2026_OSHV` — three of six comparisons have
+> full-depth reanalysis and harmonized evidence. See
 > [first_raw_reanalysis.md](first_raw_reanalysis.md).
 >
 > **#3 failed QC** as `IOCAS2022_OA_ENERGY` (registered 2026-09-30, reanalyzed
@@ -151,8 +152,9 @@ inferred from the title and design, and must be checked at intake.
 Neither assay can go straight into the processed-table converter. That
 converter handles DE tables only (see
 [implementation_status.md](implementation_status.md)). So methylation studies
-need the raw Bismark/methylKit path, which has never been run on real data,
-and proteomics studies need a per-study abundance-table script. Coordinate
+need assay-specific raw processing; CIBNOR2021 has now completed Bismark plus
+pooled-family limma analysis. Proteomics can use the quantified-matrix workflow,
+as TIMMINS2014 does, with per-study intake for published tables. Coordinate
 evidence from methylation is also exposed to the assembly change in
 [handling_genome_versions.md](handling_genome_versions.md).
 
@@ -161,9 +163,10 @@ evidence from methylation is also exposed to the assembly change in
 > **M1 is registered** as `CIBNOR2021_HEAT_RRSS` (2026-09-30) — AREE's first
 > real methylation study. All 12 libraries share one BioSample, so the design
 > was parsed from `experiment_title` with the new `--label-field` /
-> `--label-pattern` options of `aree fetch-samplesheet`. Reanalysis is **blocked**
-> until the methylKit step models family: with 2 families per class, running it
-> as-is would treat 6 vs 6 libraries as independent.
+> `--label-pattern` options of `aree fetch-samplesheet`. Reanalysis completed
+> on 2026-10-16 using family-level pooling and limma: 2 vs 2 families, not
+> 6 vs 6 independent oysters. The 132,587 harmonized regions yielded no
+> BH-significant differences; this is a low-power null result.
 
 | # | Accession | Runs | Design (from deposited metadata) | Context | Why |
 |---|---|---|---|---|---|
@@ -321,7 +324,7 @@ libraries deposited, single-end 75 bp. Unlike the metabolomics, library
 numbering interleaves the two diets.
 
 > **Registered** as `DUPERRET2025_STARVE_RNASEQ` (#23), one study across both
-> projects. It is runnable but not yet run (about 104 GB of FASTQ). Comparisons:
+> projects. All three comparisons now have harmonized evidence. Comparisons:
 > starved vs fed at 0 hpc (primary, `resilience`), matching X2's metabolomic
 > contrast, and 24 vs 0 hpc within each diet (`disease`). It needed two
 > workflow changes, now merged: single-end input (#25) and, as a general

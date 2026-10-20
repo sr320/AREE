@@ -17,7 +17,10 @@ EVIDENCE_COLUMNS = [
     # real published study. It is part of the schema rather than a report-time
     # annotation because the two must never be pooled, and a reader of the
     # evidence table must be able to tell them apart without consulting the registry.
-    "evidence_id", "study_id", "comparison_id", "simulated",
+    # `contrast_type` says what the two arms differ in (a baseline difference
+    # between resilient and susceptible groups, or a response to exposure). It
+    # is part of the pooling key: the two answer different questions.
+    "evidence_id", "study_id", "comparison_id", "contrast_type", "simulated",
     "feature_id_original", "feature_id_standardized", "feature_type",
     "orthogroup_id", "species", "species_taxid", "genome_assembly", "annotation_version",
     "identifier_annotation_release",

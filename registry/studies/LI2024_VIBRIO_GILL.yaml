@@ -1,0 +1,212 @@
+# VIBRIO ALGINOLYTICUS INFECTION TIME COURSE, GILL, WITH A PAIRED METHYLOME.
+# C. gigas gill at 0, 6 and 48 h after infection, n=3 per time point (Ocean
+# University of China; sampled 2020-10 at Laizhou). Joins AREE's Vibrio pool
+# (HESSER2024_VCOR, RUBIO2019_VIBRIO_SPAT, LI2022_LOWSAL_VIBRIO; and
+# ZWU2022_VIBRIO_TIMECOURSE, claimed on another branch).
+#
+# PAIRED WITH WGBS PRJNA1113357, likely the same nine samples. Both deposits
+# label their libraries with the same codes: RNA-seq "RNA-Seq of 0hg1 gill" ...
+# "48hg3 gill", WGBS "Bisulfite-Seq of 0hg1 gill" ... "48hg3 gill". So each
+# oyster probably has a transcriptome and a methylome, which would make this
+# AREE's first real RNA-seq + methylation pair on one contrast. The WGBS
+# deposit is in docs/candidate_studies.md (methylation Tier 2) and is not
+# registered here; register it as its own study when the methylation raw path
+# can run.
+#
+# Publication INFERRED: Li JA, He Y, Yang B, Mokrani A, Li Y, Tan C, Li Q, Liu S
+# (2024), Fish Shellfish Immunol 151:109705. Its abstract describes WGBS at
+# 0, 6 and 48 h after V. alginolyticus infection, integrated with the
+# transcriptome. Same institution (Liu Shikai, Li Qi), same design. The
+# abstract does not give the RNA-seq accession, and the paper is closed access.
+#
+# Registered 2026-10-15. 0h_replicate3 (SRR19046239) is EXCLUDED from both
+# comparisons (2026-10-17): its expression is mantle, not gill. See
+# comparisons[].excluded_samples and tissue_identity_check/. The paired WGBS
+# library of the same code (0hg3, PRJNA1113357) is probably the same tissue,
+# so whoever registers the methylome should check it the same way.
+# REANALYZED 2026-10-17 at full depth, without 0h_replicate3: 48 h vs 0 h,
+# 3,753 genes at padj < 0.05 (1,459 up, 2,294 down); 6 h vs 0 h, 1,133
+# (430 up, 703 down). All have lfcSE. 2 baseline vs 3 infected animals,
+# 3 residual df.
+
+study_id: LI2024_VIBRIO_GILL
+simulated: false
+
+accessions:
+  doi: "10.1016/j.fsi.2024.109705"
+  bioproject: "PRJNA830931"
+  geo: null
+  sra: "SRR19046233-SRR19046241"
+  ena: "PRJNA830931"
+  proteomexchange: null
+  other: "PMID:38885801; BioSamples SAMN27745117-SAMN27745125 (one per oyster); paired WGBS BioProject PRJNA1113357 (SAMN41450117-SAMN41450125, same library codes)"
+
+citation: "Li JA, He Y, Yang B, Mokrani A, Li Y, Tan C, Li Q, Liu S (2024). Whole-genome DNA methylation profiling revealed epigenetic regulation of NF-kB signaling pathway involved in response to Vibrio alginolyticus infection in the Pacific oyster, Crassostrea gigas. Fish & Shellfish Immunology 151:109705. https://doi.org/10.1016/j.fsi.2024.109705 (PMID 38885801). Link to this RNA-seq deposit inferred."
+
+species: "Magallana gigas"
+strain_or_population: "Laizhou, Shandong, China (BioSample geo_loc_name China: Laizhou), collected 2020-10. Origin (farmed or wild), age and size are not stated in the deposit."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end 2x150 bp, 9 libraries, 20.1-27.8 M read pairs each; 28.7 GB FASTQ reported by ENA"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 9 runs are public in ENA/SRA under PRJNA830931 (registered 2022-04-22, first public 2026-04-23). No count matrix or DE table is deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. sample_alias is <0h|6h|48h>_replicate<1-3>, one
+# BioSample per oyster, all gill. BioSample 'replicate' reads e.g. "Gill
+# sample replicate 1 collected at 48h after infection". Condition levels are
+# 0h, 6h, 48h.
+#
+# TWO COMPARISONS, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-15):
+# each infected time point vs the 0 h baseline. Those are the paper's
+# contrasts and the only ones the design supports, since there are no
+# time-matched uninfected controls. meta_analysis_primary is 48 h: infection
+# is established by then, and the paper reports more differentially
+# methylated regions at 48 h than at 6 h (14,196 vs 11,502), which makes it
+# the stronger target for linking to the methylome.
+#
+# ON PHENOTYPE CLASSIFICATION. Infected vs baseline, with no survival or load
+# outcome per animal in the deposit, follows CALLA2026_OSHV and
+# HESSER2024_VCOR: disease_susceptibility, classified disease, direction
+# increase for infected relative to baseline.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "valginolyticus_48h_vs_0h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Infection with Vibrio alginolyticus, gill sampled 48 h after infection (BioSample 'collected at 48h after infection'; Li et al. 2024). Dose and route not stated in the deposit or abstract."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: "48 h"
+    exposure_timing: "gill sampled 48 h after infection; baseline at 0 h"
+    control_condition: "Oysters at 0 h, before infection (sample-sheet level 0h; 0h_replicate1-3)"
+    treatment_condition: "Oysters 48 h after V. alginolyticus infection (sample-sheet level 48h; 48h_replicate1-3)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 5
+    biological_replicates: 2
+    results_file: "data/studies/LI2024_VIBRIO_GILL/LI2024_VIBRIO_GILL_valginolyticus_48h_vs_0h_dge_standardized.tsv"
+    excluded_samples:
+      - sample_id: "0h_replicate3"
+        reason: "Not gill: the library's expression is that of mantle (shell-forming) tissue, or gill heavily contaminated with it, so it is not a valid gill baseline."
+        evidence: "Tissue-identity check on the full-depth Salmon quantification (data/studies/LI2024_VIBRIO_GILL/tissue_identity_check/, 2026-10-17). Mantle and shell-matrix genes (tyrosinase-like tyr-3, per-hexamer repeat protein 5, calcium-binding LPS1-beta, tryptase-2) are at 1,530-8,374 TPM in this library vs 0-31 TPM in seven of the other eight; the eighth, 48h_replicate3, carries a faint version of the signal (15-106 TPM, about 1% of this library's level) and is kept (see curation_notes). Prestin, which the other gill libraries express at 106-2,761 TPM, is at 17. On VST expression of the 2,000 most variable genes, this library alone defines PC1 (70.6% of variance), and its Spearman r with every other library is negative (-0.08 with the other 0 h, -0.27 with 6 h, -0.20 with 48 h). Library composition is normal (rRNA 0.4% of TPM), so this is not a failed library. These measure tissue identity, not the infection contrast."
+    meta_analysis_primary: true
+
+  - comparison_id: "valginolyticus_6h_vs_0h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Infection with Vibrio alginolyticus, gill sampled 6 h after infection (BioSample 'collected at 6h after infection'; Li et al. 2024). Dose and route not stated."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: null
+    exposure_duration: "6 h"
+    exposure_timing: "gill sampled 6 h after infection; baseline at 0 h"
+    control_condition: "Oysters at 0 h, before infection (0h; 0h_replicate1-3)"
+    treatment_condition: "Oysters 6 h after V. alginolyticus infection (6h; 6h_replicate1-3)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 5
+    biological_replicates: 2
+    results_file: "data/studies/LI2024_VIBRIO_GILL/LI2024_VIBRIO_GILL_valginolyticus_6h_vs_0h_dge_standardized.tsv"
+    excluded_samples:
+      - sample_id: "0h_replicate3"
+        reason: "Not gill: the library's expression is that of mantle (shell-forming) tissue, or gill heavily contaminated with it, so it is not a valid gill baseline."
+        evidence: "Tissue-identity check on the full-depth Salmon quantification (data/studies/LI2024_VIBRIO_GILL/tissue_identity_check/, 2026-10-17). Mantle and shell-matrix genes (tyrosinase-like tyr-3, per-hexamer repeat protein 5, calcium-binding LPS1-beta, tryptase-2) are at 1,530-8,374 TPM in this library vs 0-31 TPM in seven of the other eight; the eighth, 48h_replicate3, carries a faint version of the signal (15-106 TPM, about 1% of this library's level) and is kept (see curation_notes). Prestin, which the other gill libraries express at 106-2,761 TPM, is at 17. On VST expression of the 2,000 most variable genes, this library alone defines PC1 (70.6% of variance), and its Spearman r with every other library is negative (-0.08 with the other 0 h, -0.27 with 6 h, -0.20 with 48 h). Library composition is normal (rRNA 0.4% of TPM), so this is not a failed library. These measure tissue identity, not the infection contrast."
+
+quality_flags:
+  - raw_data_available
+  - low_replication   # 2 baseline animals after excluding 0h_replicate3 (not gill)
+
+limitations: >
+  (1) n = 3 oysters per time point. (2) The only control is the 0 h baseline:
+  there are no time-matched uninfected oysters, so infection is confounded
+  with time since handling and with whatever the infection procedure itself
+  does (injection or immersion; not stated). (3) Infection dose, route,
+  water temperature, and oyster age and size are not in the deposit or the
+  abstract. The paper is closed access. (4) The link between this deposit
+  and Li et al. 2024 is inferred from institution, design and the shared
+  library codes with the paper's WGBS deposit (PRJNA1113357). The paper's
+  integrated transcriptome may have been described elsewhere. (5) No
+  per-animal infection outcome (survival, bacterial load) is deposited, so
+  this is a disease-exposure contrast, not a resistance phenotype. (6) life_stage
+  'adult' is assumed. (7) Library selection is recorded as PCR, which most
+  likely means a standard PCR-amplified poly-A or rRNA-depleted library;
+  the chemistry is not stated.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-15"
+  curation_notes: >
+    Found by the 2026-10-14 screen of NCBI SRA for M. gigas RNA-seq projects
+    absent from the registry and backlog. Claimed with `aree start-study`
+    (draft PR #61). Registered from live ENA metadata with `aree
+    fetch-samplesheet --bioproject PRJNA830931 --study LI2024_VIBRIO_GILL
+    --label-field sample_alias --label-pattern
+    '^(?P<timepoint>0h|6h|48h)_replicate(?P<replicate>[1-3])$'
+    --condition-attribute timepoint --attribute replicate --attribute tissue
+    --attribute collection_date --attribute geo_loc_name`. REPLICATION
+    CHECK: 9 runs, 9 distinct BioSamples. PUBLICATION: Europe PMC finds no
+    paper citing the accession. A PubMed search on V. alginolyticus, C.
+    gigas and transcriptome returned 5 papers. Only Li et al. 2024 (PMID
+    38885801) has the 0/6/48 h design and the Liu/Li group. Its WGBS
+    deposit PRJNA1113357 uses the same library codes (0hg1 ... 48hg3 gill)
+    as this deposit's experiment titles. PRE-SCREEN, PASSED (2026-10-15):
+    scripts/prescreen_replicates.py, 1 M read pairs per library from NCBI.
+    Median dispersion was 0h 0.167, 6h 0.046 and 48h 0.017, over
+    5,541-6,581 genes (prescreen_replicates.tsv). Salmon mapped 75.5-82.2%.
+    FLAG: the 0 h baseline is 3-10x more variable than the infected groups,
+    and higher than any group in the pre-screen calibration. That usually
+    means one animal differs from the other two. Check a PCA of the full run
+    before trusting the baseline. Exclude an animal only on independent
+    evidence (e.g. a baseline oyster already carrying Vibrio), never because
+    it weakens the contrast.
+    REANALYSIS (Pori, 2026-10-16/17): FASTQ from NCBI SRA, not ENA. ENA
+    delivered about 5 UW2016 files in 35 h that week, so the switch was
+    decided with the curator on 2026-10-16. NCBI rebuilds FASTQ, so ENA's
+    MD5s (fastq_manifest.tsv) do not apply. Instead each of the 18 files
+    held exactly ENA's read_count for its run, and each file's sha256, tool
+    (fastq-dump 3.4.1 --split-files --skip-technical --gzip) and counts are
+    in fastq_ncbi_provenance.tsv. The runner checked those sha256s before
+    each run. Native tools from environment.yml; versions are in each
+    workflow manifest. Salmon mapped 76.7-83.0% of read pairs (20.0-27.7 M
+    pairs), unstranded (IU). FIRST RUN (all 9 libraries): 48 h 3,284 and
+    6 h 502 genes at padj < 0.05; 0 h dispersion 0.160. The PCA then showed
+    0h_replicate3 alone on PC1 (70.6% of variance), with mantle expression
+    (see excluded_samples and tissue_identity_check/). It was excluded, and
+    both comparisons were re-run on 2026-10-17. The first run's outputs are
+    not committed. EFFECT OF THE EXCLUSION: log2FC new vs old r = 0.65
+    (48 h) and 0.72 (6 h); 2,239 of the 48 h genes and 403 of the 6 h genes
+    are significant in both versions. The four shell-formation genes had
+    read as strongly "down at 48 h" (log2FC about -7.6), which was an
+    artifact of the mantle baseline. They are now flat at 48 h (-0.2 to
+    +0.3). At 6 h they still read -4.6 to -9.3, but that reflects 2-31 TPM
+    in the two remaining baselines against near zero at 6 h, not a tissue
+    signal. DISPERSION after exclusion: 0h 0.0551 (2 animals), 6h 0.0462,
+    48h 0.0151; all pass (replicate_dispersion_qc.tsv). 48h_replicate3
+    carries a faint version of the same mantle signal (15-106 TPM of the
+    shell genes, about 1% of 0h_replicate3's level), but correlates
+    normally with its group (mean r 0.80), so it is kept. Harmonized
+    locally: 26,652 (48 h) and 25,888 (6 h) evidence records.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA830931"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA830931"
+    - "https://doi.org/10.1016/j.fsi.2024.109705"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1113357"

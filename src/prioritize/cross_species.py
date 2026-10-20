@@ -100,6 +100,8 @@ def species_estimates_for(species_df: pd.DataFrame, row: dict) -> pd.DataFrame:
         & (species_df["feature_type"] == row["feature_type"])
         & (species_df["simulated"].map(_partition_value) == sim)
     )
+    if "contrast_type" in species_df.columns and row.get("contrast_type") is not None:
+        mask &= species_df["contrast_type"] == row["contrast_type"]
     return species_df[mask]
 
 

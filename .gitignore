@@ -46,14 +46,19 @@ results/
 # Dashboard data + copied evidence cards (regenerate via `aree build-dashboard` / `make dashboard`)
 docs/dashboard/
 
+# Parquet tables for the site's Explore page (regenerate via `aree export-site-data`)
+docs/explore/data/
+
 # Genome/transcriptome bundles live on external storage; see docs/first_raw_reanalysis.md.
 # No trailing slash: on most machines these are symlinks to a drive, and a
 # pattern ending in / does not match a symlink.
 data/reference/GCF_*
 
-# Flat study index, generated from registry/studies/*.yaml by `aree build-registry`.
-# Not committed: study branches built in parallel would all conflict on it.
+# Flat study indexes, generated from registry/studies/*.yaml and
+# registry/demo_studies/*.yaml by `aree build-registry`.
+# Not committed: study branches built in parallel would all conflict on them.
 registry/study_registry.csv
+registry/demo_study_registry.csv
 
 # OrthoFinder intermediates (staged proteomes, DIAMOND results); the run's
 # outputs under data/reference/orthogroups/<run_id>/ ARE committed.

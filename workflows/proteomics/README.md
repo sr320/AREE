@@ -68,7 +68,7 @@ Options (`workflows/proteomics/nextflow.config`):
 ### `processed_results_harmonization`
 
 For studies that only released a processed protein-level differential
-abundance table (see `registry/studies/GIGAS_SAL04.yaml`):
+abundance table (see `registry/demo_studies/GIGAS_SAL04.yaml`):
 
 ```
 STANDARDIZE_OUTPUT (validate/reshape the supplied table)

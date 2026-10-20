@@ -45,6 +45,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_affected"
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 20
     biological_replicates: 4
     results_file: "data/demo/methylation/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_demo.tsv"

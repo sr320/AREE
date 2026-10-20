@@ -5,6 +5,11 @@ expression changed when we stressed the animal" as if it were equivalent to
 "this gene predicts which animals will survive the stress." AREE refuses to
 make that substitution silently. This page explains the mechanism.
 
+A second, independent field, `contrast_type`, records whether a resilience
+comparison is a baseline difference between resilient and susceptible animals
+or a response to the stress itself. Only the first can be read before any
+stress; see [contrast_types.md](contrast_types.md).
+
 ## The four `resilience_classification` categories
 
 Every comparison in a study record (`comparisons[].resilience_classification`
@@ -72,7 +77,7 @@ structural requirement rather than a style guideline:
   actually just describing the treatment condition itself, it is
   `exposure_only`.
 - A single study can legitimately contain comparisons in more than one
-  category — e.g. `GIGAS_PATH03` (`registry/studies/GIGAS_PATH03.yaml`) is
+  category — e.g. `GIGAS_PATH03` (`registry/demo_studies/GIGAS_PATH03.yaml`) is
   classified `disease` because its phenotype is `disease_susceptibility`
   measured via tissue pathology score rather than a survival curve, which is
   explicitly noted in its `limitations` field.
