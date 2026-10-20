@@ -88,6 +88,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/UW2016_HEATSHOCK_MANTLE/UW2016_HEATSHOCK_MANTLE_heat_shock_40c_1h_vs_control_dge_standardized.tsv"
