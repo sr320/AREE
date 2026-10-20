@@ -64,6 +64,7 @@ def test_registered_arm_is_gigas_rnaseq_only(study, samplesheet):
     assert len(arm) == comp["sample_size"] == 6
     assert len({r["sample_accession"] for r in arm}) == 6
     assert comp["resilience_classification"] == "exposure_only"
+    assert comp["contrast_type"] == "exposure_response"
     assert comp["exposure_duration"] == "12 h"
     assert comp["exposure_intensity"] is None   # temperature not yet read from the methods
 
