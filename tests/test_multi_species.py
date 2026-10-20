@@ -112,13 +112,19 @@ def test_every_complex_has_at_least_two_members():
 
 
 def test_every_species_has_exactly_one_reference_assembly():
+    """One NCBI reference assembly per species, except a species NCBI has not
+    annotated (GFF-route crosswalk, WP7), which has none."""
+    from harmonize.identifiers import crosswalk_route
+
     species_taxids = {t["ncbi_taxid"] for t in load_vocab("species").values()}
+    gff_route = {e["ncbi_taxid"] for e in registered_crosswalks() if crosswalk_route(e["path"]) == "gff_homology"}
     reference = {}
     for record in load_assemblies().values():
         if record.get("is_ncbi_reference"):
             reference.setdefault(record["ncbi_taxid"], []).append(record["assembly_id"])
     for taxid in species_taxids:
-        assert len(reference.get(taxid, [])) == 1, f"taxid {taxid}: {reference.get(taxid)}"
+        expected = 0 if taxid in gff_route else 1
+        assert len(reference.get(taxid, [])) == expected, f"taxid {taxid}: {reference.get(taxid)}"
 
 
 def test_every_assembly_belongs_to_a_registered_species():
@@ -166,12 +172,42 @@ def test_both_oyster_assemblies_share_the_oyster_crosswalk():
     assert set(entries[0]["assemblies"]) == {"xbMagGiga1.1", "cgigas_uk_roslin_v1"}
 
 
-def test_no_crosswalk_is_registered_for_species_that_have_none_built():
-    """WP0 registers the assemblies only. Claiming a crosswalk that does not exist
-    would make validation and harmonization disagree about what is possible."""
+def test_every_registered_assembly_has_a_built_crosswalk():
+    """WP2 built a crosswalk for every species, so every assembly can be harmonized.
+    A registered path that does not exist would make validation and harmonization
+    disagree about what is possible."""
     for record in load_assemblies().values():
-        if record["ncbi_taxid"] != 29159:
-            assert assembly_crosswalk_path(record) is None, record["assembly_id"]
+        path = assembly_crosswalk_path(record)
+        assert path is not None, record["assembly_id"]
+        assert path.exists(), f"{record['assembly_id']}: {path} not built"
+
+
+def test_assemblies_of_one_species_share_one_crosswalk():
+    """The crosswalk is built per taxid, so two assemblies of one species must not
+    point at two different files (both oyster and both hard clam assemblies)."""
+    by_taxid: dict[int, set] = {}
+    for record in load_assemblies().values():
+        by_taxid.setdefault(record["ncbi_taxid"], set()).add(assembly_crosswalk_path(record))
+    assert all(len(paths) == 1 for paths in by_taxid.values()), by_taxid
+
+
+@pytest.fixture
+def assembly_without_crosswalk(monkeypatch):
+    """Pretend the Manila clam assembly has no crosswalk, as every new species
+    starts out. Patched where each caller looks it up."""
+    import harmonize.identifiers as identifiers
+    import intake.schema_validate as schema_validate
+
+    real = resolve_assembly
+
+    def patched(value):
+        record = real(value)
+        if record and record["assembly_id"] == "ASM2657151v2":
+            record = {**record, "identifier_crosswalk": None}
+        return record
+
+    monkeypatch.setattr(identifiers, "resolve_assembly", patched)
+    monkeypatch.setattr(schema_validate, "resolve_assembly", patched)
 
 
 @pytest.mark.parametrize(
@@ -268,7 +304,7 @@ def test_species_outside_a_complex_does_not_need_species_identity(tmp_path):
     assert result.valid, result.errors
 
 
-def test_real_study_on_an_assembly_without_a_crosswalk_warns(tmp_path):
+def test_real_study_on_an_assembly_without_a_crosswalk_warns(tmp_path, assembly_without_crosswalk):
     result = _validate(_study(
         tmp_path, "CLAM_WARN", species="Ruditapes philippinarum", genome_assembly="ASM2657151v2",
     ))
@@ -311,9 +347,29 @@ def _real(study_id, assembly):
     return {"study_id": study_id, "simulated": False, "genome_assembly": assembly}
 
 
-def test_real_study_on_an_assembly_with_no_crosswalk_fails_with_the_build_command():
-    with pytest.raises(FileNotFoundError, match="build-crosswalk --taxid 29158"):
-        crosswalk_for_study(_real("MUS", "xbMytGall1.hap1.1"))
+def test_real_study_on_an_assembly_with_no_crosswalk_fails_with_the_build_command(
+    assembly_without_crosswalk,
+):
+    with pytest.raises(FileNotFoundError, match="build-crosswalk --taxid 129788"):
+        crosswalk_for_study(_real("CLAM", "ASM2657151v2"))
+
+
+@pytest.mark.parametrize(
+    "assembly,slug",
+    [
+        ("xbMytGall1.hap1.1", "mgall"),
+        ("xbMytEdul2.2", "medul"),
+        ("PNRI_Mtr1.1.1.hap1", "mtros"),
+        ("xbMytCali1.0.p", "mcali"),
+        ("MADL_Memer_1", "mmerc"),
+        ("ASM1480567v1.1", "mmerc"),
+        ("ASM2657151v2", "rphil"),
+    ],
+)
+def test_each_mussel_and_clam_assembly_selects_its_own_crosswalk(assembly, slug):
+    path = crosswalk_for_study(_real("X", assembly))
+    assert path.name == f"{slug}_gene_id_crosswalk.tsv"
+    assert crosswalk_taxid(path) == resolve_assembly(assembly)["ncbi_taxid"]
 
 
 def test_unknown_assembly_fails():
@@ -328,8 +384,9 @@ def test_previous_study_does_not_decide_the_next_studys_crosswalk():
     if not MGIGAS_CROSSWALK.exists():
         pytest.skip("real crosswalk not built")
     set_crosswalk_path(crosswalk_for_study(_real("OYS", "cgigas_uk_roslin_v1")))
-    with pytest.raises(FileNotFoundError, match="no identifier crosswalk is registered"):
-        crosswalk_for_study(_real("MUS", "xbMytGall1.hap1.1"))
+    mussel = crosswalk_for_study(_real("MUS", "xbMytGall1.hap1.1"))
+    assert mussel != MGIGAS_CROSSWALK
+    assert crosswalk_taxid(mussel) == 29158
 
 
 def test_override_built_for_another_taxon_is_refused(monkeypatch):
@@ -385,7 +442,7 @@ def _comparison(results_file):
         "stressor_original": "test", "stressor_standardized": "temperature",
         "control_condition": "ambient", "treatment_condition": "heat",
         "phenotype": "thermal_tolerance", "phenotype_direction": "decrease",
-        "resilience_classification": "resilience", "sample_size": 6,
+        "resilience_classification": "resilience", "contrast_type": "exposure_response", "sample_size": 6,
         "biological_replicates": 3, "results_file": str(results_file),
     }
 
@@ -493,3 +550,16 @@ def test_build_crosswalk_refuses_to_overwrite_another_species_file():
     result = _build_crosswalk("--taxid", "129788", "--slug", "mgigas")
     assert result.exit_code == 1
     assert "built for taxid 29159" in result.output
+
+
+def test_no_gene_id_appears_in_two_species_crosswalks():
+    """NCBI GeneIDs are unique across taxa. The dashboard searches every crosswalk
+    together for gene symbols, which is only safe while this holds."""
+    seen: dict[str, str] = {}
+    for entry in registered_crosswalks():
+        if not entry["path"].exists():
+            continue
+        ids = pd.read_csv(entry["path"], sep="\t", comment="#", dtype=str, usecols=["ncbi_gene_id"])
+        for gid in ids["ncbi_gene_id"].dropna():  # a GFF-route crosswalk has no GeneIDs
+            assert gid not in seen, f"GeneID {gid} in both {seen[gid]} and {entry['path'].name}"
+            seen[gid] = entry["path"].name

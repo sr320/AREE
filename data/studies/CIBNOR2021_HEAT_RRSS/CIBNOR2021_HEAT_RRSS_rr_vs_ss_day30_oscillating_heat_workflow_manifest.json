@@ -1,0 +1,104 @@
+{
+  "workflow_name": "aree-methylation",
+  "workflow_version": "0.1.0-scaffold",
+  "study_id": "CIBNOR2021_HEAT_RRSS",
+  "comparison_id": "rr_vs_ss_day30_oscillating_heat",
+  "mode": "raw_reanalysis",
+  "date_generated": "2026-10-16T15:53:23.785171-07:00",
+  "generated_by": "automated:aree-methylation@0.1.0-scaffold",
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "CIBNOR2021_HEAT_RRSS",
+    "comparison_id": "rr_vs_ss_day30_oscillating_heat",
+    "min_coverage": 1,
+    "qvalue_cutoff": 0.05,
+    "meth_diff_cutoff": 10.0,
+    "dmr_mode": "tile",
+    "tile_size": 1000,
+    "tile_step": 1000,
+    "dmr_engine": "limma",
+    "dmr_features": "genes",
+    "unit_min_coverage": 10,
+    "tile_min_cpgs": 10,
+    "replicate_unit": "family",
+    "design_sheet": "data/studies/CIBNOR2021_HEAT_RRSS/samplesheet.tsv",
+    "bismark_align_args": "--score_min L,0,-0.6",
+    "extractor_args": "--ignore_r2 20 --ignore_3prime 1 --ignore_3prime_r2 1",
+    "promoter_upstream_bp": 1500,
+    "genome_assembly": "GCF_963853765.1"
+  },
+  "input_checksums": {
+    "CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_dmr_standardized.tsv": "sha256:3dd8f2e9c7911f71f2b709320e94cc487c23113c1317297e362e3a4969069bf3",
+    "CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_methylkit_qc.tsv": "sha256:021e34c1d28c75cb63c64c083e31d106e5057d91513accdb36575553ef6fc4c3",
+    "CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_annotation_qc.tsv": "sha256:9c9603f4e48acb7edd8e834abf21e3d8515b9a6891b245f81dd5f5f93f683829",
+    "CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_standardize_qc.tsv": "sha256:8b849b0d33fa8fe6e35cec6483378d5741bd3332ef67078d745c16459fa37ab8"
+  },
+  "software_versions": {
+    "ANNOTATE_REGIONS": {
+      "bioconductor-genomicranges": "1.62.1",
+      "bioconductor-rtracklayer": "1.70.1",
+      "r-base": "4.5.1"
+    },
+    "BISMARK_ALIGN": {
+      "bismark": "0.24.2"
+    },
+    "BISMARK_DEDUPLICATE": {
+      "bismark": ""
+    },
+    "BISMARK_GENOME_PREPARATION": {
+      "bismark": "0.24.2"
+    },
+    "BISMARK_METHYLATION_EXTRACTOR": {
+      "bismark": ""
+    },
+    "COVERAGE_FILTER": {
+      "awk": "awk version 20200816"
+    },
+    "DMR_POOLED_TILES": {
+      "bioconductor-bsseq": "1.46.0",
+      "bioconductor-dss": "2.58.0",
+      "bioconductor-limma": "3.66.0",
+      "r-base": "4.5.1",
+      "r-data.table": "1.17.8"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "python": "3.14.8"
+    },
+    "TRIM_GALORE": {
+      "trim_galore": "0.6.10"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.14.8"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to methylation/report/"
+  },
+  "container_engine": null,
+  "qc_metrics": {
+    "n_standardized_regions": 132587,
+    "n_hyper": 62617,
+    "n_hypo": 69970,
+    "mean_coverage": null,
+    "pct_regions_passing_coverage_filter": null
+  },
+  "warnings": [
+    "software_version_unresolved: BISMARK_DEDUPLICATE wrote an empty version for bismark (version command failed or tool missing)",
+    "software_version_unresolved: BISMARK_METHYLATION_EXTRACTOR wrote an empty version for bismark (version command failed or tool missing)"
+  ],
+  "output_schema": [
+    "region_id",
+    "chrom",
+    "start",
+    "end",
+    "gene_id",
+    "annotation_context",
+    "meth_diff_percent",
+    "qvalue",
+    "direction"
+  ],
+  "harmonize_command": "aree harmonize --study CIBNOR2021_HEAT_RRSS --input CIBNOR2021_HEAT_RRSS_rr_vs_ss_day30_oscillating_heat_dmr_standardized.tsv"
+}

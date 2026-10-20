@@ -8,7 +8,7 @@ but have different review concerns.
 
 For coding conventions, test expectations, linting, and the PR process for
 changes to `src/`, `schemas/`, workflow scaffolds, or the app, see
-[CONTRIBUTING.md](../CONTRIBUTING.md) at the repository root. This page does
+[CONTRIBUTING.md](https://github.com/sr320/AREE/blob/main/CONTRIBUTING.md) at the repository root. This page does
 not duplicate that guide — it exists specifically to cover the
 curated-dataset contribution path, which is distinct enough from ordinary
 code contribution to warrant its own explanation.
@@ -91,4 +91,4 @@ first, since they affect every existing registered study.
 - [parallel_study_runs.md](parallel_study_runs.md)
 - [resilience_vs_exposure.md](resilience_vs_exposure.md)
 - [governance_and_provenance.md](governance_and_provenance.md)
-- [CONTRIBUTING.md](../CONTRIBUTING.md) — code contribution guide
+- [CONTRIBUTING.md](https://github.com/sr320/AREE/blob/main/CONTRIBUTING.md) — code contribution guide

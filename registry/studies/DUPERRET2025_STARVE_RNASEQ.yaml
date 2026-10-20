@@ -1,0 +1,305 @@
+# RNA-seq arm of Duperret et al. 2025 (iScience 29:114333): 16 days of
+# starvation vs ad libitum feeding, then OsHV-1 µVar cohabitation challenge.
+# Starvation lowered POMS mortality, and that survival was measured in the same
+# tanks the libraries came from.
+#
+# ONE STUDY, TWO ENA PROJECTS. The authors deposited the reads split by diet:
+# PRJEB86618 (starved) and PRJEB86525 (fed). They are one experiment with
+# shared tanks, families, timing and sequencing, so they are registered as
+# one study. The branch is named for PRJEB86618; both are listed under
+# `accessions`. The sample sheet is two `aree fetch-samplesheet` runs (one per
+# project, identical options) concatenated unchanged; see ena_provenance.json.
+#
+# The metabolomics from the same experiment is DUPERRET2025_POMS_STARVE
+# (MetaboLights MTBLS13313), registered separately because it is a different
+# assay and repository. Its starved_vs_fed_0hpc comparison matches this
+# study's primary comparison, so the two can support multi-omics convergence.
+# They are the same tanks and must not be counted as independent studies.
+#
+# REANALYZED at full depth (single-end, `single_end = true`), all three
+# registered comparisons, each fitted on 3 vs 3 pseudo-bulk tank units. Only
+# the 24 libraries the comparisons use (0 and 24 hpc) were fetched. First run
+# 2026-10-12; the committed results are the 2026-10-13 rerun, in which all
+# three comparisons share one quantification of each library (see
+# curation_notes). Results:
+#   starved_vs_fed_0hpc           29,634 genes, 11,259 padj < 0.05
+#   fed_oshv1_24hpc_vs_0hpc       29,517 genes, 10,436 padj < 0.05
+#   starved_oshv1_24hpc_vs_0hpc   29,557 genes,  4,655 padj < 0.05
+# Mapping 65.8-72.8% (Salmon, transcriptome). QC passes with warnings: see
+# quality_flags, limitations (8)-(10) and curation_notes. Reads came from NCBI's
+# SRA open-data mirror, not ENA (read_source.tsv).
+
+study_id: DUPERRET2025_STARVE_RNASEQ
+simulated: false
+
+accessions:
+  doi: "10.1016/j.isci.2025.114333"
+  bioproject: "PRJEB86618"
+  geo: null
+  sra: null
+  ena: "PRJEB86618; PRJEB86525"
+  proteomexchange: null
+  other: null
+
+citation: "Duperret L, Valdivieso A, Petton B, Morga B, Faury N, de Lorgeril J, Corporeau C, Degremont L, Allienne JF, Henry S, Turtoi A, Pouzadoux J, Romatif O, Courtay G, Monaco CJ, Toulza E, Lagorce A, Pernet F, Vidal-Dupiol J, Mitta G (2025) Food deprivation enhances disease resistance: Underlying mechanisms in oysters confronted with Pacific oyster mortality syndrome. iScience 29(1):114333. https://doi.org/10.1016/j.isci.2025.114333 (PMID 41541659). RNA-seq: ENA PRJEB86618 (starved) and PRJEB86525 (fed), under the Ifremer DECICOMP umbrella BioProject PRJEB86647. Same experiment's metabolomics: MetaboLights MTBLS13313 (AREE study DUPERRET2025_POMS_STARVE)."
+
+species: "Magallana gigas"
+strain_or_population: "Ifremer first-generation full-sib families F11N and F14R (produced 11 May 2020 from G0 families F11 and F14, whose parents were wild Dellec oysters; both G0 families highly POMS-susceptible). Pathogen-free recipients, 3 months old at the start of the diet treatment (9 Aug 2020)."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis RNA-seq studies. The authors mapped
+# to an earlier C. gigas genome with their own functional annotation.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NextSeq 550, single-end 75 bp; NEBNext Ultra library prep (per the paper). 83 runs, 22.7-36.0 M reads each (median about 27 M), 104.3 GB FASTQ reported by ENA."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ for 83 runs are public in ENA: PRJEB86618 (starved, 41 runs, public 2025-10-23) and PRJEB86525 (fed, 42 runs, public 2025-08-01). The paper reports 84 libraries; the missing one is an F14R starved 6 hpc replicate, which is not deposited. Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The authors' DEG tables are in the paper's supplementary material and were not harmonized here: AREE reanalyzes raw reads so that every comparison has a standard error. The 2026-10-12 reanalysis did not use ENA's FASTQ files: ENA was throttling this IP (about 260 KB/s, about 33 h for 31 GB), so the 24 runs used were fetched as .sra files from NCBI's SRA open-data mirror (sra-pub-run-odp on AWS S3) and converted with fasterq-dump 3.4.1. ENA's FASTQ MD5s therefore do not apply. Instead, each run's .sra size was checked against S3's content-length, its read count was checked exactly against ENA's read_count, and the .sra and output FASTQ MD5s are recorded in read_source.tsv. The quality scores are real (binned NextSeq values, not SRA Lite placeholders), and the original Illumina read names are kept."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. 2 families (F11N, F14R) x 2 diets (fed, code 3;
+# starved, code 5) x 7 times (0, 3, 6, 12, 24, 48, 72 hpc) x 3 = 84 planned,
+# 83 deposited. Design is parsed from experiment_title, e.g. 'NextSeq 550
+# sequencing: P_F14R_5_3_1' = family F14R, starved, 3 hpc, replicate 1. The
+# parse agrees with the BioSample sample_description and experimental factor
+# for both projects. Sample-sheet `condition` is '<diet_code>_<hpc>'.
+#
+# THE SAMPLE UNIT IS A POOL FROM ONE TANK. Per the paper and the BioSample
+# descriptions ('pooled from ten 3-month-old oysters'), each library is a pool
+# of 10 oysters from one tank x family. Each diet had three 400-L tanks holding
+# both families, and replicates 1-3 are the tanks (inferred: the deposit does
+# not name tanks). Diet is applied per tank, so the effective n for diet
+# contrasts is 3 tanks.
+#
+# FIT ON TANKS, NOT LIBRARIES. Each tank yields two libraries (one per family)
+# at each time, so the libraries are not independent replicates of the tank's
+# treatment. Fitting ~ family + condition would count 6 libraries per diet when
+# 3 tanks were treated, and DESeq2 cannot take tank as a term because tank is
+# nested in diet. So every comparison is fitted on pseudo-bulk tank units
+# (--replicate_unit): each unit's two family libraries are summed, giving 3 vs
+# 3 units with dispersion and lfcSE from tank-to-tank variation. The sample
+# sheet carries two derived columns for this (see ena_provenance.json):
+#   tank      = <diet>_t<replicate>        diet contrast at 0 hpc
+#   tank_hpc  = <tank>_<hpc>hpc            within-diet time contrasts
+# The time contrasts use tank_hpc because the same tank is sampled at 0 and
+# 24 hpc, so a `tank` unit would sit in both arms (the workflow refuses that).
+# They are not paired on tank: that would need replicate n to be the same
+# tank at every time point, which the deposit does not establish. Summing
+# families weights them by library depth. Family-specific effects are lost
+# from the pooled fit; per-family runs (3 vs 3 libraries, as the paper did)
+# are the sensitivity analysis.
+#
+# LIBRARY PREP IS NOT SPLIT BY DIET, as far as the deposit shows. Library
+# numbers in library_name interleave fed and starved samples (for example
+# 7-9 fed, 13-15 starved, 22-24 fed, 28-30 starved), and the sample-index
+# ranges overlap. This contrasts with the metabolomics, where diet is fully
+# confounded with MS batch. The sequencing-run layout itself is not deposited.
+#
+# COMPARISONS follow the paper's two analyses: diet at baseline (starved vs
+# fed at 0 hpc), and infection response (each time vs 0 hpc within a diet).
+# Of the six infection times, only 24 hpc is registered: the first time at
+# which viral transcriptional activity had risen under both diets (after
+# 12 hpc fed, after 24 hpc starved). The other times are in the sample sheet.
+# The paper analyzed families separately. Here the primary fit sums families
+# within tank, and per-family runs are the sensitivity analysis, because the
+# diet effect on survival is large in F14R and marginal in F11N.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "starved_vs_fed_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Food deprivation: food supply stopped for 16 days at 23 C before OsHV-1 µVar cohabitation challenge, versus ad libitum feeding (1,500 µm3/µL Tisochrysis lutea + Skeletonema costatum, 50/50)."
+    stressor_standardized: "nutritional_limitation"
+    exposure_intensity: "complete food deprivation (food supply stopped)"
+    exposure_duration: "16 d before challenge"
+    exposure_timing: "sampled at 0 hpc: end of the 16 d diet treatment, start of cohabitation, before infection"
+    control_condition: "Fed ad libitum (diet code 3), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries, summed to 3 tank units; --replicate_unit tank)"
+    treatment_condition: "Starved 16 d (diet code 5), 0 hpc: 3 tanks x families F11N and F14R, one pool of 10 oysters per tank x family (6 libraries, summed to 3 tank units; --replicate_unit tank)"
+    phenotype: "disease_resistance"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent_survival_post_challenge (final mortality per family x diet: F14R 34.8% starved vs 75.5% fed; F11N 93.3% vs 100%)"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: "data/studies/DUPERRET2025_STARVE_RNASEQ/DUPERRET2025_STARVE_RNASEQ_starved_vs_fed_0hpc_dge_standardized.tsv"
+    meta_analysis_primary: true
+
+  - comparison_id: "fed_oshv1_24hpc_vs_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, flow stopped for the first 125 hpc), in ad libitum-fed recipients; 24 hpc compared with 0 hpc."
+    stressor_standardized: "pathogen_challenge"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio (donor inoculum 2.2 x 10^5 genome copies/µL, 100 µL)"
+    exposure_duration: "24 h post-cohabitation"
+    exposure_timing: "24 hpc"
+    control_condition: "Fed ad libitum, 0 hpc, before infection (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    treatment_condition: "Fed ad libitum, 24 hpc (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "final mortality per family (F14R 75.5%, F11N 100%); OsHV-1 DNA load and transcription reported in the paper"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: "data/studies/DUPERRET2025_STARVE_RNASEQ/DUPERRET2025_STARVE_RNASEQ_fed_oshv1_24hpc_vs_0hpc_dge_standardized.tsv"
+    meta_analysis_primary: false
+
+  - comparison_id: "starved_oshv1_24hpc_vs_0hpc"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Cohabitation with OsHV-1 µVar-injected donor oysters (1:1 biomass, 23 C, flow stopped for the first 125 hpc), in recipients starved for the preceding 16 days; 24 hpc compared with 0 hpc."
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: "cohabitation with injected donors at 1:1 biomass ratio, after complete food deprivation"
+    exposure_duration: "24 h post-cohabitation (after 16 d starvation)"
+    exposure_timing: "24 hpc"
+    control_condition: "Starved, 0 hpc, before infection (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    treatment_condition: "Starved, 24 hpc (6 libraries: 3 tanks x 2 families, summed to 3 tank units; --replicate_unit tank_hpc)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "final mortality per family (F14R 34.8%, F11N 93.3%); OsHV-1 DNA load and transcription reported in the paper"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 3
+    results_file: "data/studies/DUPERRET2025_STARVE_RNASEQ/DUPERRET2025_STARVE_RNASEQ_starved_oshv1_24hpc_vs_0hpc_dge_standardized.tsv"
+    meta_analysis_primary: false
+
+quality_flags:
+  - raw_data_available
+  - tank_level_replication
+  - low_replication
+
+limitations: >
+  (1) Only the 0 and 24 hpc libraries (24 of 83) were fetched and
+  reanalyzed, because no other time point is registered. (2) Replication is 3
+  tanks per diet. Each library is a pool of 10 oysters, so between-oyster
+  variance is averaged away. Both families share each tank, so every
+  comparison is fitted on pseudo-bulk tank units (families summed), 3 vs 3.
+  Replicate = tank is inferred, and the time contrasts are not paired on
+  tank. (3) Starvation is a strong physiological manipulation. Most 0 hpc differences will reflect
+  fasting itself (growth fell from about 90% to 15-19% weight gain, and lipid
+  reserves fell), not resistance mechanisms that would generalize to fed
+  animals. The comparison associates expression with a treatment that raised
+  survival; it does not identify heritable resistance markers. (4) The
+  survival benefit is family-dependent: large in F14R (34.8% vs 75.5%
+  mortality) and marginal in F11N (93.3% vs 100%). Summing families within
+  tank dilutes it, so run each family separately (3 vs 3 libraries) as a
+  sensitivity analysis. (5) In the
+  infection comparisons, 0 hpc samples were taken at the start of
+  cohabitation, so time since tank set-up is confounded with infection
+  time. The 24 hpc infection comparisons are a disease-response contrast
+  (`disease`), not resilience evidence. (6) Same tanks and animals' cohort
+  as DUPERRET2025_POMS_STARVE (metabolomics): convergent evidence, not
+  independent replication. Family F14R and the 2020 Ifremer production are
+  also shared with DECICOMP2025_POMS_AGE. (7) One planned library (F14R
+  starved 6 hpc) is not deposited. The authors excluded one deposited
+  library (F11N fed 48 hpc rep 2, 21% mapping). Neither affects the
+  registered comparisons. (8) Replicate dispersion is low, as expected for
+  libraries that each pool 10 oysters. By diet x time group (two families
+  each) it is 0.0075-0.021, which passes the 0.005 floor. Within a family
+  across its three replicates it is 0.0029-0.0059, and 7 of 8 sets fall
+  below the floor, which was calibrated on single oysters (0.03-0.05). These
+  are not technical replicates: at 24 hpc, viral reads per million differ by
+  orders of magnitude among one family's three libraries (e.g. F14R fed:
+  11,445 / 48 / 1,383), which re-sequencing one RNA sample cannot produce.
+  Residual variance is still small, so lfcSE is small, and the study should
+  not dominate an inverse-variance pool by pooling alone. (9) The tank
+  pairing is unconfirmed. Residual expression of the F11N and F14R libraries
+  sharing a replicate number is no more correlated than different-number
+  pairs (mean r = -0.02 vs 0.01), so either tank effects are negligible or
+  replicate n is not tank n. Summing libraries by replicate number is then
+  an arbitrary pairing of independent pools. The 3 vs 3 fit remains
+  conservative relative to 6 vs 6. (10) The 0 hpc diet contrast calls 38%
+  of genes DE. That fits the size of the manipulation (16 d starvation, with
+  growth and lipid reserves collapsing) and the replicates are independent
+  (8), but it also means a 0 hpc "candidate" is mostly a fasting marker.
+  Viral reads at 24 hpc are low in 5 of 6 starved libraries (1-11 per
+  million) and one fed library (48 per million). This is consistent with the
+  paper's delayed viral replication under starvation, so no library was
+  excluded.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-11"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB86618 --study-id
+    DUPERRET2025_STARVE_RNASEQ`. The fed-diet project PRJEB86525 was added to
+    `accessions` as part of the same study. Sample sheet and FASTQ manifest
+    were generated by running `aree fetch-samplesheet --bioproject <P> --study
+    DUPERRET2025_STARVE_RNASEQ --label-field experiment_title --label-pattern
+    'P_(?P<family>F1[14][NR])_(?P<diet_code>[35])_(?P<hpc>\d+)_(?P<replicate>\d)'
+    --condition-attribute diet_code --condition-attribute hpc --attribute
+    family --attribute replicate --attribute isolate --attribute age
+    --attribute tissue_type --attribute 'experimental factor'` once for each
+    project, then concatenating the outputs unchanged (ena_provenance.json
+    records both per-project provenance blocks and the merged checksums). The
+    parsed diet code matches the BioSample 'experimental factor' (starvation
+    vs control) for all 83 runs. Design, pooling, tank numbers, survival,
+    sequencing details, the 84th library, the excluded outlier
+    (ERR14687881, P_F11N_3_48_2) and the authors' contrasts come from the
+    open-access full text (PMC12803857), read 2026-10-11. The outlier is
+    outside every registered comparison, so no excluded_samples entry is
+    needed. If a 48 hpc comparison is added, exclude it with the paper's
+    mapping-rate evidence or AREE's own. Comparisons were chosen before any
+    result was computed; starved_vs_fed_0hpc is meta_analysis_primary. DESeq2
+    reference levels: fed (3_0) for the diet contrast, and 0 hpc within diet
+    for the infection contrasts. Replication decision (2026-10-11): fit on
+    pseudo-bulk tank units (`--replicate_unit tank` for the diet contrast,
+    `tank_hpc` for the time contrasts), not `~ family + condition`, because
+    the two family libraries from each tank are not independent replicates
+    of its treatment. The tank and tank_hpc columns are derived in the merge
+    step and documented in ena_provenance.json. Reanalysis (2026-10-12,
+    sr320 with Claude Code, on a workstation with 8 cores and 16 GB):
+    Nextflow 26.04.7, -profile local,workstation, work dir on Monarch (HFS+),
+    one run per comparison (`--replicate_unit tank` for the diet contrast,
+    `tank_hpc` for the time contrasts, `--viral_reference` OsHV-1
+    NC_005881.2 for the time contrasts only, because both arms of the diet
+    contrast are pre-infection). Tools as recorded in each workflow
+    manifest: fastp 1.3.6, Salmon 2.3.4, DESeq2 1.42.1, tximport 1.30.0, R
+    4.3.2. The three 2026-10-12 runs shared one session, but -resume reused no
+    tasks across them, so each comparison quantified its own libraries. The
+    task hashes were in fact identical; Nextflow had been launched as `java
+    -jar nextflow-26.04.7-one.jar`, without the launcher's --add-opens flags,
+    so no cache entry was ever written (PR #44). Rerun 2026-10-13 with the
+    official 26.04.7 launcher, same commands, tools and reference files
+    (sha256 now in each manifest), work dir on omics (HFS+): comparison 1 ran
+    all 78 tasks, comparison 2 reused 74 and comparison 3 reused 99, so every
+    comparison now rests on one fastp/Salmon/viral quantification of each
+    library. These rerun outputs replace the 2026-10-12 ones. They agree
+    closely. Per comparison 25-41 genes moved by more than 0.1 in log2 fold
+    change, all at baseMean 1.8-81; 76 of these 99 have no padj in either run,
+    and the 4 that are significant are significant in both. Counts at padj <
+    0.05 moved by +11, -2 and -31, and 13, 6 and 55 genes changed call, mostly
+    with padj near 0.05 in both runs. In starved_oshv1_24hpc_vs_0hpc, DESeq2's
+    independent-filtering cutoff fell from baseMean about 50 to about 42, so
+    573 more genes were tested; 12 of them, at baseMean 42-50, now reach padj
+    < 0.05. Multithreaded Salmon quantification is not bit-reproducible
+    between runs, which is the likely cause of the count differences; on
+    2026-10-12 the two time contrasts' separate quantifications of the same 24
+    hpc libraries already differed slightly (e.g. P_F11N_3_24_1 viral reads
+    per million 26,686.12 vs 26,685.75). Mapping rates, viral loads quoted in
+    limitations (8) and (10), and both dispersion QC tables are unchanged by
+    the rerun (the tables reproduce byte for byte). The manifests record the
+    reference files by the absolute local paths they were read from.
+    Replicate dispersion QC:
+    replicate_dispersion_qc.tsv (by group) and
+    replicate_dispersion_qc_by_family.tsv (within family), interpreted in
+    limitations (8). The viral-load independence check and the tank
+    residual-correlation check in limitations (8)-(9) were run ad hoc from
+    the Salmon quant files and are not committed scripts.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86618"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86647"
+    - "https://doi.org/10.1016/j.isci.2025.114333"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC12803857/"

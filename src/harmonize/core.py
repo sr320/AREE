@@ -7,7 +7,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import EVIDENCE_TABLE_PATH, REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_yaml, sha256_file
+from common import (
+    EVIDENCE_TABLE_PATH,
+    REPO_ROOT,
+    REPORTS_DIR,
+    load_yaml,
+    sha256_file,
+    study_yaml_path,
+)
 
 from .identifiers import (
     active_crosswalk_path,
@@ -38,7 +45,7 @@ def _generated_by() -> str:
 
 
 def _load_study(study_id: str) -> dict:
-    path = STUDIES_DIR / f"{study_id}.yaml"
+    path = study_yaml_path(study_id)
     if not path.exists():
         raise FileNotFoundError(f"No registered study file at {path}")
     return load_yaml(path)
@@ -111,6 +118,12 @@ def _crosswalk_ref() -> dict:
     return ref
 
 
+def _orthogroup_ref() -> dict | None:
+    from mappings.orthogroups import active_run_ref
+
+    return active_run_ref()
+
+
 def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evidence_df: pd.DataFrame, date_generated: str) -> Path:
     MANIFESTS_DIR.mkdir(parents=True, exist_ok=True)
     manifest = {
@@ -128,6 +141,9 @@ def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evide
             # Record the crosswalk that was actually used, with its checksum. A
             # hardcoded path here silently misreported provenance for real studies.
             "identifier_crosswalk": _crosswalk_ref(),
+            # The orthogroup run that orthogroup_id came from (null: none
+            # active, or a simulated study on the demo crosswalk).
+            "orthogroups": None if study.get("simulated") else _orthogroup_ref(),
         },
         "software_versions": {"aree-harmonize": WORKFLOW_VERSION},
         "workflow_version": WORKFLOW_VERSION,
@@ -177,7 +193,7 @@ def _warn_if_analysis_status_stale(study: dict) -> None:
         warnings.warn(
             f"Study {study['study_id']} is registered with analysis_status="
             f"{status!r} but has just been harmonized. Update "
-            f"registry/studies/{study['study_id']}.yaml to 'harmonized' and re-run "
+            f"{study_yaml_path(study['study_id']).relative_to(REPO_ROOT)} to 'harmonized' and re-run "
             "`aree register-study --update`.",
             stacklevel=2,
         )

@@ -1,0 +1,77 @@
+{
+  "artifact": "medul_gene_id_crosswalk.tsv",
+  "artifact_sha256": "082c9d4090f40fea73c5a395bf34268b009194da11d94b39128fcf4ac4bfabb7",
+  "builder": "src/mappings/build_crosswalk.py",
+  "builder_version": "1.0.0",
+  "date_generated": "2026-10-11",
+  "organism": "Mytilus edulis, Blue mussel",
+  "ncbi_taxid": 6550,
+  "ncbi_reference_annotation_at_build": "GCF_963676685.1 (xbMytEdul2.2), annotation release GCF_963676685.1-RS_2025_02",
+  "sources": [
+    {
+      "name": "NCBI Gene gene_info",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Invertebrates/All_Invertebrates.gene_info.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/medul_gene_info.tsv",
+      "sha256_filtered": "fbf4148dcfcc417ca7e27ef4aa6827660b7bc24b400e89214c0008d12c136477",
+      "records": 49210
+    },
+    {
+      "name": "UniProtKB",
+      "url": "https://rest.uniprot.org/uniprotkb/stream?query=organism_id:6550&fields=accession,reviewed,protein_name,gene_names,gene_primary,xref_geneid,xref_refseq&format=tsv&compressed=true",
+      "local_copy": "data/reference/crosswalk/_sources/medul_uniprot.tsv",
+      "sha256": "4ffa8bdb290311699797c9168a47ee20446ed8b32393d8ead1938a95f278e327",
+      "entries_with_geneid_xref": 32,
+      "genes_linked": 31
+    },
+    {
+      "name": "NCBI Gene gene_history",
+      "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_history.gz",
+      "local_filtered_copy": "data/reference/crosswalk/_sources/medul_gene_history.tsv",
+      "sha256_filtered": "4e9a17adc11d84f88936509de2ba021af961916f243a15479b9ee061de23bd34",
+      "remappable_retired_ids": 0,
+      "discontinued_without_replacement": 12
+    }
+  ],
+  "coverage": {
+    "genes_total": 49210,
+    "with_ensembl_xref": {
+      "n": 25098,
+      "pct": 51.0
+    },
+    "with_uniprot_accession": {
+      "n": 31,
+      "pct": 0.06
+    },
+    "with_multiple_uniprot_accessions": {
+      "n": 1,
+      "pct": 0.0
+    },
+    "with_named_symbol": {
+      "n": 3967,
+      "pct": 8.06
+    },
+    "with_orthogroup": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "genes_by_type": {
+      "protein-coding": 35875,
+      "ncRNA": 5874,
+      "tRNA": 3966,
+      "rRNA": 1639,
+      "snRNA": 968,
+      "pseudo": 754,
+      "snoRNA": 133,
+      "other": 1
+    },
+    "retired_gene_ids_remappable": 0,
+    "retired_gene_ids_without_replacement": 12
+  },
+  "known_limitations": [
+    "UniProt cross-references to NCBI GeneID are sparse for this organism; most TrEMBL entries carry no GeneID or RefSeq xref and therefore cannot be linked.",
+    "orthogroup_id is empty; cross-species evidence pooling requires an ortholog inference run that this builder does not perform.",
+    "Ensembl xrefs come from NCBI dbXrefs and reflect Ensembl Metazoa's assembly, which may differ from the current NCBI reference assembly.",
+    "gene_synonyms is emitted for curation and future symbol resolution but is not currently consulted by harmonize.identifiers.",
+    "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are labelled 'inferred' because the remap crosses an annotation version; GeneIDs discontinued without a replacement stay 'unresolved' by design."
+  ]
+}

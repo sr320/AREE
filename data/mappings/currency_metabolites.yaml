@@ -1,0 +1,23 @@
+# Currency (cofactor / inorganic) compounds that are never used as a metabolite -> gene link.
+#
+# Each takes part in hundreds of KEGG reactions (ATP, C00002, in 810 on 2026-10-16),
+# so a change in one would "link" to most of the metabolic genome. They stay in the
+# evidence table and on evidence cards as metabolites; they are only excluded as LINKS,
+# and every exclusion is shown on the card. See docs/metabolite_gene_links.md.
+version: "0.1.0"
+compounds:
+  - {kegg_compound: C00001, name: H2O, reason: "solvent; participates in most hydrolytic reactions"}
+  - {kegg_compound: C00080, name: "H+", reason: "proton; balancing species"}
+  - {kegg_compound: C00002, name: ATP, reason: "energy currency; ~800 KEGG reactions"}
+  - {kegg_compound: C00008, name: ADP, reason: "energy currency"}
+  - {kegg_compound: C00020, name: AMP, reason: "energy currency"}
+  - {kegg_compound: C00003, name: "NAD+", reason: "redox cofactor"}
+  - {kegg_compound: C00004, name: NADH, reason: "redox cofactor"}
+  - {kegg_compound: C00006, name: "NADP+", reason: "redox cofactor"}
+  - {kegg_compound: C00005, name: NADPH, reason: "redox cofactor"}
+  - {kegg_compound: C00009, name: Orthophosphate, reason: "inorganic cofactor"}
+  - {kegg_compound: C00013, name: Diphosphate, reason: "inorganic cofactor"}
+  - {kegg_compound: C00010, name: CoA, reason: "acyl-carrier cofactor"}
+  - {kegg_compound: C00011, name: CO2, reason: "inorganic; carboxylation/decarboxylation"}
+  - {kegg_compound: C00007, name: Oxygen, reason: "inorganic; oxidase/oxygenase co-substrate"}
+  - {kegg_compound: C00014, name: Ammonia, reason: "inorganic nitrogen"}

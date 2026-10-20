@@ -45,14 +45,17 @@ other — all nullable), `strain_or_population`, `annotation_version`,
 `platform`, `qc_status`, `analysis_status`, `quality_flags`, `limitations`.
 
 If the study is synthetic/demo data rather than a real dataset, set
-`simulated: true` and say so plainly in the `citation` and `limitations`
-fields (see any file in `registry/studies/GIGAS_*.yaml` for the convention
-used by the demo set — they are all prefixed `[SIMULATED]`).
+`simulated: true`, put the YAML in `registry/demo_studies/` instead of
+`registry/studies/`, and say so plainly in the `citation` and `limitations`
+fields (see any file in `registry/demo_studies/GIGAS_*.yaml` for the convention
+used by the demo set — they are all prefixed `[SIMULATED]`). Validation fails
+for a study in the wrong directory. Demo studies are test fixtures for code
+paths real data does not reach yet; add one only for that reason.
 
 ## 3. The `comparisons[]` structure
 
 A single study can report more than one phenotype or stressor — for example
-`registry/studies/GIGAS_HEAT01.yaml` reports both an acute heat-shock
+`registry/demo_studies/GIGAS_HEAT01.yaml` reports both an acute heat-shock
 comparison (phenotype `survival`) and a chronic heat comparison (phenotype
 `growth_under_stress`) from the same study. Rather than forcing one label per
 study, phenotype/stressor/tissue/life-stage fields live at the **comparison**
@@ -74,6 +77,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "percent_survival"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 24
     biological_replicates: 3
     results_file: "data/demo/rnaseq/GIGAS_HEAT01_acute_heat_vs_control_dge_demo.tsv"
@@ -83,7 +87,12 @@ Each comparison needs its own `comparison_id` (unique within the study),
 `tissue` and `life_stage` (from the controlled vocabularies), a
 `stressor_original` (exact free text from the source — never discard this)
 alongside a `stressor_standardized` ontology term, a `phenotype` term, a
-`phenotype_direction`, a `resilience_classification`, and sample-size fields.
+`phenotype_direction`, a `resilience_classification`, a `contrast_type`, and
+sample-size fields. `contrast_type` says whether the arms are a treatment and
+its control (`exposure_response`) or groups that differ in resilience, and if
+so whether they were sampled at baseline or under the challenge; see
+[contrast_types.md](contrast_types.md). If a study has both kinds, choose
+`meta_analysis_primary` separately within each contrast type.
 `results_file` points at the processed results table for that comparison when
 `analysis_mode` is `processed_results_harmonization` (or when raw-mode output
 has already been produced and staged, as in the demo).
@@ -206,7 +215,59 @@ prepare those tables by a documented script of your own for now.
 
 ## 7. Next steps
 
-For a `raw_reanalysis` study, check after the workflow runs and **before
+For a `raw_reanalysis` study, `aree fetch-samplesheet` (see
+[first_raw_reanalysis.md](first_raw_reanalysis.md)) writes
+`fastq_manifest.tsv` alongside the sample sheet, and the two always list the
+same runs:
+
+- Each run gets exactly one manifest row per mate: 1 for `SINGLE`, 2 for
+  `PAIRED`. Any other count is an error naming the runs. One exception: when
+  a paired run's ENA FASTQ also includes an unpaired `RUN.fastq.gz` beside
+  `RUN_1`/`RUN_2`, that file is left out and listed under
+  `unpaired_files_dropped` in `ena_provenance.json`.
+- URLs come from ENA's generated FASTQ (`fastq_ftp`) where it exists. Some
+  public runs have none, and only the submitter's own files (`submitted_ftp`).
+  When those are all FASTQ, they are used instead, with the submitter's MD5s
+  and sizes. The manifest's `source` column (`fastq_ftp` or `submitted_ftp`)
+  and `submitted_ftp_runs` in `ena_provenance.json` record which runs these
+  are. PRJEB105019's ERR15996548 is one example. Submitted files keep their
+  own names (e.g. `..._DNA_R1.fastq.gz`), so download them by
+  `run_accession` and `mate`, not by file name.
+- A run with neither (no ENA FASTQ, and submitted files that are BAM, CRAM
+  or missing) is an error naming the run, not a silent omission. Resolve it
+  with the submitter or ENA before going further. Do not hand-edit the
+  manifest.
+
+**Before downloading** a `raw_reanalysis` study, pre-screen its replicates on
+the first ~1 M reads of each library:
+
+```bash
+python scripts/prescreen_replicates.py --source ncbi \
+    --samplesheet data/studies/STUDY_ID/samplesheet.tsv \
+    --manifest data/studies/STUDY_ID/fastq_manifest.tsv \
+    --salmon-index data/reference/GCF_963853765.1/salmon_index \
+    --level CONTROL_LEVEL --level TREATMENT_LEVEL
+```
+
+It quantifies only those reads and applies the same dispersion statistic as
+the full check below, at about 1 GB and 10 minutes per study instead of tens
+of GB. `--source ncbi` uses `fastq-dump -X` (sra-tools, in
+`environment.yml`) and is usually much faster than ENA. Use `--source ena`
+to screen the exact files the manifest would download. It was calibrated on
+two studies with known outcomes (1 M reads per library; full-depth values in
+brackets):
+
+| Study | Pre-screen | Full depth | Verdict |
+|---|---|---|---|
+| `WANG2024_HEAT_GILL` | 0.0038 / 0.0029 | (0.0030 / 0.0009) | fail |
+| `LI2022_HEAT_PLOIDY` d_0 / d_f | 0.0191 / 0.0218 | (0.0139 / 0.0143) | pass |
+
+The subsample reads a little high, so a borderline study can pass the
+pre-screen and still fail at full depth. A pass is permission to download,
+not a substitute for the full check. A fail means: do not download the study
+as is, and record why in [candidate_studies.md](candidate_studies.md).
+
+Check after the workflow runs and **before
 harmonizing** that its replicates are independent animals:
 
 ```bash
@@ -218,10 +279,15 @@ python scripts/check_replicate_dispersion.py \
 It exits non-zero if any group's median gene dispersion falls below 0.005.
 Real *M. gigas* biological replicates sit around 0.03–0.05. A group far below
 that is behaving like technical replicates, and its DESeq2 standard errors
-are too small to pool. `IOCAS2022_OA_ENERGY` failed this check despite
-deposited metadata labelling every library a biological replicate; see
-[candidate_studies.md](candidate_studies.md). If a study fails, set
-`qc_status: failed`, record the evidence, and do not harmonize it.
+are too small to pool. `IOCAS2022_OA_ENERGY` and `WANG2024_HEAT_GILL` failed
+this check even though the deposited metadata labelled every library a
+biological replicate; see [candidate_studies.md](candidate_studies.md). If a
+study fails, set `qc_status: failed`, record the evidence, and do not
+harmonize it. For individually sequenced animals, comparing allele fractions
+at expressed SNPs can show *why* a group failed (one RNA source vs distinct
+animals). `data/studies/WANG2024_HEAT_GILL/genotype_check/` is a worked
+example. It cannot tell pools of larvae from one cross apart, since those
+share parental genotypes.
 
 Once a study is registered and has passed QC, harmonize its results into the shared evidence
 table — see [raw_vs_processed.md](raw_vs_processed.md) for which mode applies

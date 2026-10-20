@@ -1,0 +1,8 @@
+# Retired NCBI GeneIDs for taxid 6550, from NCBI gene_history.
+# Built by src/mappings/build_crosswalk.py v1.0.0 on 2026-10-11
+# Studies analysed against an older annotation report these identifiers; each row
+# records the authoritative NCBI replacement. Resolution through this table is
+# labelled 'inferred', not 'exact', because it crosses an annotation version.
+# 12 further GeneIDs were discontinued with NO replacement and are
+# deliberately absent, so that they stay 'unresolved'.
+discontinued_gene_id	current_gene_id	discontinued_symbol	discontinue_date

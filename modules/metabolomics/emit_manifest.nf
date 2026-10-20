@@ -149,6 +149,9 @@ process EMIT_MANIFEST {
                              "separately by src/harmonize/metabolomics.py",
         "parameters": {
             "mode": MODE,
+            # Every params.metabolomics value this run used (normalization,
+            # detection_limit, replicate_unit, ...), not just the mode.
+            "metabolomics": json.loads(r'''${groovy.json.JsonOutput.toJson(params.metabolomics)}'''),
         },
         "input_checksums_sha256": checksums,
         # Tools as reported by each process that ran, keyed by process name.

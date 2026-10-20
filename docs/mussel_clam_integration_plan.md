@@ -1,7 +1,12 @@
 # Plan: integrating mussel and clam datasets
 
-**Status, 2026-10-11:** WP0 and WP1 are implemented (see their entries in
-section 5). Everything else is a proposal. This plan describes the work needed
+**Status, 2026-10-17:** WP0 to WP4, WP6 and WP8 are implemented, and WP7 has
+its builder and first species. WP5 has its backlog and
+its first within-species pool: two Manila clam heat studies
+(TUCCI2025_HEAT_PRIMING and PERUZZA2023_HEATWAVE, both reanalyzed and on
+`main`, k = 2). WP6 has its
+orthogroup run, orthogroup-level meta-analysis and cross-species candidates
+with their evidence cards, and the dashboard gate (see the entries in section 5). Everything else is a proposal. This plan describes the work needed
 to take AREE from a single-species (*Magallana
 gigas*) evidence engine to one that holds mussel and clam evidence, first
 species-by-species and then across species through orthology.
@@ -279,6 +284,23 @@ names a different file and checksum for each.
 
 ### WP2. Crosswalks for the first-wave species
 
+**Status: done, 2026-10-11.** Six crosswalks built and registered, one per
+species; coverage is in [identifier_mapping.md](identifier_mapping.md#mussel-and-clam-crosswalks).
+Findings that change later work:
+
+- **UniProt linkage is near zero** for every mussel and clam (2 to 94 genes per
+  species), because UniProtKB entries for them derive from GenBank, not RefSeq.
+  Proteomics studies (WP5) will need sequence-based protein mapping before they
+  can contribute.
+- **Hard clam:** the two annotated assemblies share 31,226 GeneIDs. On the older
+  one, 3,656 GeneIDs remap to a current gene and 9,078 were discontinued without
+  replacement, so both assemblies use one crosswalk and the older one carries a
+  note that up to about 21% of its genes will stay unresolved.
+- NCBI's `gene_info` and `gene_history` were confirmed to keep each taxid's rows
+  contiguous, which the builder's early-exit streaming depends on.
+- The real-crosswalk invariant tests now run over every registered crosswalk,
+  and a new test checks that no GeneID appears in two species' crosswalks.
+
 Run `aree build-crosswalk --taxid <id> --slug <slug>` for each of the six
 species (five first wave plus *M. californianus*), commit the TSV and
 provenance sidecar as for oysters (3 MB each), and set `identifier_crosswalk`
@@ -293,6 +315,43 @@ Acceptance: six new crosswalks committed with provenance; test suite green.
 
 ### WP3. Reference bundles and workflow configs
 
+**Status: done, 2026-10-12.** `aree fetch-reference` fetches, verifies and
+records a bundle for any registered RefSeq assembly; see
+[reference_bundles.md](reference_bundles.md). What was done and found:
+
+- **Every registered RefSeq assembly resolves** to its NCBI folder (`--plan`),
+  all eight of them; the Roslin oyster assembly, which has no RefSeq
+  annotation, is refused.
+- **The oyster bundle was backfilled** with `reference_provenance.json` and the
+  genome FASTA that `config/CIBNOR2021_HEAT_RRSS.config` already expected. The
+  new tx2gene builder reproduces the pilot's awk-built `tx2gene.tsv` byte for
+  byte (60,992 transcripts, 33,068 genes, all in the oyster crosswalk).
+- **The *M. galloprovincialis* bundle was fetched.** Its GTF names the
+  registered release (`GCF_965363235.1-RS_2025_08`), and all 43,185 of its
+  genes are in the WP2 crosswalk.
+- **Acceptance, run with simulated reads.** No mussel study is curated yet
+  (WP5), so six single-end libraries (3 vs 3, about 85,000 to 97,000 reads
+  each) were simulated from 400 single-isoform mussel genes, 60 of them with a
+  4-fold change. The real RNA-seq workflow ran end to end on this machine
+  (8 GB RAM, `-profile local` with the machine-local resource config): 24 of
+  24 tasks, 3 min 12 s, including a Salmon index of the full mussel
+  transcriptome. Harmonizing the output resolved all 425 records `exact`
+  against `mgall_gene_id_crosswalk.tsv` under taxid 29158. All 60 simulated
+  changes were called at padj < 0.05 in the right direction, 3 of 340
+  unchanged genes were called, and estimated and true log2 fold changes
+  correlated at 0.989. The simulated reads were not committed.
+- **The manifest now checksums its reference.** The run showed the RNA-seq
+  manifest named the assembly but recorded no checksum for the transcriptome,
+  GTF or tx2gene it read. It now stages and hashes them, compares each with
+  the bundle's `reference_provenance.json`, and warns on a mismatch, on a
+  bundle for a different assembly, or on reference files with no bundle
+  provenance.
+
+Not done: bundles for the other five species are fetched on demand when a
+study needs them (each `--plan` already resolves). The methylation manifest
+does not yet checksum its genome FASTA, and the Bismark index is still built
+by the workflow rather than kept in the bundle.
+
 - Write a `data/reference/README.md` recipe, or an `aree fetch-reference
   --assembly GCF_...` command, that downloads the RefSeq transcript FASTA and
   GTF from the NCBI genomes FTP, verifies `md5checksums.txt`, builds
@@ -300,8 +359,8 @@ Acceptance: six new crosswalks committed with provenance; test suite green.
   in [first_raw_reanalysis.md](first_raw_reanalysis.md). Salmon indexes are
   built by the workflow on first run.
 - For the methylation workflow, extend the bundle with the genomic FASTA and
-  a Bismark index, which the oyster bundle does not yet carry because no
-  methylation run has completed.
+  a reusable Bismark index. CIBNOR2021 completed a real methylation run on
+  2026-10-16; the workflow-built index is still separate from the bundle.
 - Storage: roughly 2 to 5 GB per species bundle before Salmon indexes; FASTQ
   volumes follow the chosen studies (the Manila clam deposits alone are
   several TB in aggregate, so stage per study as now).
@@ -312,6 +371,34 @@ mussel assembly and annotation release.
 
 ### WP4. Second-species demo and regression fixtures
 
+**Status: done, 2026-10-12.** `MYTGAL_HEAT01` is a simulated *M.
+galloprovincialis* larval heat-stress study. It reports the oyster demo's gene
+identifiers under the same phenotype (`larval_viability`) as the two oyster
+larval studies, which pool *hsp70* and disagree on *sod1*, so without the
+species partition it would have joined both pools. What was done and found:
+
+- **The partition holds.** `tests/test_demo_species.py` runs the demo with and
+  without the mussel study and requires every oyster meta-analysis row and
+  every oyster candidate, down to adjusted p-values and scores, to be
+  identical. They are. The mussel study forms its own pools (k = 1), and its
+  candidates never reach the high-priority tier.
+- **Seven existing tests assumed one species.** Each took the first row or card
+  for a gene and now got the mussel one. No oyster result changed; the tests
+  now select the oyster partition explicitly (`oyster()` and `oyster_card()` in
+  `tests/conftest.py`).
+- **Two outputs could not tell species apart.** Evidence cards printed only a
+  taxid, and the top-candidates summary listed the oyster and mussel *hsp70*
+  as two identical-looking rows. Cards now name the species and state that they
+  pool one species only; the summary has a species column.
+- **The demo list is no longer hard-coded.** It was spelled out in the
+  Makefile, both GitHub workflows, the README and the test fixtures. It is now
+  every `simulated: true` study (`aree study-ids --simulated`), so the next demo
+  study needs no list edits.
+- The demo study declares `species_identity` (collection site) and carries
+  `species_assignment_unverified`, exercising the WP0 species-complex rule.
+- The synthetic crosswalk header says both demo species share its identifiers
+  on purpose, and drops its stale `AREE_CROSSWALK` instructions.
+
 - Add one simulated *M. galloprovincialis* study (`MYTGAL_HEAT01`, clearly
   `simulated: true`) sharing feature identifiers with the oyster demo so the
   species partition is exercised by `make demo`, the dashboard, and the
@@ -321,6 +408,30 @@ mussel assembly and annotation release.
   demo LOC numbers for real mussel genes, as the oyster demo already warns.
 
 ### WP5. First real studies (curation backlog)
+
+**Status: backlog done, 2026-10-12; Manila clam heat pool done, 2026-10-17
+(k = 2: TUCCI2025_HEAT_PRIMING, PERUZZA2023_HEATWAVE, both 3' Tag-seq,
+fitted on clams with tank_level_replication). No mussel study yet.** The screen is in
+[candidate_studies_mussels_clams.md](candidate_studies_mussels_clams.md): 186
+ENA RNA-seq projects listed, about 40 inspected from deposited metadata, and
+publications matched in PubMed. Three within-species pools are within reach:
+Manila clam heat (k = 2, about 22 GB in total, curate first), hard clam
+salinity (k = 3), and *M. edulis* heat (k = 2, up to 4). Findings:
+
+- **Mixed assays inflate group sizes.** Both Manila clam heat projects deposit
+  16S amplicon runs from the same animals under the same attributes, which
+  doubled every group in `fetch-samplesheet`. It now takes
+  `--library-strategy` and, whenever a project mixes strategies, prints group
+  sizes per strategy instead of filtering silently (the label can be wrong,
+  as it was for `LUTIER2022_OA_TIPPING`).
+- **Three hard clam acidification projects look like one experiment** (one
+  Stony Brook rearing program sampled at three ages), so they should be one
+  study, not k = 3.
+- **Pooling within *Mytilus* is thin.** *M. galloprovincialis* has no
+  same-phenotype pair with n ≥ 3; its strongest study (larval acidification
+  with measured abnormality) waits for cross-species pooling in WP6.
+- The one candidate with a measured survival difference between sequenced
+  groups is Manila clam heat priming (Tucci et al. 2025), primed vs naive.
 
 Open `docs/candidate_studies_mussels_clams.md` using the same screen as the
 oyster backlog: raw reads public, n ≥ 3 biological replicates confirmed from
@@ -336,7 +447,92 @@ k ≥ 2 per taxon.
 
 ### WP6. Cross-species orthology and pooling (the new science)
 
-This is where "mussel and clam integration" stops being plumbing.
+**Status: done. Orthogroups 2026-10-13; pooling and cross-species candidates 2026-10-14; dashboard gate 2026-10-17.** What exists:
+
+- `aree fetch-reference --proteins` writes one protein per gene (the longest)
+  for each species, keyed by NCBI GeneID; all seven reference assemblies have
+  one, 100% covered by their crosswalks (228,833 proteins).
+- `aree build-orthogroups` ran OrthoFinder 3.1.5 on them (6 threads, 55
+  minutes on Pori) in its own conda environment. The run,
+  `orthofinder3.1.5_2026-10-13`, is committed and active: 38,507 orthogroups,
+  of which 5,552 are single-copy in all seven species, 7,031 single-copy where
+  present, 11,877 multi-copy and 14,047 species-specific. Shared with at least
+  one other species: 95-98% of each mussel's genes, 85-88% of each clam's, 77%
+  of the oyster's.
+- Harmonization attaches the active run's orthogroup to every resolved real
+  GeneID and records the run in its manifest. On HESSER2024_VCOR, 274 of 306
+  resolved genes got one (the rest are non-coding), and 190 of those 274 sit
+  in multi-copy orthogroups, only 18 in single-copy ones. The worry below
+  about lineage-specific expansions is therefore the normal case, not the
+  exception: most genes stress studies report are in expanded families.
+- Checks: in 63% of single-copy-in-all orthogroups with named genes, every
+  species' gene name agrees exactly (the rest are naming variants such as
+  "forkhead box C1-a" vs "forkhead box protein C1"); "heat shock 70 kDa
+  protein" genes fall into 285 orthogroups, the largest holding 17-23 copies
+  in each mussel against 3 in the oyster.
+
+**Orthogroup-level meta-analysis: done, 2026-10-14.** `aree meta-analyze
+--level orthogroup` pools each species' gene-level estimate across species
+through orthogroups (two-stage DerSimonian-Laird), reports between-species
+Q, I-squared and tau-squared, per-species estimates and study counts, and a
+`meets_replication_gate` flag (two or more species with k >= 2 each).
+Multi-copy orthogroups are set aside by default, as are orthogroups missing
+from the active run. On the demo, 8 orthogroups pool oyster with mussel
+(larval viability), none past the gate; on all committed real evidence
+(465,531 oyster records), nothing pooled across species yet, correctly, until
+the first clam study merged (see below).
+Building it found that the demo's illustrative orthogroup IDs collide with
+real OrthoFinder IDs, so simulated evidence never consults the run (tested).
+
+**Cross-species candidates and cards: done, 2026-10-14.** `aree
+build-cross-species-cards` tiers each orthogroup row behind five named gates
+(replication, direction, significance, phenotype relevance, quality) into
+`cross_species_convergence`, `cross_species_emerging`,
+`cross_species_discordant` or `cross_species_unsupported`, with a transparent
+weighted score and a between-species I-squared penalty. Each card shows every
+species' estimate side by side, the pooled estimate, the orthogroup run and
+the gates failed. Single-species cards now name their orthogroup. On the
+demo: 5 emerging, 3 unsupported, none convergent.
+
+First real cross-species rows, 2026-10-16, after TUCCI2025_HEAT_PRIMING
+merged: oyster and Manila clam thermal-tolerance evidence pools through 5,681
+single-copy orthogroups, giving 64 emerging, 6 discordant and 5,611
+unsupported rows, none convergent, with 603 cards. Real data changed two
+rules. "Discordant" now requires species that are each significant at gene
+level and disagree in sign: 2,880 of 2,886 sign disagreements involved a
+non-significant species, which is noise, not a reversal. Quality is now
+judged per species, because the union of flags across species always
+exceeded the limit.
+
+With PERUZZA2023_HEATWAVE merged (2026-10-17) the clam reached k = 2 and the
+replication gate is met on real data for the first time. On all of `main`'s
+real evidence, oyster and clam pool through 5,975 single-copy orthogroups
+(5,152 multi-copy set aside): 133 emerging and 5,842 unsupported rows, none
+discordant or convergent, with 455 cards. The gate is met in 5,633 of them;
+131 emerging rows fail only phenotype relevance and quality. Both clam
+comparisons are exposure-only, so no oyster-clam row can converge on
+thermal tolerance until a clam study measures a tolerance outcome in its
+pooled comparison. The 6 discordant rows seen with one clam study did not
+survive the second.
+
+**Dashboard gate: done, 2026-10-17.** The dashboard's pools are now per
+species, and `cross_species_gate` opens a phenotype only when at least two
+species each have a within-species gene pool with k >= 2. For an open
+phenotype the home page's "Across species" section shows the gate, the
+cross-species tiers and the top rows with their cards; rows for a closed
+phenotype are counted as withheld, never ranked or linked. Whether or not the
+gate is open, each top single-species candidate carries an ortholog lookup:
+the other species' genes in its orthogroup, the phenotypes they were tested
+under, and how many of their records were significant. On `main` (2026-10-17)
+thermal tolerance is open (*M. gigas* k = 3, *R. philippinarum* k = 2) and
+the demo's larval viability is closed (the demo mussel has k = 1, 8 rows
+withheld). `make demo`, CI and the Pages build now run
+`aree build-cross-species-cards`.
+
+The
+OrthoFinder run used `-M dendroblast` (OrthoFinder 3 has no orthogroups-only
+mode) and only its `Orthogroups.tsv` is used; hierarchical orthogroups are a
+possible refinement.
 
 - **Orthogroup inference.** Run OrthoFinder (or use OrthoDB) on the RefSeq
   proteomes of every species with a committed crosswalk, starting from the
@@ -386,7 +582,35 @@ species their only route to cross-species comparison. Until this lands, their
 studies harmonize with `unresolved` identifiers and are visible as registered
 but unmapped.
 
+**Status: builder and first species done, 2026-10-17.** `aree build-crosswalk
+--from-gff` exists (`src/mappings/gff_crosswalk.py`), and the resolver is
+anchor-aware: it reads `gene_id` for a GFF-route crosswalk and `ncbi_gene_id`
+otherwise. One decision differs from the text above. Rows are not marked
+`inferred` wholesale. A study reporting the authors' gene, transcript or
+protein ID resolves `exact`, because it names that gene in that annotation;
+only a lookup through the homology-derived UniProt accession is `inferred`.
+*Mytilus coruscus* is registered with its MCOR1.1 assembly (GCA_011752425.2,
+the only annotated one) and the `mcoru` crosswalk: 58,540 genes, 9,877 with a
+Swiss-Prot 2026_03 hit at the recorded thresholds, and the authors' own
+accession among our hits for 48.6% of the genes both assigned. Still to do:
+*S. constricta* and *P. generosa*, whose annotations are not on NCBI (the
+authors' GFF and proteins must be sourced and checksummed), and adding
+GFF-route species to an orthogroup run, which needs `gene_orthogroups.tsv`
+keyed by gene and taxid rather than GeneID alone.
+
 ### WP8. Interface and documentation
+
+**Status: done, 2026-10-17.** Dashboard and app: a per-species table
+(crosswalk route and size, real and demo study counts, evidence records), a
+species filter on the studies table and on the app's studies, evidence and
+candidates tabs, accepted names throughout so synonyms group, and a species
+identity column for studies of a hybridizing complex (also in the registry
+index). Docs: a worked example in
+[adding_a_species.md](adding_a_species.md), which follows the Manila clam
+rather than the first mussel because no real mussel study is harmonized yet,
+plus a GFF-route species; a new [species_identity.md](species_identity.md);
+and updates to the roadmap, implementation status and the orthogroup section
+of identifier_mapping.md.
 
 - Dashboard and study browser: species filter, per-species crosswalk and
   study counts, a species-identity column for *Mytilus* studies.
@@ -455,7 +679,7 @@ WP6 could first be tested.
 | 2 | WP1 per-study crosswalk selection | WP0 | 2 to 3 |
 | 3 | WP2 six crosswalks | WP1 | 1, mostly download time |
 | 4 | WP4 simulated mussel demo | WP1 | 1 |
-| 5 | WP3 reference bundles + first config | WP0 | 1 to 2 plus a workflow run |
+| 5 | WP3 reference bundles + first config (done) | WP0 | 1 to 2 plus a workflow run |
 | 6 | WP5 backlog page, then first four studies | WP1 to WP3 | 1 for the page; each study as today (a day or more of compute per raw reanalysis) |
 | 7 | WP6 orthology and cross-species pooling | WP2, WP5 | 5 to 10, plus an OrthoFinder run (hours to a day for ten proteomes) |
 | 8 | WP7 non-RefSeq crosswalks | WP6 | 3 to 5 |

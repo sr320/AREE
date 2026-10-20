@@ -16,7 +16,8 @@
 process ANNOTATE_REGIONS {
     tag "${study_id}:${comparison_id}"
     label 'process_medium'
-    container 'bioconductor/bioconductor_docker:RELEASE_3_18'
+    // GenomicRanges and rtracklayer (methylKit dependencies), R 4.5.2.
+    container 'quay.io/biocontainers/bioconductor-methylkit:1.36.0--r45ha27e39d_0'
     publishDir "${params.outdir}/methylation/annotated", mode: params.publish_mode
 
     input:
@@ -102,6 +103,17 @@ process ANNOTATE_REGIONS {
         gene_ids[i] <- ifelse(is.na(gid), "", gid)
     }
 
+    # A DMR step that classifies its own units (DMR_POOLED_TILES with
+    # dmr_features = 'genes') keeps that: a gene-body unit stays with its gene,
+    # and an intergenic tile stays gene-less even where it borders a gene
+    # window (its CpGs are only the ones outside it). Re-assigning by overlap
+    # would hand both the same gene and recreate an identifier collision.
+    preset <- if ("annotation_context" %in% names(dmr)) !is.na(dmr\$annotation_context) & nzchar(as.character(dmr\$annotation_context)) else rep(FALSE, nrow(dmr))
+    if (any(preset)) {
+        contexts[preset] <- as.character(dmr\$annotation_context[preset])
+        gid <- as.character(dmr\$gene_id[preset])
+        gene_ids[preset] <- ifelse(is.na(gid), "", gid)
+    }
     dmr\$annotation_context <- contexts
     dmr\$gene_id <- gene_ids
 

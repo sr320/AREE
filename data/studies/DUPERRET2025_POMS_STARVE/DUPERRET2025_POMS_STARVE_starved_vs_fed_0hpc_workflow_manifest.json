@@ -1,0 +1,214 @@
+{
+  "comparison_id": "starved_vs_fed_0hpc",
+  "container_engine": null,
+  "date_generated": "2026-10-16T14:30:03.531649+00:00",
+  "generated_by": "automated:aree-metabolomics@0.1.0-scaffold",
+  "input_checksums_sha256": {
+    "DUPERRET2025_POMS_STARVE_features.tsv": "50d484845bb175015205ff70cb5c488a628ee15efa249a2c3f6d6351f2dd2850",
+    "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_metabolite_features_standardized.tsv": "e8c9bdf4f74f34923f6fedefb476e628986a7f33784e5a4a177c937ed2d7af9b",
+    "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_samplesheet.tsv": "54c3d1973e47f1915ada7a64874eb83d98dc8aca944f89f102f246596736c52c"
+  },
+  "mode": "raw_reanalysis",
+  "parameters": {
+    "metabolomics": {
+      "acquisition": "targeted",
+      "comparison_id": "starved_vs_fed_0hpc",
+      "detection_limit": "0.001",
+      "metabolite_annotation_map": null,
+      "metabolite_class_map": null,
+      "min_detected_per_arm": 2,
+      "normalization": "internal_standard",
+      "processed_results": null,
+      "qc_cv_threshold": 0.3,
+      "raw_feature_table": "/private/tmp/claude-501/-Users-sr320-Documents-GitHub-AREE/da27bc79-7896-49a5-a57e-211d9b51e10b/scratchpad/duperret_staging/DUPERRET2025_POMS_STARVE_features.tsv",
+      "replicate_unit": "tank",
+      "sample_sheet": "/private/tmp/claude-501/-Users-sr320-Documents-GitHub-AREE/da27bc79-7896-49a5-a57e-211d9b51e10b/scratchpad/duperret_staging/DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_samplesheet.tsv",
+      "study_id": "DUPERRET2025_POMS_STARVE"
+    },
+    "mode": "raw_reanalysis"
+  },
+  "provenance_level": "infra-level (see docs/design.md section 4); per-row evidence-level provenance is stamped separately by src/harmonize/metabolomics.py",
+  "qc_metrics": {
+    "n_annotation_confidence_level_1_or_2": 122,
+    "n_features": 122,
+    "pct_annotation_confidence_level_1_or_2": 100.0,
+    "upstream_step_qc": {
+      "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_annotation_qc.json": {
+        "comparison_id": "starved_vs_fed_0hpc",
+        "level_counts": {
+          "2": 320
+        },
+        "n_confidence_from_annotation_map": 0,
+        "n_confidence_from_input_table": 320,
+        "n_defaulted_to_unknown_level_4": 0,
+        "n_features": 320,
+        "study_id": "DUPERRET2025_POMS_STARVE"
+      },
+      "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_diffabundance_qc.json": {
+        "analysis_method": "targeted_MS_limma_moderated_t",
+        "comparison_id": "starved_vs_fed_0hpc",
+        "limma_df_prior": 2.2742,
+        "min_detected_per_arm": 2,
+        "n_features_in": 310,
+        "n_features_not_tested": {
+          "detected_too_rarely_in_both_arms": 2,
+          "detected_too_rarely_in_control": 14,
+          "detected_too_rarely_in_treatment": 23,
+          "not_detected": 149
+        },
+        "n_features_tested": 122,
+        "n_padj_below_0.05": 68,
+        "n_replicates_control": 3,
+        "n_replicates_treatment": 3,
+        "replicate_unit": "tank",
+        "study_id": "DUPERRET2025_POMS_STARVE"
+      },
+      "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_intake_qc.json": {
+        "comparison_id": "starved_vs_fed_0hpc",
+        "n_features_in": 320,
+        "n_features_out": 320,
+        "n_intensity_values_coerced_to_nan": 0,
+        "n_qc_pool_samples": 0,
+        "n_samples": 12,
+        "study_id": "DUPERRET2025_POMS_STARVE",
+        "warnings": []
+      },
+      "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_normalization_qc.json": {
+        "comparison_id": "starved_vs_fed_0hpc",
+        "detection_limit": 0.001,
+        "internal_standards": [
+          "GM:2-Morpholinoethansulfonic Acid",
+          "NUCs:MES",
+          "PUFAs:12-HETE-d8",
+          "PUFAs:6-keto-PGF1a-d4",
+          "PUFAs:LTB4 d4",
+          "PUFAs:OEA-d4",
+          "PUFAs:PAF-d4",
+          "PUFAs:PGD2-d4",
+          "PUFAs:TXB2-d4",
+          "TCA:d27-Myristic acid"
+        ],
+        "n_features": 310,
+        "n_internal_standards_excluded": 10,
+        "n_samples_normalized": 12,
+        "n_values_below_detection": 2124,
+        "normalization_method": "log2_then_internal_standard_per_platform",
+        "qc_pool_metric": {
+          "cv_threshold": 0.3,
+          "n_features_passing_cv_threshold": "not_applicable",
+          "n_qc_pool_samples": 0,
+          "note": "fewer than 2 QC pooled samples available; pooled-sample CV QC not computed",
+          "pct_features_passing_cv_threshold": "not_applicable"
+        },
+        "sample_scaling": {
+          "GM": {
+            "F11N-3-0-1": 0.890623,
+            "F11N-3-0-2": 0.923147,
+            "F11N-3-0-3": 0.788103,
+            "F11N-5-0-1": -1.130991,
+            "F11N-5-0-2": -0.600499,
+            "F11N-5-0-3": -0.56437,
+            "F14R-3-0-1": 1.135785,
+            "F14R-3-0-2": 0.738342,
+            "F14R-3-0-3": 0.739291,
+            "F14R-5-0-1": -0.458354,
+            "F14R-5-0-2": -1.712521,
+            "F14R-5-0-3": -0.748556
+          },
+          "NUCs": {
+            "F11N-3-0-1": -0.591641,
+            "F11N-3-0-2": -0.520478,
+            "F11N-3-0-3": -0.607879,
+            "F11N-5-0-1": 0.041641,
+            "F11N-5-0-2": 0.443017,
+            "F11N-5-0-3": 0.787359,
+            "F14R-3-0-1": -0.404634,
+            "F14R-3-0-2": -0.278673,
+            "F14R-3-0-3": -0.059998,
+            "F14R-5-0-1": 0.722384,
+            "F14R-5-0-2": -0.036222,
+            "F14R-5-0-3": 0.505124
+          },
+          "PUFAs": {
+            "F11N-3-0-1": 0.102382,
+            "F11N-3-0-2": 0.179724,
+            "F11N-3-0-3": 0.21972,
+            "F11N-5-0-1": -0.100647,
+            "F11N-5-0-2": -0.285857,
+            "F11N-5-0-3": -0.045098,
+            "F14R-3-0-1": 0.214262,
+            "F14R-3-0-2": 0.296287,
+            "F14R-3-0-3": 0.353261,
+            "F14R-5-0-1": -0.391221,
+            "F14R-5-0-2": -0.314716,
+            "F14R-5-0-3": -0.228097
+          },
+          "TCA": {
+            "F11N-3-0-1": 1.382674,
+            "F11N-3-0-2": 1.071901,
+            "F11N-3-0-3": 1.065395,
+            "F11N-5-0-1": -0.73956,
+            "F11N-5-0-2": -1.328085,
+            "F11N-5-0-3": -1.076107,
+            "F14R-3-0-1": 1.211194,
+            "F14R-3-0-2": 0.347044,
+            "F14R-3-0-3": 0.826102,
+            "F14R-5-0-1": -0.183821,
+            "F14R-5-0-2": -1.186918,
+            "F14R-5-0-3": -1.389821
+          }
+        },
+        "study_id": "DUPERRET2025_POMS_STARVE"
+      },
+      "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc_pathway_mapping_qc.json": {
+        "comparison_id": "starved_vs_fed_0hpc",
+        "metabolite_class_counts": {
+          "unknown": 122
+        },
+        "metabolite_class_map_used": null,
+        "n_features": 122,
+        "n_matched_via_map": 0,
+        "n_unmatched_defaulted_to_unknown": 122,
+        "study_id": "DUPERRET2025_POMS_STARVE"
+      }
+    }
+  },
+  "software_versions": {
+    "ANNOTATION_CONFIDENCE": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "DIFFERENTIAL_ABUNDANCE": {
+      "bioconductor-limma": "3.58.1",
+      "r-base": "4.3.2",
+      "r-jsonlite": "1.8.9"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.9.6"
+    },
+    "FEATURE_TABLE_INTAKE": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "NORMALIZE_QC": {
+      "numpy": "2.0.2",
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "PATHWAY_MAPPING": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "2.3.3",
+      "python": "3.9.6"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards"
+  },
+  "study_id": "DUPERRET2025_POMS_STARVE",
+  "warnings": [],
+  "workflow_name": "aree-metabolomics",
+  "workflow_version": "0.1.0-scaffold"
+}

@@ -2,7 +2,7 @@ import math
 
 import pandas as pd
 import pytest
-from conftest import harmonize_all_demo_studies
+from conftest import harmonize_all_demo_studies, oyster
 
 from harmonize.core import load_evidence_table
 from meta_analysis.effect_sizes import approximate_se
@@ -14,6 +14,33 @@ def test_approximate_se_recovers_z_relationship():
     # p = 0.05 two-sided corresponds to z ~= 1.96
     se = approximate_se(effect_size=1.0, p_value=0.05)
     assert math.isclose(se, 1.0 / 1.959963985, rel_tol=1e-3)
+
+
+@pytest.mark.parametrize("p", [1e-20, 1e-100, 1e-300, 0.0])
+def test_approximate_se_preserves_extreme_significance(p):
+    from scipy.stats import norm
+
+    from meta_analysis.run import effective_standard_errors
+
+    expected = 2.0 / norm.isf(max(p, 1e-300) / 2)
+    scalar = approximate_se(2.0, p)
+    vector = effective_standard_errors(pd.DataFrame({
+        "effect_size": [2.0], "standard_error": [None], "p_value": [p],
+    }))[0]
+    assert scalar > 0
+    assert scalar == pytest.approx(expected)
+    assert vector == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("p", [1.0, -0.1, 1.1, float("inf"), float("nan")])
+def test_approximate_se_rejects_unusable_p_values(p):
+    from meta_analysis.run import effective_standard_errors
+
+    assert approximate_se(1.0, p) is None
+    vector = effective_standard_errors(pd.DataFrame({
+        "effect_size": [1.0], "standard_error": [None], "p_value": [p],
+    }))[0]
+    assert math.isnan(vector)
 
 
 def test_dersimonian_laird_single_study_is_fixed_effect():
@@ -38,7 +65,7 @@ def test_dersimonian_laird_conflicting_studies_show_high_heterogeneity():
 
 def test_meta_analysis_on_demo_data_pools_hsp70_across_studies(isolated_reports):
     harmonize_all_demo_studies()
-    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    result = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
     hsp70 = result[result["feature_id_standardized"] == "LOC105333935"].iloc[0]
     assert hsp70["k_studies"] == 2
     assert hsp70["direction_consistency"] == 1.0
@@ -46,7 +73,7 @@ def test_meta_analysis_on_demo_data_pools_hsp70_across_studies(isolated_reports)
 
 def test_meta_analysis_flags_conflicting_direction_for_sod1(isolated_reports):
     harmonize_all_demo_studies()
-    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    result = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
     sod1 = result[result["feature_id_standardized"] == "LOC105331241"].iloc[0]
     assert sod1["k_studies"] == 2
     assert sod1["direction_consistency"] < 0.7
@@ -157,7 +184,7 @@ def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, m
         "  - comparison_id: contrast_b\n"
         "    meta_analysis_primary: true\n"
     )
-    monkeypatch.setattr(meta_run, "STUDIES_DIR", studies_dir)
+    monkeypatch.setattr(meta_run, "study_files", lambda: sorted(studies_dir.glob("*.yaml")))
 
     result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
     assert result["k_studies"] == 1
@@ -169,7 +196,7 @@ def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, m
 
 def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_reports):
     harmonize_all_demo_studies()
-    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    result = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
     hsp70 = result[result["feature_id_standardized"] == "LOC105333935"].iloc[0]
     assert hsp70["n_excluded_duplicate_mappings"] == 1
     assert hsp70["n_excluded_unpoolable"] == 0
@@ -213,10 +240,11 @@ def test_benjamini_hochberg_leaves_nan_out_of_the_family():
 def test_adjusted_p_is_computed_within_family_and_invariant_to_filters(isolated_reports):
     """The family is (phenotype, feature_type, simulated, species_taxid), which is
     exactly what the CLI can filter on, so the same feature gets the same adjusted
-    p whether the run covered one phenotype or every phenotype."""
+    p whether the run covered one phenotype or every phenotype. With two demo
+    species, one phenotype holds two families; the oyster one is checked here."""
     harmonize_all_demo_studies()
-    everything = run_meta_analysis(feature_type="gene")
-    one_phenotype = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    everything = oyster(run_meta_analysis(feature_type="gene"))
+    one_phenotype = oyster(run_meta_analysis(phenotype="larval_viability", feature_type="gene"))
 
     assert "adjusted_p_value" in everything.columns
     assert (everything["adjusted_p_value"] >= everything["p_value"] - 1e-12).all()

@@ -37,10 +37,10 @@ GENE_INFO_FIXTURE = "\t".join(
     [
         # named gene, single Ensembl xref
         "29159\t100\tCYTB\t-\tcob|cytb\tEnsembl:ENSMGIG00000000100\tMT\t-\tcytochrome b\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
-        # unnamed gene, two Ensembl xrefs
-        "29159\t200\tLOC200\t-\t-\tEnsembl:ENSMGIG00000000200|Ensembl:ENSMGIG00000000201\t1\t-\tuncharacterized LOC200\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
-        # no xrefs at all
-        "29159\t300\tLOC300\t-\t-\t-\t2\t-\tuncharacterized LOC300\tncRNA\t-\t-\t-\t-\t20240101\t-",
+        # unnamed gene, two Ensembl xrefs, a legacy (oyster_v9-style) locus tag
+        "29159\t200\tLOC200\tCGI_10000200\t-\tEnsembl:ENSMGIG00000000200|Ensembl:ENSMGIG00000000201\t1\t-\tuncharacterized LOC200\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
+        # no xrefs at all; a legacy locus tag
+        "29159\t300\tLOC300\tCGI_10000300\t-\t-\t2\t-\tuncharacterized LOC300\tncRNA\t-\t-\t-\t-\t20240101\t-",
         # a different taxid must be ignored
         "6565\t999\tOTHER\t-\t-\t-\t1\t-\twrong species\tprotein-coding\t-\t-\t-\t-\t20240101\t-",
     ]
@@ -247,6 +247,29 @@ def test_unknown_identifiers_stay_unresolved(use_built_crosswalk):
 # --------------------------------------------------------------------------- #
 
 
+def test_legacy_locus_tags_are_carried_into_the_crosswalk(built_crosswalk):
+    _, rows = built_crosswalk
+    tags = {r["ncbi_gene_id"]: r["legacy_locus_tags"] for r in rows}
+    assert tags == {"100": "", "200": "CGI_10000200", "300": "CGI_10000300"}
+
+
+def test_legacy_locus_tag_resolves_as_inferred(use_built_crosswalk):
+    resolved = resolve_identifier("CGI_10000200", "legacy_locus_tag")
+    assert resolved.feature_id_standardized == "200"
+    assert resolved.mapping_confidence == "inferred"
+
+
+def test_legacy_protein_group_resolves_only_when_members_agree(use_built_crosswalk):
+    assert resolve_identifier("CGI_10000200,CGI_10000200", "legacy_locus_tag").feature_id_standardized == "200"
+    for group in ("CGI_10000200,CGI_10000300", "CGI_10000200,CGI_99999999"):
+        resolved = resolve_identifier(group, "legacy_locus_tag")
+        assert resolved.feature_id_standardized is None and resolved.mapping_confidence == "unresolved"
+
+
+def test_unknown_legacy_locus_tag_stays_unresolved(use_built_crosswalk):
+    assert resolve_identifier("CGI_10099999", "legacy_locus_tag").mapping_confidence == "unresolved"
+
+
 def test_parse_gene_history_separates_replaced_from_dead(fixture_sources):
     replacements, dead = parse_gene_history(fixture_sources[2], 29159)
     assert replacements["150"]["current_gene_id"] == "200"
@@ -347,30 +370,124 @@ def real_crosswalk():
     set_crosswalk_path(None)
 
 
-def test_real_crosswalk_gene_ids_are_unique_and_numeric(real_crosswalk):
+def _committed_crosswalks():
+    """Every real crosswalk registered in genome_assemblies.yaml, one test id per species."""
+    from common import registered_crosswalks
+
+    return [
+        pytest.param(entry, id=entry["path"].name.replace("_gene_id_crosswalk.tsv", ""))
+        for entry in registered_crosswalks()
+    ]
+
+
+@pytest.fixture(params=_committed_crosswalks())
+def committed_crosswalk(request):
+    entry = request.param
+    if not entry["path"].exists():
+        pytest.skip(f"{entry['path'].name} not built; run `aree build-crosswalk`")
+    return entry
+
+
+def _route(entry) -> str:
+    from harmonize.identifiers import crosswalk_route
+
+    return crosswalk_route(entry["path"])
+
+
+def test_real_crosswalk_gene_ids_are_unique_and_numeric(committed_crosswalk):
     import pandas as pd
 
-    df = pd.read_csv(real_crosswalk, sep="\t", comment="#", dtype=str)
+    if _route(committed_crosswalk) != "ncbi_gene":
+        pytest.skip("GFF-route crosswalk: see test_gff_route_crosswalk_invariants")
+    df = pd.read_csv(committed_crosswalk["path"], sep="\t", comment="#", dtype=str)
+    assert len(df) > 1000
     assert df["ncbi_gene_id"].is_unique
     assert df["ncbi_gene_id"].str.fullmatch(r"\d+").all()
     assert (df["locus_id"] == "LOC" + df["ncbi_gene_id"]).all()
 
 
-def test_real_crosswalk_provenance_matches_the_artifact(real_crosswalk):
+def test_gff_route_crosswalk_invariants(committed_crosswalk):
+    """Anchored on the authors' gene IDs; UniProt only from the recorded homology search."""
+    import pandas as pd
+
+    if _route(committed_crosswalk) != "gff_homology":
+        pytest.skip("NCBI-route crosswalk")
+    path = committed_crosswalk["path"]
+    df = pd.read_csv(path, sep="\t", comment="#", dtype=str).fillna("")
+    assert len(df) > 1000
+    assert df["gene_id"].is_unique and (df["gene_id"] != "").all()
+    assert df["ncbi_gene_id"].eq("").all() or df["ncbi_gene_id"].str.fullmatch(r"\d*").all()
+    assert set(df["uniprot_evidence"]) <= {"", "diamond_blastp"}
+    assert ((df["uniprot_accession"] != "") == (df["uniprot_evidence"] == "diamond_blastp")).all()
+    # A transcript or protein ID names exactly one gene.
+    for column in ("transcript_ids", "protein_ids"):
+        ids = [i for v in df[column] for i in v.split(";") if i]
+        assert len(ids) == len(set(ids)), column
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    assert prov["anchor_column"] == "gene_id"
+    thresholds = prov["homology_search"]["thresholds"]
+    assert thresholds["max_evalue"] <= 1e-5 and thresholds["min_identity_pct"] >= 25
+    assert {s["name"] for s in prov["sources"]} >= {"annotation_gff3", "annotation_proteins", "uniprot_database"}
+    assert all(len(s["sha256"]) == 64 for s in prov["sources"])
+
+
+def test_real_crosswalk_never_invents_orthogroups(committed_crosswalk):
+    import pandas as pd
+
+    df = pd.read_csv(committed_crosswalk["path"], sep="\t", comment="#", dtype=str)
+    assert df["orthogroup_id"].isna().all()
+
+
+def test_real_crosswalk_provenance_matches_the_artifact(committed_crosswalk):
     from common import sha256_file
 
-    prov = json.loads(REAL_CROSSWALK.with_name(
-        "mgigas_gene_id_crosswalk.provenance.json").read_text())
-    assert prov["artifact_sha256"] == sha256_file(real_crosswalk), (
-        "crosswalk has changed since its provenance sidecar was written; rebuild it"
+    path = committed_crosswalk["path"]
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    assert prov["artifact_sha256"] == sha256_file(path), (
+        f"{path.name} has changed since its provenance sidecar was written; rebuild it"
     )
-    assert prov["ncbi_taxid"] == 29159
+    assert prov["ncbi_taxid"] == committed_crosswalk["ncbi_taxid"]
+
+
+def test_real_crosswalk_provenance_names_the_species_reference_annotation(committed_crosswalk):
+    """The annotation recorded at build time is what every evidence record reports as
+    identifier_annotation_release, so it must be this species' reference assembly,
+    not a default carried over from another species."""
+    from common import load_assemblies
+
+    path = committed_crosswalk["path"]
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    if _route(committed_crosswalk) == "gff_homology":
+        # No NCBI reference annotation exists; the annotation named is the
+        # registered assembly whose crosswalk this is.
+        reference = [a for a in load_assemblies().values()
+                     if a["assembly_id"] in committed_crosswalk["assemblies"]]
+    else:
+        reference = [
+            a for a in load_assemblies().values()
+            if a["ncbi_taxid"] == committed_crosswalk["ncbi_taxid"] and a.get("is_ncbi_reference")
+        ]
+    assert len(reference) == 1
+    assert reference[0]["ncbi_assembly_accession"] in prov["ncbi_reference_annotation_at_build"]
+
+
+def test_real_crosswalk_has_a_retired_gene_id_sidecar(committed_crosswalk):
+    from harmonize.identifiers import retired_table_path
+
+    if _route(committed_crosswalk) != "ncbi_gene":
+        pytest.skip("retired GeneIDs exist only for NCBI-route crosswalks")
+    sidecar = retired_table_path(committed_crosswalk["path"])
+    assert sidecar is not None and sidecar.exists()
 
 
 def test_real_crosswalk_resolves_a_known_gene(real_crosswalk):
     """LOC105331241 is a real M. gigas gene (coadhesin). It is also used by the demo
     crosswalk under a fabricated identity, which is why the two files stay separate."""
+    from mappings.orthogroups import gene_orthogroup
+
     resolved = resolve_identifier("LOC105331241", "locus_id")
     assert resolved.mapping_confidence == "exact"
     assert resolved.feature_id_standardized == "105331241"
-    assert resolved.orthogroup_id is None
+    # The crosswalk carries no orthogroup; resolution takes it from the active
+    # orthogroup run (data/reference/orthogroups/active.yaml), if there is one.
+    assert resolved.orthogroup_id == gene_orthogroup("105331241")

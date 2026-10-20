@@ -46,7 +46,7 @@ that only a processed table was ever available. `GIGAS_SAL04`'s
 What differs:
 
 - Raw mode is expected to produce (or has produced) the workflow-level
-  outputs described in [architecture.md](architecture.md#layer-2) — QC
+  outputs described in [architecture.md](architecture.md#layer-2-standardized-reanalysis) — QC
   metrics, alignment/calling logs, a machine-readable manifest with tool
   versions and checksums.
 - Processed mode cannot independently verify upstream QC. `aree harmonize`

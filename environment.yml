@@ -10,8 +10,8 @@
 #   pip install -e ".[dev,app,intake]"
 #
 # This is a convenience for native runs. The workflows still declare their own
-# containers, and a manifest from a native run records the declared container
-# versions, not the ones in this environment (see docs/implementation_status.md).
+# containers. Current RNA-seq manifests collect observed process versions;
+# older manifests record declared versions (see docs/implementation_status.md).
 name: aree
 channels:
   - conda-forge
@@ -28,9 +28,10 @@ dependencies:
   - openjdk=21
   - salmon
   - fastp
-  - fastqc
+  - fastqc=0.12.1   # the Java FastQC the workflow container pins; bioconda 0.13 on osx-arm64 is a different, incompatible tool
   - multiqc
   - samtools
+  - sra-tools   # fastq-dump -X for scripts/prescreen_replicates.py --source ncbi
   # R steps (DESeq2 / tximport / limma / methylKit) and reports
   - r-base
   - bioconductor-deseq2

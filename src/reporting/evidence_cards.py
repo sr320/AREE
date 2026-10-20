@@ -24,16 +24,25 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import REPORTS_DIR, load_vocab
+from common import REPORTS_DIR, load_vocab, species_term_for_taxid
 from harmonize.core import load_evidence_table
+from mappings.metabolite_links import (
+    LINK_TYPE_TRANSPORTER,
+    MAX_GENES_PER_COMPOUND,
+    links_for_partition,
+)
 from meta_analysis.run import run_meta_analysis
 from prioritize.rank import (
+    METABOLITE_LAYER,
     EvidenceIndex,
     _partition_value,
     add_partition_columns,
     build_candidates,
+    contrast_suffix,
+    contrast_type_of,
     sort_candidates,
 )
+from prioritize.unpooled import POOLING_STATUS_UNPOOLED, build_unpooled_candidates
 
 EVIDENCE_CARDS_DIR = REPORTS_DIR / "evidence_cards"
 DEFAULT_MAX_ADJUSTED_P = 0.05
@@ -47,6 +56,11 @@ NEXT_STEP_BY_TIER = {
         "Investigate the regulatory link across molecular layers (e.g. paired methylation/expression "
         "measurement in the same individuals) before committing to validation."
     ),
+    "metabolite_linked_convergence": (
+        "Measure the metabolite and the linked enzyme's transcript or activity in the same animals "
+        "and the same stressor before treating the link as biological; the current link is KEGG "
+        "reaction annotation transferred by orthology, not a measured relationship."
+    ),
     "emerging": (
         "Requires replication in an independent study before further validation investment."
     ),
@@ -57,6 +71,34 @@ NEXT_STEP_BY_TIER = {
 # sees only `high_priority_cross_study` will read "resilience biomarker", which
 # is wrong for every candidate whose contributing studies never measured a
 # resilience outcome.
+# What the comparison behind the evidence contrasts. The evidence class says
+# what was measured; this says when and between whom.
+CONTRAST_TYPE_STATEMENT = {
+    "baseline_phenotype_difference": (
+        "The contributing comparisons contrast groups that differ in resilience (line, family, "
+        "population, ploidy or age), sampled under **common unstressed conditions**. A difference "
+        "here exists before any stress, which is what a predictive marker needs. Groups that differ "
+        "in origin differ in more than resilience, so replication across independent group pairs, "
+        "and ultimately pre-challenge sampling of individuals whose survival is then recorded, is "
+        "what separates a marker from a background difference."
+    ),
+    "phenotype_difference_under_exposure": (
+        "The contributing comparisons contrast groups that differ in resilience, sampled **during or "
+        "after a challenge**. A difference here may be a cause of the outcome or a consequence of it "
+        "(sicker animals express different genes), so it does not by itself predict resilience "
+        "before stress."
+    ),
+    "exposure_response": (
+        "The contributing comparisons contrast a **treatment with a control**. They show how the "
+        "feature responds to the exposure, not whether it differs between resilient and susceptible "
+        "animals."
+    ),
+    "phenotype_by_exposure_interaction": (
+        "The contributing comparisons contrast **how two groups respond** to the same exposure. A "
+        "difference here is a difference in response, not a baseline difference."
+    ),
+}
+
 EVIDENCE_CLASS_STATEMENT = {
     "resilience_associated": (
         "The contributing studies measured a **resilience outcome** (survival, tolerance, or "
@@ -195,6 +237,140 @@ def _other_omics_context(index: EvidenceIndex, candidate: dict) -> list:
     return rows
 
 
+EXCLUSION_REASON_TEXT = {
+    "currency_metabolite": "currency metabolite (data/mappings/currency_metabolites.yaml); never used as a link",
+    "hub_compound": f"hub compound reaching more than {MAX_GENES_PER_COMPOUND} genes; not credited",
+    "no_reaction_in_table": "no enzyme or transporter link for this compound in the link table",
+}
+
+
+def _linked_omics_context(index: EvidenceIndex, candidate: dict) -> dict:
+    """Evidence reached through a metabolite <-> gene link, for the card.
+
+    Every linked record is shown, under any phenotype. A row counts toward
+    `metabolite_linked_convergence` only when its link is credited, it is for
+    this candidate's own phenotype, its study reported adjusted p <= 0.05, and
+    its layer is not already a shared-identifier supporting layer."""
+    table = links_for_partition(_partition_value(candidate["simulated"]),
+                                _partition_value(candidate["species_taxid"]))
+    is_metabolite = candidate.get("molecular_layer") == METABOLITE_LAYER
+    supporting = {x for x in str(candidate.get("supporting_layers") or "").split("|") if x}
+    rows = []
+    for record in index.linked_records(candidate).to_dict("records"):
+        link = record["_link"]
+        same_phenotype = record["phenotype"] == candidate["phenotype"]
+        significant = bool(record["_significant"])
+        rows.append({
+            "study_id": record["study_id"],
+            "layer": record["_layer"],
+            "linked_feature": index.linked_feature_id(link, is_metabolite),
+            "kegg_compound": link.kegg_compound,
+            "link_type": link.link_type,
+            "via": link.via,
+            "link_basis": link.link_basis,
+            "brite_family": link.brite_family,
+            "ko": link.ko,
+            "equation_side": link.equation_side,
+            "link_confidence": link.link_confidence,
+            "n_genes_for_compound": link.n_genes_for_compound,
+            "credited": link.credited,
+            "phenotype": record["phenotype"],
+            "stressor": record["stressor"],
+            "molecular_direction": record["molecular_direction"],
+            "effect_size": record["effect_size"],
+            "adjusted_p_value": record["adjusted_p_value"],
+            "same_phenotype": same_phenotype,
+            "significant": significant,
+            "counts": (link.credited and same_phenotype and significant
+                       and record["_layer"] not in supporting),
+        })
+    exclusions = (
+        [{"kegg_compound": e.kegg_compound, "reason": e.reason, "link_type": e.link_type}
+         for e in table.excluded_for_metabolite(candidate["feature_id_standardized"])]
+        if is_metabolite and table.available else []
+    )
+    return {"table": table, "rows": rows, "exclusions": exclusions, "is_metabolite": is_metabolite}
+
+
+def _linked_section(candidate: dict, linked: dict) -> list:
+    # A gene with no linked metabolite evidence gets no section: the table's
+    # status is reported on every metabolite card and in candidates.tsv instead.
+    if not linked["is_metabolite"] and not linked["rows"]:
+        return []
+    table = linked["table"]
+    lines = ["", "### Metabolite–gene links (biochemical; weaker than shared gene identity)"]
+    if not table.available:
+        lines.append(
+            f"No metabolite–gene link table for this partition (`{table.status}`). "
+            + ("Build it with `aree build-metabolite-links`; until then metabolomics evidence cannot "
+               "be linked to gene-level evidence for this species." if table.status == "not_built"
+               else "Links are only defined for species with a registered table.")
+        )
+        return lines
+    lines.append(
+        "These links come from KEGG annotation, not from measurement. An `enzyme` link means the "
+        "linked gene's product is *annotated* (by KEGG orthology transfer) to catalyse a reaction in "
+        "which the metabolite takes part. A link does not mean the gene regulates, or controls the level of, "
+        "the metabolite. KEGG writes reactions as reversible equations, so the side the compound is "
+        "on does not say whether it is consumed or produced. Linked layers do not add to this "
+        "candidate's score."
+    )
+    if any(r["link_type"] == LINK_TYPE_TRANSPORTER for r in linked["rows"]):
+        lines.append("")
+        lines.append(
+            "**Transporter links** are weaker still. KEGG BRITE ko02000 confirms only that the KO is a "
+            "transporter and names its family; it records no substrates, so the metabolite was assigned "
+            "to the transporter by AREE curation (`data/mappings/transporter_substrates.tsv`). "
+            "`ko_definition` means KEGG's KO definition names the compound; `substrate_class` means it "
+            "names only a class (e.g. monocarboxylic acids) and the compound is a curator's call from the "
+            "characterized human family members. Transporter links are always `inferred`, and a "
+            "transporter moves a metabolite between compartments rather than making or consuming it."
+        )
+    families = sorted({r["brite_family"] for r in linked["rows"] if r["brite_family"]})
+    if families:
+        lines.append("")
+        lines.append("Transporter families (KEGG BRITE ko02000): " + "; ".join(f"`{f}`" for f in families) + ".")
+    lines.append("")
+    lines.append(f"Link table: {table.label()}.")
+    stressors = {r["stressor"] for r in linked["rows"] if r["counts"]}
+    own_stressors = {x for x in str(candidate.get("pooled_stressors") or "").split("|") if x}
+    if stressors and own_stressors and not stressors <= own_stressors:
+        lines.append("")
+        lines.append(
+            f"⚠️ The linked support comes from a different stressor (`{'|'.join(sorted(stressors))}`) "
+            f"than this candidate's own evidence (`{'|'.join(sorted(own_stressors))}`). Same "
+            "phenotype, different exposure: treat as a hypothesis connecting two experiments."
+        )
+    if linked["rows"]:
+        lines.append("")
+        lines.append("Only rows marked **yes** in the last column count toward "
+                     "`metabolite_linked_convergence`:")
+        lines.append("| study | layer | linked feature | compound | link type | via | KO | side | basis | "
+                     "link confidence | genes for compound | credited | phenotype | stressor | direction | "
+                     "effect | adj. p | counts |")
+        lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+        for r in linked["rows"]:
+            lines.append(
+                f"| {r['study_id']} | {r['layer']} | {r['linked_feature']} | {r['kegg_compound']} | "
+                f"{r['link_type']} | {r['via']} | {r['ko']} | {r['equation_side'] or '—'} | "
+                f"{r['link_basis']} | {r['link_confidence']} | "
+                f"{r['n_genes_for_compound']} | {'yes' if r['credited'] else 'no (hub)'} | {r['phenotype']} | "
+                f"{r['stressor']} | {r['molecular_direction']} | {_fmt(r['effect_size'], '.3f')} | "
+                f"{_fmt(r['adjusted_p_value'])} | {'**yes**' if r['counts'] else 'no'} |"
+            )
+    else:
+        lines.append("")
+        lines.append("No evidence in other layers for any feature linked to this one.")
+    if linked["exclusions"]:
+        lines.append("")
+        lines.append("Compounds this metabolite resolves to that contribute no credited link:")
+        for e in linked["exclusions"]:
+            scope = f" ({e['link_type']} links)" if e.get("link_type") else ""
+            lines.append(f"- `{e['kegg_compound']}`{scope}: "
+                         f"{EXCLUSION_REASON_TEXT.get(e['reason'], e['reason'])}")
+    return lines
+
+
 def has_significant_signal(candidate: dict, forest_points: list, max_adjusted_p: float) -> bool:
     """Does anything about this candidate clear the significance threshold?
 
@@ -212,7 +388,8 @@ def has_significant_signal(candidate: dict, forest_points: list, max_adjusted_p:
     )
 
 
-def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phenotype_label: str) -> str:
+def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phenotype_label: str,
+                   linked: dict | None = None) -> str:
     lines = []
     lines.append(f"# Evidence card: {candidate['feature_id_standardized']} — {phenotype_label}")
     lines.append("")
@@ -220,12 +397,16 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     evidence_class = candidate.get("evidence_class", "exposure_only")
     lines.append(f"**Evidence class:** `{evidence_class}`  "
                  f"**Context replication:** `{candidate.get('context_replication', 'single_study')}`")
+    lines.append(f"**Contrast type:** `{contrast_type_of(candidate)}`"
+                 + ("  **Predictive baseline candidate**" if candidate.get("is_predictive_baseline") else ""))
     lines.append("")
     lines.append("> AREE candidate scores are associations across available evidence, not validated biomarkers. "
                   "See Limitations below before acting on this card.")
     lines.append("")
     lines.append("## What this evidence does and does not show")
     lines.append(EVIDENCE_CLASS_STATEMENT.get(evidence_class, EVIDENCE_CLASS_STATEMENT["exposure_only"]))
+    lines.append("")
+    lines.append(CONTRAST_TYPE_STATEMENT[contrast_type_of(candidate)])
     lines.append("")
     lines.append(_context_statement(candidate))
     lines.append("")
@@ -235,7 +416,24 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     lines.append("## Candidate identifiers")
     lines.append(f"- Standardized feature ID: `{candidate['feature_id_standardized']}`")
     lines.append(f"- Feature type: `{candidate['feature_type']}`")
+    term = species_term_for_taxid(candidate["species_taxid"])
+    if term is not None:
+        lines.append(f"- Species: *{term['scientific_name']}* ({term['label']})")
     lines.append(f"- Species taxid: `{candidate['species_taxid']}`")
+    orthogroup = candidate.get("orthogroup_id")
+    if isinstance(orthogroup, str) and orthogroup:
+        lines.append(
+            f"- Ortholog context: orthogroup `{orthogroup}`. This card pools evidence from one "
+            "species only; evidence from another species is never pooled with this one. Where "
+            "another species has evidence for the same orthogroup, the cross-species estimate is "
+            "on its own card under `evidence_cards/cross_species/` (`aree build-cross-species-cards`)."
+        )
+    else:
+        lines.append(
+            "- Ortholog context: no orthogroup assigned. This card pools evidence from one species "
+            "only; evidence from another species is never pooled with this one, and this feature "
+            "cannot be compared across species until it is in an orthogroup."
+        )
     simulated = _partition_value(candidate["simulated"]) == "true"
     lines.append(f"- Data origin: `{'simulated' if simulated else 'real'}`")
     lines.append(f"- Mapping confidence across contributing studies: {candidate['mapping_confidences']}")
@@ -248,11 +446,20 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
                  f"(95% CI {candidate['ci_lower']:.3f} to {candidate['ci_upper']:.3f})")
     lines.append(f"- Pooled p-value: {_fmt(candidate['p_value'])}")
     n_tests = candidate.get("n_tests_in_family")
+    # Float once unpooled rows (which have no test family) share the frame.
+    n_tests = int(n_tests) if n_tests is not None and n_tests == n_tests else None
     lines.append(
         f"- Pooled p-value, BH-adjusted across the {_fmt(n_tests, 'd')} features tested for "
         f"`{candidate['phenotype']}` / `{candidate['feature_type']}` in this partition: "
         f"{_fmt(candidate.get('adjusted_p_value'))}"
     )
+    n_unpooled = candidate.get("n_excluded_unpoolable") or 0
+    if n_unpooled == n_unpooled and n_unpooled > 0:
+        lines.append(
+            f"- Records left out of the pool for lack of a standard error or unadjusted p-value: "
+            f"{int(n_unpooled)} ({candidate.get('excluded_studies')}). They appear below with "
+            "`pooled = no`; their effects are shown but carry no weight in the estimate."
+        )
     lines.append(f"- Direction consistency across studies: {candidate['direction_consistency']:.2f}")
     lines.append(f"- Heterogeneity (I²): {candidate['i_squared']:.1f}%")
     if candidate["direction_consistency"] < 0.7 and candidate["k_studies"] >= 2:
@@ -260,11 +467,14 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
                       "stable biomarker, until the source of heterogeneity is resolved.")
     lines.append("")
     lines.append("## Per-study evidence (forest-plot data)")
-    lines.append("| study | tissue | life stage | stressor | effect | SE | p | adj. p | pooled | direction | mapping confidence |")
-    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    # The comparison names the arms (treatment_vs_control), which is what gives
+    # the effect's sign its meaning.
+    lines.append("| study | comparison | tissue | life stage | stressor | effect | SE | p | adj. p | pooled | "
+                 "direction | mapping confidence |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for p in forest_points:
         lines.append(
-            f"| {p['study_id']} | {p['tissue']} | {p['life_stage']} | {p['stressor']} | "
+            f"| {p['study_id']} | {p.get('comparison_id', '')} | {p['tissue']} | {p['life_stage']} | {p['stressor']} | "
             f"{p['effect_size']:.3f} | {_fmt(p['standard_error'], '.3f')} | {_fmt(p['p_value'])} | "
             f"{_fmt(p['adjusted_p_value'])} | "
             f"{'yes' if p['included_in_pool'] else 'no'} | {p['molecular_direction']} | "
@@ -304,6 +514,17 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     else:
         lines.append("")
         lines.append("No evidence from other molecular layers for this standardized feature yet.")
+    if candidate.get("is_metabolite_linked_convergence"):
+        lines.append("")
+        lines.append(
+            "**How the layers were linked:** not by a shared identifier. Layer(s) "
+            f"{', '.join(f'`{x}`' for x in str(candidate.get('linked_layers')).split('|'))} were linked "
+            f"through metabolite–enzyme annotation ({candidate.get('linked_features')}; link confidence: "
+            f"{candidate.get('link_confidences')}). This is a weaker kind of convergence than shared gene "
+            "identity and is ranked below it."
+        )
+    if linked is not None:
+        lines.extend(_linked_section(candidate, linked))
     lines.append("")
     lines.append("## Limitations")
     lines.append(f"- Quality flags present across contributing evidence: {candidate['quality_flags_union'] or 'none recorded'}")
@@ -330,11 +551,77 @@ def _card_markdown(candidate: dict, forest_points: list, other_omics: list, phen
     return "\n".join(lines)
 
 
+def _unpooled_card_markdown(candidate: dict, forest_points: list, phenotype_label: str) -> str:
+    """Card for a feature whose evidence could not enter any pooled estimate."""
+    evidence_class = candidate.get("evidence_class", "exposure_only")
+    simulated = _partition_value(candidate["simulated"]) == "true"
+    lines = [
+        f"# Evidence card: {candidate['feature_id_standardized']} — {phenotype_label}",
+        "",
+        f"**Tier:** `{candidate['tier']}`  **Score:** not scored (unpooled)",
+        f"**Evidence class:** `{evidence_class}`  **Pooling status:** `{POOLING_STATUS_UNPOOLED}`",
+        f"**Contrast type:** `{contrast_type_of(candidate)}`",
+        "",
+        "> This feature has no pooled estimate. Every record below comes from a source that reports "
+        "neither a standard error nor an unadjusted p-value — typically an author-curated, "
+        "significance-filtered DEG list — so it cannot be weighted, pooled, or scored. Effects from "
+        "such a list are selected for being large and significant and will overstate the true "
+        "effect. Read this card as a pointer to a reported result, not as an estimate.",
+        "",
+        "## What this evidence does and does not show",
+        EVIDENCE_CLASS_STATEMENT.get(evidence_class, EVIDENCE_CLASS_STATEMENT["exposure_only"]),
+        "",
+        CONTRAST_TYPE_STATEMENT[contrast_type_of(candidate)],
+        "",
+        CONTEXT_REPLICATION_STATEMENT["single_study"],
+        "",
+        "## Candidate identifiers",
+        f"- Standardized feature ID: `{candidate['feature_id_standardized']}`",
+        f"- Feature type: `{candidate['feature_type']}`",
+        f"- Species taxid: `{candidate['species_taxid']}`",
+        f"- Data origin: `{'simulated' if simulated else 'real'}`",
+        f"- Mapping confidence: {candidate['mapping_confidences']}",
+        "",
+        "## Reported evidence (not pooled)",
+        f"- Phenotype context: `{candidate['phenotype']}`",
+        f"- Source studies: {candidate['excluded_studies']}",
+        "",
+        "| study | comparison | tissue | life stage | stressor | effect | adj. p | direction | mapping confidence |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for p in forest_points:
+        lines.append(
+            f"| {p['study_id']} | {p['comparison_id']} | {p['tissue']} | {p['life_stage']} | "
+            f"{p['stressor']} | {_fmt(p['effect_size'], '.3f')} | {_fmt(p['adjusted_p_value'])} | "
+            f"{p['molecular_direction']} | {p['mapping_confidence']} |"
+        )
+    lines += [
+        "",
+        "## Limitations",
+        f"- Quality flags present: {candidate['quality_flags_union'] or 'none recorded'}",
+        "- No standard error or unadjusted p-value: not pooled, not scored, not eligible for any "
+        "tier above `emerging`. See the source study's registry `limitations` for its design caveats.",
+        "- This candidate reflects association, not confirmed mechanistic causation.",
+    ]
+    if simulated:
+        lines.append("- This card contains simulated demo evidence; do not cite it as real evidence.")
+    lines += [
+        "",
+        "## Recommended next validation step",
+        "Obtain the full result table (all genes, with standard errors or unadjusted p-values) from "
+        "the authors or by raw-data reanalysis so this evidence can be pooled; otherwise "
+        + NEXT_STEP_BY_TIER["emerging"][0].lower() + NEXT_STEP_BY_TIER["emerging"][1:],
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def _card_slug(candidate: dict) -> str:
     origin = "simulated" if _partition_value(candidate["simulated"]) == "true" else "real"
     return _slug(
         f"{candidate['feature_id_standardized']}_{candidate['phenotype']}_"
         f"{candidate['feature_type']}_{origin}_taxid{candidate['species_taxid']}"
+        f"{contrast_suffix(candidate)}"
     )
 
 
@@ -350,6 +637,12 @@ def rank_all_candidates(evidence_df: pd.DataFrame, phenotype: str | None, featur
         meta_df = run_meta_analysis(phenotype=phenotype, feature_type=ftype)
         if len(meta_df):
             frames.append(build_candidates(meta_df, evidence_df))
+    pooled = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    # Features whose evidence is entirely unpoolable get an unscored `emerging`
+    # row instead of vanishing (prioritize/unpooled.py).
+    unpooled = build_unpooled_candidates(evidence_df, pooled, phenotype, feature_type)
+    if len(unpooled):
+        frames.append(unpooled)
     if not frames:
         return pd.DataFrame()
     return sort_candidates(pd.concat(frames, ignore_index=True))
@@ -399,10 +692,14 @@ def build_evidence_cards_report(
             card_files.append("")
             continue
 
-        other_omics = _other_omics_context(index, candidate)
         phenotype_label = phenotype_vocab.get(candidate["phenotype"], {}).get("label", candidate["phenotype"])
         card_path = EVIDENCE_CARDS_DIR / f"{_card_slug(candidate)}.md"
-        card_path.write_text(_card_markdown(candidate, forest_points, other_omics, phenotype_label))
+        if candidate.get("pooling_status") == POOLING_STATUS_UNPOOLED:
+            card_path.write_text(_unpooled_card_markdown(candidate, forest_points, phenotype_label))
+        else:
+            other_omics = _other_omics_context(index, candidate)
+            linked = _linked_omics_context(index, candidate)
+            card_path.write_text(_card_markdown(candidate, forest_points, other_omics, phenotype_label, linked))
         card_files.append(str(card_path))
         written.append({
             "feature_id_standardized": candidate["feature_id_standardized"],

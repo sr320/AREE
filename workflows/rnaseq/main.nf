@@ -43,10 +43,33 @@ def validModes() {
     ['raw_reanalysis', 'processed_results_harmonization']
 }
 
+// Nextflow saves each finished task's cache entry with Kryo, which needs
+// java.base/java.util opened to it. The `nextflow` launcher script passes
+// --add-opens for this; `java -jar ~/.nextflow/framework/<ver>/nextflow-<ver>-one.jar`
+// does not. Without it every cache write fails silently inside Nextflow's
+// writer thread: the run succeeds, but -resume never reuses a task. This is
+// what made the 2026-10-12 DUPERRET2025_STARVE_RNASEQ comparisons each
+// recompute every library (see README.md, "Several comparisons of one study").
+def cacheEntriesSerializable() {
+    Collections.getModule().isOpen('java.util', nextflow.Session.getModule())
+}
+
 workflow {
 
     if (!(params.mode in validModes())) {
         error "params.mode must be one of ${validModes()}, got: ${params.mode}"
+    }
+
+    if (!cacheEntriesSerializable()) {
+        def why = "this JVM does not open java.base/java.util to Nextflow, so no task " +
+            "will be written to the resume cache. Launch Nextflow with the `nextflow` " +
+            "launcher script (e.g. from `conda activate aree`), not with " +
+            "`java -jar nextflow-<ver>-one.jar`; see workflows/rnaseq/README.md, " +
+            "\"Several comparisons of one study\"."
+        if (workflow.resume) {
+            error "-resume cannot reuse any task: ${why}"
+        }
+        log.warn "A later -resume will not reuse this run: ${why}"
     }
 
     log.info """
@@ -65,6 +88,7 @@ workflow {
     report_template = file("${projectDir}/assets/report_template.qmd")
     no_viral_qc     = file("${projectDir}/assets/NO_VIRAL_QC")
     no_deseq2_design = file("${projectDir}/assets/NO_DESEQ2_DESIGN")
+    no_exclude_genes = file("${projectDir}/assets/NO_EXCLUDE_GENES")
     collect_versions_py = file("${projectDir}/../../modules/shared/collect_versions.py", checkIfExists: true)
 
     if (params.mode == 'raw_reanalysis') {
@@ -157,9 +181,13 @@ workflow {
             params.exclude_samples ?: '',
             params.replicate_unit ?: '',
             params.covariates ?: '',
+            params.tag_seq as boolean,
             quant_dirs_ch,
             Channel.fromPath(params.tx2gene, checkIfExists: true),
-            Channel.fromPath(params.sample_sheet, checkIfExists: true)
+            Channel.fromPath(params.sample_sheet, checkIfExists: true),
+            // Genes dropped before size factors (e.g. rRNA in total-RNA libraries).
+            params.exclude_genes ? Channel.fromPath(params.exclude_genes, checkIfExists: true).first()
+                                 : Channel.value(no_exclude_genes)
         )
 
         raw_de_ch = DIFFERENTIAL_EXPRESSION_DESEQ2.out.results.map { sid, cid, tsv -> tsv }
@@ -195,6 +223,21 @@ workflow {
 
         STANDARDIZE_OUTPUT(study_id, comparison_id, raw_de_ch)
 
+        // The reference files this run read, checksummed into the manifest. A
+        // bundle fetched with `aree fetch-reference` carries
+        // reference_provenance.json beside them; it is staged too, so the
+        // manifest can confirm the files still match what was fetched.
+        def ref_paths = [params.transcript_fasta, params.gtf, params.tx2gene]
+            .findAll { it }
+            .collect { file(it, checkIfExists: true) }
+        if (ref_paths) {
+            def bundle_provenance = ref_paths[0].parent.resolve('reference_provenance.json')
+            if (bundle_provenance.exists()) {
+                ref_paths << bundle_provenance
+            }
+        }
+        reference_files_ch = Channel.value(ref_paths)
+
     } else {
 
         // ---- processed_results_harmonization branch ---------------------
@@ -217,6 +260,7 @@ workflow {
         viral_summary_ch = Channel.value(no_viral_qc)
         deseq2_design_ch = Channel.value(no_deseq2_design)
         versions_ch = Channel.empty()
+        reference_files_ch = Channel.value([])
     }
 
     // ---- shared tail: manifest + report (both modes) --------------------
@@ -237,6 +281,7 @@ workflow {
         warnings_json,
         viral_summary_ch,
         deseq2_design_ch,
+        reference_files_ch,
         versions_ch.collect(),
         collect_versions_py
     )

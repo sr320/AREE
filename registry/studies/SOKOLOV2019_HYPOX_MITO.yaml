@@ -1,0 +1,162 @@
+# Real proteomics study: gill mitochondria of Pacific oysters after 24 h of
+# hypoxia and after 1 h of reoxygenation following hypoxia, versus normoxia;
+# total mitochondrial proteome and enriched phosphoproteome. Registered from
+# PRIDE PXD011365 (CC0). The paper, Sokolov et al. 2019, J Proteomics
+# 194:99-111, is not open access and was not read; design details below come
+# from the PRIDE project record and the deposited files.
+#
+# The only public omics dataset found for hypoxia_tolerance
+# (candidate_studies.md, P5).
+#
+# REGISTERED, NOT REANALYZED (2026-10-17, sr320). Three reasons:
+#   1. Phosphoproteome: 15 runs (PP_01-PP_15), 5 per condition per PRIDE, but
+#      nothing deposited says which run is which condition. Their acquisition
+#      order (01, 06, 11, 02, 05, 07, 12, 03, 08, 10, 13, 04, 09, 14, 15)
+#      suggests three blocks of five interleaved, but not which block is which.
+#   2. Total proteome: 3 oysters per condition (C2-C4, H1/H2/H5, R2/R4/R5),
+#      each run as 10 gel fractions. Each oyster's fractions were acquired
+#      back to back (about 20 h per oyster) in the order H1, C2, C3, C4, R2,
+#      R4, R5, H2, H5 between 8 and 17 May 2017 (run_order.tsv, from the .raw
+#      headers). Normoxia and reoxygenation are each one consecutive block,
+#      and hypoxia sits at both ends, so condition cannot be separated from
+#      acquisition time or instrument drift.
+#   3. The only quantitative files are Scaffold mzIdentML exports, one per
+#      oyster; per-protein spectral counts would have to be rebuilt from them,
+#      and the proteins are oyster_v9 RefSeq XP_ accessions, which AREE's
+#      crosswalk cannot map yet. With n = 3 per arm, a blocked acquisition and
+#      no access to the authors' results to check against, the cost was not
+#      justified.
+# qc_status and analysis_status not_started; every results_file null. If the
+# authors can supply the phosphoproteome sample key and per-oyster NSAF
+# tables, this is the first study to reopen for hypoxia.
+
+study_id: SOKOLOV2019_HYPOX_MITO
+simulated: false
+
+accessions:
+  doi: "10.1016/j.jprot.2018.12.009"
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: "PXD011365"
+  other: null
+
+citation: "Sokolov EP, Markert S, Hinzke T, Hirschfeld C, Becher D, Ponsuksili S, Sokolova IM (2019) Effects of hypoxia-reoxygenation stress on mitochondrial proteome and bioenergetics of the hypoxia-tolerant marine bivalve Crassostrea gigas. J Proteomics 194:99-111. https://doi.org/10.1016/j.jprot.2018.12.009 (PMID 30550986). Proteomics: PRIDE PXD011365 (CC0)."
+
+species: "Magallana gigas"
+strain_or_population: null
+
+# Spectra were searched against the proteins of NCBI PRJNA276446 (the RefSeq
+# annotation of oyster_v9; XP_ accessions, FASTA deposited). AREE has no
+# RefSeq-protein route in its crosswalk; this records the annotation a mapping
+# would target. See identifier_mapping_uncertain.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "raw_reanalysis"
+platform: "GeLC-MS/MS. Total mitochondrial proteome: 1D SDS-PAGE, 10 fractions per sample, LTQ Orbitrap Classic. Phosphoproteome: Pro-Q Diamond phosphoprotein enrichment, short 1D gel cleanup, one run per sample on an LTQ Orbitrap Velos. Sorcerer-SEQUEST against the PRJNA276446 proteins with contaminants and reversed decoys; Scaffold 4.8.3/4.8.4 at 1% protein and peptide FDR, >= 2 peptides; NSAF from total spectrum counts; manually curated to mitochondrial proteins."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "PRIDE PXD011365 (public 2021-11-04, COMPLETE submission, CC0): 105 .raw (90 total-proteome fractions of 9 oysters, 15 phosphoproteome runs), 24 Scaffold mzIdentML exports with matching MGF (one per total-proteome oyster, one per phosphoproteome run) and the search FASTA. No per-sample abundance table, and no key from phosphoproteome run to condition. The paper is not open access. Acquisition times in data/studies/SOKOLOV2019_HYPOX_MITO/run_order.tsv; details in pride_provenance.json."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# TWO COMPARISONS, from the PRIDE description: hypoxia (24 h) and
+# reoxygenation (1 h after hypoxia) each against normoxic controls. The total
+# proteome sizes are recorded (3 vs 3). meta_analysis_primary is set on the
+# hypoxia contrast, the exposure itself, before any analysis; it has no
+# effect while results_file is null.
+#
+# PHENOTYPE, from the PRIDE description only: gill mitochondria kept normal
+# electron-transport and OXPHOS capacity under hypoxia and reoxygenation,
+# with a slight but significant decline in cytochrome c oxidase (Complex IV)
+# activity after reoxygenation. Recorded as metabolic_resilience: no_change
+# for hypoxia, mixed for reoxygenation. Whether these were measured on the
+# proteomic oysters is not stated in the deposit.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "hypoxia_24h_vs_normoxia"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "24 h of hypoxia versus normoxia (PRIDE PXD011365 description; oxygen levels and temperature not given in the deposit)."
+    stressor_standardized: "hypoxia"
+    exposure_intensity: null
+    exposure_duration: "24 h"
+    exposure_timing: "acute"
+    control_condition: "Normoxia: oysters C2, C3, C4 (total mitochondrial proteome)"
+    treatment_condition: "24 h hypoxia: oysters H1, H2, H5 (total mitochondrial proteome)"
+    phenotype: "metabolic_resilience"
+    phenotype_direction: "no_change"
+    phenotype_unit: "gill mitochondrial electron-transport and OXPHOS capacity maintained (PRIDE description)"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+  - comparison_id: "reoxygenation_1h_vs_normoxia"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "24 h of hypoxia followed by 1 h of reoxygenation (post-hypoxic recovery) versus normoxia (PRIDE PXD011365 description)."
+    stressor_standardized: "hypoxia"
+    exposure_intensity: null
+    exposure_duration: "24 h hypoxia + 1 h reoxygenation"
+    exposure_timing: "acute, sampled during recovery"
+    control_condition: "Normoxia: oysters C2, C3, C4 (total mitochondrial proteome)"
+    treatment_condition: "Hypoxia then 1 h reoxygenation: oysters R2, R4, R5 (total mitochondrial proteome)"
+    phenotype: "metabolic_resilience"
+    phenotype_direction: "mixed"
+    phenotype_unit: "OXPHOS capacity maintained; cytochrome c oxidase (Complex IV) activity slightly but significantly lower after reoxygenation (PRIDE description)"
+    resilience_classification: "resilience"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - batch_confounded
+  - single_timepoint
+  - identifier_mapping_uncertain
+
+limitations: >
+  (1) Total proteome: 3 oysters per condition, each acquired as a 10-fraction
+  block, in an order that puts normoxia and reoxygenation in single
+  consecutive blocks (run_order.tsv); condition is confounded with
+  acquisition time. batch_confounded is declared for this. (2)
+  Phosphoproteome: no run-to-condition key was deposited, so it cannot be
+  analysed. (3) No per-sample abundance table; spectral counts would have to
+  be rebuilt from Scaffold mzIdentML exports, with protein inference as
+  Scaffold did it. (4) Proteins are oyster_v9 RefSeq XP_ accessions with no
+  AREE crosswalk route. (5) The paper is closed access and was not read;
+  oxygen levels, temperature, oyster origin and size, and whether the
+  physiological measurements come from the proteomic oysters are not in the
+  deposit. (6) Mitochondria were isolated and curated to mitochondrial
+  proteins, so this covers one organelle, not the gill proteome.
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-17"
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD011365 --study-id
+    SOKOLOV2019_HYPOX_MITO` (branch study/PXD011365/SOKOLOV2019_HYPOX_MITO).
+    Registered from the PRIDE v3 project and file records and the first 1 KB
+    of every .raw file (acquisition start times), retrieved 2026-10-17 by
+    build_provenance.py. One total-proteome mzIdentML export
+    (Mudpit_170509_O2_P7_SG_StM_C2_1) was inspected to confirm it is a
+    Scaffold 4.8.4 export over RefSeq XP_ accessions with no abundance table.
+    Design and phenotype come from the PRIDE project description and
+    protocols; the paper (closed access) was not read. Decision (2026-10-17,
+    sr320): register only, for the reasons at the top of this file.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD011365"
+    - "https://doi.org/10.1016/j.jprot.2018.12.009"
+    - "https://pubmed.ncbi.nlm.nih.gov/30550986/"
