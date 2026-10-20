@@ -5,12 +5,13 @@
 #
 # Publication: Zhong et al. 2025, PNAS (open access, read via PubMed Central
 # PMC12377751). It reports a new nidovirus, PONV1, replicating in 20 of 33
-# diseased farmed oysters and in none of 26 wild ones. The paper's text, as
-# retrieved, does not show the ENA accession, so the link is INFERRED. It is
-# strong all the same: the paper's station codes (StnA-H, J, K wild; StnI,
-# StnL, StnM farm), tissues (mantle, plus hemolymph "when possible"), animal
-# counts (33 farm, 26 wild) and year all match the 96-run deposit. Confirm
-# from the data availability statement before harmonizing.
+# diseased farmed oysters and in none of 26 wild ones. The link to the
+# deposit is CONFIRMED (2026-10-20): the paper's Data, Materials, and Software
+# Availability statement (Europe PMC full-text XML of PMC12377751) gives the
+# raw reads as ENA ERR13334386 to ERR13334481, exactly this deposit's 96 runs,
+# and the PONV1 genome as GenBank PQ030832 (segment 1) and PV579160
+# (segment 2). The station codes (StnA-H, J, K wild; StnI, StnL, StnM farm),
+# tissues, animal counts (33 farm, 26 wild) and year also match.
 #
 # NOT TO BE RUN ON THE MACHINE THAT REGISTERED IT. The libraries are
 # metatranscriptomes at ~175-200 M read pairs each: 792.6 GB of FASTQ (mantle
@@ -203,8 +204,14 @@ provenance:
     quoted above. Crossref gives the author list, volume 122(33) and article
     e2426923122. FOR THE MACHINE THAT RUNS IT: stage only the libraries of
     the comparison being run (mantle 437 GB, hemolymph 355 GB); add the
-    PONV1 genome to data/reference/pathogens/ for viral QC; then add the
-    within-farm comparison following the rule in the header.
+    PONV1 genome for viral QC; then add the within-farm comparison
+    following the rule in the header. RUN ON CHLO (2026-10-20): PONV1
+    (GenBank PQ030832.1 + PV579160.1, 41,709 + 22,622 bp, matching the
+    paper) is committed under data/studies/ZHONG2025_PONV1_MORTALITY/
+    pathogen_reference/ with a provenance file; data/reference/pathogens/ is
+    outside a study PR's scope. Mantle FASTQ (106 files, 437 GB) are being
+    downloaded from ENA to OWC-Express, each file checked against the ENA
+    MD5 in fastq_manifest.tsv.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB77044"
     - "https://doi.org/10.1073/pnas.2426923122"
