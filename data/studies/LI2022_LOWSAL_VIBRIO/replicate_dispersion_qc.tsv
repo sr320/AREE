@@ -1,0 +1,5 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+10ppt_12h	3	C10-1,C10-2,C10-3	4901	0.07311	True
+10ppt_48h	3	C10-4,C10-5,C10-6	5384	0.04113	True
+30ppt_12h	3	C23-1,C23-2,C23-3	6324	0.01164	True
+30ppt_48h	3	C23-4,C23-5,C23-6	5746	0.04726	True

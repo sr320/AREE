@@ -10,13 +10,13 @@ for the assumptions this roadmap is consistent with.
 - **Schemas.** `schemas/study.schema.json` and `schemas/evidence.schema.json`
   are complete JSON Schema definitions, enforced by `aree validate-study` and
   by `src/harmonize`.
-- **Controlled vocabularies.** Phenotype ontology (15 terms), stressor
-  ontology (11 terms), assay types, tissue types, life stages, mapping
+- **Controlled vocabularies.** Phenotype ontology (18 terms), stressor
+  ontology (12 terms), assay types, tissue types, life stages, mapping
   confidence, and quality flags all exist under
   `registry/controlled_vocabularies/` and are actively checked/consumed by
   code (`src/common/load_vocab`, `src/intake/schema_validate.py`).
 - **Study registry.** Seven demo studies are registered: six oyster
-  (`registry/studies/GIGAS_{HEAT01,OA02,PATH03,SAL04,LARV05,GROW06}.yaml`) and
+  (`registry/demo_studies/GIGAS_{HEAT01,OA02,PATH03,SAL04,LARV05,GROW06}.yaml`) and
   one mussel (`MYTGAL_HEAT01`) that exercises species partitioning. The six
   oyster studies cover the required demo mix: two RNA-seq raw-reanalysis studies
   (`GIGAS_HEAT01`, `GIGAS_OA02`), one methylation study (`GIGAS_PATH03`), one
@@ -24,8 +24,10 @@ for the assumptions this roadmap is consistent with.
   processed-results-only study (`GIGAS_GROW06`), one imperfect-identifier
   example (`GIGAS_LARV05`, legacy symbol-only annotation), and one
   conflicting-direction example (`sod1`/`LOC105331241` across `GIGAS_OA02`
-  and `GIGAS_LARV05`). `registry/study_registry.csv` is the resulting index, rebuilt by
-  `aree build-registry` rather than committed.
+  and `GIGAS_LARV05`). They live in `registry/demo_studies/`, apart from the real studies, and
+  index into `registry/demo_study_registry.csv`; `registry/study_registry.csv`
+  lists real studies only. Both are rebuilt by `aree build-registry` rather
+  than committed.
   `aree validate-study` and `aree register-study` both work end to end
   against these files.
 - **Harmonization for all four assay types.** `src/harmonize` converts
@@ -48,7 +50,7 @@ for the assumptions this roadmap is consistent with.
   [interpreting_meta_analysis.md](interpreting_meta_analysis.md).
 - **Candidate prioritization.** `src/prioritize/scoring.py` and
   `src/prioritize/rank.py` implement the full transparent scoring formula and
-  the three-tier hard-gated ranking system. Simulation status and species taxid
+  the four-tier hard-gated ranking system. Simulation status and species taxid
   remain partition keys through ranking and reporting; the top tier additionally
   requires a BH-adjusted pooled p ≤ 0.05. `aree build-evidence-cards` ranks every
   candidate into `reports/evidence_cards/candidates.tsv` and renders a markdown
@@ -79,39 +81,53 @@ for the assumptions this roadmap is consistent with.
 
 - **Nextflow workflows.** All four now run `processed_results_harmonization`
   end to end, and `workflows/rnaseq` has additionally run the full
-  `raw_reanalysis` path against real public FASTQ (PRJNA1329250, subsampled;
+  `raw_reanalysis` path at full depth against real public FASTQ (including PRJNA1329250;
   see [first_raw_reanalysis.md](first_raw_reanalysis.md)). None of this was
   true before 2026-08-28 — three of the four did not compile on current
-  Nextflow. Still outstanding: full-depth runs, the raw paths for methylation,
-  proteomics and metabolomics, and any execution inside the declared
-  containers. CI executes all four processed paths on Nextflow 26.04 and uses
+  Nextflow. Methylation now has a real CIBNOR2021 run using Bismark and
+  pooled family-level limma analysis; proteomics has a real quantified-matrix
+  run for TIMMINS2014. Metabolomics has fixture execution but no real study
+  that passed QC. Execution inside the declared containers remains unverified. CI executes all four processed paths on Nextflow 26.04 and uses
   tiny paired FASTQ fixtures plus `-stub-run` to exercise the RNA-seq raw DAG;
   the stub run verifies wiring and artifact contracts, not tool execution or
   biological validity.
 - **Containers.** `containers/README.md` documents the intended
   Docker/Apptainer approach, but container images/definitions themselves are
   not yet built.
-- **Ortholog mapping.** Orthogroups across all seven registered species come
-  from an OrthoFinder run on their RefSeq proteomes and are attached to
-  evidence at harmonization (crosswalks themselves stay NCBI-only).
-  Cross-species pooling on them is the next step — see
+- **Ortholog mapping and cross-species evidence.** Orthogroups across the seven
+  RefSeq-annotated species come from an OrthoFinder run and are attached to
+  evidence at harmonization. Cross-species meta-analysis, cross-species
+  candidates with their cards, and the dashboard gate exist; on real data the
+  oyster and Manila clam pool through 5,975 single-copy orthogroups on thermal
+  tolerance, none convergent because the clam studies are exposure-only. See
   [identifier_mapping.md](identifier_mapping.md#orthogroups).
+- **Species beyond the oyster.** Seven mussel and clam species are registered
+  with crosswalks: six from NCBI Gene and one, *M. coruscus*, from its
+  authors' GFF with a recorded homology search. The Manila clam has the first
+  real within-species pool outside the oyster (k = 2). The dashboard and app
+  show per-species counts, species filters and species identity
+  ([species_identity.md](species_identity.md)).
 
 ## Next milestones
 
-- **First full-depth real raw reanalysis.** Run all prespecified
+- **Remaining raw reanalyses.** Complete the unrun prespecified
   `CALLA2026_OSHV` contrasts at full depth, but do not combine its repeated
   contrasts as independent effects. Select one comparison per study/phenotype
   or implement a covariance-aware within-study model first.
-- **First real cross-study pool.** Curate and reanalyze a compatible independent
-  pathogen-challenge study such as `PRJNA593309`, aligning phenotype and
-  contrast definitions before pooling.
+- **Broader independent replication.** Real cross-study pools already exist
+  for oyster disease susceptibility and oyster and Manila clam thermal
+  tolerance. Add compatible studies with measured outcomes, preserving
+  species and contrast-type partitions; see the [dashboard](index.qmd).
 - **Container verification.** Execute the CI fixtures with the declared Docker
-  images, pin an AREE utility image, and record introspected rather than declared
-  software versions.
-- **Additional species.** The schema and vocabularies are species-aware and
-  ranking/reporting partitions on `species_taxid`; onboarding another species
-  still requires its reference data and identifier crosswalk.
+  images and pin an AREE utility image. Current RNA-seq runs collect observed
+  process versions; older manifests still need the provenance caveat documented
+  on the implementation-status page.
+- **First real mussel studies.** No real mussel study is harmonized yet; the
+  WP5 backlog's *M. edulis* heat pair is the nearest within-species pool.
+- **A clam study that measured tolerance**, so a cross-species row can reach
+  convergence on a tolerance phenotype rather than on exposure alone.
+- **GFF-route species in an orthogroup run**, and crosswalks for razor clam
+  and geoduck once their authors' annotation files are sourced.
 - **Expanded ontologies.** Phenotype, stressor, tissue, and life-stage
   vocabularies cover the terms specified in the founding proposal but will
   need extension as more species and study types are added (e.g. finfish

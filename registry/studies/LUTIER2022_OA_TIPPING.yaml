@@ -112,6 +112,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 35
     biological_replicates: 3
     results_file: "data/studies/LUTIER2022_OA_TIPPING/LUTIER2022_OA_TIPPING_ph_le6_7_vs_ph_ge7_6_23d_dge_standardized.tsv"

@@ -1,0 +1,30 @@
+{
+  "study_id": "PAYTON2017_HAB_AMINUTUM",
+  "date": "2026-10-18",
+  "summary": "101 of 104 FASTQ files are ENA's, verified against the ENA MD5s in fastq_manifest.tsv. ERR1758957_1, ERR1758957_2 and ERR1758961_1 arrived corrupt from ENA in every one of six HTTPS downloads (correct byte count, different wrong MD5 each time, gzip CRC errors), on two different disks, while ENA's catalogue MD5s were unchanged. Both runs ERR1758957 and ERR1758961 were therefore taken from NCBI SRA instead.",
+  "ncbi_sra": {
+    "tool": "sra-tools 3.4.1: prefetch, vdb-validate, fasterq-dump --split-files --skip-technical --seq-defline '@$ac.$si $sn/$ri' --qual-defline '+'",
+    "source": "https://sra-pub-run-odp.s3.amazonaws.com/sra/<run>/<run>",
+    "vdb_validate": {
+      "ERR1758957": "consistent (all column md5 ok)",
+      "ERR1758961": "consistent (all column md5 ok)"
+    },
+    "read_counts": {
+      "ERR1758957": 43691832,
+      "ERR1758961": 33621449
+    },
+    "read_counts_match_ena": true,
+    "equivalence_check": "ERR1758961_2 from SRA and ENA's MD5-verified ERR1758961_2 are identical in read IDs, sequences and qualities: md5 of the uncompressed FASTQ with each defline cut to its read ID is 64acd93b4f60340624abd74cfdd65e3c for both. They differ only in the original Illumina read names, which SRA does not keep (SRA deflines carry the spot number instead).",
+    "files_installed": [
+      "ERR1758957_1.fastq.gz",
+      "ERR1758957_2.fastq.gz",
+      "ERR1758961_1.fastq.gz"
+    ],
+    "installed_md5": {
+      "ERR1758957_1.fastq.gz": "295668a92ff69f3bea628b9127796fc6",
+      "ERR1758957_2.fastq.gz": "b751edb1f6a4f2403004b0b1960d5562",
+      "ERR1758961_1.fastq.gz": "4c455355dae12003e4b5e605efbc84b9"
+    },
+    "note": "ERR1758961_2 stays ENA's verified file; its SRA twin was used only for the equivalence check. Read names are not used by fastp, Salmon or DESeq2."
+  }
+}

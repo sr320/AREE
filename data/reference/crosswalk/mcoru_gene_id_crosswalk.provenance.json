@@ -1,0 +1,128 @@
+{
+  "artifact": "mcoru_gene_id_crosswalk.tsv",
+  "artifact_sha256": "28547c3bdc91bb6534d5e1df1e6674d8b23cb8ceec0a664eb997a07a0b73b222",
+  "builder": "src/mappings/gff_crosswalk.py",
+  "builder_version": "1.0.0",
+  "route": "gff_homology",
+  "anchor_column": "gene_id",
+  "date_generated": "2026-10-17",
+  "organism": "Mytilus coruscus, Korean mussel",
+  "ncbi_taxid": 42192,
+  "ncbi_reference_annotation_at_build": "GCA_011752425.2 (MCOR1.1), GenBank annotation submitted by Ningbo University, 2020-07-08",
+  "sources": [
+    {
+      "name": "annotation_gff3",
+      "file": "genomic.gff",
+      "sha256": "3f58198a3e18b2f2e81f4629a69f297625c47f5306e4acbdcde5fccc4f1c1b64"
+    },
+    {
+      "name": "annotation_proteins",
+      "file": "protein.faa",
+      "sha256": "6547f7b363ab1329494dd6fb6d4fb9a06197b02235ee1fb4a5ed159e1bb61660",
+      "query": "longest protein per gene",
+      "n_queries": 58249
+    },
+    {
+      "name": "uniprot_database",
+      "file": "uniprot_sprot.fasta.gz",
+      "sha256": "a9c3496aa727e61d25d9e1291c9ba28d2c2ad19c0e26569dc083d53ec4169536",
+      "release": "UniProtKB/Swiss-Prot Release 2026_03 of 02-Sep-2026",
+      "url": "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz"
+    },
+    {
+      "name": "homology_hits",
+      "file": "hits.tsv",
+      "sha256": "8c817ae6dab8f7dbbd839e0c7d93c5bbbea03e2c6977469c04511b6959445d5a"
+    }
+  ],
+  "homology_search": {
+    "tool": "diamond version 2.2.8",
+    "command": [
+      "/Users/sr320/miniforge3/envs/orthofinder/bin/diamond",
+      "blastp",
+      "--sensitive",
+      "--query",
+      "/Users/sr320/aree-data/reference/GCA_011752425.2/diamond_sprot_2026_03/longest_proteins.faa",
+      "--db",
+      "/Users/sr320/aree-data/reference/GCA_011752425.2/diamond_sprot_2026_03/uniprot.dmnd",
+      "--out",
+      "/Users/sr320/aree-data/reference/GCA_011752425.2/diamond_sprot_2026_03/hits.tsv",
+      "--outfmt",
+      "6",
+      "qseqid",
+      "sseqid",
+      "pident",
+      "evalue",
+      "bitscore",
+      "qcovhsp",
+      "scovhsp",
+      "stitle",
+      "--evalue",
+      "1e-10",
+      "--id",
+      "30.0",
+      "--query-cover",
+      "50.0",
+      "--subject-cover",
+      "50.0",
+      "--max-target-seqs",
+      "5",
+      "--max-hsps",
+      "1",
+      "--threads",
+      "6"
+    ],
+    "run_by_builder": true,
+    "thresholds": {
+      "max_evalue": 1e-10,
+      "min_identity_pct": 30.0,
+      "min_query_cover_pct": 50.0,
+      "min_subject_cover_pct": 50.0,
+      "max_target_seqs": 5
+    },
+    "selection": "best bitscore per gene; all hits passing thresholds kept"
+  },
+  "coverage": {
+    "genes_total": 58540,
+    "genes_with_protein": {
+      "n": 58249,
+      "pct": 99.5
+    },
+    "with_uniprot_accession": {
+      "n": 9877,
+      "pct": 16.87,
+      "pct_of_genes_with_protein": 16.96
+    },
+    "with_multiple_uniprot_accessions": 9054,
+    "with_author_symbol": {
+      "n": 13187,
+      "pct": 22.53
+    },
+    "with_ncbi_gene_id": 0,
+    "with_orthogroup": {
+      "n": 0,
+      "pct": 0.0
+    },
+    "author_uniprot_agreement": {
+      "genes_with_both": 6353,
+      "author_accession_among_our_hits": 3085,
+      "pct": 48.56
+    },
+    "proteins_matched_to_no_gene": 0,
+    "genes_by_type": {
+      "protein_coding": 58249,
+      "rRNA": 291
+    }
+  },
+  "resolution": {
+    "gene_id, locus_id, transcript_ids, protein_ids": "exact (identity in the authors' annotation)",
+    "uniprot_accession": "inferred (homology), many_to_one_ortholog when several genes share it",
+    "gene_symbol": "inferred, as for every route"
+  },
+  "known_limitations": [
+    "UniProt accessions are homology assignments from one recorded search, not curated cross-references; a gene's best Swiss-Prot hit is usually another species' protein.",
+    "gene_symbol is the authors' name for the gene where the GFF gives one (for GenBank annotations, the CDS standard_name, itself homology-derived); it is not unique.",
+    "orthogroup_id is empty; cross-species comparison needs this species in an orthogroup run.",
+    "Genes without a protein (non-coding, or proteins whose FASTA headers match no GFF ID) have no homology fields."
+  ]
+}

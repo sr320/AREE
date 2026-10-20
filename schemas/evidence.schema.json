@@ -8,6 +8,7 @@
     "evidence_id",
     "study_id",
     "comparison_id",
+    "contrast_type",
     "simulated",
     "feature_id_original",
     "feature_id_standardized",
@@ -200,6 +201,16 @@
         "mixed",
         "not_applicable"
       ]
+    },
+    "contrast_type": {
+      "type": "string",
+      "enum": [
+        "baseline_phenotype_difference",
+        "phenotype_difference_under_exposure",
+        "exposure_response",
+        "phenotype_by_exposure_interaction"
+      ],
+      "description": "The comparison's contrast_type from the study registry: what the two arms differ in and under what conditions they were sampled. Part of the meta-analysis grouping key, so a baseline difference between resilient and susceptible groups never pools with a response to exposure (docs/contrast_types.md)."
     },
     "resilience_classification": {
       "type": [

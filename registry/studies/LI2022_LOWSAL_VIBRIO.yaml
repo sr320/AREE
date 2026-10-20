@@ -1,0 +1,181 @@
+# Low salinity x Vibrio alginolyticus infection in adult M. gigas gill:
+# AREE's FIRST REAL SALINITY EVIDENCE. Every oyster was injected with
+# V. alginolyticus, then held at 10 ppt or at the 30 ppt acclimation
+# salinity, so the contrast is salinity given infection.
+#
+# Source: Li et al. 2022, Front Immunol (open access, PMC9162580), whose Data
+# Availability Statement names PRJNA756710 (RNA-seq) and PRJNA756403 (16S).
+# The methods were read in full (2026-10-11). Not in docs/candidate_studies.md;
+# chosen after that page's RNA-seq backlog ran out (#9, PRJNA877226, is the
+# same lab's high-temperature arm and has no control of its own: see the
+# limitations).
+#
+# MEASURED PHENOTYPE, AT GROUP LEVEL. Over 12 days, 100% of infected oysters
+# at 10 ppt died against 33% at 30 ppt (n = 30 per tank, triplicate tanks;
+# log-rank p < 0.01), with no deaths in sham-injected 30 ppt controls. Gill
+# was sampled at 12 h and 48 h, before most deaths, from animals whose fate
+# is unknown. So the comparisons are disease evidence (low salinity raises
+# susceptibility to the infection), not per-animal resilience.
+
+study_id: LI2022_LOWSAL_VIBRIO
+simulated: false
+
+accessions:
+  doi: "10.3389/fimmu.2022.859975"
+  bioproject: "PRJNA756710"
+  geo: null
+  sra: "SRR15559845-SRR15559858"
+  ena: "PRJNA756710"
+  proteomexchange: null
+  other: "BioSamples SAMN20924676-SAMN20924689; PMID 35663972; PMC9162580; companion 16S project PRJNA756403"
+
+citation: "Li X, Yang B, Shi C, Wang H, Yu R, Li Q, Liu S (2022). Synergistic Interaction of Low Salinity Stress With Vibrio Infection Causes Mass Mortalities in the Oyster by Inducing Host Microflora Imbalance and Immune Dysregulation. Frontiers in Immunology 13:859975. https://doi.org/10.3389/fimmu.2022.859975"
+
+species: "Magallana gigas"
+strain_or_population: "Farmed oysters (mean wet weight 18.2 ± 2.8 g) from an oyster farm at 30 ppt, Rongcheng, Shandong, China; acclimated two weeks at 30 ppt (Li et al. 2022 methods). Age and family not stated."
+
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end RNA-seq (NEBNext Ultra, poly-A); 14 libraries deposited, 12 used, 20.5-23.3 M read pairs each"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 14 runs are public in ENA/SRA under PRJNA756710. The paper's supplementary DEG tables (10‰Vibrio vs 30‰Vibrio at 12 h and 48 h) report only significant genes against an older assembly (GCA_902806645.1); AREE reanalyzes from raw reads. Salinity and timepoint are only in each BioSample's title, not in its attributes; design.tsv records the parse with the verbatim titles. Sequence data are not committed."
+
+# QC PASSED WITH WARNINGS, 2026-10-11 (full-depth run of the 12 libraries).
+# - Replicates are real: median within-group dispersion 0.012-0.073
+#   (replicate_dispersion_qc.tsv). 30ppt_12h is lowest (0.012) but well above
+#   the 0.005 floor; each library pools three oysters, which by itself lowers
+#   dispersion about threefold.
+# - Agrees with the authors: of their Supplementary Table 4 DEGs (10‰Vibrio
+#   vs 30‰Vibrio, padj < 0.05, matched by GeneID), 98.7% (12 h) and 99.0%
+#   (48 h) change in the same direction here (fold-change r = 0.87, 0.85),
+#   and 99.8% / 100% of those also significant here.
+# - Warning: the 12 h and 48 h responses barely agree (fold-change r = 0.03
+#   across all genes; 63% same direction among the 792 genes significant at
+#   both). That is in the authors' own lists too (74% of their 659 genes DE at
+#   both times), so it is the biology of a fast-changing response, not a
+#   pipeline fault, but it means one timepoint does not stand for the other.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+# ---------------------------------------------------------------------------
+# Comparisons: 10 ppt vs 30 ppt, both Vibrio-injected, at each timepoint.
+# Prespecified 2026-10-11, before any result was computed.
+#
+# REPLICATION. The paper: infected oysters went into three 20 L tanks per
+# salinity (30 per tank); at each timepoint three oysters per tank were
+# pooled into one library, "one biological replicate". So each library is
+# one tank, and each comparison is 3 tanks v 3 tanks: the tank is the unit
+# the treatment was applied to, and it is already the unit DESeq2 sees. The
+# SAME three tanks per salinity were sampled at 12 h and 48 h, so the two
+# comparisons are not independent of each other.
+#
+# meta_analysis_primary = 48 h. Chosen before results: 48 h is past the
+# acute osmotic shock of the transfer to 10 ppt, so it is closer to the
+# sustained exposure that other salinity studies sample, and the two
+# timepoints share tanks, so only one may pool.
+#
+# ON CLASSIFICATION. disease_susceptibility / disease, the ontology default,
+# with phenotype_direction increase: low salinity increased mortality of
+# infected oysters. stressor_standardized is salinity, because salinity is
+# the only factor that differs between the arms (both were infected); the
+# infection is recorded in stressor_original and the limitations.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "lowsal_10ppt_vs_30ppt_vibrio_48h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Intramuscular injection of Vibrio alginolyticus (50 uL of 5 x 10^8 CFU/mL) followed by transfer to 10‰ seawater ('10‰Vibrio') vs the same injection held at 30‰ ('30‰Vibrio'); BioSample titles 'Infected by Vibrio alginolyticus at low salinity' / 'at normal salinity'"
+    stressor_standardized: "salinity"
+    exposure_intensity: "10 ppt vs 30 ppt seawater, both after V. alginolyticus injection (2.5 x 10^7 CFU per oyster)"
+    exposure_duration: "48 h"
+    exposure_timing: "abrupt transfer immediately after injection; gill sampled 48 h post infection"
+    control_condition: "30‰Vibrio: V. alginolyticus-injected, held at 30 ppt; 3 tanks, one pooled library (3 oysters) per tank"
+    treatment_condition: "10‰Vibrio: V. alginolyticus-injected, transferred to 10 ppt; 3 tanks, one pooled library (3 oysters) per tank"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent mortality over 12 d per salinity group (measured: 100% at 10 ppt vs 33% at 30 ppt; not per sequenced oyster)"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    meta_analysis_primary: true
+    results_file: "data/studies/LI2022_LOWSAL_VIBRIO/LI2022_LOWSAL_VIBRIO_lowsal_10ppt_vs_30ppt_vibrio_48h_dge_standardized.tsv"
+
+  - comparison_id: "lowsal_10ppt_vs_30ppt_vibrio_12h"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Intramuscular injection of Vibrio alginolyticus followed by transfer to 10‰ seawater ('10‰Vibrio') vs the same injection held at 30‰ ('30‰Vibrio'); 12 h post infection"
+    stressor_standardized: "salinity"
+    exposure_intensity: "10 ppt vs 30 ppt seawater, both after V. alginolyticus injection (2.5 x 10^7 CFU per oyster)"
+    exposure_duration: "12 h"
+    exposure_timing: "abrupt transfer immediately after injection; gill sampled 12 h post infection"
+    control_condition: "30‰Vibrio: V. alginolyticus-injected, held at 30 ppt; 3 tanks, one pooled library (3 oysters) per tank"
+    treatment_condition: "10‰Vibrio: V. alginolyticus-injected, transferred to 10 ppt; 3 tanks, one pooled library (3 oysters) per tank"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: "percent mortality over 12 d per salinity group (measured: 100% at 10 ppt vs 33% at 30 ppt; not per sequenced oyster)"
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/LI2022_LOWSAL_VIBRIO/LI2022_LOWSAL_VIBRIO_lowsal_10ppt_vs_30ppt_vibrio_12h_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - ambiguous_phenotype_definition   # mortality measured per salinity group, not per sequenced oyster
+
+limitations: >
+  (1) Salinity and infection are crossed only one way: both arms were
+  infected, and sham-injected oysters were not sequenced, so the comparisons
+  measure the effect of low salinity on infected oysters, not of salinity
+  alone. (2) Mortality (100% vs 33% over 12 d) was measured per group; the
+  sequenced animals were sampled at 12 h and 48 h with unknown fate. (3) Each
+  comparison is 3 tanks v 3 tanks, one pooled library (three oysters) per
+  tank; pooling hides animal-to-animal variation, and the same tanks were
+  sampled at both timepoints, so the comparisons are not independent. (4)
+  Salinity and timepoint are recorded only in the BioSample titles. (5) The
+  same laboratory deposited a high-temperature arm (PRJNA877226: infected at
+  high temperature, 12 h and 48 h, sample names C33-n against C23-n here)
+  with no control of its own. Using this study's 30 ppt libraries as its
+  control would cross BioProjects and possibly batches, and is not done.
+
+provenance:
+  registered_by: "sr320"
+  date_registered: "2026-10-11"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA756710 --study-id
+    LI2022_LOWSAL_VIBRIO` (draft PR sr320/AREE#26). Chosen 2026-10-11 by sr320
+    from candidates outside docs/candidate_studies.md, after its RNA-seq
+    backlog was exhausted. Design parsed from each BioSample TITLE (fetched
+    from the ENA sample XML; regex in tests/test_li2022_lowsal_vibrio.py) into
+    design.tsv, which keeps the verbatim titles, and joined on the deposited
+    `ID` attribute with `aree fetch-samplesheet --design-table` (code PR
+    sr320/AREE#24). The sample names agree with the titles: C10-n are low
+    salinity, C23-n normal salinity, -1..3 at 12 h and -4..6 at 48 h, and
+    C23h2/C23h3 the 0 h baselines. Replication read from the paper's methods
+    (PMC9162580): three tanks per salinity, one pooled library per tank per
+    timepoint. Comparisons and the meta_analysis_primary flag fixed before any
+    result was computed. An earlier, independent reanalysis of this BioProject
+    in the sister repository sr320/AREE-co found within-group dispersion of
+    0.011-0.074 on its Salmon quantifications, i.e. real (pooled) biological
+    replicates.
+    Runs (2026-10-11, Nextflow 26.04.7, native -profile local,workstation on
+    a 16 GB / 8-core Mac, work dir on an HFS+ external drive): all 24 FASTQ
+    verified against ENA MD5s; 48 h comparison 42/42 tasks, 12 h reuses its
+    Salmon quantifications. Salmon mapping 75.5-83.7%, library type IU
+    (unstranded, as expected for NEBNext Ultra). DE at padj < 0.05: 48 h
+    3,711 of 25,689 genes; 12 h 4,012 of 25,508 (the paper reports 3,187 and
+    3,038 with |FC| > 1 against an older assembly). Harmonized 2026-10-11:
+    51,197 evidence records, identifier mapping 100% exact.
+  source_links:
+    - "https://doi.org/10.3389/fimmu.2022.859975"
+    - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9162580/"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA756710"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA756710"

@@ -32,7 +32,7 @@ pip install -e ".[dev,app]"
 
 This installs the packages declared in `pyproject.toml`'s `[tool.setuptools]`
 table — `aree`, `common`, `intake`, `harmonize`, `meta_analysis`, `prioritize`,
-`reporting`, `validation` — all under the `src/` layout, plus:
+`reporting`, `validation`, `mappings`, `query` — all under the `src/` layout, plus:
 
 - core runtime dependencies: `click`, `pyyaml`, `pandas`, `numpy`, `scipy`,
   `jsonschema`, `tabulate`
@@ -46,7 +46,9 @@ available on your `PATH` once the package is installed.
 
 To run the workflows natively, not just the Python package, use
 `environment.yml`. It adds git, Nextflow 26.04, Salmon, fastp, FastQC,
-MultiQC, R with DESeq2/tximport/limma and Quarto, at the versions CI uses. It
+MultiQC, R with DESeq2/tximport/limma and Quarto. Python and Nextflow track
+the CI versions; several bioinformatics and R packages are unpinned, so the
+resolved environment can differ from CI. It
 needs no system compilers or Homebrew, so it also works on a Mac without the
 Xcode Command Line Tools:
 
@@ -87,7 +89,7 @@ Once installed, the full demo pipeline runs against the committed demo data
 with no external downloads:
 
 ```bash
-aree validate-study registry/studies/GIGAS_HEAT01.yaml
+aree validate-study registry/demo_studies/GIGAS_HEAT01.yaml
 aree harmonize --study GIGAS_HEAT01
 aree meta-analyze --phenotype thermal_tolerance --feature-type gene
 aree build-evidence-cards --phenotype thermal_tolerance
@@ -106,6 +108,9 @@ streamlit run app/main.py
 or, for the static documentation/report site:
 
 ```bash
+pip install -e ".[site]"
+aree build-dashboard
+aree export-site-data
 quarto render docs/
 ```
 

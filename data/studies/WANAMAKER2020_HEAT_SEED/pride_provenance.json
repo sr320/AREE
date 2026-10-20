@@ -1,0 +1,68 @@
+{
+  "study_id": "WANAMAKER2020_HEAT_SEED",
+  "accession": "PXD013262",
+  "repository": "PRIDE",
+  "license": "Creative Commons Public Domain (CC0)",
+  "submission_type": "PARTIAL",
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/WANAMAKER2020_HEAT_SEED/build_samplesheet.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD013262",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD013262/files/all",
+    "https://ftp.pride.ebi.ac.uk/pride/data/archive/2020/06/PXD013262/oyster_tempXtime_proteomics_metadata.csv",
+    "https://api.figshare.com/v2/articles/12436598"
+  ],
+  "pride_reference": "Wanamaker SA, Mitchell KR, Thompson RE, Eudeline B, Vadopalas B, Timmins-Schiffman EB, Roberts SB. Temporal proteomic profiling reveals insight into critical developmental processes and temperature-influenced physiological response differences in a bivalve mollusc. BMC Genomics. 2020 21(1):723",
+  "pride_instrument": [
+    "LTQ Orbitrap Elite"
+  ],
+  "pride_files_by_category": {
+    "OTHER": 1,
+    "PEAK": 26,
+    "RAW": 26,
+    "SEARCH": 26
+  },
+  "search_database_deposited_in_pride": false,
+  "search_database_in_figshare": true,
+  "input_sha256": {
+    "oyster_tempXtime_proteomics_metadata.csv": "0dd267a5711b0ec5894af52cb6b4ec1e294bf811dafdb66d39d8a4d8e1d0a52a",
+    "paper-OysterSeed-TimeXTemp.zip": "35dbd146a3f9dd99f1dd5789ea4357e1cb09920fdcddaf0cbaf8258cf7afc5cc",
+    "paper-OysterSeed-TimeXTemp.zip:Data/Sample_metadata.csv": "7178adc0afaf2f918c76e39eb60d79faa15193f23ab3791560ffd34888b4e329",
+    "paper-OysterSeed-TimeXTemp.zip:Data/Abacus_output.tsv": "f076363aee03ad80b8f42f44cd97daad91dafff91c0d3043053fd26f16656ac9"
+  },
+  "figshare": {
+    "doi": "10.6084/m9.figshare.12436598.v5",
+    "version": 5,
+    "license": "CC BY 4.0",
+    "file": "paper-OysterSeed-TimeXTemp.zip",
+    "md5": "d728060b4cac390fdeb7148c2dd772d3",
+    "size_bytes": 39833470
+  },
+  "n_runs": 26,
+  "n_pools": 13,
+  "technical_runs_per_pool": 2,
+  "silos_by_temperature_C": {
+    "23": [
+      "3"
+    ],
+    "29": [
+      "9"
+    ]
+  },
+  "pools_per_temperature_per_day": 1,
+  "days_of_exposure": [
+    3,
+    5,
+    7,
+    9,
+    11,
+    13
+  ],
+  "abacus_output": {
+    "n_proteins": 8443,
+    "n_adjnsaf_columns": 26
+  },
+  "outputs": {
+    "data/studies/WANAMAKER2020_HEAT_SEED/samplesheet.tsv": "7fa2884a9ee35a50d161cc5de4037cb360edf66cdb8b2ee48f87f314241e7f24"
+  }
+}

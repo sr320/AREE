@@ -86,6 +86,37 @@ default mapped 15.5% of pairs uniquely, and `--score_min L,0,-0.6` mapped
 Use `extractor_args` for M-bias trimming (e.g. `--ignore_r2 N`) after
 checking the M-bias plot.
 
+#### Chunked alignment (`methylation.align_chunk_pairs`)
+
+A deep library is one long Bismark task: about 20 h for 224 M read pairs on
+a 10-core workstation. On a scheduler with short or preemptible jobs, such
+as Klone's ckpt partitions, it never finishes. Set
+`methylation.align_chunk_pairs` to split each trimmed library into chunks of
+that many read pairs (e.g. `20000000`):
+
+- `SPLIT_FASTQ_PAIRS` splits R1/R2 in step with `seqkit split2`.
+- `BISMARK_ALIGN_CHUNK` aligns each chunk with the same Bismark command as
+  `BISMARK_ALIGN`.
+- `BISMARK_MERGE_CHUNKS` concatenates the chunk BAMs in chunk order with
+  `samtools cat`, so mates stay adjacent. It also sums the chunk reports
+  into one per-library `*_PE_report.txt` in Bismark's own layout
+  (`bin/sum_bismark_pe_reports.sh`); percentages are recomputed from the
+  summed counts.
+
+Deduplication and extraction then run on the merged BAM, as before. Duplicates
+that fall in different chunks are still removed. Bismark aligns each pair
+independently, so the merged BAM holds the same alignments as an unchunked
+run's, but in a different record order. `deduplicate_bismark` keeps the first
+read of each duplicate set it meets, so a few CpG calls can come from a
+different (equally valid) read of a duplicate set. On 4 EM-seq libraries of
+`VALDIVIESO2025_POMS_RS_EMSEQ` (400k pairs each, 4 chunks per library),
+mapped pairs, mapping efficiency, CpG methylation and duplicates removed were
+identical to an unchunked run. Two CpG reports were byte-identical, and the
+other two differed in 2 and 1 of about 1 million covered CpGs, by one read
+each. The per-chunk reports are published next to the merged one. Unset or
+`0` keeps one alignment task per library. See
+[docs/running_on_klone.md](../../docs/running_on_klone.md).
+
 #### Replication unit (`methylation.replicate_unit`)
 
 When the phenotype or treatment belongs to a group of libraries, such as a
@@ -114,6 +145,70 @@ power: the true regions ranked near the top but none reached q < 0.05. Where
 a region's estimated overdispersion falls below 1, methylKit resets it to 1,
 so a few null regions can still get small q-values; the `meth_diff_cutoff`
 filter is the second guard.
+
+#### Matched sets (`methylation.block_by`, limma only)
+
+Some designs pair units across the two arms: a population contributing one
+resistant and one susceptible animal, or the same animal sampled before and
+after a challenge. An unpaired test then treats the population (or animal)
+effect as noise. Set `methylation.block_by` to the design-sheet column that
+names the matched set, with `dmr_engine = 'limma'`:
+
+```
+methylation.dmr_engine   = 'limma'
+methylation.block_by     = 'population'
+methylation.design_sheet = 'data/studies/<STUDY_ID>/samplesheet.tsv'
+```
+
+limma then fits `~ block + treatment` (a paired / randomized-block test), and
+`meth_diff_percent` is the mean within-block difference. Each block must hold
+both arms, at least two blocks are needed, and a replicate unit may not span
+blocks. `analysis_method` becomes `limma_blocked_pooled_<features>`, and the
+QC table records `block_by` and `n_blocks`.
+
+On synthetic data with 5 blocks × 2 arms, a block effect (SD 0.8 on the logit
+scale) shared within each block and a ±1 logit effect on 20 of 400 tiles, the
+unpaired fit called none of the 20 at q < 0.05 in five seeds. The blocked fit
+called 12–19, with 0–2 of 380 null tiles at q < 0.05 and 3.4–6.6% of null
+tiles at p < 0.05 (`tests/test_dmr_pooled_tiles_block.py`).
+
+#### DMR engines (`methylation.dmr_engine`)
+
+- `methylkit` (default): `DMR_METHYLKIT`, as above.
+- `limma` and `dss`: `DMR_POOLED_TILES` (`modules/methylation/dmr_pooled_tiles.nf`).
+  It merges the two strands of each CpG, pools libraries by `replicate_unit`,
+  and keeps CpGs with at least `unit_min_coverage` reads in **every unit**
+  (coverage is applied after pooling, so set `min_coverage` low, e.g. 1). It
+  sums them into `tile_size` tiles with at least `tile_min_cpgs` CpGs, then
+  tests treatment units against control units.
+  - `limma`: a moderated t on per-unit M-values (the logit of methylation),
+    with variance shrunk across tiles by empirical Bayes. Recommended when
+    there are only a few units per arm.
+  - `dss`: `DSS::DMLtest`, a beta-binomial model with shrunken dispersion
+    and a Wald test.
+
+Units (`methylation.dmr_features`), for `limma` and `dss`:
+- `tiles` (default): `tile_size` windows genome-wide.
+- `genes`: one unit per gene, pooling every CpG in the gene body and its
+  `promoter_upstream_bp` promoter (strand-aware). CpGs outside every gene
+  window fall into intergenic tiles. Each gene then gives one record, so
+  harmonized methylation evidence links one-to-one to RNA-seq genes; with
+  `tiles`, many tiles share a gene and meta-analysis refuses to pool them
+  (identifier collision). `ANNOTATE_REGIONS` keeps the gene and context these
+  units arrive with.
+
+Why `limma` is recommended for few units: on synthetic data with 2 vs 2
+families, real family-to-family variation and 20 true regions among 400
+tiles:
+
+| Test | True regions found | False positives (of 380) |
+|---|---|---|
+| methylKit (families, MN + F) | 0 | 0 |
+| DSS (families) | 17 | 57 |
+| limma (families) | 4 | 1 |
+
+limma's null p-values were calibrated (5.0% below 0.05). DSS's Wald test
+has no small-sample correction, so it is overconfident at 2 vs 2.
 
 ### `processed_results_harmonization`
 
@@ -148,7 +243,7 @@ which is clearly labeled simulated data.
 ## Standardized output schema
 
 `STANDARDIZE_OUTPUT` emits `<study_id>_<comparison_id>_dmr_standardized.tsv`
-with exactly these tab-separated columns, matching
+with these tab-separated columns (the last three optional), matching
 `data/demo/methylation/GIGAS_PATH03_OsHV1_challenge_vs_sham_dmr_demo.tsv` and
 what `src/harmonize/methylation.py` expects:
 
@@ -163,6 +258,12 @@ what `src/harmonize/methylation.py` expects:
 | `meth_diff_percent` | signed methylation difference, treatment − control |
 | `qvalue` | multiple-testing-adjusted p-value from methylKit (or as supplied in processed mode) |
 | `direction` | `hyper` \| `hypo`, derived from the sign of `meth_diff_percent` when not directly supplied |
+| `pvalue` | *optional*: unadjusted p-value. Written when the DMR step supplies it (`limma` / `dss` engines); methylKit does not |
+| `se_meth_diff_percent` | *optional*: standard error of `meth_diff_percent`. For `limma`, abs(diff) / qnorm(1 - p/2), so a normal (Wald) test, which is what meta-analysis applies, reproduces limma's own p-value and keeps its small-sample df. Using abs(diff / t) instead gave p ~1e-23 where limma gave 3e-4 at 2 vs 2 units |
+| `analysis_method` | *optional*: e.g. `limma_pooled_tiles`; the harmonizer uses it as the evidence `analysis_method` (default `methylKit`) |
+
+Without `pvalue` and `se_meth_diff_percent`, harmonized methylation
+evidence has no standard error and cannot enter inverse-variance pooling.
 
 The only rows genuinely dropped by `STANDARDIZE_OUTPUT` are ones missing
 `chrom`/`start`/`end` entirely (no genomic coordinates at all) — that count
@@ -209,11 +310,17 @@ Every process uses the exact image tags declared in `containers/README.md`:
 `quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0`,
 `quay.io/biocontainers/trim-galore:0.6.10--hdfd78af_0`,
 `quay.io/biocontainers/bismark:0.24.2--hdfd78af_0`,
-`bioconductor/bioconductor_docker:RELEASE_3_18` (methylKit DMR calling,
-GenomicRanges/rtracklayer annotation), `python:3.11-slim` (standardize/
-manifest steps, stdlib only), `ghcr.io/quarto-dev/quarto:1.5.57` (report).
-None of these images have been pulled or run as part of this task — see
-`containers/README.md` "What is real vs. aspirational here."
+`quay.io/biocontainers/seqkit:2.8.2--h9ee0642_0` (chunk splitting),
+`quay.io/biocontainers/bioconductor-dss:2.58.0--r45h01b2380_0` (limma/DSS
+pooled DMRs), `quay.io/biocontainers/bioconductor-methylkit:1.36.0--r45ha27e39d_0`
+(methylKit DMRs, GenomicRanges/rtracklayer annotation),
+`quay.io/biocontainers/python:3.12.12` (standardize/manifest steps, stdlib
+only; it has the `ps` Nextflow needs, which `python:3.11-slim` lacks) and
+`rocker/verse:4.5.2` (report: R, knitr and quarto). All of them ran under
+Apptainer on Klone in October 2026 (see
+[docs/running_on_klone.md](../../docs/running_on_klone.md)). The earlier
+`bioconductor/bioconductor_docker:RELEASE_3_18` had limma but not
+data.table, DSS or methylKit, and the quarto image had no R.
 
 ## Running
 
@@ -236,9 +343,8 @@ nextflow run main.nf -profile docker \
 **Neither of the above commands has actually been executed in this build.**
 The `docker,demo` invocation is expected to be runnable on a machine with
 Docker and Nextflow installed, since `processed_results_harmonization` mode
-only depends on `python:3.11-slim` and `ghcr.io/quarto-dev/quarto:1.5.57`,
-both lightweight, real, pullable images — but that has not been verified
-here.
+only depends on `quay.io/biocontainers/python:3.12.12` and
+`rocker/verse:4.5.2` — but that has not been verified here.
 
 ## What has and has not been run (honesty statement)
 

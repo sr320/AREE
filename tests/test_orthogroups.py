@@ -179,9 +179,12 @@ def test_every_gene_in_the_active_run_is_in_its_species_crosswalk(committed_run)
 
     from common import registered_crosswalks
 
-    run_dir, _ = committed_run
+    run_dir, prov = committed_run
     genes = pd.read_csv(run_dir / "gene_orthogroups.tsv", sep="\t", dtype=str)
+    in_run = {int(s["ncbi_taxid"]) for s in prov["species"]}
     for entry in registered_crosswalks():
+        if int(entry["ncbi_taxid"]) not in in_run:
+            continue  # e.g. a GFF-route species not yet in an orthogroup run
         ids = set(pd.read_csv(entry["path"], sep="\t", comment="#", dtype=str,
                               usecols=["ncbi_gene_id"])["ncbi_gene_id"])
         mine = genes[genes["ncbi_taxid"] == str(entry["ncbi_taxid"])]

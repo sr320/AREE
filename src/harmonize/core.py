@@ -7,7 +7,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from common import EVIDENCE_TABLE_PATH, REPO_ROOT, REPORTS_DIR, STUDIES_DIR, load_yaml, sha256_file
+from common import (
+    EVIDENCE_TABLE_PATH,
+    REPO_ROOT,
+    REPORTS_DIR,
+    load_yaml,
+    sha256_file,
+    study_yaml_path,
+)
 
 from .identifiers import (
     active_crosswalk_path,
@@ -38,7 +45,7 @@ def _generated_by() -> str:
 
 
 def _load_study(study_id: str) -> dict:
-    path = STUDIES_DIR / f"{study_id}.yaml"
+    path = study_yaml_path(study_id)
     if not path.exists():
         raise FileNotFoundError(f"No registered study file at {path}")
     return load_yaml(path)
@@ -186,7 +193,7 @@ def _warn_if_analysis_status_stale(study: dict) -> None:
         warnings.warn(
             f"Study {study['study_id']} is registered with analysis_status="
             f"{status!r} but has just been harmonized. Update "
-            f"registry/studies/{study['study_id']}.yaml to 'harmonized' and re-run "
+            f"{study_yaml_path(study['study_id']).relative_to(REPO_ROOT)} to 'harmonized' and re-run "
             "`aree register-study --update`.",
             stacklevel=2,
         )

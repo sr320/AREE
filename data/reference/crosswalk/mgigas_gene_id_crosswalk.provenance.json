@@ -1,9 +1,9 @@
 {
   "artifact": "mgigas_gene_id_crosswalk.tsv",
-  "artifact_sha256": "6d2534b319ff355a9814fab2c5c90a6fa50a0ed761bfc332c03835b0963e25a1",
+  "artifact_sha256": "87226cd6818cf44da6e9986fa76fbaea62bfa7d1c0c636323e6a625a159dbccd",
   "builder": "src/mappings/build_crosswalk.py",
-  "builder_version": "1.0.0",
-  "date_generated": "2026-08-27",
+  "builder_version": "1.1.0",
+  "date_generated": "2026-10-17",
   "organism": "Magallana gigas (Crassostrea gigas), Pacific oyster",
   "ncbi_taxid": 29159,
   "ncbi_reference_annotation_at_build": "GCF_963853765.1 (xbMagGiga1.1), annotation release GCF_963853765.1-RS_2024_06",
@@ -50,6 +50,10 @@
       "n": 650,
       "pct": 1.95
     },
+    "with_legacy_locus_tag": {
+      "n": 14699,
+      "pct": 44.07
+    },
     "with_orthogroup": {
       "n": 0,
       "pct": 0.0
@@ -73,6 +77,7 @@
     "orthogroup_id is empty; cross-species evidence pooling requires an ortholog inference run that this builder does not perform.",
     "Ensembl xrefs come from NCBI dbXrefs and reflect Ensembl Metazoa's assembly, which may differ from the current NCBI reference assembly.",
     "gene_synonyms is emitted for curation and future symbol resolution but is not currently consulted by harmonize.identifiers.",
+    "legacy_locus_tags is NCBI's LocusTag: the gene model ID a previous assembly's annotation used (for M. gigas, the oyster_v9 CGI_ models). Resolution through it is labelled 'inferred' because it crosses an annotation version; a legacy model NCBI did not carry forward has no tag here and stays 'unresolved'.",
     "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are labelled 'inferred' because the remap crosses an annotation version; GeneIDs discontinued without a replacement stay 'unresolved' by design."
   ]
 }

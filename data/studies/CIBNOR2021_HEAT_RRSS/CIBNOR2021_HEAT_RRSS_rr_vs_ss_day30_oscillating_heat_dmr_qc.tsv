@@ -1,0 +1,2 @@
+study_id	comparison_id	n_samples	n_candidate_regions	n_significant_regions	dmr_mode	tile_size	min_coverage	qvalue_cutoff	meth_diff_cutoff	replicate_unit	n_replicate_units	overdispersion	test	engine	df_prior	destranded	tile_min_cpgs	n_cpgs_all_units
+CIBNOR2021_HEAT_RRSS	rr_vs_ss_day30_oscillating_heat	12	132587	0	genes	1000	10	0.05	10	family	4	empirical-Bayes moderated variance	limma moderated t on unit M-values, BH	limma	2.33914431336831	TRUE	10	7269210

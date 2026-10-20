@@ -47,7 +47,7 @@ def test_mussel_demo_study_is_a_registered_simulated_study():
     from intake.schema_validate import validate_study_file
 
     assert MUSSEL_STUDY in ALL_DEMO_STUDY_IDS
-    result = validate_study_file(Path("registry/studies") / f"{MUSSEL_STUDY}.yaml")
+    result = validate_study_file(Path("registry/demo_studies") / f"{MUSSEL_STUDY}.yaml")
     assert result.valid, result.errors
 
 

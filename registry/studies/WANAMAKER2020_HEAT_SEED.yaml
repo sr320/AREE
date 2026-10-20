@@ -1,0 +1,184 @@
+# Real proteomics study: Pacific oyster seed reared at 23 vs 29 C through
+# settlement and metamorphosis, shotgun LC-MS/MS on six days of a 13-day
+# exposure. Registered from PRIDE PXD013262 (CC0), the authors' figshare
+# package (10.6084/m9.figshare.12436598, CC BY 4.0) and the open-access paper,
+# Wanamaker et al. 2020, BMC Genomics 21:723 (PMC7574277).
+#
+# NO BIOLOGICAL REPLICATION; QC FAILED AT REGISTRATION (2026-10-17). Each
+# temperature was one silo in one tank: Silo 3 at 23 C, Silo 9 at 29 C, about
+# one million pediveligers each. On each sampling day one pool of about 12,500
+# larvae was taken from each silo, and each pool was run twice on the mass
+# spectrometer. The 26 deposited runs are therefore 13 pools x 2 technical
+# runs: one 19 dpf baseline pool and one pool per temperature per day.
+# figshare Data/Sample_metadata.csv names the silo and technical replicate of
+# every run; PRIDE's metadata gives only day and temperature
+# (pride_provenance.json, samplesheet.tsv).
+#
+# Consequences. Temperature is fully confounded with silo (and tank), so a
+# 29-vs-23 difference cannot be separated from anything else that differed
+# between the two silos. Within a day there is no between-pool variance: the
+# only replicate is a technical one, and any standard error from it measures
+# instrument repeatability, not biology. Using days as replicates instead
+# would estimate the temperature x day interaction of a single silo pair
+# during metamorphosis, when the proteome is changing fastest; it is still
+# n = 1 silo per arm. The authors' own ASCA permutation test found no
+# significant temperature effect (P = 0.19; time P = 0.003; time x temperature
+# P = 0.998; paper Table 1). This is the same problem that kept PXD008057 out
+# (pooled samples, no replicates), with fewer silos. QC decision (2026-10-17,
+# sr320): qc_status failed, results_file null, not reanalyzed, not harmonized.
+#
+# A SECOND 23 C SILO EXISTED. The authors' figshare code
+# (Analyses/Technical_Replicates_PCA/ClusteringTechnicalReplicates_and_CalculateAvgNSAFs.Rmd)
+# maps "Silo 2" to 23 C and a day 15 / 33 dpf time point, then drops both. No
+# Silo 2 or day 15 run is in PRIDE, in Sample_metadata.csv or in
+# Abacus_output.tsv. If Silo 2 samples were ever run, they would give the
+# 23 C arm a second silo, which is the one thing that could make part of this
+# design analyzable. Ask the authors before re-screening.
+#
+# Processed data. figshare Data/Abacus_output.tsv is the protein x run table
+# (adjusted NSAF, 26 runs, 8,443 Gigaton protein IDs) the paper analysed, so a
+# reanalysis would not need the 47 GB of .raw files. It was not used here
+# because the design, not the data format, is the limit.
+
+study_id: WANAMAKER2020_HEAT_SEED
+simulated: false
+
+accessions:
+  doi: "10.1186/s12864-020-07127-3"
+  bioproject: null
+  geo: null
+  sra: null
+  ena: null
+  proteomexchange: "PXD013262"
+  other: "figshare 10.6084/m9.figshare.12436598"
+
+citation: "Wanamaker SA, Mitchell KR, Thompson RE, Eudeline B, Vadopalas B, Timmins-Schiffman EB, Roberts SB (2020) Temporal proteomic profiling reveals insight into critical developmental processes and temperature-influenced physiological response differences in a bivalve mollusc. BMC Genomics 21:723. https://doi.org/10.1186/s12864-020-07127-3 (PMID 33076839; author-name correction 10.1186/s12864-023-09145-3, Trigg SA -> Wanamaker SA). Proteomics: PRIDE PXD013262 (CC0). Supplementary data and code: figshare 10.6084/m9.figshare.12436598 (CC BY 4.0)."
+
+species: "Magallana gigas"
+strain_or_population: "Hatchery seed provided by Taylor Shellfish Hatchery (Quilcene, WA); Pacific Northwest domesticated stock. Broodstock and cross not described. All larvae came from one hatchery cohort and were split between the two silos at 19 dpf."
+
+# Not genome-aligned. Spectra were searched with Comet against the Gigaton
+# transcriptome-derived protein set (Riviere et al. 2015; 40,637 predicted
+# proteins), which AREE has no assembly record or crosswalk for. The
+# validator needs a known assembly, so this records the annotation a
+# Gigaton -> gene link would have to target (as in DUPERRET2025_POMS_STARVE).
+# See identifier_mapping_uncertain.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["proteomics"]
+analysis_mode: "raw_reanalysis"
+platform: "Data-dependent shotgun LC-MS/MS on a Thermo Orbitrap Fusion Lumos (paper Methods and the PRIDE sample-processing protocol; PRIDE's instrument field says LTQ Orbitrap Elite). Comet 2016.01 rev.2 against the Gigaton protein set plus crapOME contaminants, Trans-Proteomic Pipeline (peptide probability 0.9), Abacus adjusted NSAF spectral counting. 100 ug protein per sample; each sample run in technical duplicate."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: true
+  status: "available"
+  access_notes: "PRIDE PXD013262 (public 2020-06-12, CC0, PARTIAL submission): 26 .raw, 26 .mzXML, 26 Comet .pep.xml (about 47 GB of .raw) and oyster_tempXtime_proteomics_metadata.csv. The search database (Cg-Giga_cont_AA.fa) is named in that CSV but not deposited in PRIDE; it is in the figshare package. figshare 12436598 v5 (CC BY 4.0, 40 MB zip) holds Data/Abacus_output.tsv (protein x run adjusted NSAF and spectral counts), Data/Sample_metadata.csv (silo and technical replicate per run), the analysis code and Supplemental Tables S1-S5. No differential-abundance table with per-protein statistics exists: the paper used PCA, ASCA and clustering. Checksums in data/studies/WANAMAKER2020_HEAT_SEED/pride_provenance.json."
+
+# See the header: one silo per temperature, technical replicates only.
+qc_status: "failed"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# ONE COMPARISON. The paper's temperature question is 29 C vs 23 C across the
+# six sampling days (3, 5, 7, 9, 11, 13 of exposure = 21-31 dpf); its
+# temperature heat map singles out days 3 and 9 (21 and 27 dpf). That is
+# registered as one comparison over all six days, flagged primary before any
+# result was computed. The 19 dpf, 16 C pool is a pre-exposure baseline taken
+# before the split and belongs to neither arm.
+#
+# sample_size 12 = the 12 pools in the comparison (24 MS runs). There is one
+# biological unit (silo) per arm, so biological_replicates is 1.
+#
+# PHENOTYPE. Measured once, at 24 dpf (exposure day 6), on the same two silos:
+# settlement 30.9% at 29 C vs 29.7% at 23 C, and seed at 29 C were larger on
+# the sorting screens (paper Fig. 1b, Table S1). There is one value per silo
+# and no variance, and the authors read 29 C as pro-growth rather than
+# stressful. Classified exposure_only, overriding the ontology's resilience
+# default for growth_under_stress: the record describes a rearing-temperature
+# exposure, not a tested tolerance outcome.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "temp29_vs_temp23_days3to13"
+    tissue: "whole_animal"
+    life_stage: "spat"
+    stressor_original: "Pediveligers (19 dpf, reared at 16 C) transferred to a settlement silo (46 cm PVC pipe, 80 mL 180-315 um microcultch) in a flow-through tank held at either 23 C or 29 C for 13 days; tanks drained and oysters rinsed daily. About 12,500 larvae sampled per temperature on days 3, 5, 7, 9, 11 and 13 (21-31 dpf)."
+    stressor_standardized: "temperature"
+    exposure_intensity: "29 C vs 23 C (+6 C over the standard hatchery setting temperature)"
+    exposure_duration: "3 to 13 d (sampled every 2 d)"
+    exposure_timing: "chronic, through settlement and metamorphosis, 19-31 dpf"
+    control_condition: "23 C, Silo 3, one pool of ~12,500 larvae per sampling day (6 pools, 12 MS runs)"
+    treatment_condition: "29 C, Silo 9, one pool of ~12,500 larvae per sampling day (6 pools, 12 MS runs)"
+    phenotype: "growth_under_stress"
+    phenotype_direction: "increase"
+    phenotype_unit: "seed size distribution on 450-1320 um sorting screens at 24 dpf (larger at 29 C); settlement 30.9% at 29 C vs 29.7% at 23 C; one measurement per silo"
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 1
+    results_file: null
+    meta_analysis_primary: true
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - tank_level_replication
+  - batch_confounded
+  - identifier_mapping_uncertain
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) No biological replication: one silo per temperature, so temperature is
+  fully confounded with silo and tank. Each sampling day has one pool per
+  temperature, run in technical duplicate; a standard error from those runs
+  measures instrument repeatability, not variation between animals or silos.
+  Treating sampling days as replicates still leaves one silo per arm and
+  confounds the temperature effect with development, which the paper shows
+  dominates the proteome (time 57% of ASCA variance, P = 0.003; temperature
+  9%, P = 0.19). The study failed QC at registration and is not reanalyzed or
+  harmonized. batch_confounded is declared for the silo, the only unit the
+  treatment was applied to. (2) The authors' code refers to a second 23 C silo
+  (Silo 2) and a day 15 time point that are not in the deposited data; their
+  absence is unexplained. (3) Each sample is a pool of about 12,500 larvae,
+  which averages away between-animal variance. (4) The phenotype was
+  measured once per silo at 24 dpf with no variance: settlement was nearly
+  equal (30.9% vs 29.7%) and 29 C seed were larger. Classified exposure_only;
+  it cannot support a resilience claim. (5) Proteins are Gigaton
+  transcriptome-derived IDs with no AREE crosswalk to GCF_963853765.1 gene
+  IDs; mapping would go through sequence similarity (the authors' BLASTP to
+  UniProt is in the figshare package). (6) Quantification is spectral
+  counting (adjusted NSAF) from DDA, which is noisy for low-abundance
+  proteins. (7) PRIDE's instrument field (LTQ Orbitrap Elite) disagrees with
+  the paper and PRIDE's own protocol text (Orbitrap Fusion Lumos).
+
+provenance:
+  registered_by: sr320
+  date_registered: "2026-10-17"
+  curation_notes: >
+    Claimed with `aree start-study --accession PXD013262 --study-id
+    WANAMAKER2020_HEAT_SEED` (branch study/PXD013262/WANAMAKER2020_HEAT_SEED).
+    Registered from the PRIDE v3 project and file records, the PRIDE metadata
+    CSV, and the figshare package (v5, md5-checked against the figshare API),
+    all retrieved 2026-10-17 by build_samplesheet.py, which writes
+    samplesheet.tsv and pride_provenance.json and stops if PRIDE and figshare
+    disagree on any run's day or temperature or the design is not one silo per
+    temperature with two technical runs per pool. Silo, technical replicate
+    and dpf come from figshare Data/Sample_metadata.csv; the silo-to-
+    temperature mapping (3 = 23 C, 9 = 29 C) was checked against every run's
+    PRIDE temperature. Design, settlement and size, and the ASCA result come
+    from the open-access full text (PMC7574277), Methods, Results and Table 1,
+    read 2026-10-17. The study_id follows the first-author convention; the
+    first author published as Trigg SA, corrected to Wanamaker SA in 2023, and
+    PRIDE lists the submitter as Shelly Trigg. One comparison is registered,
+    flagged meta_analysis_primary before any analysis; 23 C is the reference,
+    so a positive effect would mean higher at 29 C. QC decision (2026-10-17,
+    sr320): failed for lack of biological replication (see the header). The
+    registering curator is the paper's senior author; the decision rests on
+    the deposited design, which tests/test_wanamaker2020_study.py pins.
+  source_links:
+    - "https://www.ebi.ac.uk/pride/archive/projects/PXD013262"
+    - "https://ftp.pride.ebi.ac.uk/pride/data/archive/2020/06/PXD013262/"
+    - "https://doi.org/10.6084/m9.figshare.12436598"
+    - "https://doi.org/10.1186/s12864-020-07127-3"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC7574277/"

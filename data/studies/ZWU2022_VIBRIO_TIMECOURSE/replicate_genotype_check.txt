@@ -1,0 +1,13 @@
+# Pre-download expressed-SNP screen, 2026-10-14: scripts/check_replicate_genotypes.py from sr320/AREE-co,
+# on the first ~250 MB of R1 of control1-3 (SRR19849556, SRR19849555, SRR19849546) and V24h_1-2
+# (SRR19849549, SRR19849548); V24h_3's partial download failed.
+1474 sites with pooled minor-allele frequency >= 0.15 and depth >= 30 in all 5 libraries
+per-library allele-frequency histogram (0-1 in tenths); one diploid animal peaks at 0, 0.5 and 1:
+  control_SRR19849546  [191 278 318 264 190 130  60  23  13   7]
+  control_SRR19849555  [228 294 312 242 185 104  60  29  13   7]
+  control_SRR19849556  [207 286 287 268 189 145  51  26   5  10]
+  V24h_SRR19849548     [252 261 295 243 165 118  65  40  18  17]
+  V24h_SRR19849549     [223 316 288 232 163 144  62  26  17   3]
+mean |allele-frequency difference| (observed, same-RNA simulation, correlation):
+  within   pairs=  4 observed 0.196 (0.190-0.211) noise 0.054 r 0.16
+  between  pairs=  6 observed 0.207 (0.196-0.217) noise 0.052 r 0.10

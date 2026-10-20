@@ -1,0 +1,300 @@
+{
+  "study_id": "WANG2026_ERK_HEAT",
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/WANG2026_ERK_HEAT/build_provenance.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD065668",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD065706",
+    "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13280272/supplementaryFiles"
+  ],
+  "paper_license": "CC BY-NC-ND 4.0 (supplement fetched and checksummed, not committed)",
+  "pride": {
+    "proteome": {
+      "accession": "PXD065668",
+      "title": "proteome of ERK kinase inhibited oyster gill",
+      "license": "Creative Commons Public Domain (CC0)",
+      "submission_type": "PARTIAL",
+      "publication_date": "2026-03-12",
+      "instrument": [
+        "Orbitrap Exploris 480"
+      ],
+      "files_by_category": {
+        "RAW": 12,
+        "SEARCH": 1
+      },
+      "search_files": [
+        "20240223_103546_XB00901DA.sne"
+      ],
+      "pools_per_group": {
+        "ERK_0": 3,
+        "ERK_12": 3,
+        "SW_0": 3,
+        "SW_12": 3
+      }
+    },
+    "phosphoproteome": {
+      "accession": "PXD065706",
+      "title": "phosphoproteome of ERK kinase inhibited oyster gill",
+      "license": "Creative Commons Public Domain (CC0)",
+      "submission_type": "PARTIAL",
+      "publication_date": "2026-03-12",
+      "instrument": [
+        "Orbitrap Exploris 480"
+      ],
+      "files_by_category": {
+        "RAW": 12,
+        "SEARCH": 1
+      },
+      "search_files": [
+        "20240227_142541_XB00901DPST.sne"
+      ],
+      "pools_per_group": {
+        "ERK_0": 3,
+        "ERK_12": 3,
+        "SW_0": 3,
+        "SW_12": 3
+      }
+    }
+  },
+  "proteome_acquisition_order": [
+    "seawater_0h_1",
+    "seawater_0h_2",
+    "seawater_0h_3",
+    "seawater_12h_1",
+    "seawater_12h_2",
+    "seawater_12h_3",
+    "SCH772984_0h_1",
+    "SCH772984_0h_2",
+    "SCH772984_0h_3",
+    "SCH772984_12h_1",
+    "SCH772984_12h_2",
+    "SCH772984_12h_3"
+  ],
+  "supplementary_tables": {
+    "proteome": {
+      "file": "42003_2026_10054_MOESM2_ESM.xlsx",
+      "sha256": "fdd30d3b1445b62ddc8e6e6a3bf10535cae724f7530012ce5498ada8623c1371",
+      "caption": "Supplementary Data 1. The significantly differentially abundant proteins (DAPs) between seawater group and ERK-inhibited group under heat stress in proteome. Sheet 1: Significantly up-regulated DAPs under heat stress; Sheet 2: ERK significantly activated DAPs under heat stress; Sheet 3: Significantly down-regulated DAPs under heat stress; Sheet 4: ERK significantly inhibited DAPs under heat stress",
+      "sheets": {
+        "Sheet 1": {
+          "n_rows": 476,
+          "regulation": {
+            "Up": 476
+          },
+          "per_pool_value_columns": [
+            "Intensity SW_0_1",
+            "Intensity SW_0_2",
+            "Intensity SW_0_3",
+            "Intensity SW_12_1",
+            "Intensity SW_12_2",
+            "Intensity SW_12_3",
+            "Intensity ERK_0_1",
+            "Intensity ERK_0_2",
+            "Intensity ERK_0_3",
+            "Intensity ERK_12_1",
+            "Intensity ERK_12_2",
+            "Intensity ERK_12_3",
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        },
+        "Sheet 2": {
+          "n_rows": 278,
+          "regulation": {
+            "Up": 278
+          },
+          "per_pool_value_columns": [
+            "Intensity SW_0_1",
+            "Intensity SW_0_2",
+            "Intensity SW_0_3",
+            "Intensity SW_12_1",
+            "Intensity SW_12_2",
+            "Intensity SW_12_3",
+            "Intensity ERK_0_1",
+            "Intensity ERK_0_2",
+            "Intensity ERK_0_3",
+            "Intensity ERK_12_1",
+            "Intensity ERK_12_2",
+            "Intensity ERK_12_3",
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        },
+        "Sheet 3": {
+          "n_rows": 348,
+          "regulation": {
+            "Down": 348
+          },
+          "per_pool_value_columns": [
+            "Intensity SW_0_1",
+            "Intensity SW_0_2",
+            "Intensity SW_0_3",
+            "Intensity SW_12_1",
+            "Intensity SW_12_2",
+            "Intensity SW_12_3",
+            "Intensity ERK_0_1",
+            "Intensity ERK_0_2",
+            "Intensity ERK_0_3",
+            "Intensity ERK_12_1",
+            "Intensity ERK_12_2",
+            "Intensity ERK_12_3",
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        },
+        "Sheet 4": {
+          "n_rows": 337,
+          "regulation": {
+            "Down": 337
+          },
+          "per_pool_value_columns": [
+            "Intensity SW_0_1",
+            "Intensity SW_0_2",
+            "Intensity SW_0_3",
+            "Intensity SW_12_1",
+            "Intensity SW_12_2",
+            "Intensity SW_12_3",
+            "Intensity ERK_0_1",
+            "Intensity ERK_0_2",
+            "Intensity ERK_0_3",
+            "Intensity ERK_12_1",
+            "Intensity ERK_12_2",
+            "Intensity ERK_12_3",
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        }
+      }
+    },
+    "phosphoproteome": {
+      "file": "42003_2026_10054_MOESM3_ESM.xlsx",
+      "sha256": "c72e5949830a9b24af62c1387f3ec05e74aa85433d2aa0e4cd9f941bc52eaac3",
+      "caption": "Supplementary Data 2 The significantly differentially phosphorylated proteins (DPPs) and sites between seawater group and ERK-inhibited group under heat stress in phosphoproteome. Sheet 1: Significantly up-regulated DPPs (phosphorylation sites) under heat stress. Sheet 2: ERK significantly activated DPPs (phosphorylation sites) under heat stress. Sheet 3: Significantly down-regulated DPPs (phosphorylation sites) under heat stress. Sheet 4: ERK significantly inhibited DPPs (phosphorylation sites) under heat stress",
+      "sheets": {
+        "Sheet 1": {
+          "n_rows": 2602,
+          "regulation": {
+            "Up": 2602
+          },
+          "per_pool_value_columns": [
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        },
+        "Sheet 2": {
+          "n_rows": 838,
+          "regulation": {
+            "UP": 838
+          },
+          "per_pool_value_columns": [
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        },
+        "Sheet 3": {
+          "n_rows": 2497,
+          "regulation": {
+            "Down": 2497
+          },
+          "per_pool_value_columns": [
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        },
+        "Sheet 4": {
+          "n_rows": 445,
+          "regulation": {
+            "Down": 445
+          },
+          "per_pool_value_columns": [
+            "SW_0_1",
+            "SW_0_2",
+            "SW_0_3",
+            "SW_12_1",
+            "SW_12_2",
+            "SW_12_3",
+            "ERK_0_1",
+            "ERK_0_2",
+            "ERK_0_3",
+            "ERK_12_1",
+            "ERK_12_2",
+            "ERK_12_3"
+          ]
+        }
+      }
+    }
+  },
+  "outputs_sha256": {
+    "data/studies/WANG2026_ERK_HEAT/run_order.tsv": "40678c138663f82a27af61ed602718be3e23719d9745970fab0d80f5f3f48961"
+  }
+}
