@@ -123,6 +123,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_diploid_prolonged_heat_vs_baseline_dge_standardized.tsv"
@@ -142,6 +143,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_diploid_acute_heat_12h_vs_baseline_dge_standardized.tsv"
@@ -160,6 +162,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_triploid_prolonged_heat_vs_baseline_dge_standardized.tsv"
@@ -178,6 +181,7 @@ comparisons:
     phenotype_direction: "not_applicable"
     phenotype_unit: null
     resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
     results_file: "data/studies/LI2022_HEAT_PLOIDY/LI2022_HEAT_PLOIDY_triploid_acute_heat_12h_vs_baseline_dge_standardized.tsv"
