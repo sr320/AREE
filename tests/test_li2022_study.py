@@ -140,6 +140,7 @@ def test_every_comparison_is_exposure_only(comparisons):
         assert comp["stressor_standardized"] == "temperature"
         assert comp["phenotype"] == "thermal_tolerance"
         assert comp["resilience_classification"] == "exposure_only"
+        assert comp["contrast_type"] == "exposure_response"
         assert comp["phenotype_direction"] == "not_applicable"
         assert comp["tissue"] == "gill"
 
