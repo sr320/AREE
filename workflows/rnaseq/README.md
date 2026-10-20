@@ -123,6 +123,7 @@ evidence-record-level `quality_flags` from study/comparison metadata).
 | Standardized output | `STANDARDIZE_OUTPUT` validates/reshapes DESeq2 output | `STANDARDIZE_OUTPUT` validates/reshapes the provided table |
 | Sample exclusion | `--exclude_samples`, recorded in the manifest | n/a |
 | Covariates | `--covariates` (e.g. `family`), fitted design recorded in the manifest | n/a |
+| Gene exclusion | `--exclude_genes` (e.g. rRNA in total-RNA libraries), counts recorded in the manifest | n/a |
 | Viral read QC | optional, `--viral_reference` | n/a |
 
 Both modes converge on the same standardized TSV schema, written to
@@ -241,6 +242,62 @@ infected animals; it cannot put reads into an uninfected one. For OsHV-1,
 `config/CALLA2026_OSHV.config` points at RefSeq `NC_005881.2`
 (`data/reference/pathogens/OsHV-1/`, with a provenance sidecar).
 
+## Gene exclusion for total-RNA libraries (`raw_reanalysis` only)
+
+**`--exclude_genes`** takes a file of `gene_id`s, one per line, with `#`
+starting a comment. Those genes are removed from the tximport matrices before
+anything else is estimated: pseudo-bulk sums, size factors, dispersions and
+the contrast. The use it was written for is rRNA in libraries that were
+neither rRNA-depleted nor poly-A selected. In `ZHONG2025_PONV1_MORTALITY`
+(field metatranscriptomes), rRNA took 65–97% of gene counts, and its share
+differed between farm and wild animals.
+
+What it does and does not change was measured on that study. Three farm and
+three wild mantle libraries were run at 1 M read pairs each, with and without
+the rRNA list:
+
+- **Size factors are unchanged** (every ratio 1.00), and so are fold
+  changes for the other genes (r = 1.00). DESeq2's median-of-ratios takes
+  a median over thousands of genes, and the six rRNA genes Salmon reports
+  (it collapses the near-identical rRNA copies) cannot move it. Without the
+  option, normalization is not biased.
+- **rRNA genes stop appearing as results.** Four rRNA genes were in the
+  uncorrected result table (499 vs 496 genes at padj < 0.05). They would
+  otherwise reach the evidence table as "differentially expressed genes".
+- **The rRNA share per library is recorded** (here 73–97%). It is the
+  number to read when an arm's libraries look different.
+
+Use it for any total-RNA study. It is a cleanliness and QC step, not a
+correction to normalization.
+
+Build the list from the annotation the run uses, so the ids match `tx2gene`:
+
+```bash
+python scripts/list_genes_by_biotype.py \
+    --gtf data/reference/GCF_963853765.1/genomic.gtf --biotype rRNA \
+    --tx2gene data/reference/GCF_963853765.1/tx2gene.tsv \
+    --out data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt
+```
+
+The list for the current reference is committed:
+`data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt`, 68 genes
+with NCBI `gene_biotype "rRNA"`. Only those present in the quantification are
+dropped: Salmon's index collapses identical sequences, so many rRNA copies
+have no row of their own. The manifest's `n_excluded` counts the ones that
+did. A list that matches no quantified gene stops
+the run, so a list built for another annotation cannot silently do nothing.
+The manifest records the path under `parameters.exclude_genes`. Under
+`deseq2_design.exclude_genes` it records the file's name and MD5, how many
+genes were listed and dropped, and the min, median and max share of each
+library's counts they held. That share is QC worth reading: a large
+difference between arms means the arms' libraries differ in composition, not
+just in depth.
+
+Excluded genes get no result rows, so they never reach the evidence table.
+Use this for technical contaminants of the count matrix (rRNA,
+mitochondrial rRNA, spike-ins), never to remove genes because of their
+results.
+
 ## Several comparisons of one study
 
 Run each registered comparison as its own `nextflow run`, one after another,
@@ -295,7 +352,7 @@ aree harmonize --study GIGAS_HEAT01 \
 
 which calls `src/harmonize/rnaseq.py::harmonize_rnaseq()` to convert the
 table into evidence records (`schemas/evidence.schema.json`) joined against
-the study's registry entry (`registry/studies/GIGAS_HEAT01.yaml`) for
+the study's registry entry (`registry/demo_studies/GIGAS_HEAT01.yaml`) for
 tissue/life-stage/stressor/phenotype/sample-size context. The workflow
 manifest JSON is a separate, complementary artifact — it documents how the
 TSV was produced (or, in harmonization mode, that it was *not* independently

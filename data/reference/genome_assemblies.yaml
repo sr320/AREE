@@ -5,6 +5,13 @@
 # that, so a typo or an undocumented assembly is caught at registration rather
 # than surfacing later as evidence that cannot be compared.
 #
+# `metabolite_gene_links` (optional) is the metabolite -> enzyme gene link table
+# that metabolomics evidence on this species is linked through for the
+# `metabolite_linked_convergence` tier. It is built locally by
+# `aree build-metabolite-links` and NOT committed (KEGG terms); until it is built,
+# real candidates report `link_table_status: not_built`. See
+# docs/metabolite_gene_links.md.
+#
 # `identifier_crosswalk` is the crosswalk that evidence from studies on this
 # assembly is standardized against (repo-relative path, or null if none has been
 # built yet). Harmonizing a real study reads it from here, so a mussel study and
@@ -34,6 +41,7 @@ assemblies:
     annotation_release: "GCF_963853765.1-RS_2024_06"
     annotation_release_date: "2024-06-20"
     identifier_crosswalk: "data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    metabolite_gene_links: "data/mappings/metabolite_gene_links_mgigas.tsv"
     verified: "2026-08-28"
     notes: >-
       Current NCBI reference genome for the Pacific oyster. AREE's identifier
@@ -52,6 +60,7 @@ assemblies:
     is_ncbi_reference: false
     annotation_release: null
     identifier_crosswalk: "data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv"
+    metabolite_gene_links: "data/mappings/metabolite_gene_links_mgigas.tsv"
     verified: "2026-08-28"
     notes: >-
       The assembly most C. gigas studies published before ~2024 were mapped
@@ -137,6 +146,27 @@ assemblies:
       Scaffold-level primary assembly. Gene-level evidence is unaffected;
       methylation regions on it may not lift over to a later
       chromosome-level assembly.
+
+  - assembly_id: "MCOR1.1"
+    species: "Mytilus coruscus"
+    ncbi_taxid: 42192
+    ncbi_assembly_accession: "GCA_011752425.2"
+    genbank_accession: "GCA_011752425.2"
+    assembly_level: "Scaffold"
+    submitter: "Ningbo University"
+    is_ncbi_reference: false
+    annotation_release: "GenBank annotation submitted by Ningbo University"
+    annotation_release_date: "2020-07-08"
+    identifier_crosswalk: "data/reference/crosswalk/mcoru_gene_id_crosswalk.tsv"
+    verified: "2026-10-17"
+    notes: >-
+      GenBank-only (GCA_) assembly: NCBI has not annotated this species, so
+      there are no NCBI Gene records and no RefSeq reference bundle. The
+      authors' annotation (58,540 genes, 64,639 proteins, locus tags MCOR_<n>)
+      is the only gene model set, and the crosswalk is built from it by the
+      GFF route with a recorded DIAMOND search against Swiss-Prot. Not in the
+      orthogroup run yet. Two later chromosome-level assemblies
+      (GCA_017311375.1, GCA_059745995.1) carry no annotation on NCBI.
 
   - assembly_id: "MADL_Memer_1"
     species: "Mercenaria mercenaria"

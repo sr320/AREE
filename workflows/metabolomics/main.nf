@@ -4,7 +4,8 @@
  * ------------------------------------
  * STATUS: processed_results_harmonization executes end to end against the
  * bundled demo and is covered by current-version CI. The raw feature-table
- * path and all declared containers remain unexecuted; see README.md.
+ * path runs natively (-profile local) on a CI fixture and on the targeted
+ * panel of DUPERRET2025_POMS_STARVE; declared containers remain unpulled.
  *
  * Implements CLAUDE.md Layer 2.D (Metabolomics):
  *   metabolite feature table intake -> annotation confidence tracking ->
@@ -109,14 +110,19 @@ workflow {
             comparison_id_ch,
             ANNOTATION_CONFIDENCE.out.annotated_table.map { it[2] },
             sample_sheet_ch,
-            Channel.value(params.metabolomics.qc_cv_threshold)
+            Channel.value(params.metabolomics.qc_cv_threshold),
+            Channel.value(params.metabolomics.normalization),
+            Channel.value(params.metabolomics.detection_limit == null ? 'null' : params.metabolomics.detection_limit)
         )
 
         DIFFERENTIAL_ABUNDANCE(
             study_id_ch,
             comparison_id_ch,
             NORMALIZE_QC.out.normalized_table.map { it[2] },
-            sample_sheet_ch
+            sample_sheet_ch,
+            Channel.value(params.metabolomics.replicate_unit ?: ''),
+            Channel.value(params.metabolomics.min_detected_per_arm),
+            Channel.value(params.metabolomics.acquisition)
         )
 
         PATHWAY_MAPPING(
@@ -131,6 +137,7 @@ workflow {
         qc_json_for_manifest = FEATURE_TABLE_INTAKE.out.intake_qc
             .mix(ANNOTATION_CONFIDENCE.out.annotation_qc)
             .mix(NORMALIZE_QC.out.normalization_qc)
+            .mix(DIFFERENTIAL_ABUNDANCE.out.da_qc)
             .mix(PATHWAY_MAPPING.out.mapping_qc)
             .collect()
 

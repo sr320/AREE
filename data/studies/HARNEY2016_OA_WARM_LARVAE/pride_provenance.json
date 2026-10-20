@@ -1,0 +1,149 @@
+{
+  "study_id": "HARNEY2016_OA_WARM_LARVAE",
+  "accession": "PXD002316",
+  "repository": "PRIDE",
+  "license": "EBI terms of use",
+  "submission_type": "COMPLETE",
+  "date_retrieved": "2026-10-17",
+  "generated_by": "data/studies/HARNEY2016_OA_WARM_LARVAE/build_provenance.py",
+  "source_urls": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD002316",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD002316/files/all",
+    "https://archimer.ifremer.fr/doc/00299/40985/40076.pdf",
+    "https://rest.uniprot.org/uniprotkb/<accession>?format=json"
+  ],
+  "pride_reference": "Harney E, Artigaud S, Le Souchu P, Miner P, Corporeau C, Essid H, Pichereau V, Nunes FLD. Non-additive effects of ocean acidification in combination with warming on the larval proteome of the Pacific oyster, Crassostrea gigas. J Proteomics. 2016 135:151-161",
+  "pride_instrument": [
+    "LTQ Orbitrap"
+  ],
+  "pride_description_spot_count": "22 differentially expressed spots, 18 proteins (pre-revision; the paper reports 12 spots at P < 0.02)",
+  "pride_files_by_category": {
+    "OTHER": 22,
+    "PEAK": 44,
+    "RAW": 22,
+    "RESULT": 22
+  },
+  "pride_spot_runs": [
+    "266_178",
+    "266_182",
+    "266_183",
+    "266_188",
+    "266_196",
+    "266_231",
+    "266_239",
+    "266_241",
+    "266_25",
+    "266_268",
+    "266_27",
+    "266_282",
+    "266_325",
+    "266_392",
+    "266_464",
+    "266_478",
+    "266_479b",
+    "266_527",
+    "266_609",
+    "266_99",
+    "266_X",
+    "266_Z"
+  ],
+  "n_pride_spot_runs": 22,
+  "quantitative_data_deposited": false,
+  "input_sha256": {
+    "archimer_40076.pdf (accepted manuscript)": "f9196c45df49632afeab48db29d87275cee50bd2ccd10d0adc1aec76565e27a2"
+  },
+  "paper_spots": {
+    "1": {
+      "annotation": "Matrilin-2",
+      "uniprot_accession": "K1QDH1",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "2": {
+      "annotation": "78 kDa glucose-regulated protein (GRP78)",
+      "uniprot_accession": "K1QIR8",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "3": {
+      "annotation": "Protein disulfide-isomerase 2 (PDI 2)",
+      "uniprot_accession": "K1Q6X5",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "4": {
+      "annotation": "ATP synthase subunit b",
+      "uniprot_accession": "K1RWW5",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "5": {
+      "annotation": "Severin",
+      "uniprot_accession": "K1PE57",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "6": {
+      "annotation": "Severin",
+      "uniprot_accession": "K1PE57",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "7": {
+      "annotation": "Uncharacterised; nearest characterised: shell matrix protein G9MBW9 (Pinctada maxima)",
+      "uniprot_accession": "K1QWT8",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "8": {
+      "annotation": "Actin-2",
+      "uniprot_accession": "K1QWP8",
+      "status": "active",
+      "entry_type": "UniProtKB unreviewed (TrEMBL)",
+      "ncbi_gene_ids": [
+        "105340468"
+      ]
+    },
+    "9": {
+      "annotation": "Glyceraldehyde-3-phosphate dehydrogenase (GAPDH)",
+      "uniprot_accession": "K1Q350",
+      "status": "active",
+      "entry_type": "UniProtKB unreviewed (TrEMBL)",
+      "ncbi_gene_ids": [
+        "105340512"
+      ]
+    },
+    "10": {
+      "annotation": "Superoxide dismutase (SOD)",
+      "uniprot_accession": "K1QGQ5",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "11": {
+      "annotation": "Vitellogenin-6",
+      "uniprot_accession": "K1QNA2",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    },
+    "12": {
+      "annotation": "Uncharacterised; nearest characterised: USP-like protein isoform 2 H9LJ92 (Crassostrea ariakensis)",
+      "uniprot_accession": "K1QVF8",
+      "status": "deleted",
+      "reason": "Not part of a reference proteome",
+      "ncbi_gene_ids": []
+    }
+  },
+  "uniprot_summary": {
+    "deleted": 9,
+    "active": 2
+  }
+}

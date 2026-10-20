@@ -1,0 +1,96 @@
+{
+  "study_id": "VALDIVIESO2025_POMS_RS_EMSEQ",
+  "bioproject": "PRJEB81880",
+  "date_generated": "2026-10-18",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB81880&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format,experiment_title",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "tissue_code",
+    "phenotype_class",
+    "time"
+  ],
+  "n_runs": 40,
+  "n_samples": 40,
+  "library_strategies": [
+    "Bisulfite-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "G_R_T0": 5,
+    "G_R_T1": 5,
+    "G_S_T0": 5,
+    "G_S_T1": 5,
+    "M_R_T0": 5,
+    "M_R_T1": 5,
+    "M_S_T0": 5,
+    "M_S_T1": 5
+  },
+  "min_group_size": 5,
+  "total_fastq_bytes": 624864284369,
+  "fastq_sources": {
+    "fastq_ftp": 40,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/VALDIVIESO2025_POMS_RS_EMSEQ/samplesheet.tsv": "8e2c4ed43c33b80d904a50fb964b8b259f5e9f26ea9419daa8edb3036ec0ec18",
+    "data/studies/VALDIVIESO2025_POMS_RS_EMSEQ/fastq_manifest.tsv": "6e6ed4fc9d8c0386211a968e538244f6822c7a97fa4976cc0c7018074d3a5bdd",
+    "data/studies/VALDIVIESO2025_POMS_RS_EMSEQ/methylkit_samplesheet.csv": "7b9be2c3f23d03b67b5accf13537417495077a2826a0e6cebb995998f321d95d"
+  },
+  "run_labels": {
+    "field": "experiment_title",
+    "pattern": "(?P<population>GT[1-5])_(?P<code>\\d{2})_(?P<time>T[01])_(?P<tissue_code>[GM])_(?P<phenotype_class>[RS])$",
+    "labels": {
+      "ERR13913462": "GT1_09_T0_G_R",
+      "ERR13913463": "GT1_09_T1_G_R",
+      "ERR13913464": "GT2_18_T0_G_R",
+      "ERR13913465": "GT2_18_T1_G_R",
+      "ERR13913466": "GT3_16_T0_G_R",
+      "ERR13913467": "GT3_16_T1_G_R",
+      "ERR13913468": "GT4_21_T0_G_R",
+      "ERR13913469": "GT4_21_T1_G_R",
+      "ERR13913470": "GT5_06_T0_G_R",
+      "ERR13913471": "GT5_06_T1_G_R",
+      "ERR13913472": "GT1_16_T0_G_S",
+      "ERR13913473": "GT1_16_T1_G_S",
+      "ERR13913474": "GT2_15_T0_G_S",
+      "ERR13913475": "GT2_15_T1_G_S",
+      "ERR13913476": "GT3_14_T0_G_S",
+      "ERR13913477": "GT3_14_T1_G_S",
+      "ERR13913478": "GT4_21_T0_G_S",
+      "ERR13913479": "GT4_21_T1_G_S",
+      "ERR13913480": "GT5_17_T0_G_S",
+      "ERR13913481": "GT5_17_T1_G_S",
+      "ERR13913482": "GT1_09_T0_M_R",
+      "ERR13913483": "GT1_09_T1_M_R",
+      "ERR13913484": "GT2_18_T0_M_R",
+      "ERR13913485": "GT2_18_T1_M_R",
+      "ERR13913486": "GT3_16_T0_M_R",
+      "ERR13913487": "GT3_16_T1_M_R",
+      "ERR13913488": "GT4_21_T0_M_R",
+      "ERR13913489": "GT4_21_T1_M_R",
+      "ERR13913490": "GT5_06_T0_M_R",
+      "ERR13913491": "GT5_06_T1_M_R",
+      "ERR13913492": "GT1_16_T0_M_S",
+      "ERR13913493": "GT1_16_T1_M_S",
+      "ERR13913494": "GT2_15_T0_M_S",
+      "ERR13913495": "GT2_15_T1_M_S",
+      "ERR13913496": "GT3_14_T0_M_S",
+      "ERR13913497": "GT3_14_T1_M_S",
+      "ERR13913498": "GT4_21_T0_M_S",
+      "ERR13913499": "GT4_21_T1_M_S",
+      "ERR13913500": "GT5_17_T0_M_S",
+      "ERR13913501": "GT5_17_T1_M_S"
+    }
+  },
+  "methylkit_samplesheet": {
+    "control_level": "G_S_T0",
+    "treatment_level": "G_R_T0",
+    "n_control": 5,
+    "n_treatment": 5
+  }
+}

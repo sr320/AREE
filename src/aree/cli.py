@@ -5,6 +5,7 @@ See README.md for the full command reference.
 from __future__ import annotations
 
 import datetime
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -78,9 +79,10 @@ def register_study_cmd(path, allow_update):
 
 
 @main.command("list-studies")
-def list_studies_cmd():
+@click.option("--include-simulated", is_flag=True, help="Also list the simulated demo studies.")
+def list_studies_cmd(include_simulated):
     """List all studies currently in the registry."""
-    rows = list_studies()
+    rows = list_studies(include_simulated=include_simulated)
     if not rows:
         click.echo("No studies in the index yet. Run `aree build-registry` to build it from registry/studies/.")
         return
@@ -94,7 +96,7 @@ def list_studies_cmd():
 @click.option("--simulated", "which", flag_value="simulated", help="Only simulated (demo) studies.")
 @click.option("--real", "which", flag_value="real", help="Only real studies.")
 def study_ids_cmd(which):
-    """Print registered study_ids, one per line, read from registry/studies/.
+    """Print study_ids, one per line, read from registry/studies/ and registry/demo_studies/.
 
     `aree study-ids --simulated` is the demo study list the Makefile, CI and the
     Pages build iterate over.
@@ -175,7 +177,7 @@ def start_study_cmd(accession, study_id, worktree_dir, registered_by, machine, n
 @click.option("--base", default="origin/main", show_default=True, help="Ref the PR merges into.")
 def check_study_scope_cmd(branch, base):
     """Fail if a study PR changes files its study does not own (run by CI on study/ branches)."""
-    from common import STUDIES_DIR, load_yaml
+    from common import load_yaml, study_yaml_path
     from intake.study_claims import parse_branch
 
     diff = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True,
@@ -185,7 +187,7 @@ def check_study_scope_cmd(branch, base):
         sys.exit(1)
     changed = [p for p in diff.stdout.splitlines() if p]
     parsed = parse_branch(branch)
-    yaml_path = STUDIES_DIR / f"{parsed[1]}.yaml" if parsed else None
+    yaml_path = study_yaml_path(parsed[1]) if parsed else None
     study = load_yaml(yaml_path) if yaml_path and yaml_path.exists() else None
     errors, warnings = check_study_scope(branch, changed, study, registered_on(base, REPO_ROOT))
     for w in warnings:
@@ -382,8 +384,40 @@ def harmonize_cmd(study_id, input_path, comparison_id, date_generated):
 @main.command("meta-analyze")
 @click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
 @click.option("--feature-type", default=None, help="Feature type to filter on, e.g. gene, protein (default: all).")
-def meta_analyze_cmd(phenotype, feature_type):
+@click.option("--level", type=click.Choice(["gene", "orthogroup"]), default="gene", show_default=True,
+              help="gene: pool within each species. orthogroup: pool species' gene-level estimates "
+                   "across species through orthogroups (single-copy orthogroups only by default).")
+@click.option("--include-multi-copy", is_flag=True,
+              help="With --level orthogroup, also pool multi-copy orthogroups where each species has "
+                   "evidence for exactly one gene. Off by default: paralogs are not like for like.")
+def meta_analyze_cmd(phenotype, feature_type, level, include_multi_copy):
     """Run a random-effects meta-analysis over the harmonized evidence table."""
+    if level == "orthogroup":
+        from meta_analysis.run import write_orthogroup_meta_analysis
+
+        try:
+            result, _species, summary, out_path = write_orthogroup_meta_analysis(
+                phenotype, feature_type, include_multi_copy=include_multi_copy)
+        except (FileNotFoundError, ValueError) as exc:
+            click.echo(click.style(str(exc), fg="red"))
+            sys.exit(1)
+        click.echo(f"Orthogroup groups seen: {summary['orthogroup_groups']}; pooled across species: "
+                   f"{summary['pooled']}; one species only: {summary['single_species']}; set aside: "
+                   f"{summary['multi_copy_excluded']} multi-copy, {summary['paralogs_in_species_excluded']} "
+                   f"with paralogs in one species, {summary['not_in_active_run_excluded']} not in the "
+                   "active orthogroup run.")
+        if len(result) == 0:
+            click.echo("No orthogroup has gene-level estimates from two or more species.")
+            return
+        click.echo(tabulate(
+            result[["orthogroup_id", "copy_class", "phenotype", "n_species", "k_studies_by_species",
+                    "pooled_effect", "p_value", "adjusted_p_value", "i_squared_between_species",
+                    "meets_replication_gate"]].head(20),
+            headers="keys", showindex=False, floatfmt=".3g",
+        ))
+        click.echo(f"\nFull results ({len(result)} rows) written to {out_path}; per-species "
+                   "estimates beside it. meets_replication_gate: at least two species each with k >= 2.")
+        return
     try:
         result, out_path = write_meta_analysis(phenotype, feature_type)
     except FileNotFoundError as exc:
@@ -437,6 +471,43 @@ def build_evidence_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards)
             click.echo(f"  {tier}: {tiers[tier]}")
 
 
+@main.command("build-cross-species-cards")
+@click.option("--phenotype", default=None, help="Phenotype ontology term id to filter on (default: all).")
+@click.option("--feature-type", default=None, help="Feature type to filter on (default: all).")
+@click.option("--max-adjusted-p", default=DEFAULT_MAX_ADJUSTED_P, show_default=True, type=float,
+              help="Render a card only when the pooled cross-species adjusted p, or any one species' "
+                   "gene-level adjusted p, is at or below this value. Every row is still listed in "
+                   "reports/evidence_cards/cross_species/candidates.tsv.")
+@click.option("--all-cards", is_flag=True, help="Render a card for every orthogroup row.")
+@click.option("--include-multi-copy", is_flag=True,
+              help="Also pool multi-copy orthogroups where each species has evidence for exactly one gene.")
+def build_cross_species_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards, include_multi_copy):
+    """Tier orthogroup-level (cross-species) results and write cross-species evidence cards."""
+    from reporting.cross_species_cards import TIER_ORDER as CROSS_TIERS
+    from reporting.cross_species_cards import build_cross_species_cards_report
+
+    try:
+        report = build_cross_species_cards_report(
+            phenotype=phenotype, feature_type=feature_type, max_adjusted_p=max_adjusted_p,
+            all_cards=all_cards, include_multi_copy=include_multi_copy)
+    except (FileNotFoundError, ValueError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    if report.n_candidates == 0:
+        click.echo("No orthogroup has gene-level estimates from two or more species, so there are no "
+                   "cross-species candidates. Harmonize a study of a second species first.")
+        return
+    click.echo(click.style(
+        f"Tiered {report.n_candidates} cross-species rows ({report.candidates_path}); "
+        f"wrote {len(report.index)} cards to {report.candidates_path.parent}/", fg="green"))
+    counts = {}
+    for row in report.index:
+        counts[row["tier"]] = counts.get(row["tier"], 0) + 1
+    for tier in CROSS_TIERS:
+        if tier in counts:
+            click.echo(f"  {tier}: {counts[tier]}")
+
+
 @main.command("top-candidates")
 @click.option("--n", "n", default=10, show_default=True, type=int,
               help="Number of top-ranked candidates to show per phenotype.")
@@ -445,10 +516,13 @@ def build_evidence_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards)
               help="Path to a ranked candidates.tsv (from `aree build-evidence-cards`).")
 @click.option("--out", "out_path", default=DEFAULT_OUT_PATH, show_default=True, type=click.Path(path_type=Path),
               help="Where to write the Markdown summary.")
-def top_candidates_cmd(n, candidates_path, out_path):
+@click.option("--include-simulated", is_flag=True,
+              help="Also rank candidates from the simulated demo studies (left out by default).")
+def top_candidates_cmd(n, candidates_path, out_path, include_simulated):
     """Summarize the top-N ranked candidates per phenotype from an existing candidates.tsv."""
     try:
-        out = build_top_candidates_summary(n=n, candidates_path=candidates_path, out_path=out_path)
+        out = build_top_candidates_summary(n=n, candidates_path=candidates_path, out_path=out_path,
+                                           include_simulated=include_simulated)
     except FileNotFoundError as exc:
         click.echo(click.style(str(exc), fg="red"))
         sys.exit(1)
@@ -458,14 +532,16 @@ def top_candidates_cmd(n, candidates_path, out_path):
 @main.command("build-dashboard")
 @click.option("--out", "out_path", default=DEFAULT_DASHBOARD_PATH, show_default=True,
               type=click.Path(path_type=Path), help="Where to write the dashboard JSON.")
-def build_dashboard_cmd(out_path):
+@click.option("--include-simulated", is_flag=True,
+              help="Also show the simulated demo studies and their evidence (left out by default).")
+def build_dashboard_cmd(out_path, include_simulated):
     """Summarize registry, pipeline, and findings state into docs/dashboard/data.json.
 
     Reads whatever the pipeline has produced so far; missing outputs are reported
     as missing on the page rather than hidden. `quarto render docs` then renders
     docs/index.qmd (the site home page) from it.
     """
-    data = build_dashboard_data(out_path)
+    data = build_dashboard_data(out_path, include_simulated=include_simulated)
     present = data["artifacts_present"]
     missing = [k for k, v in present.items() if not v]
     k = data["kpis"]
@@ -478,6 +554,44 @@ def build_dashboard_cmd(out_path):
         click.echo(click.style(f"Pipeline outputs not found: {', '.join(missing)} "
                                "(run `make demo` to populate them)", fg="yellow"))
     click.echo(click.style(f"Wrote dashboard data to {out_path}", fg="green"))
+
+
+@main.command("export-site-data")
+@click.option("--out", "out_dir", default=None, type=click.Path(path_type=Path),
+              help="Directory for the Parquet tables (default: docs/explore/data).")
+@click.option("--include-simulated", is_flag=True,
+              help="Also export the simulated demo studies and their evidence (left out by default).")
+def export_site_data_cmd(out_dir, include_simulated):
+    """Export evidence, candidates and studies as Parquet for the site's Explore page.
+
+    docs/explore.qmd queries them with DuckDB-WASM in the browser. Needs pyarrow
+    (pip install -e ".[site]").
+    """
+    from query.site_export import DEFAULT_OUT_DIR, export_site_data
+
+    out_dir = out_dir or DEFAULT_OUT_DIR
+    meta = export_site_data(out_dir, include_simulated=include_simulated)
+    for name, table in meta["tables"].items():
+        click.echo(f"{name}: {table['total']} rows ({table['real']} real, {table['simulated']} simulated)")
+    missing = [k for k, v in meta["artifacts"].items() if not v["present"]]
+    if missing:
+        click.echo(click.style(f"Pipeline outputs not found: {', '.join(missing)} "
+                               "(run `make demo` to populate them)", fg="yellow"))
+    click.echo(click.style(f"Wrote site data to {out_dir}", fg="green"))
+
+
+@main.command("mcp")
+@click.option("--transport", type=click.Choice(["stdio", "streamable-http"]), default="stdio",
+              show_default=True, help="stdio for desktop clients; streamable-http to serve over HTTP.")
+def mcp_cmd(transport):
+    """Serve AREE's studies, evidence and candidates to MCP clients (e.g. Claude).
+
+    Read-only. Needs the mcp extra (Python >= 3.10): pip install -e ".[mcp]".
+    See docs/querying_aree.md for client setup.
+    """
+    from query.mcp_server import run
+
+    run(transport)
 
 
 @main.command("fetch-reference")
@@ -640,12 +754,37 @@ def build_orthogroups_cmd(orthofinder_bin, threads, run_id, work_dir, from_resul
 @click.option("--uniprot", default=None, type=click.Path(exists=True),
               help="Pre-downloaded UniProt TSV export.")
 @click.option("--download", is_flag=True, help="Force re-download of reference sources.")
-def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, download):
-    """Build a real identifier crosswalk from NCBI Gene and UniProtKB.
+@click.option("--from-gff", "from_gff", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route (WP7), for a genome with no NCBI Gene records: the authors' GFF3.")
+@click.option("--proteins", "proteins", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route: the authors' protein FASTA (headers = protein, mRNA or gene IDs).")
+@click.option("--uniprot-fasta", "uniprot_fasta", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route: UniProtKB FASTA to search (e.g. uniprot_sprot.fasta.gz of one release).")
+@click.option("--uniprot-release", default=None,
+              help="GFF route: the UniProtKB release searched, as its reldate.txt states it.")
+@click.option("--uniprot-url", default=None, help="GFF route: where the UniProtKB FASTA was downloaded from.")
+@click.option("--diamond", default="diamond", show_default=True, help="GFF route: DIAMOND executable.")
+@click.option("--threads", default=4, show_default=True, type=int, help="GFF route: DIAMOND threads.")
+@click.option("--hits", "hits", default=None, type=click.Path(exists=True, path_type=Path),
+              help="GFF route: reuse a DIAMOND hits table (outfmt 6 in the builder's field order) "
+                   "instead of running DIAMOND; thresholds are re-applied.")
+@click.option("--workdir", default=None, type=click.Path(path_type=Path),
+              help="GFF route: where the query FASTA, DIAMOND database and hits go "
+                   "(default: data/reference/crosswalk/_sources/<slug>_gff/).")
+def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, download, from_gff, proteins,
+                        uniprot_fasta, uniprot_release, uniprot_url, diamond, threads, hits, workdir):
+    """Build a real identifier crosswalk from NCBI Gene and UniProtKB, or from a GFF.
 
-    Downloads reference data from public sources (~230 MB streamed from NCBI) and
-    writes a crosswalk plus a JSON provenance sidecar to data/reference/crosswalk/.
-    The species and its reference assembly must already be registered (see
+    NCBI route (default): downloads reference data from public sources (~230 MB
+    streamed from NCBI) and writes a crosswalk plus a JSON provenance sidecar to
+    data/reference/crosswalk/.
+
+    GFF route (--from-gff, WP7): for a genome NCBI has not annotated. Genes come
+    from the authors' GFF3, anchored on their gene IDs; UniProt accessions come
+    from a recorded DIAMOND blastp search with explicit thresholds, so a UniProt
+    lookup resolves 'inferred'. See docs/identifier_mapping.md.
+
+    The species and its assembly must already be registered (see
     docs/adding_a_species.md), so that provenance names the right annotation.
     """
     from common import load_assemblies, load_vocab
@@ -660,6 +799,10 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
     if term is None:
         fail(f"taxid {taxid} is not in registry/controlled_vocabularies/species.yaml; "
              "register the species first (docs/adding_a_species.md).")
+    if from_gff is not None:
+        _build_gff_crosswalk(term, taxid, slug, organism, assembly, from_gff, proteins, uniprot_fasta,
+                             uniprot_release, uniprot_url, diamond, threads, hits, workdir, fail)
+        return
     reference = [a for a in load_assemblies().values()
                  if a.get("ncbi_taxid") == taxid and a.get("is_ncbi_reference")]
     if assembly is None:
@@ -710,6 +853,95 @@ def build_crosswalk_cmd(taxid, slug, organism, assembly, gene_info, uniprot, dow
     click.echo("assemblies in data/reference/genome_assemblies.yaml:")
     click.echo(click.style(f"  identifier_crosswalk: \"{shown}\"", fg="cyan"))
 
+
+
+def _build_gff_crosswalk(term, taxid, slug, organism, assembly, gff, proteins, uniprot_fasta, uniprot_release,
+                         uniprot_url, diamond, threads, hits, workdir, fail):
+    """The GFF route of `aree build-crosswalk` (WP7)."""
+    from common import assembly_crosswalk_path, load_assemblies
+    from harmonize.identifiers import crosswalk_taxid
+    from mappings.build_crosswalk import CROSSWALK_DIR, SOURCES_DIR
+    from mappings.gff_crosswalk import build as build_gff
+
+    if slug is None:
+        fail("--slug is required with --from-gff.")
+    missing = [n for n, v in (("--proteins", proteins), ("--uniprot-fasta", uniprot_fasta),
+                              ("--uniprot-release", uniprot_release)) if v is None]
+    if missing:
+        fail(f"--from-gff also needs {', '.join(missing)}.")
+    out_path = CROSSWALK_DIR / f"{slug}_gene_id_crosswalk.tsv"
+    if out_path.exists() and crosswalk_taxid(out_path) not in (None, taxid):
+        fail(f"{out_path} was built for taxid {crosswalk_taxid(out_path)}; choose a different --slug.")
+    if assembly is None:
+        records = [a for a in load_assemblies().values() if a.get("ncbi_taxid") == taxid
+                   and assembly_crosswalk_path(a) == out_path]
+        if not records:
+            fail(f"no assembly of taxid {taxid} in data/reference/genome_assemblies.yaml registers "
+                 f"identifier_crosswalk {out_path.relative_to(REPO_ROOT)}; register it, or pass --assembly.")
+        rec = records[0]
+        assembly = (f"{rec['ncbi_assembly_accession']} ({rec['assembly_id']}), "
+                    f"{rec.get('annotation_release')}, {rec.get('annotation_release_date')}")
+    if organism is None:
+        organism = f"{term['scientific_name']}, {term['label']}"
+    try:
+        path = build_gff(gff=gff, proteins=proteins, uniprot_fasta=uniprot_fasta, uniprot_release=uniprot_release,
+                         uniprot_url=uniprot_url, taxid=taxid, organism=organism, annotation=assembly,
+                         out_dir=CROSSWALK_DIR, slug=slug, workdir=workdir or SOURCES_DIR / f"{slug}_gff",
+                         diamond=diamond, threads=threads, hits_path=hits)
+    except (ValueError, FileNotFoundError) as exc:
+        fail(str(exc))
+    prov = json.loads(path.with_name(f"{path.stem}.provenance.json").read_text())
+    cov = prov["coverage"]
+    click.echo(click.style(f"Wrote {path}", fg="green"))
+    click.echo(f"{cov['genes_total']} genes; {cov['genes_with_protein']['n']} with a protein; "
+               f"{cov['with_uniprot_accession']['n']} with a UniProt hit "
+               f"({cov['with_uniprot_accession']['pct_of_genes_with_protein']}% of genes with a protein).")
+    agree = cov["author_uniprot_agreement"]
+    if agree["genes_with_both"]:
+        click.echo(f"The authors' own UniProt assignment is among our hits for {agree['pct']}% of the "
+                   f"{agree['genes_with_both']} genes that have both.")
+
+
+@main.command("build-metabolite-links")
+@click.option("--taxid", default=29159, show_default=True, type=int,
+              help="NCBI taxid; must have a KEGG organism code in mappings.build_metabolite_links.")
+@click.option("--offline", is_flag=True,
+              help="Rebuild only from cached KEGG responses in data/mappings/_sources/kegg/.")
+def build_metabolite_links_cmd(taxid, offline):
+    """Build the real metabolite -> enzyme / transporter gene link table from KEGG.
+
+    Queries KEGG only for the compounds curated in
+    data/mappings/metabolite_compound_map.tsv; transporter links come from the
+    curated data/mappings/transporter_substrates.tsv, each KO verified against
+    KEGG BRITE ko02000. Writes
+    data/mappings/metabolite_gene_links_<slug>.tsv plus a .provenance.json
+    sidecar. The output is git-ignored and must not be committed (KEGG terms).
+    See docs/metabolite_gene_links.md.
+    """
+    from mappings.build_metabolite_links import build
+    from mappings.metabolite_links import clear_caches
+
+    try:
+        path = build(taxid=taxid, offline=offline)
+    except (OSError, ValueError) as exc:
+        click.echo(click.style(str(exc), fg="red"))
+        sys.exit(1)
+    clear_caches()
+    prov = json.loads(path.with_suffix(".provenance.json").read_text())
+    cov = prov["coverage"]
+    by_type = cov["rows_by_link_type"]
+    click.echo(click.style(f"Wrote {path} ({cov['rows']} links: {by_type['enzyme']} enzyme, "
+                           f"{by_type['transporter']} transporter)", fg="green"))
+    transporters = prov["transporter_substrates"]
+    click.echo(f"  curated transporter KOs: {len(transporters['kos_used'])} in KEGG BRITE ko02000, "
+               f"{len(transporters['rejected_not_in_ko02000'])} rejected (not in ko02000), "
+               f"{len(transporters['kos_without_crg_genes'])} with no crg gene")
+    click.echo(f"  compounds with links: {cov['compounds_with_links']} of {cov['compounds_queried']} queried"
+               f" (currency skipped: {', '.join(prov['currency_metabolites']['skipped']) or 'none'})")
+    click.echo(f"  hub compounds (not credited): {', '.join(cov['hub_compounds']) or 'none'}")
+    click.echo(f"  KEGG genes: {cov['kegg_genes_current']} current, {cov['kegg_genes_retired_remapped']} "
+               f"remapped from retired IDs, {cov['kegg_genes_unresolved']} unresolved")
+    click.echo("  Not for redistribution: do not commit this file (docs/metabolite_gene_links.md).")
 
 if __name__ == "__main__":
     main()

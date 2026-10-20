@@ -13,7 +13,9 @@
 process DMR_METHYLKIT {
     tag "${study_id}:${comparison_id}"
     label 'process_high'
-    container 'bioconductor/bioconductor_docker:RELEASE_3_18'
+    // methylKit 1.36.0 (the version of the native CIBNOR2021 runs), limma,
+    // data.table (R 4.5.2). bioconductor_docker had no methylKit.
+    container 'quay.io/biocontainers/bioconductor-methylkit:1.36.0--r45ha27e39d_0'
     publishDir "${params.outdir}/methylation/dmr", mode: params.publish_mode
 
     input:

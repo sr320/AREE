@@ -6,10 +6,11 @@
 # CC0) and the published paper, Duperret et al. 2025, iScience 29:114333
 # (PMID 41541659, open access PMC12803857).
 #
-# THE PROCESSED TABLES ARE EMPTY, as in DECICOMP2025_POMS_AGE. The four
+# THE MetaboLights TABLES ARE EMPTY, as in DECICOMP2025_POMS_AGE. The four
 # Metabolite Assignment Files list 328 metabolites but hold no abundance
-# values. Only Agilent targeted-dMRM raw files (.d, zipped) are deposited, and
-# no AREE workflow reads them. Nothing can be harmonized yet.
+# values, and the deposited raw files are Agilent targeted-dMRM .d files no
+# AREE workflow reads. The paper's Table S12 (mmc13.xlsx) does hold per-sample
+# peak areas, and the study was reanalyzed from it on 2026-10-16 (below).
 #
 # DIET IS FULLY CONFOUNDED WITH MS BATCH. On all four platforms the fed and
 # starved samples were acquired in separate runs months apart, with no
@@ -32,6 +33,31 @@
 # copy (still 0 abundance values), and the MetaboLights files API lists the
 # same four MAFs. The other three MAFs could not be re-fetched (EBI FTP
 # unreachable that day).
+#
+# REANALYZED FROM TABLE S12 (2026-10-16), QC FAILED. Table S12 ("Raw
+# metabolomic data") gives peak areas for 310 metabolites and 10 internal
+# standards (green in the sheet) in all 48 samples. The paper is CC BY-NC-ND
+# 4.0, so the table is not committed: build_feature_table.py fetches it from
+# Europe PMC, checks its SHA-256 and writes the workflow inputs
+# (table_s12_provenance.json). The 0 hpc contrast was run with the metabolomics
+# workflow in raw_reanalysis mode: internal-standard normalization within each
+# platform (the authors' own first step), 0.0001/0 placeholders as below
+# detection, families averaged within tank (3 vs 3 tanks), limma. 122 of 310
+# metabolites were detected often enough to test; 68 have padj < 0.05.
+#
+# Why it fails QC. The internal standards themselves differ by diet, i.e. by MS
+# batch: on GM the per-sample IS offset is about +0.8 log2 in fed and -0.9 in
+# starved samples, and on NUCs, which uses the same MES spike, the shift has
+# the opposite sign. Re-running with median normalization ranks metabolites
+# identically within GM, NUCs and TCA (r = 1.00) but shifts every log2FC by
+# about 1 (GM +1.14, NUCs -0.84, TCA +0.98), and on PUFAs the two disagree
+# outright (r = 0.40, mean shift 5.9). Only 61% of tested metabolites keep
+# their direction across the two normalizations (normalization_sensitivity.tsv).
+# A starved-vs-fed direction cannot be separated from the batch, and direction
+# is what an evidence record asserts. QC decision (2026-10-16, sr320): mark
+# qc_status failed, keep results_file null, do not harmonize or pool. The
+# standardized table, missingness report, manifest, report and sensitivity
+# table are committed as provenance for the decision.
 
 study_id: DUPERRET2025_POMS_STARVE
 simulated: false
@@ -65,10 +91,11 @@ data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "MetaboLights MTBLS13313 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,PUFAs_RAW,TCA_RAW}/, one per sample per platform (192 files). The four MAFs name 328 metabolites but contain no abundance values; checked 2026-10-11, and the GM MAF re-checked unchanged 2026-10-13. No metabolite has a database identifier or MSI reliability level. The authors' processed data (internal-standard normalized, IQR filtered, quantile normalized, log10 in MetaboAnalystR 4.0.0) are described in the paper but are not in MetaboLights; check the paper's supplementary tables before re-integrating raw files."
+  access_notes: "MetaboLights MTBLS13313 is public under CC0 1.0. Vendor raw files (Agilent .d, zipped) are under FILES/RAW_FILES/{GM_RAW,NUCs_RAW,PUFAs_RAW,TCA_RAW}/, one per sample per platform (192 files). The four MAFs name 328 metabolites but contain no abundance values; checked 2026-10-11, and the GM MAF re-checked unchanged 2026-10-13. No metabolite has a database identifier or MSI reliability level. The authors' processed data (internal-standard normalized, IQR filtered, quantile normalized, log10 in MetaboAnalystR 4.0.0) are not deposited. The paper's Table S12 (mmc13.xlsx, CC BY-NC-ND 4.0) has the un-normalized peak areas for all 48 samples and four platforms; it is fetched from Europe PMC (PMC12803857 supplementary files) by data/studies/DUPERRET2025_POMS_STARVE/build_feature_table.py, not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+# See the 2026-10-16 note at the top: direction is confounded with MS batch.
+qc_status: "failed"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. 48 samples = 2 families (F11N, F14R) x 2 diets
@@ -112,6 +139,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: "percent_survival_post_challenge (final mortality per family x diet: F14R 34.8% starved vs 75.5% fed; F11N 93.3% vs 100%)"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 3
     results_file: null
@@ -130,9 +158,14 @@ limitations: >
   2024, in separate runs, so the diet effect cannot be separated from batch
   or instrument drift. Internal-standard and quantile normalization reduce
   but do not remove this. AREE has no quality flag for batch confounding
-  yet; it is recorded here. (2) No usable processed data: the MAFs hold no
-  abundance values, and the raw files are vendor targeted-MRM data that no
-  AREE workflow reads. (3) Replication is 3 tanks per diet. Each sample is
+  yet; it is recorded here. The 2026-10-16 reanalysis shows the consequence:
+  the internal standards themselves shift with diet, and internal-standard and
+  median normalization disagree on the direction of 39% of tested metabolites
+  (normalization_sensitivity.tsv), so the study failed QC and is not
+  harmonized. (2) The MAFs hold no abundance values; the analyzable data are
+  the paper's Table S12 peak areas, which are not redistributable (CC BY-NC-ND
+  4.0) and are fetched by build_feature_table.py. 188 of 310 metabolites
+  were below detection in too many tanks to test (missingness report). (3) Replication is 3 tanks per diet. Each sample is
   a pool of 10 oysters, so between-oyster variance is averaged away and the
   replicate unit is the tank (replicate = tank is inferred). (4) Starvation
   is a strong physiological manipulation. Metabolite differences at 0 hpc
@@ -150,8 +183,11 @@ limitations: >
   Its 0 hpc diet contrast calls 38% of genes DE, mostly fasting response,
   and this study's metabolites will share that interpretation. (7) Targeted
   panel of about 330 metabolites
-  with no database identifiers or MSI levels in the deposit. Mapping is
-  held at unresolved.
+  with no database identifiers or MSI levels in the deposit. The
+  reanalysis records them as MSI level 2 (named by the targeted method,
+  identity not confirmed in the deposit). No metabolite maps to a gene, so
+  even a usable result would not link to DUPERRET2025_STARVE_RNASEQ's genes
+  without a metabolite-to-enzyme map.
 
 provenance:
   registered_by: sr320
@@ -174,10 +210,27 @@ provenance:
     registered (the paper's own metabolomic contrast), flagged
     meta_analysis_primary before any result was computed. Fed is the reference
     level, so positive effects mean higher in starved oysters.
+    2026-10-16 reanalysis: Table S12 (mmc13.xlsx, SHA-256
+    451eb13e2da9db56ac984ee432632af2ced6ef9fc483183c62ba38c7c7f9c61d) fetched
+    from the Europe PMC supplementary-files API (PMC's direct file link does
+    not serve the file to scripts) and converted by build_feature_table.py
+    (table_s12_provenance.json). Internal standards are the ten green rows,
+    checked against the names in the Methods. One blank cell triple (TXB3, the
+    three F11N fed 12 hpc samples) is kept missing; those samples are not in
+    the 0 hpc contrast. Workflow run on Hete with -profile local:
+    --mode raw_reanalysis --metabolomics.normalization internal_standard
+    --metabolomics.detection_limit 0.001 --metabolomics.replicate_unit tank
+    --metabolomics.acquisition targeted (min_detected_per_arm 2, the
+    default); the sample sheet maps fed to control and starved to treatment
+    and sets tank = <diet>_t<replicate>. Sensitivity: the same run with
+    --metabolomics.normalization median, compared per metabolite in
+    normalization_sensitivity.tsv. QC decision (2026-10-16, sr320): failed,
+    for the batch confounding described at the top of this file.
   source_links:
     - "https://www.ebi.ac.uk/metabolights/MTBLS13313"
     - "https://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public/MTBLS13313/"
     - "https://doi.org/10.1016/j.isci.2025.114333"
     - "https://pmc.ncbi.nlm.nih.gov/articles/PMC12803857/"
+    - "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12803857/supplementaryFiles"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86618"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"

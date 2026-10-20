@@ -1,0 +1,7 @@
+gene_id	description	48h_replicate3	48h_replicate2	48h_replicate1	6h_replicate3	6h_replicate2	6h_replicate1	0h_replicate3	0h_replicate2	0h_replicate1
+105319088	putative tyrosinase-like protein tyr-3 (shell formation, mantle edge)	15.2	0.6	0.3	0.1	0.3	0.1	1529.5	2.1	3.9
+105346498	putative per-hexamer repeat protein 5 (shell matrix)	106.4	5.7	4.9	0.1	0.2	0.1	8374.3	16	22.9
+105338611	calcium-binding protein LPS1-beta (shell matrix)	88	4.7	3.8	0	0	0.2	8135.5	13.6	30.8
+105331575	tryptase-2	30.1	1	0.9	0	0	0	2927.1	4.7	8.5
+117690964	ectin (expressed in the eight other libraries)	0	438.3	56.5	16.9	0.2	33.7	0	4.9	3
+105336253	prestin (expressed in the eight other libraries)	526.8	308.1	501.5	2760.6	2655	1240	17.4	308.7	105.6

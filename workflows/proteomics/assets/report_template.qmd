@@ -55,8 +55,24 @@ if (length(manifest$warnings) > 0) {
 ## QC metrics
 
 ```{r qc-table}
-qc <- as.data.frame(manifest$qc_metrics)
-knitr::kable(qc)
+scalar <- Filter(function(x) length(x) == 1 && !is.list(x), manifest$qc_metrics)
+knitr::kable(data.frame(metric = names(scalar), value = unlist(lapply(scalar, as.character))),
+             row.names = FALSE)
+```
+
+```{r da-qc, results='asis'}
+da <- manifest$qc_metrics$differential_abundance_qc
+if (is.null(da)) {
+  cat("No differential abundance was run by this workflow (processed results mode).\n")
+} else {
+  not_tested <- da$n_proteins_not_tested
+  cat(sprintf(
+    "limma on %d control vs %d treatment samples: %d of %d proteins tested (detected in at least %d samples per arm), %d at padj < 0.05. Not tested: %s.\n",
+    da$n_replicates_control, da$n_replicates_treatment, da$n_proteins_tested, da$n_proteins_in,
+    da$min_detected_per_arm, da$n_padj_below_0.05,
+    if (length(not_tested)) paste(names(not_tested), unlist(not_tested), sep = " ", collapse = "; ") else "none"
+  ))
+}
 ```
 
 ## Missingness distribution

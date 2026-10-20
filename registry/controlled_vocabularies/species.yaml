@@ -104,6 +104,21 @@ terms:
     notes: >-
       Not part of the Mytilus edulis complex. NCBI Taxonomy lists no synonyms.
 
+  - id: mytilus_coruscus
+    label: Korean mussel
+    scientific_name: "Mytilus coruscus"
+    accepted_synonyms: []
+    common_names:
+      - "Korean mussel"
+      - "hard-shelled mussel"
+    ncbi_taxid: 42192
+    notes: >-
+      Not part of the Mytilus edulis complex. NCBI has no Gene records for this
+      species: its only annotated assembly (MCOR1.1) carries a GenBank
+      annotation submitted by its authors, so its crosswalk is built by the GFF
+      route (mappings/gff_crosswalk.py, WP7) and anchored on the authors' locus
+      tags rather than NCBI GeneIDs.
+
   # ------------------------------------------------------------------------- #
   # Clams
   # ------------------------------------------------------------------------- #

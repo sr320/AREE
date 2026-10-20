@@ -54,6 +54,9 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: null
     resilience_classification: "resilience"
+    # baseline_phenotype_difference | phenotype_difference_under_exposure |
+    # exposure_response | phenotype_by_exposure_interaction (docs/contrast_types.md)
+    contrast_type: "exposure_response"
     sample_size: 0
     biological_replicates: 0
     results_file: null

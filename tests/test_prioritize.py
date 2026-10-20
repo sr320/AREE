@@ -44,6 +44,19 @@ def test_compute_components_bounds_are_0_to_1():
         assert 0.0 <= value <= 1.0, f"{key}={value} out of bounds"
 
 
+def test_batch_confounded_costs_at_least_as_much_quality_as_low_replication():
+    meta_row = {
+        "k_studies": 2, "total_sample_size": 24, "pooled_effect": 1.0,
+        "p_value": 1e-4, "direction_consistency": 1.0, "phenotype": "survival",
+        "distinct_tissues": 1, "distinct_life_stages": 1, "i_squared": 0.0,
+    }
+    baseline = compute_components(meta_row, ["exact"], [])["quality_score"]
+    low_rep = compute_components(meta_row, ["exact"], ["low_replication"])["quality_score"]
+    batch = compute_components(meta_row, ["exact"], ["batch_confounded"])["quality_score"]
+    assert batch < baseline
+    assert batch <= low_rep
+
+
 def test_high_priority_gate_blocks_low_direction_consistency_even_with_two_studies(isolated_reports):
     harmonize_all_demo_studies()
     meta_df = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
@@ -420,11 +433,11 @@ def test_missing_classification_falls_back_to_the_phenotype_default():
 def test_harmonized_evidence_carries_each_comparisons_classification(isolated_reports):
     """The evidence table must keep the curator's classification, not only the
     phenotype, or ranking cannot honour an override."""
-    from common import STUDIES_DIR, load_yaml
+    from common import load_yaml, study_yaml_path
 
     harmonize_all_demo_studies()
     evidence = load_evidence_table()
     for (study_id, comparison_id), records in evidence.groupby(["study_id", "comparison_id"]):
-        study = load_yaml(STUDIES_DIR / f"{study_id}.yaml")
+        study = load_yaml(study_yaml_path(study_id))
         (comparison,) = [c for c in study["comparisons"] if c["comparison_id"] == comparison_id]
         assert set(records["resilience_classification"]) == {comparison["resilience_classification"]}

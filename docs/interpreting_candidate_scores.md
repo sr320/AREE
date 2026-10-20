@@ -31,6 +31,15 @@ positive components:
 | `mapping_confidence_score` | 3 | trust in identifier harmonization (worst mapping among contributing records) | `mapping_confidence` |
 | `quality_score` | 2 | study/data quality (`1 - n_quality_flags/5`, floored at 0) | `quality_flags` |
 
+Every quality flag counts the same in `quality_score`: `batch_confounded`
+(treatment fully confounded with a sequencing run, MS acquisition batch, or
+extraction batch) removes the same 0.2 as `low_replication`, and counts
+toward the `quality_score >= 0.4` high-priority gate the same way. Adding the
+term (2026-10-16) did not change any existing score, because no registered
+study declared it yet. Once a study declares it, every candidate with a
+record from that study loses 0.2 `quality_score` (0.4 points of the 0-100
+score) unless the flag was already in its union.
+
 ### Why the unbounded components saturate instead of clipping
 
 Every component whose input has no natural upper bound uses `v / (v + half)`,
@@ -97,7 +106,7 @@ Tier assignment, in order:
    - `phenotype_relevance_score > 0.1` (not `exposure_only` — see
      [resilience_vs_exposure.md](resilience_vs_exposure.md))
    - `direction_consistency >= 0.7`
-   - `quality_score >= 0.4` (i.e. fewer than ~3 of 5 quality flags present)
+   - `quality_score >= 0.4` (at most 3 distinct quality flags under the current scoring formula)
    - `adjusted_p_value <= 0.05` — the pooled effect survives
      Benjamini–Hochberg control within its phenotype / feature-type family
      (see [interpreting_meta_analysis.md](interpreting_meta_analysis.md#multiple-testing)).
@@ -123,7 +132,24 @@ Tier assignment, in order:
    qualifies, because every cross-layer overlap in the demo is
    cross-phenotype. The card still lists that adjacent evidence and marks
    each row with whether it counts.
-3. **`emerging`** — everything else: single-study support, or support that
+3. **`metabolite_linked_convergence`** — the candidate's own layer is
+   significant, and another layer carries a significant same-phenotype record
+   for a feature **linked** to it biochemically rather than by a shared ID: a
+   metabolite and a gene whose product KEGG annotates (by orthology) to
+   catalyse a reaction involving that metabolite (`enzyme`), or a transporter
+   (KEGG BRITE ko02000) curated as carrying it (`transporter`, always
+   `inferred`). Checked only if neither tier
+   above applies. This is a deliberately weaker, separately named kind of
+   convergence: it does not add to `n_supporting_layers` or to the score;
+   currency metabolites (ATP, NAD⁺, …) and hub compounds reaching more than
+   25 genes are never credited; and every link is `inferred` or
+   `one_to_many_ortholog`, never `exact`. The card lists each link's
+   compound, reaction, KO, confidence and source checksum, plus the
+   exclusions. Candidates carry `convergence_basis`
+   (`shared_identifier` / `metabolite_gene_link` / `none`), `linked_layers`,
+   `linked_features`, `link_confidences` and `link_table_status`. See
+   [metabolite_gene_links.md](metabolite_gene_links.md).
+4. **`emerging`** — everything else: single-study support, or support that
    fails one or more of the high-priority gates. Always labeled as requiring
    replication.
 
@@ -158,13 +184,16 @@ Each candidate therefore carries two more columns, computed in
 
 | column | values | meaning |
 |---|---|---|
-| `evidence_class` | `resilience_associated`, `disease_associated`, `stress_response`, `exposure_only` | the `resilience_relevance` of the phenotype the contributing studies actually measured |
+| `evidence_class` | `resilience_associated`, `disease_associated`, `stress_response`, `exposure_only` | the most conservative comparison-level `resilience_classification` among contributing records; ontology default only when absent |
 | `context_replication` | `single_study`, `single_context`, `multi_context` | whether the contributing studies vary in stressor, tissue, or life stage — replication of the *biology*, as distinct from replication of the study |
 
-Both real OsHV-1 studies measure `disease_susceptibility`: animals were
-challenged with the virus, but no survival or per-animal viral load was
-recorded. So all 1,994 top-tier candidates are `disease_associated`, not
-`resilience_associated`. They are well-replicated evidence of an infection
+In the initial two-study OsHV-1 pool (September 2026), the selected contrasts
+measured `disease_susceptibility`: animals were challenged with the virus,
+without an individual survival outcome used in those contrasts. Its 1,994
+top-tier candidates were therefore `disease_associated`. Subsequent CALLA2026
+viral read counts are QC measurements, not a survival phenotype. These
+historical counts do not describe the current expanded pool; see the
+[dashboard](index.qmd). The selected contrasts provide evidence of an infection
 response. Whether any of them distinguishes an animal that survives from one
 that does not is a question these data cannot answer, and the card says so
 rather than leaving the tier to imply otherwise.
@@ -180,6 +209,19 @@ step with closing that gap — measuring the feature in animals whose outcome
 was recorded — and only then gives the tier-appropriate validation advice.
 Confirming an expression difference that was never tied to an outcome does not
 turn it into a biomarker.
+
+## Contrast type: predictive baseline candidates
+
+Evidence class says what was measured; `contrast_type` says between whom and
+when. A `resilience_associated` candidate can rest on a difference between
+resilient and susceptible animals under unstressed conditions
+(`baseline_phenotype_difference`) or on how animals respond to the stress.
+Only the first could be read before any stress, which is what a breeder needs,
+so those candidates carry `is_predictive_baseline = True` and get their own
+section at the top of `aree top-candidates`. Baseline and response evidence
+never pool together. The flag changes neither tier nor score; for a baseline
+candidate, replication means independent resistant-vs-susceptible group pairs.
+See [contrast_types.md](contrast_types.md).
 
 ## Reading the output
 
@@ -208,6 +250,119 @@ Each card shows the tier, the contributing studies, the pooled and
 BH-adjusted p-values with the family size, and a forest-style table of
 per-study effect estimates with each study's own adjusted p, so a reviewer can
 see exactly which inputs drove the score rather than trusting a single number.
+
+### Unpooled candidates (`pooling_status = unpooled`)
+
+Pooling needs a standard error, either reported or backed out of an
+unadjusted p-value. Some sources publish neither: typically an author-curated,
+significance-filtered DEG list with only log2FC and padj (HESSER2024_VCOR).
+AREE does not back a standard error out of padj, and it does not pool such
+records. A significance-selected subset overstates effects and inflates apparent
+replication. Those records still never disappear:
+
+- When a feature also has poolable evidence for the same phenotype, its card
+  names the excluded records (`Records left out of the pool…`) and lists them
+  in the forest table with `pooled = no`. They carry no weight.
+- When a feature's evidence for a phenotype is *entirely* unpoolable, it gets
+  its own `candidates.tsv` row with `tier = emerging`,
+  `pooling_status = unpooled`, `k_studies = 0` and **no score**. These rows
+  sort after every scored candidate, and their card says the effect is a
+  reported, selection-biased value rather than an estimate.
+
+The fix is upstream: obtain the full result table from the authors, or
+reanalyze the raw reads, so the study can be pooled like any other.
+
+## Cross-species candidates
+
+`aree build-cross-species-cards` tiers the orthogroup-level meta-analysis
+(see [interpreting_meta_analysis.md](interpreting_meta_analysis.md#cross-species-results---level-orthogroup)):
+one row per orthogroup, phenotype and feature type, pooling each species' own
+gene-level estimate. The rule is the same as for single-species candidates:
+**hard gates first, score second.** It writes, under
+`reports/evidence_cards/cross_species/`, a `candidates.tsv` with every row and
+its component breakdown, an `index.json`, and a card for each row whose pooled
+adjusted p, or any one species' gene-level adjusted p, is at or below
+`--max-adjusted-p`.
+
+The five convergence gates, each named in the `gates_failed` column when it
+fails:
+
+| Gate | Passes when |
+|---|---|
+| `replication` | at least two species each have k ≥ 2 studies of their own |
+| `direction` | every species' estimate has the same sign |
+| `significance` | the pooled cross-species BH-adjusted p ≤ 0.05 |
+| `phenotype_relevance` | the weakest evidence class across all species' contributing records is more than exposure-only |
+| `quality` | each species' own quality flags are within the gene-level limit (the weakest species decides) |
+
+The tiers:
+
+| Tier | Meaning |
+|---|---|
+| `cross_species_convergence` | every gate passes |
+| `cross_species_emerging` | species agree in sign and the pooled estimate is significant, but another gate fails, usually replication |
+| `cross_species_discordant` | species that are each significant at gene level disagree in sign; shown, never dropped |
+| `cross_species_unsupported` | the pooled estimate is not significant, or species disagree in sign only because one of them is noise |
+
+The direction gate is judged on point estimates, so any sign disagreement
+fails it. Only a disagreement between species that are each significant at
+gene level is called discordant. Two null estimates disagree in sign about
+half the time: on the first real oyster-clam pool, 2,880 of 2,886 sign
+disagreements involved a non-significant species, and only 6 were reversals
+between significant ones.
+
+The cross-species score uses its own weights, which sum to 100:
+
+| Component | Weight | What it measures |
+|---|---|---|
+| `per_species_replication_score` | 20 | the smallest per-species study count, saturating at 2 = 0.5 |
+| `n_species_score` | 15 | number of species, saturating at 2 = 0.5 |
+| `direction_consistency_score` | 15 | share of species agreeing with the majority sign |
+| `effect_magnitude_score` | 10 | absolute pooled cross-species effect |
+| `significance_score` | 10 | pooled BH-adjusted p, on the −log10 scale |
+| `phenotype_relevance_score` | 10 | weakest evidence class across all species' records |
+| `orthology_score` | 8 | copy class: `single_copy_all` 1.0, `single_copy` and `demo_crosswalk` 0.9, `multi_copy` 0.3 |
+| `sample_size_score` | 5 | total biological replicates across species |
+| `mapping_confidence_score` | 4 | worst identifier mapping behind any species' estimate |
+| `quality_score` | 3 | the weakest species' own gene-level quality (`1 - n_flags/5`) |
+
+Between-species I² is subtracted as a penalty of up to 15 points. The
+smallest per-species study count carries the most weight because a
+cross-species claim is only as strong as its weakest species.
+
+A cross-species card shows each species' gene, original identifiers, studies,
+tissue, life stage, stressor, sample size, effect with 95% CI and gene-level
+adjusted p side by side, then the pooled estimate and between-species
+heterogeneity. It names the orthogroup run, or says the orthogroup is the demo
+crosswalk's illustrative one. It also warns when the species' studies differ
+in stressor, tissue or life stage, because species and study design are then
+confounded. Agreement across species shows an association recurs in
+orthologous genes. It does not show the genes do the same thing in each
+species.
+
+On the demo, oyster and mussel larval studies give five emerging rows and
+three unsupported rows. None converges, because the demo mussel has one study
+per gene. The demo's one sign disagreement involves a non-significant mussel
+estimate, so it is unsupported, not discordant.
+
+On real data (2026-10-17), the three harmonized oyster thermal-tolerance
+studies and the two Manila clam heat studies (TUCCI2025_HEAT_PRIMING,
+PERUZZA2023_HEATWAVE) pool through 5,975 single-copy orthogroups: 133
+emerging, 5,842 unsupported, none discordant or convergent. The replication
+gate is met in 5,633 rows. 131 emerging rows pass replication, direction and
+significance and fail only phenotype relevance (both clam comparisons are
+exposure-only) and quality (each species' own flags exceed the gene-level
+limit, as they do for its single-species candidates). With one clam study
+(2026-10-16) the same pool had 5,681 rows, 64 emerging and 6 discordant; the
+discordant rows did not survive the second clam study.
+
+**On the dashboard.** The home page shows cross-species tiers, rows and cards
+only for a phenotype past the WP6 gate: at least two species each with a
+within-species gene pool of k >= 2. A row for a gated phenotype is counted as
+withheld, not ranked. Every top single-species candidate also lists its
+orthologs in other species, the phenotypes they were tested under and how many
+of their records were significant. That lookup pools nothing, so it is shown
+whether or not the gate is open.
 
 ## Related documentation
 

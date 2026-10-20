@@ -78,7 +78,8 @@ public sources, with a `.provenance.json` sidecar recording source URLs, SHA-256
 checksums of both inputs and the output, retrieval date, and coverage:
 
 - **NCBI Gene `gene_info`**, filtered to taxid 29159 — GeneID, symbol, synonyms,
-  Ensembl xrefs, description, gene type.
+  Ensembl xrefs, description, gene type, and `LocusTag` (written as
+  `legacy_locus_tags`; see [Legacy gene models](#legacy-gene-models-oyster_v9-cgi_-ids)).
 - **UniProtKB REST**, same organism — accession, reviewed status, GeneID xref.
 - **NCBI Gene `gene_history`**, same organism — GeneIDs NCBI has discontinued and
   what replaced them (written to a separate sidecar, see below).
@@ -91,6 +92,7 @@ Coverage as built (2026-08-27, NCBI annotation release `GCF_963853765.1-RS_2024_
 | `ensembl_gene_id` | 12,717 | 38.1% |
 | `uniprot_accession` | 2,790 | 8.4% |
 | named `gene_symbol` (non-LOC) | 650 | 2.0% |
+| `legacy_locus_tags` (oyster_v9 `CGI_` models; added in builder v1.1.0, 2026-10-17) | 14,699 | 44.1% |
 | `orthogroup_id` | 0 | 0% |
 
 Plus a sidecar, `mgigas_retired_gene_ids.tsv`, covering 9,057 discontinued
@@ -166,6 +168,23 @@ an orthogroup (the rest are non-coding genes, which have no protein), and 190
 of those 274 are in `multi_copy` orthogroups. Expect most cross-species links
 for stress-response genes to be one-to-many.
 
+What the run is used for:
+
+- **Cross-species meta-analysis**: `aree meta-analyze --level orthogroup` pools
+  each species' gene-level estimate through single-copy orthogroups
+  ([interpreting_meta_analysis.md](interpreting_meta_analysis.md#cross-species-results---level-orthogroup)).
+- **Cross-species candidates and cards**: `aree build-cross-species-cards`
+  ([interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates)).
+- **The dashboard gate**: a phenotype's cross-species results appear on the
+  dashboard only once two species each have a within-species pool of k ≥ 2.
+  Before that, the dashboard offers only an ortholog lookup for each top
+  candidate. As of 2026-10-17 thermal tolerance is open, through the oyster
+  and the Manila clam.
+- **Not yet for GFF-route species.** The run is keyed by NCBI GeneID, so a
+  species whose crosswalk is anchored on author gene IDs (*M. coruscus*) is
+  not in it, and its genes get no orthogroup until a run keyed by gene and
+  taxid includes it.
+
 ### Mussel and clam crosswalks
 
 Built 2026-10-11 with the same builder, each against its species' NCBI
@@ -201,6 +220,66 @@ What this means in practice:
   `data/reference/genome_assemblies.yaml`.
 - **No retirement history yet** for most mussels: their RefSeq annotations are
   first releases, so there are no older GeneIDs to remap.
+
+### Genomes without NCBI Gene records (GFF route, WP7)
+
+A species NCBI has not annotated has no GeneIDs, so the NCBI route has nothing
+to download. `aree build-crosswalk --from-gff` builds its crosswalk from the
+authors' own annotation instead (`src/mappings/gff_crosswalk.py`):
+
+- **Genes come from the authors' GFF3**, one row each, anchored on `gene_id`,
+  the GFF gene ID without a `gene-` prefix. For an NCBI GenBank annotation that
+  is the locus tag (`MCOR_1`). `ncbi_gene_id` stays empty. Every downstream
+  reader uses the crosswalk's anchor, never a route's own column, and the
+  provenance records `"route": "gff_homology"` and `"anchor_column": "gene_id"`.
+- **Transcript and protein IDs** from the GFF go into `transcript_ids` and
+  `protein_ids` (GenBank protein IDs with and without their version). A study
+  reporting any of them reaches the gene.
+- **UniProt accessions come from one recorded DIAMOND blastp search** of the
+  longest protein per gene against a named UniProtKB release (Swiss-Prot by
+  default). The thresholds are explicit and recorded: e-value ≤ 1e-10,
+  identity ≥ 30%, query and subject coverage ≥ 50%, up to 5 hits per gene. The
+  builder re-applies them when it reads the hits table. The best hit is
+  `uniprot_accession`, all passing hits are in `uniprot_accessions_all`, and
+  `uniprot_evidence` is `diamond_blastp`. The source files, the database and
+  the hits table are all checksummed in the provenance.
+- **The authors' own homology names** (GenBank `standard_name`) become
+  `gene_symbol`, and their own UniProt assignment, where the GFF records one,
+  is kept in `author_uniprot_accession`. The provenance reports how often it
+  is among our hits, a free check on the search.
+
+Resolution follows what a lookup went through, not the route that built the
+file:
+
+| Study reports | Resolves |
+|---|---|
+| the authors' gene ID, locus tag, transcript ID or protein ID | `exact`: it names that gene in that annotation |
+| a UniProt accession | `inferred`: reached through our homology search; `many_to_one_ortholog` when several genes share it |
+| a gene symbol | `inferred` or `many_to_one_ortholog`, as for every route |
+
+A GFF-route gene gets no orthogroup from the active orthogroup run, which is
+keyed by NCBI GeneID. An author ID could collide with a GeneID, so the lookup
+is skipped. Cross-species comparison needs the species added to an orthogroup
+run, which is not built yet.
+
+**First GFF-route crosswalk: `mcoru`**, *Mytilus coruscus* MCOR1.1
+(GCA_011752425.2, GenBank annotation submitted by Ningbo University). Built
+2026-10-17 against UniProtKB/Swiss-Prot 2026_03 with DIAMOND 2.2.8
+(`--sensitive`, 103 s on 6 threads).
+
+| Genes | With a protein | With a Swiss-Prot hit | Authors' accession among our hits |
+|---|---|---|---|
+| 58,540 | 58,249 | 9,877 (17.0%) | 3,085 of the 6,353 genes both assigned (48.6%) |
+
+The hit rate is low because the thresholds require half of both proteins to
+align, which keeps partial, single-domain matches out. Resolving a study's own
+gene, transcript or protein IDs does not depend on it. Of the 3,268 genes
+where the authors' accession is not among our hits, 1,883 of the 3,265 that
+can be compared (57.7%) carry the same Swiss-Prot protein name on both
+entries: the same protein, recorded from a different species. Counting those,
+our search names the authors' protein for 78% of the genes both assigned. *M. coruscus* studies on the two later chromosome-level
+assemblies use annotations NCBI does not hold, so their identifiers will not
+resolve against `mcoru`.
 
 ### Design decisions in the real crosswalk
 
@@ -254,6 +333,32 @@ Retired IDs whose replacement is itself absent from the crosswalk are dropped at
 build time rather than chained, so no identifier resolves through a gene that
 does not exist.
 
+### Legacy gene models (oyster_v9 `CGI_` IDs)
+
+Studies from roughly 2012–2016 report the gene models of the first *C. gigas*
+assembly (oyster_v9, Zhang et al. 2012), named `CGI_10001851` and so on. Most
+proteomics studies of that period searched spectra against that proteome, so
+their protein tables are keyed by these IDs, sometimes as ProteinProphet groups
+(`CGI_10000041,CGI_10008574`). They are not GeneIDs, and the retired-GeneID
+sidecar does not cover them.
+
+NCBI keeps them, though: a current gene whose model descends from an oyster_v9
+model carries that model's ID in `gene_info`'s `LocusTag` field. Builder v1.1.0
+writes that field to `legacy_locus_tags`. In the current annotation 14,699
+genes carry one, and no tag is shared between genes. `resolve_identifier(raw,
+"legacy_locus_tag")` looks the ID up there:
+
+- a tag on one current gene resolves to that gene, `inferred` (it crosses an
+  annotation version, as with retired GeneIDs);
+- a protein group resolves only if every member names the same gene;
+  otherwise it is `unresolved`, because a peptide-level group cannot be split;
+- a model NCBI did not carry forward has no tag and stays `unresolved`.
+
+`src/harmonize/proteomics.py` sends any `CGI_` ID (or group) down this route and
+everything else down the UniProt one. For the per-oyster NSAF table of PRIDE
+`PXD000835` (2014), 1,107 of 1,616 proteins (68.5%) resolve this way; the rest
+stay `unresolved`, visibly, rather than being matched by name.
+
 ### Rebuilding
 
 The build streams ~230 MB from NCBI and takes roughly 15–20 minutes on a typical
@@ -286,6 +391,9 @@ stable identity to group on.
 `resolve_identifier(raw_id, id_type)` in `src/harmonize/identifiers.py`
 handles two families of input:
 
+- **Legacy gene models** (`legacy_locus_tag`): oyster_v9 `CGI_` IDs, matched
+  against `legacy_locus_tags` and labelled `inferred`; see
+  [Legacy gene models](#legacy-gene-models-oyster_v9-cgi_-ids).
 - **Stable ID columns** (`ncbi_gene_id`, `ensembl_gene_id`,
   `uniprot_accession`, `locus_id`): looked up directly against the crosswalk.
   A single match is `exact`; multiple matching rows collapse to
@@ -295,6 +403,10 @@ handles two families of input:
   `uniprot_accession` is resolved through a prebuilt index over
   `uniprot_accessions_all` so that any accession for a gene — not just the
   representative one stored in `uniprot_accession` — resolves `exact`.
+- **GFF-route crosswalks** add the authors' `gene_id`, `transcript_ids` and
+  `protein_ids` to the stable-ID search (all `exact`), and a UniProt match on
+  a row whose `uniprot_evidence` is `diamond_blastp` is `inferred`; see
+  [the GFF route](#genomes-without-ncbi-gene-records-gff-route-wp7).
 - **Gene symbols**: looked up case-insensitively against the crosswalk's
   `gene_symbol` column first. A single match is labeled `inferred` (not
   `exact`) — symbols are not guaranteed unique or stable, so even a clean
@@ -324,7 +436,7 @@ Three ways a source study might report this feature, and what AREE resolves:
    even though it happens to be unambiguous in this crosswalk).
 3. **Source reports the symbol `hsp70-like2`** (as used by
    `GIGAS_LARV05`'s legacy gene-symbol-only annotation — see
-   `registry/studies/GIGAS_LARV05.yaml`, which deliberately exercises this
+   `registry/demo_studies/GIGAS_LARV05.yaml`, which deliberately exercises this
    path). This does not match any `gene_symbol` value in the crosswalk
    directly, so resolution falls through to
    `data/mappings/ambiguous_symbol_map.yaml`:
@@ -360,6 +472,19 @@ annotations.
   mapping confidence among all contributing records for a candidate
   (`src/prioritize/scoring.py`, `worst_mapping = min(...)`), so a candidate
   is only as trustworthy, identifier-wise, as its weakest link.
+
+## Metabolites are linked, not mapped
+
+Metabolite evidence keeps the reported metabolite name as its
+`feature_id_standardized`; it is never forced into the gene hierarchy above.
+Its connection to genes is a separate, weaker relationship (metabolite →
+KEGG compound → reaction → KO → crg GeneID for enzymes; metabolite → compound
+→ curated transporter KO in KEGG BRITE ko02000 → crg GeneID for transporters)
+resolved at ranking time from
+`data/mappings/metabolite_gene_links_*.tsv`, chosen per partition exactly as
+the crosswalk is: the simulated demo table for simulated evidence, the table
+registered under `metabolite_gene_links` in `genome_assemblies.yaml` for real
+evidence. See [metabolite_gene_links.md](metabolite_gene_links.md).
 
 ## Related documentation
 

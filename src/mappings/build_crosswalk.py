@@ -66,7 +66,7 @@ UNIPROT_STREAM_URL = (
     "&format=tsv&compressed=true"
 )
 
-BUILDER_VERSION = "1.0.0"
+BUILDER_VERSION = "1.1.0"
 
 COLUMNS = [
     "ncbi_gene_id",
@@ -79,6 +79,7 @@ COLUMNS = [
     "gene_description",
     "gene_type",
     "orthogroup_id",
+    "legacy_locus_tags",
 ]
 
 LOC_SYMBOL_RE = re.compile(r"^LOC\d+$")
@@ -157,6 +158,7 @@ def parse_gene_info(path: Path, taxid: int) -> dict:
                 continue
             gene_id = f[1].strip()
             symbol = _blank(f[2])
+            locus_tags = _blank(f[3])
             synonyms = _blank(f[4])
             dbxrefs = _blank(f[5])
 
@@ -178,6 +180,10 @@ def parse_gene_info(path: Path, taxid: int) -> dict:
                 "gene_description": _blank(f[8]),
                 "gene_type": _blank(f[9]),
                 "orthogroup_id": "",
+                # NCBI's LocusTag carries the gene model ID of an earlier assembly's
+                # annotation (e.g. CGI_10001851 from the 2012 oyster_v9 GigaDB set),
+                # which older studies report instead of a GeneID.
+                "legacy_locus_tags": locus_tags.replace("|", ";") if locus_tags else "",
             }
     return genes
 
@@ -288,6 +294,7 @@ def coverage_stats(rows: list) -> dict:
     n_uniprot = sum(1 for r in rows if r["uniprot_accession"])
     n_named = sum(1 for r in rows if r["gene_symbol"] and not LOC_SYMBOL_RE.match(r["gene_symbol"]))
     n_multi_uniprot = sum(1 for r in rows if ";" in r["uniprot_accessions_all"])
+    n_locus_tag = sum(1 for r in rows if r.get("legacy_locus_tags"))
 
     by_type = defaultdict(int)
     for r in rows:
@@ -299,6 +306,7 @@ def coverage_stats(rows: list) -> dict:
         "with_uniprot_accession": {"n": n_uniprot, "pct": pct(n_uniprot)},
         "with_multiple_uniprot_accessions": {"n": n_multi_uniprot, "pct": pct(n_multi_uniprot)},
         "with_named_symbol": {"n": n_named, "pct": pct(n_named)},
+        "with_legacy_locus_tag": {"n": n_locus_tag, "pct": pct(n_locus_tag)},
         "with_orthogroup": {"n": 0, "pct": 0.0},
         "genes_by_type": dict(sorted(by_type.items(), key=lambda kv: -kv[1])),
     }
@@ -350,6 +358,10 @@ def write_provenance(
             "which may differ from the current NCBI reference assembly.",
             "gene_synonyms is emitted for curation and future symbol resolution but is not "
             "currently consulted by harmonize.identifiers.",
+            "legacy_locus_tags is NCBI's LocusTag: the gene model ID a previous assembly's "
+            "annotation used (for M. gigas, the oyster_v9 CGI_ models). Resolution through it "
+            "is labelled 'inferred' because it crosses an annotation version; a legacy model "
+            "NCBI did not carry forward has no tag here and stays 'unresolved'.",
             "Retired GeneIDs resolve through the *_retired_gene_ids.tsv sidecar and are "
             "labelled 'inferred' because the remap crosses an annotation version; GeneIDs "
             "discontinued without a replacement stay 'unresolved' by design.",

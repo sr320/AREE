@@ -84,6 +84,8 @@ mode) are embedded in the manifest under `qc_metrics.upstream_step_qc`; in
 processed-results mode this section is typically empty (see note above).
 
 ```{r qc-metrics, results='asis'}
+# Base R has %||% only from 4.4.
+if (!exists("%||%")) `%||%` <- function(x, y) if (is.null(x)) y else x
 qc <- manifest$qc_metrics
 if (!is.null(qc)) {
   cat(sprintf(
@@ -92,6 +94,22 @@ if (!is.null(qc)) {
     qc$n_annotation_confidence_level_1_or_2 %||% "NA",
     qc$pct_annotation_confidence_level_1_or_2 %||% "NA"
   ))
+  # Raw mode: what normalization and the detection filter did.
+  for (step in qc$upstream_step_qc) {
+    if (!is.null(step$normalization_method)) {
+      cat(sprintf("- Normalization: %s; detection limit %s; %s value(s) below detection; %s internal standard(s) excluded from testing\n",
+                  step$normalization_method, step$detection_limit %||% "none",
+                  step$n_values_below_detection %||% 0, step$n_internal_standards_excluded %||% 0))
+    }
+    if (!is.null(step$n_features_tested)) {
+      not_tested <- unlist(step$n_features_not_tested)
+      cat(sprintf("- Tested %s of %s features on %s vs %s replicates%s; not tested: %s (full list in the missingness report)\n",
+                  step$n_features_tested, step$n_features_in,
+                  step$n_replicates_control, step$n_replicates_treatment,
+                  if (is.null(step$replicate_unit)) "" else sprintf(" (units: %s)", step$replicate_unit),
+                  if (length(not_tested)) paste(sprintf("%s %s", not_tested, names(not_tested)), collapse = ", ") else "none"))
+    }
+  }
 } else {
   cat("No qc_metrics found in manifest.\n")
 }

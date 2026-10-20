@@ -1,0 +1,5 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+Naïve_Heatwave	10	Naive_HW_1,Naive_HW_10,Naive_HW_2,Naive_HW_3,Naive_HW_4,Naive_HW_5,Naive_HW_6,Naive_HW_7,Naive_HW_8,Naive_HW_9	845	0.08169	True
+Naïve_No_Heatwave	10	Naive_noHW_1,Naive_noHW_10,Naive_noHW_2,Naive_noHW_3,Naive_noHW_4,Naive_noHW_5,Naive_noHW_6,Naive_noHW_7,Naive_noHW_8,Naive_noHW_9	857	0.09977	True
+Primed_Heatwave	10	Primed_HW_1,Primed_HW_10,Primed_HW_2,Primed_HW_3,Primed_HW_4,Primed_HW_5,Primed_HW_6,Primed_HW_7,Primed_HW_8,Primed_HW_9	857	0.11639	True
+Primed_No_Heatwave	10	Primed_noHW_1,Primed_noHW_10,Primed_noHW_2,Primed_noHW_3,Primed_noHW_4,Primed_noHW_5,Primed_noHW_6,Primed_noHW_7,Primed_noHW_8,Primed_noHW_9	861	0.09169	True

@@ -45,14 +45,17 @@ other — all nullable), `strain_or_population`, `annotation_version`,
 `platform`, `qc_status`, `analysis_status`, `quality_flags`, `limitations`.
 
 If the study is synthetic/demo data rather than a real dataset, set
-`simulated: true` and say so plainly in the `citation` and `limitations`
-fields (see any file in `registry/studies/GIGAS_*.yaml` for the convention
-used by the demo set — they are all prefixed `[SIMULATED]`).
+`simulated: true`, put the YAML in `registry/demo_studies/` instead of
+`registry/studies/`, and say so plainly in the `citation` and `limitations`
+fields (see any file in `registry/demo_studies/GIGAS_*.yaml` for the convention
+used by the demo set — they are all prefixed `[SIMULATED]`). Validation fails
+for a study in the wrong directory. Demo studies are test fixtures for code
+paths real data does not reach yet; add one only for that reason.
 
 ## 3. The `comparisons[]` structure
 
 A single study can report more than one phenotype or stressor — for example
-`registry/studies/GIGAS_HEAT01.yaml` reports both an acute heat-shock
+`registry/demo_studies/GIGAS_HEAT01.yaml` reports both an acute heat-shock
 comparison (phenotype `survival`) and a chronic heat comparison (phenotype
 `growth_under_stress`) from the same study. Rather than forcing one label per
 study, phenotype/stressor/tissue/life-stage fields live at the **comparison**
@@ -74,6 +77,7 @@ comparisons:
     phenotype_direction: "decrease"
     phenotype_unit: "percent_survival"
     resilience_classification: "resilience"
+    contrast_type: "exposure_response"
     sample_size: 24
     biological_replicates: 3
     results_file: "data/demo/rnaseq/GIGAS_HEAT01_acute_heat_vs_control_dge_demo.tsv"
@@ -83,7 +87,12 @@ Each comparison needs its own `comparison_id` (unique within the study),
 `tissue` and `life_stage` (from the controlled vocabularies), a
 `stressor_original` (exact free text from the source — never discard this)
 alongside a `stressor_standardized` ontology term, a `phenotype` term, a
-`phenotype_direction`, a `resilience_classification`, and sample-size fields.
+`phenotype_direction`, a `resilience_classification`, a `contrast_type`, and
+sample-size fields. `contrast_type` says whether the arms are a treatment and
+its control (`exposure_response`) or groups that differ in resilience, and if
+so whether they were sampled at baseline or under the challenge; see
+[contrast_types.md](contrast_types.md). If a study has both kinds, choose
+`meta_analysis_primary` separately within each contrast type.
 `results_file` points at the processed results table for that comparison when
 `analysis_mode` is `processed_results_harmonization` (or when raw-mode output
 has already been produced and staged, as in the demo).

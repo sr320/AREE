@@ -123,3 +123,67 @@ def test_paired_rnaseq_study_owns_the_accessions_and_matching_contrast(study):
     ours = {c["comparison_id"] for c in study["comparisons"]}
     theirs = {c["comparison_id"] for c in rnaseq["comparisons"]}
     assert "starved_vs_fed_0hpc" in ours & theirs
+
+
+# --------------------------------------------------------------------------- #
+# 2026-10-16 reanalysis from Table S12: run, then failed QC
+# --------------------------------------------------------------------------- #
+
+STEM = "DUPERRET2025_POMS_STARVE_starved_vs_fed_0hpc"
+
+
+@pytest.fixture(scope="module")
+def table_s12():
+    return json.loads((STUDY_DIR / "table_s12_provenance.json").read_text())
+
+
+def test_table_s12_is_fetched_and_checked_not_committed(table_s12):
+    src = table_s12["source"]
+    assert src["sha256"] == "451eb13e2da9db56ac984ee432632af2ced6ef9fc483183c62ba38c7c7f9c61d"
+    assert "CC BY-NC-ND" in src["license"]
+    # The NC-ND table and the feature table derived from it stay out of the repo.
+    assert not list(STUDY_DIR.glob("*.xlsx"))
+    assert not (STUDY_DIR / "DUPERRET2025_POMS_STARVE_features.tsv").exists()
+    assert table_s12["n_samples"] == 48
+    assert table_s12["n_internal_standards"] == 10
+    assert sum(table_s12["n_metabolites_by_platform"].values()) == 310
+
+
+def test_run_used_internal_standards_detection_limit_and_tank_units():
+    manifest = json.loads((STUDY_DIR / f"{STEM}_workflow_manifest.json").read_text())
+    params = manifest["parameters"]["metabolomics"]
+    assert manifest["mode"] == "raw_reanalysis"
+    assert params["normalization"] == "internal_standard"
+    assert float(params["detection_limit"]) == 0.001
+    assert params["replicate_unit"] == "tank"
+    assert params["acquisition"] == "targeted"
+    da = next(v for k, v in manifest["qc_metrics"]["upstream_step_qc"].items() if "diffabundance_qc" in k)
+    assert (da["n_replicates_control"], da["n_replicates_treatment"]) == (3, 3)
+    assert (da["n_features_in"], da["n_features_tested"]) == (310, 122)
+
+
+def test_every_metabolite_is_accounted_for(table_s12):
+    import pandas as pd
+
+    results = pd.read_csv(STUDY_DIR / f"{STEM}_metabolite_features_standardized.tsv", sep="\t")
+    missing = pd.read_csv(STUDY_DIR / f"{STEM}_missingness.tsv", sep="\t")
+    assert len(missing) == 310
+    assert set(results["feature_id"]) == set(missing.loc[missing.status == "tested", "feature_id"])
+    assert results["lfcSE"].notna().all()
+    standards = set(table_s12["internal_standards"])
+    assert len(standards) == 10
+    assert not standards & (set(results["feature_id"]) | set(missing["feature_id"]))
+
+
+def test_direction_depends_on_normalization_which_is_why_qc_failed(study):
+    import pandas as pd
+
+    sens = pd.read_csv(STUDY_DIR / "normalization_sensitivity.tsv", sep="\t")
+    assert len(sens) == 122
+    # The batch-confounded offset flips the direction of a large share of
+    # metabolites; if a re-run ever made the two agree, the decision should be
+    # revisited rather than left standing.
+    assert sens["same_direction"].mean() < 0.7
+    assert study["qc_status"] == "failed"
+    assert study["comparisons"][0]["results_file"] is None
+    assert "normalization_sensitivity.tsv" in study["limitations"]
