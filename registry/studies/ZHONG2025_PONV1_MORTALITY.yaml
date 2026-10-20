@@ -83,6 +83,12 @@ analysis_status: "not_started"
 # husbandry, so this is the least confounded disease contrast in the
 # deposit. If either arm has fewer than 5 animals, do not register it.
 #
+# CONTRAST TYPE (2026-10-20). Farm vs wild is exposure_response, the type
+# that claims least (docs/contrast_types.md). It is closest to infected vs
+# uninfected: nothing shows the wild arm met the same challenge, so it is not
+# a phenotype_difference_under_exposure. The planned within-farm
+# PONV1-positive vs PONV1-negative comparison will be
+# phenotype_difference_under_exposure, like CORPOREAU2014's high vs low load.
 # ON PHENOTYPE CLASSIFICATION. Disease state (gaping, necrosis, sampled during
 # mass mortality) was observed per animal, so these are disease
 # comparisons, not exposures. The cause is not established: the paper
@@ -104,6 +110,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 53
     biological_replicates: 26
     results_file: null
@@ -122,6 +129,7 @@ comparisons:
     phenotype_direction: "increase"
     phenotype_unit: null
     resilience_classification: "disease"
+    contrast_type: "exposure_response"
     sample_size: 43
     biological_replicates: 19
     results_file: null
