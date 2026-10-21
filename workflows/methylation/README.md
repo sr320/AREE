@@ -122,7 +122,12 @@ run's, but in a different record order. `deduplicate_bismark` keeps the first
 read of each duplicate set it meets, so a few CpG calls can come from a
 different (equally valid) read of a duplicate set.
 
-CHUNK_VALIDATION_PLACEHOLDER
+Checked on 4 EM-seq libraries of `VALDIVIESO2025_POMS_RS_EMSEQ` (400k pairs
+each, 4 chunks per library, Klone, October 2026). Pairs analysed, unique
+alignments, mapping efficiency, CpG methylation and duplicates removed were
+identical to the unchunked path for all four. Where both CpG reports exist,
+they differ at 142 of about 1 million covered CpGs (0.014%), by one read
+each.
 
 The per-chunk alignment and trimming reports are published in
 `bismark_align/<sample>_chunk_reports/`. Unset or `0` keeps the
