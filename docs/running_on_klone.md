@@ -59,7 +59,7 @@ pattern as on the workstation, submitted as a job.
 #SBATCH --account=<group> --partition=cpu-g2 --cpus-per-task=2 --mem=8G --time=4-00:00:00
 source <miniforge>/etc/profile.d/conda.sh && conda activate nextflow
 export NXF_HOME=/gscratch/scrubbed/$USER/aree/nxf-home
-export TMPDIR=/gscratch/scrubbed/$USER/aree/tmp NXF_TEMP=$TMPDIR
+export NXF_TEMP=/gscratch/scrubbed/$USER/aree/tmp   # not TMPDIR: see below
 export AREE_SLURM_ACCOUNT=<group>          # account for the ckpt jobs (default srlab)
 nextflow run workflows/methylation \
   -config config/<STUDY_ID>.config \
@@ -98,9 +98,12 @@ all libraries align in parallel. The chunk task uses a pinned conda
 environment, which `-profile klone` enables (cache in
 `/gscratch/scrubbed/$USER/aree/conda-cache`, or `AREE_CONDA_CACHEDIR`).
 
-**Pin scratch to `/scr`, not `scratch true`.** Slurm passes the head job's
-environment to tasks, so a `TMPDIR` exported on shared storage (as above)
-would put "node-local" scratch back on gscratch. The klone profile sets
+**Do not export `TMPDIR` in the head job, and pin scratch to `/scr`.** Slurm
+passes the head job's environment to every task. A `TMPDIR` on gscratch then
+(1) puts `scratch true` back on shared storage, and (2) is forwarded into
+containers, where `/gscratch/...` is not mounted (only `/mmfs1/gscratch`).
+Quarto in `RENDER_REPORT` then fails with `NotFound ... tmpdir`. Use
+`NXF_TEMP` for Nextflow's own temporary files. The klone profile also sets
 `scratch = '/scr'` for the chunk, merge and extractor tasks.
 
 **Select a subset of libraries with a directory of links, not a brace
