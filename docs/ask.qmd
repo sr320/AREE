@@ -1,0 +1,52 @@
+---
+title: "Ask AREE"
+subtitle: "Ask questions about AREE's evidence in plain language"
+toc: false
+css: ask/ask.css
+---
+
+Ask about AREE's registered studies, genes, candidate biomarkers and how to read
+them. Claude answers by querying AREE's published tables, and cites the study behind
+each claim. Open **How this answer was found** under an answer to see every query
+it ran and exactly what came back.
+
+::: {.callout-warning appearance="simple"}
+**How to read these answers.** AREE's evidence records are statistical associations
+from individual studies. A significant result or a high candidate score is not a
+validated biomarker and does not establish causation. A language model can also
+misread a table, so check any claim you rely on against the cited study on the
+[Explore page](explore.qmd) before using it.
+:::
+
+```{=html}
+<div id="ask-aree" class="ask-aree">
+  <div id="aa-status" class="aa-status small text-muted" role="status">Connecting to Ask AREE…</div>
+  <div id="aa-messages" class="aa-messages" aria-live="polite"></div>
+  <div class="aa-examples">
+    <span class="small text-muted me-1">Try:</span>
+    <button type="button" class="btn btn-sm btn-outline-secondary aa-example" disabled>Which phenotypes does AREE have evidence for?</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary aa-example" disabled>Which genes are significant for thermal tolerance in more than one study, and do any disagree in direction?</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary aa-example" disabled>What are the top high-priority candidates for disease resistance?</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary aa-example" disabled>Which studies measured acidification tolerance, and are their raw data available?</button>
+  </div>
+  <form id="aa-form" class="aa-form">
+    <label for="aa-input" class="visually-hidden">Your question</label>
+    <textarea id="aa-input" class="form-control" rows="2" maxlength="1000" disabled
+              placeholder="Ask about AREE's studies, genes or candidates (Enter to send, Shift+Enter for a new line)"></textarea>
+    <div class="aa-actions">
+      <div id="aa-turnstile"></div>
+      <button type="button" id="aa-new" class="btn btn-sm btn-link">New conversation</button>
+      <button type="submit" id="aa-send" class="btn btn-primary" disabled>Ask</button>
+    </div>
+  </form>
+  <noscript><div class="alert alert-warning mt-3">Ask AREE needs JavaScript. The <a href="explore.html">Explore page</a> also needs it; the <a href="querying_aree.html">query docs</a> describe other ways in.</div></noscript>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="ask/ask.js"></script>
+```
+
+Questions are sent to AREE's chat service and to Anthropic's Claude API to be
+answered, so don't include personal or confidential information. There is a limit
+on questions per hour and per day. How the service works, and what it costs to run,
+is described in [Ask AREE chat service](ask_aree.md).

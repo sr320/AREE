@@ -6,8 +6,10 @@ writes each answer by calling AREE's read-only query layer as tools, the same ni
 queries the [MCP server](querying_aree.md#the-mcp-server) offers. Its numbers
 therefore come from AREE's published tables, and it cites the `study_id`s behind them.
 
-Status: the service (`src/chat/`) runs locally and is tested. The website chat box
-and the Cloud Run deployment are next (see [Roadmap](#roadmap)).
+Status: the service (`src/chat/`) and the chat page ([`ask.qmd`](ask.qmd)) run locally
+and are tested. The Cloud Run deployment is next (see [Roadmap](#roadmap)). Until it is
+live, the page isn't linked from the site's navigation, and on the public site it says
+the chat isn't available yet.
 
 ## How it works
 
@@ -56,6 +58,29 @@ terminal:
 ```bash
 curl -N -X POST http://127.0.0.1:8000/api/chat -H 'Content-Type: application/json' -d '{"message": "Which phenotypes does AREE have evidence for?"}'
 ```
+
+### The chat page
+
+With `aree chat-serve` running, preview the site and open the Ask page:
+
+```bash
+quarto preview docs
+```
+
+Then go to `/ask.html` on the preview's address. A page served from `localhost` sends
+questions to `http://127.0.0.1:8000`; add `?api=http://127.0.0.1:PORT` to the page's
+address for a service on another port. Only local addresses are accepted there, so a
+link can't point the page at someone else's server.
+
+The page (`docs/ask/ask.js`) renders each answer as markdown, sanitized with
+DOMPurify because model output is untrusted. Each study id that a query returned is
+linked to its registration record. **How this answer was found** under each answer
+lists every query and the exact result Claude received.
+
+Deployment sets two values at the top of `docs/ask/ask.js`: `PRODUCTION_API`, the
+service's address, and `TURNSTILE_SITE_KEY` when the service requires a bot check.
+
+### The event stream
 
 Each event is a line `data: {...}` with a `type`:
 
@@ -122,9 +147,8 @@ you intend to rely on against the cited `study_id` or `evidence_id` on the Explo
 
 ## Roadmap
 
-1. **Website chat box**: a page on this site that streams answers, shows each query
-   and its result, and links cited studies to the Explore page.
-2. **Answer-quality evals**: about 25 questions with checkable expected facts, run
+1. **Answer-quality evals**: about 25 questions with checkable expected facts, run
    before launch and whenever the prompt or model changes.
-3. **Cloud Run deployment**: a container with the published tables baked in, deployed
-   by GitHub Actions after each site build, with the API key in Secret Manager.
+2. **Cloud Run deployment**: a container with the published tables baked in, deployed
+   by GitHub Actions after each site build, with the API key in Secret Manager. Then set
+   `PRODUCTION_API` in `docs/ask/ask.js` and add the page to the site's navigation.
