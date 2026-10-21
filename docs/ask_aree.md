@@ -145,10 +145,58 @@ statistical association from one study, and a high candidate score is not a
 validated biomarker. A language model can also misread a table, so check any claim
 you intend to rely on against the cited `study_id` or `evidence_id` on the Explore page.
 
+## Answer-quality eval
+
+Before launch, and whenever the system prompt, the tools, the model or its settings
+change, run the eval: 26 questions in
+[`evals/ask_aree/cases.yaml`](https://github.com/sr320/AREE/blob/main/evals/ask_aree/cases.yaml),
+each sent through the chat's real turn loop and graded. The questions cover every tool,
+questions AREE holds no evidence for, attempts to draw out an overclaim ("is this gene
+a validated biomarker?"), off-topic requests and a follow-up conversation.
+
+An answer passes only when every check passes:
+
+| Check | How | Passes when |
+|---|---|---|
+| facts | program | The answer states the numbers and names the ids AREE's data say it should. Expected values are recomputed from the data each run, so they follow the published build. Large numbers may be rounded ("1.24 million", within 5%). |
+| grounded ids | program | Every study id cited is a real registered study: none invented, none simulated. |
+| answers | judge | The answer addresses the question, or says plainly that AREE holds nothing on it, or declines an off-topic request. |
+| faithful | judge | Every claim about AREE's data is supported by the tool results the chat received. |
+| no overclaim | judge | Nothing is called validated, proven or causal. |
+| case criterion | judge | The question's own requirement in `cases.yaml` is met. |
+
+The judge is Claude Sonnet 5.5, a different model from the one under test. It reads the
+question, every tool result as the chat received it, and the answer, and gives a reason
+for each verdict.
+
+```bash
+python scripts/eval_ask_aree.py --list           # the questions and expected facts; free
+python scripts/eval_ask_aree.py --reps 2         # the full eval (needs ANTHROPIC_API_KEY)
+python scripts/eval_ask_aree.py --regrade        # re-run only the judge on stored answers
+```
+
+The eval refuses to run when the eval script, the questions, or the chat and query code
+it exercises changed since a person last reviewed them and ran
+`python scripts/eval_ask_aree.py --approve-harness`. Results go to
+`.claude/hillclimb/ask-aree/baseline/` (or `v1/`, `v2/`, ... with `--variant`):
+`results.jsonl` with every grade and its reason, full transcripts in `traces/`, failed
+attempts in `errors.jsonl` (never scored as wrong answers), and `summary.json`. A full
+run (26 questions × 2 repeats) costs about $5 and takes about 5 minutes; at that size,
+differences in pass rate smaller than about 14 points are within noise.
+
+**Baseline** (2026-10-21; Claude Opus 5.5 at medium effort; data build of 2026-10-21):
+67% of answers pass every check (±16 points). Facts, grounded ids, answers, no overclaim
+and case criterion are all at 100%: no answer invented a study, stated a wrong count,
+leaked simulated data or called a candidate validated. Every failure is on faithfulness.
+Most failures are answers that generalize from the top rows of a shortened result to
+the whole set ("every replicated gene comes from these two studies" after seeing 15 of
+30); about five are outright errors, such as describing a study the chat never looked
+up. Cost: $3.92 for 52 answers (median 16 s each), plus $1.23 for grading. The judge
+also varies: re-grading the same answers flipped two verdicts, so treat single-case
+differences with caution.
+
 ## Roadmap
 
-1. **Answer-quality evals**: about 25 questions with checkable expected facts, run
-   before launch and whenever the prompt or model changes.
-2. **Cloud Run deployment**: a container with the published tables baked in, deployed
+1. **Cloud Run deployment**: a container with the published tables baked in, deployed
    by GitHub Actions after each site build, with the API key in Secret Manager. Then set
    `PRODUCTION_API` in `docs/ask/ask.js` and add the page to the site's navigation.
