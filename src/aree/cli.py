@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -580,10 +581,37 @@ def export_site_data_cmd(out_dir, include_simulated):
     click.echo(click.style(f"Wrote site data to {out_dir}", fg="green"))
 
 
+@main.command("fetch-site-data")
+@click.option("--dest", default=None, type=click.Path(path_type=Path),
+              help="Directory for the tables (default: docs/explore/data).")
+@click.option("--url", "base_url", default=None,
+              help="Where the tables are published (default: the AREE site).")
+def fetch_site_data_cmd(dest, base_url):
+    """Download the published evidence, candidates, studies and evidence cards.
+
+    Lets `aree mcp --data-dir` answer from the public site's data without
+    running the pipeline. Needs no extra packages.
+    """
+    from query.site_export import DEFAULT_OUT_DIR, PUBLISHED_DATA_URL, fetch_site_data
+
+    dest = dest or DEFAULT_OUT_DIR
+    meta = fetch_site_data(dest, base_url or PUBLISHED_DATA_URL)
+    for name, table in meta["tables"].items():
+        click.echo(f"{name}: {table['total']} rows ({table['real']} real, {table['simulated']} simulated)")
+    if "cards" in meta:
+        click.echo(f"cards: {meta['cards']['total']} evidence cards")
+    else:
+        click.echo(click.style("The published data has no evidence cards yet; "
+                               "get_evidence_card will report them as missing.", fg="yellow"))
+    click.echo(click.style(f"Published {meta['generated']}; saved to {dest}", fg="green"))
+
+
 @main.command("mcp")
 @click.option("--transport", type=click.Choice(["stdio", "streamable-http"]), default="stdio",
               show_default=True, help="stdio for desktop clients; streamable-http to serve over HTTP.")
-def mcp_cmd(transport):
+@click.option("--data-dir", default=None, type=click.Path(exists=True, file_okay=False, path_type=Path),
+              help="Answer from published Parquet tables (aree fetch-site-data) instead of reports/.")
+def mcp_cmd(transport, data_dir):
     """Serve AREE's studies, evidence and candidates to MCP clients (e.g. Claude).
 
     Read-only. Needs the mcp extra (Python >= 3.10): pip install -e ".[mcp]".
@@ -591,7 +619,38 @@ def mcp_cmd(transport):
     """
     from query.mcp_server import run
 
-    run(transport)
+    run(transport, data_dir)
+
+
+@main.command("chat-serve")
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--port", default=8000, show_default=True, type=int)
+@click.option("--data-dir", default=None, type=click.Path(exists=True, file_okay=False, path_type=Path),
+              help="Answer from published Parquet tables (aree fetch-site-data) instead of reports/.")
+def chat_serve_cmd(host, port, data_dir):
+    """Run the Ask AREE chat service locally (docs/ask_aree.md).
+
+    Needs the chat extra (Python >= 3.10): pip install -e ".[chat]", and an
+    Anthropic API key in ANTHROPIC_API_KEY. Other settings are AREE_CHAT_*
+    environment variables; local pages (localhost) may call it.
+    """
+    import logging
+
+    import uvicorn
+
+    from chat.server import Settings, create_app
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    settings = Settings.from_env()
+    settings.allow_localhost = True
+    if data_dir:
+        settings.data_dir = data_dir
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        click.echo(click.style("ANTHROPIC_API_KEY is not set: questions will fail unless the "
+                               "Anthropic SDK finds other credentials (e.g. `ant auth login`).", fg="yellow"))
+    click.echo(f"Ask AREE on http://{host}:{port} (model {settings.model}, "
+               f"data {settings.data_dir or 'reports/'}, budget ${settings.daily_budget_usd:.2f}/day)")
+    uvicorn.run(create_app(settings), host=host, port=port)
 
 
 @main.command("fetch-reference")

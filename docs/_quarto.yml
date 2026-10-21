@@ -37,6 +37,8 @@ website:
             href: explore.qmd
           - text: "Querying AREE (explorer + MCP)"
             href: querying_aree.md
+          - text: "Ask AREE chat service"
+            href: ask_aree.md
           - text: "Installation"
             href: installation.md
           - text: "Why this resource matters"

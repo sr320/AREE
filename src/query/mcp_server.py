@@ -7,6 +7,9 @@ wrappers over `query`, so the model's numbers come from the pipeline's outputs,
 never from its own recall. See docs/querying_aree.md.
 
 Requires the optional `mcp` extra (Python >= 3.10): pip install -e ".[mcp]"
+
+By default it answers from this checkout's reports/; `aree mcp --data-dir DIR`
+answers from the published Parquet tables instead (`aree fetch-site-data`).
 """
 from __future__ import annotations
 
@@ -32,12 +35,7 @@ How to answer:
 
 
 def _server_class():
-    try:  # mcp >= 2
-        from mcp.server.mcpserver import MCPServer
-        return MCPServer
-    except ImportError:
-        pass
-    try:  # mcp 1.x
+    try:
         from mcp.server.fastmcp import FastMCP
         return FastMCP
     except ImportError as exc:
@@ -101,6 +99,19 @@ def build_server(sources: query.Sources = query.DEFAULT_SOURCES):
                                   tissue, max_adjusted_p, include_simulated, exact_feature, limit, sources)
 
     @server.tool()
+    def find_replicated_features(phenotype: str | None = None, stressor: str | None = None,
+                                 feature_type: str | None = None, species: str | None = None,
+                                 tissue: str | None = None, min_studies: int = 2,
+                                 max_adjusted_p: float = 0.05, include_simulated: bool = True,
+                                 limit: int = 25) -> dict:
+        """Features significant (adjusted p <= max_adjusted_p) in at least min_studies studies,
+        e.g. "which genes are significant for thermal_tolerance in more than one study?". Per
+        feature: studies, how many studies went up vs down, whether directions conflict, the
+        smallest adjusted p. Also counts how many matching features conflict."""
+        return query.find_replicated_features(phenotype, stressor, feature_type, species, tissue,
+                                              min_studies, max_adjusted_p, include_simulated, limit, sources)
+
+    @server.tool()
     def list_candidates(phenotype: str | None = None, tier: str | None = None,
                         evidence_class: str | None = None, feature: str | None = None,
                         species_taxid: int | None = None, feature_type: str | None = None,
@@ -127,8 +138,9 @@ def build_server(sources: query.Sources = query.DEFAULT_SOURCES):
     return server
 
 
-def run(transport: str = "stdio") -> None:
-    build_server().run(transport=transport)
+def run(transport: str = "stdio", data_dir=None) -> None:
+    sources = query.Sources.from_site_data(data_dir) if data_dir else query.DEFAULT_SOURCES
+    build_server(sources).run(transport=transport)
 
 
 if __name__ == "__main__":
