@@ -1,0 +1,82 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "WANG2024_HEAT_GILL",
+  "comparison_id": "gigas_heat_12h_vs_control",
+  "input_files": [
+    {
+      "name": "WANG2024_HEAT_GILL_gigas_heat_12h_vs_control_dge_standardized.tsv",
+      "sha256": "bbf864667b7e8223de8c7ead367591e4133d8a6ab06415e5ed3a08fff15b9ccf"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "WANG2024_HEAT_GILL",
+    "comparison_id": "gigas_heat_12h_vs_control",
+    "outdir": "results/rnaseq/WANG2024_HEAT_GILL/gigas_heat_12h_vs_control",
+    "exclude_samples": [],
+    "control_levels": [
+      "RNA_Seq_gigas_NC"
+    ],
+    "treatment_levels": [
+      "RNA_Seq_gigas_HC"
+    ],
+    "replicate_unit": null,
+    "covariates": [],
+    "single_end": false,
+    "se_adapter": null,
+    "viral_reference": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "n_libraries_or_units": 6,
+    "residual_df": 4
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.3"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.35"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.17"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.4.0"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.17"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-13T10:45:34.155977-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

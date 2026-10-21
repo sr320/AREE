@@ -1,0 +1,3 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+RNA_Seq_gigas_HC	3	HC.gigas1_RNA-Seq_fastq,HC.gigas2_RNA-Seq_fastq,HC.gigas3_RNA-Seq_fastq	6381	0.00298	False
+RNA_Seq_gigas_NC	3	NC.gigas1_RNA-Seq_fastq,NC.gigas2_RNA-Seq_fastq,NC.gigas3_RNA-Seq_fastq	7038	0.00093	False
