@@ -1,0 +1,11 @@
+# Only what the Ask AREE image needs (containers/chat/Dockerfile); everything else,
+# including data/, reports/ and any local virtualenv, stays out of the build context.
+*
+!pyproject.toml
+!README.md
+!LICENSE
+!src/
+!registry/
+!containers/chat/requirements.lock
+**/__pycache__
+**/*.egg-info
