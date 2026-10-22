@@ -30,7 +30,8 @@
 #
 # Mussel and clam terms (added 2026-10-11) were checked against NCBI Taxonomy
 # (E-utilities efetch) on that date. See docs/mussel_clam_integration_plan.md.
-version: "0.2.0"
+# The basket cockle (added 2026-10-21) was checked the same way on that date.
+version: "0.3.0"
 terms:
   - id: magallana_gigas
     label: Pacific oyster
@@ -158,3 +159,25 @@ terms:
       taxid. NCBI has also merged four older taxids into this one (430757,
       152465, 104384, 55422); a deposit carrying one of them is still this
       species.
+
+  # ------------------------------------------------------------------------- #
+  # Cockles
+  # ------------------------------------------------------------------------- #
+
+  - id: clinocardium_nuttallii
+    label: Basket cockle
+    scientific_name: "Clinocardium nuttallii"
+    accepted_synonyms:
+      - "Cardium nuttallii"
+    common_names:
+      - "basket cockle"
+      - "heart cockle"
+      - "Nuttall's cockle"
+    ncbi_taxid: 410350
+    notes: >-
+      Registered ahead of any study (2026-10-21) so that a Pacific Northwest
+      dataset can be registered as soon as one is deposited. "Cardium
+      nuttallii" (Conrad, 1837), the original combination, is the only synonym
+      NCBI Taxonomy lists for this taxid. Its only chromosome-level assembly
+      has no gene annotation yet, so no crosswalk exists: studies can be
+      registered but not harmonized. See docs/candidate_studies_mussels_clams.md.

@@ -220,6 +220,30 @@ cohorts.
   two projects); they are the first mussel methylation candidates once a mussel
   RNA-seq study is through.
 
+## Basket cockle: registered, nothing to curate yet
+
+*Clinocardium nuttallii* (taxid 410350) was added to the species vocabulary
+and its assembly registered on **2026-10-21**, ahead of any study, because it
+is a restoration-aquaculture species in Puget Sound (Suquamish Tribe and Puget
+Sound Restoration Fund). Its studies can be registered but not harmonized yet:
+
+- **Genome.** `xbCliNutt1.hap2.1` (GCA_977929165.1, Darwin Tree of Life,
+  chromosome-level) has no gene annotation on NCBI or Ensembl, so it has no
+  crosswalk. Build one when RefSeq or an author GFF appears.
+- **Omics data.** ENA holds no treatment RNA-seq, methylation, proteomics or
+  metabolomics for the species. The one RNA-seq run (`ERR15381746`,
+  `PRJEB94705`) was sequenced to annotate the genome, not as a contrast.
+- **Not contrasts.** `PRJNA771709` is RADseq population genomics (349 animals,
+  12 sites; Dimond et al. 2022, *Evol Appl*,
+  [10.1111/eva.13359](https://doi.org/10.1111/eva.13359)). The transmissible
+  neoplasia lineages CnuBTN1 and CnuBTN2 (Yonemitsu et al. 2025, *Mol Ecol*,
+  [10.1111/mec.17682](https://doi.org/10.1111/mec.17682)) would be
+  `disease_associated`, but their genome project `PRJNA1082776` has no
+  public runs.
+
+Look again when a heat, macroalgal-bloom or broodstock-performance experiment
+from the restoration hatcheries is deposited.
+
 ## Sourcing notes
 
 - ENA was queried by `tax_tree(<taxid>)` with `library_strategy="RNA-Seq"`.

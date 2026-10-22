@@ -26,7 +26,7 @@
 # each entry's `verified`. When adding an assembly, look the accession up
 # yourself and record the date — do not copy one from another entry. See
 # docs/handling_genome_versions.md.
-version: "0.3.0"
+version: "0.4.0"
 verified_against: "NCBI Datasets API (api.ncbi.nlm.nih.gov/datasets/v2alpha); per-entry date in `verified`"
 
 assemblies:
@@ -228,3 +228,34 @@ assemblies:
       evidence on this assembly will be fragmented and is unlikely to lift
       over to a future chromosome-level RefSeq annotation; see
       docs/handling_genome_versions.md.
+
+  # ------------------------------------------------------------------------- #
+  # Cockles (added 2026-10-21). Registered without a crosswalk: NCBI has not
+  # annotated the assembly, and no author annotation is public.
+  # ------------------------------------------------------------------------- #
+
+  - assembly_id: "xbCliNutt1.hap2.1"
+    species: "Clinocardium nuttallii"
+    ncbi_taxid: 410350
+    ncbi_assembly_accession: "GCA_977929165.1"
+    genbank_accession: "GCA_977929165.1"
+    assembly_level: "Chromosome"
+    submitter: "Wellcome Sanger Institute"
+    is_ncbi_reference: false
+    annotation_release: null
+    identifier_crosswalk: null
+    verified: "2026-10-21"
+    notes: >-
+      Darwin Tree of Life assembly (BioProject PRJEB105204), released
+      2026-02-01: 1.36 Gb in 19 chromosomes, contig N50 about 2.5 Mb, scaffold
+      N50 about 66 Mb. NCBI flags it as the species' reference genome, but it
+      carries no gene annotation (no RefSeq GCF_ copy, no Ensembl rapid
+      release, no author GFF) as of the verification date, so it is not
+      AREE's annotated reference (`is_ncbi_reference` here means the
+      annotated assembly evidence is standardized against). Studies on it can
+      be registered but not harmonized. When an annotation appears, build the
+      crosswalk (RefSeq route if NCBI annotates it, GFF route otherwise; see
+      docs/adding_a_species.md) and update this entry. Haplotype 1 is
+      GCA_977929185.1 (xbCliNutt1.hap1.1). An older short-read draft,
+      GCA_031471495.1 (scaffold N50 about 4 kb), is too fragmented to use and
+      is not registered.
