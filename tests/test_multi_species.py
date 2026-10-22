@@ -217,6 +217,7 @@ def assembly_without_crosswalk(monkeypatch):
         ("tissue_types", "foot"),
         ("tissue_types", "byssal_gland"),
         ("tissue_types", "siphon"),
+        ("tissue_types", "eggs"),
         ("stressor_ontology", "emersion_desiccation"),
         ("phenotype_ontology", "byssal_attachment"),
         ("phenotype_ontology", "burrowing_performance"),
