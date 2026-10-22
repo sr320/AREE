@@ -91,30 +91,47 @@ checking the M-bias plot.
 A deep library is one long Bismark task: about 20 h for 224 M read pairs on
 a 10-core workstation. On a scheduler with short or preemptible jobs, such
 as Klone's ckpt partitions, it never finishes. Set
-`methylation.align_chunk_pairs` to split each trimmed library into chunks of
-that many read pairs (e.g. `20000000`):
+`methylation.align_chunk_pairs` (e.g. `20000000`) to trim, align and
+deduplicate each library as chunks of that many read pairs
+(`modules/methylation/bismark_chunked.nf`):
 
-- `SPLIT_FASTQ_PAIRS` splits R1/R2 in step with `seqkit split2`.
-- `BISMARK_ALIGN_CHUNK` aligns each chunk with the same Bismark command as
-  `BISMARK_ALIGN`.
-- `BISMARK_MERGE_CHUNKS` concatenates the chunk BAMs in chunk order with
-  `samtools cat`, so mates stay adjacent. It also sums the chunk reports
-  into one per-library `*_PE_report.txt` in Bismark's own layout
-  (`bin/sum_bismark_pe_reports.sh`); percentages are recomputed from the
-  summed counts.
+- `COUNT_READ_PAIRS` counts the pairs in raw R1.
+- `TRIM_ALIGN_CHUNK` cuts one chunk's records out of the raw R1/R2, runs
+  Trim Galore and Bismark exactly as `TRIM_GALORE` and `BISMARK_ALIGN` do,
+  and keeps only the chunk BAM and reports. It needs both tools in one
+  environment and no public image has them, so it declares a pinned conda
+  environment (Bismark 0.24.2, Trim Galore 0.6.10, samtools 1.18).
+- `MERGE_DEDUP_CHUNKS` concatenates the chunk BAMs in chunk order with
+  `samtools cat` (mates stay adjacent), runs `deduplicate_bismark`, and keeps
+  only the deduplicated BAM. It also sums the chunk reports into one
+  per-library `*_PE_report.txt` in Bismark's own layout
+  (`bin/sum_bismark_pe_reports.sh`), recomputing percentages from the summed
+  counts.
 
-Deduplication and extraction then run on the merged BAM, as before. Duplicates
-that fall in different chunks are still removed. Bismark aligns each pair
+Everything about the size of the reads (chunk FASTQs, trimmed reads, Bismark's
+temporary files, the merged BAM) exists only in the task's node-local scratch
+directory. Only chunk BAMs and deduplicated BAMs reach shared storage: about
+1.8x the raw reads, against about 4.4x for a first version that kept trimmed
+reads, chunk FASTQs and the merged BAM. That version overflowed Klone's
+shared scratch twice.
+
+Duplicates that fall in different chunks are still removed, because
+deduplication runs on the whole library. Bismark aligns each pair
 independently, so the merged BAM holds the same alignments as an unchunked
 run's, but in a different record order. `deduplicate_bismark` keeps the first
 read of each duplicate set it meets, so a few CpG calls can come from a
-different (equally valid) read of a duplicate set. On 4 EM-seq libraries of
-`VALDIVIESO2025_POMS_RS_EMSEQ` (400k pairs each, 4 chunks per library),
-mapped pairs, mapping efficiency, CpG methylation and duplicates removed were
-identical to an unchunked run. Two CpG reports were byte-identical, and the
-other two differed in 2 and 1 of about 1 million covered CpGs, by one read
-each. The per-chunk reports are published next to the merged one. Unset or
-`0` keeps one alignment task per library. See
+different (equally valid) read of a duplicate set.
+
+Checked on 4 EM-seq libraries of `VALDIVIESO2025_POMS_RS_EMSEQ` (400k pairs
+each, 4 chunks per library, Klone, October 2026). Pairs analysed, unique
+alignments, mapping efficiency, CpG methylation and duplicates removed were
+identical to the unchunked path for all four. The CpG reports differ at
+104-245 of 948k-988k covered CpGs per library (0.011-0.026%), by one read
+each.
+
+The per-chunk alignment and trimming reports are published in
+`bismark_align/<sample>_chunk_reports/`. Unset or `0` keeps the
+one-task-per-library path. See
 [docs/running_on_klone.md](../../docs/running_on_klone.md).
 
 #### Replication unit (`methylation.replicate_unit`)
