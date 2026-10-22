@@ -1,71 +1,241 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# FOURTH REAL MANILA CLAM STUDY, claimed 2026-10-21 from the WP5 backlog
+# (docs/candidate_studies_mussels_clams.md, Tier 2: PRJNA733332). The first
+# clam study in AREE whose arms include a SELECTED STRAIN with an asserted
+# tolerance advantage: Zebra II, a Manila clam strain bred in Liaoning, against
+# ordinary (wild-type) clams, each held in seawater or under total ammonia
+# nitrogen (TAN) for 96 h. It is the only clam study on pollutant_exposure /
+# toxicant_tolerance, so every comparison is k = 1 for now: emerging
+# candidates only, until a second ammonia (or other toxicant) study exists.
+#
+# Registered from deposited metadata and the publication's abstract.
+# Publication CONFIRMED by design and title: Ma et al. 2022 (Comp Biochem
+# Physiol D 44:101016), "Transcriptome sequencing reveals improved ammonia
+# nitrogen tolerance in Zebra II strain of the Manila clam", Dalian Ocean
+# University, matching the BioProject's center, title and 96 h acute test. The
+# full text is paywalled (no PMC copy, Unpaywall: closed) and was NOT read, so
+# every methods detail beyond the abstract and the deposit is marked unknown.
+#
+# DESIGN, DECODED FROM THE SAMPLE ALIASES (BioSamples carry no design field):
+#   <strain><treatment>_<rep>
+#   strain    B = Zebra II (pinyin banma, "zebra"); P = ordinary/wild clam
+#             (putong, "ordinary"). The BioProject title names exactly these two
+#             groups ("Zebra 2" and "Ruditapes philippinarum"). P could also
+#             stand for Putian, the southern population this lab compares with
+#             Zebra II in Li et al. 2024 (see NORTHSOUTH2024_TEMP_GILL); either
+#             reading makes P the non-selected comparator.
+#   treatment D = control (duizhao); C96 = 96 h TAN challenge.
+#   3 clams per cell, 12 distinct BioSamples (isolates "Cultured clam1-12"),
+#   all "Complete individual", collected 2019-12, Dalian.
+#
+# FOUR COMPARISONS, PRESPECIFIED 2026-10-21, BEFORE ANY DATA WERE RUN.
+# Each contrast type has exactly one meta_analysis_primary comparison:
+#   ordinary_tan96h_vs_ordinary_control   exposure_response              PRIMARY
+#     The unselected stock's ammonia response: the contrast most like the
+#     exposure responses a future toxicant study would contribute.
+#   zebra_tan96h_vs_zebra_control         exposure_response              secondary
+#   zebra_vs_ordinary_control             baseline_phenotype_difference  PRIMARY
+#     The predictive-marker design: strains that differ in tolerance, both
+#     unexposed. Positive log2FC = higher in Zebra II.
+#   zebra_vs_ordinary_tan96h              phenotype_difference_under_exposure PRIMARY
+#     Positive log2FC = higher in Zebra II. Confounded with dose (limitations 3).
+# The strain x TAN interaction (phenotype_by_exposure_interaction) is not fitted:
+# the RNA-seq workflow fits two-level contrasts only. Compare the two exposure
+# responses on the evidence cards instead.
+# ---------------------------------------------------------------------------
 
 study_id: MA2022_AMMONIA_ZEBRA
 simulated: false
 
 accessions:
-  doi: null
+  doi: "10.1016/j.cbd.2022.101016"
   bioproject: "PRJNA733332"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR14675931-SRR14675942 (12 RNA-seq runs)"
+  ena: "PRJNA733332"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN19375778-SAMN19375789 (one per clam). PMID 35985189."
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "Ma Q, Shi W, Jahan K, Zhao W, Xu Q, Huo Z, Fang L, Yang F, Yan X (2022). Transcriptome sequencing reveals improved ammonia nitrogen tolerance in Zebra II strain of the Manila clam Ruditapes philippinarum. Comparative Biochemistry and Physiology Part D: Genomics and Proteomics 44:101016. https://doi.org/10.1016/j.cbd.2022.101016 (PMID 35985189)."
+
+species: "Ruditapes philippinarum"
+strain_or_population: "Juveniles of two groups held at Dalian Ocean University (BioSample isolation_source Dalian, collected 2019-12): the Zebra II strain (a Manila clam strain bred by the Engineering Research Center of Shellfish Culture and Breeding in Liaoning Province; sample prefix B) and ordinary clams described in the abstract as a wild population (prefix P). Breeding history, generation, age and size of either group are in the paywalled methods and were not read."
+
+# AREE reanalyzes against the NCBI RefSeq annotation its Manila clam crosswalk
+# is built from, as for the other Manila clam studies. The authors' reference
+# and pipeline are not known (full text not read).
+genome_assembly: "ASM2657151v2"
+annotation_version: "GCF_026571515.1-RS_2023_10"
 
 assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end (2 x 150 bp per ENA base counts), 22.8-26.6 M read pairs per library; 38.7 GB FASTQ reported by ENA. Full-length libraries; no 3' Tag-seq design, unlike the Padova clam studies."
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 12 libraries are public in ENA/SRA under PRJNA733332 (first public 2021-06-02). The design is encoded only in sample aliases. The paper's DEG lists are behind a paywall and were not used. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
 analysis_status: "not_started"
 
 comparisons:
-  - comparison_id: "comp1"
-    tissue: "gill"
-    life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
-    exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+  - comparison_id: "ordinary_tan96h_vs_ordinary_control"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "96 h acute toxicity test with total ammonia nitrogen (TAN); the wild-population group was exposed at 16.670 +/- 0.7 mg/L TAN (Ma et al. 2022 abstract). Sample aliases PC96_1-3 vs PD_1-3."
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: "16.670 +/- 0.7 mg/L TAN vs control seawater (control TAN not reported in the abstract)"
+    exposure_duration: "96 h"
+    exposure_timing: "sampled at the end of the 96 h acute test; mortality during the test is not known to AREE (paywalled), so the exposed clams may be survivors of a lethal exposure"
+    control_condition: "Ordinary/wild clams held without added ammonia (condition P_D); 3 clams"
+    treatment_condition: "Ordinary/wild clams after 96 h at about 16.7 mg/L TAN (condition P_C96); 3 clams"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    # baseline_phenotype_difference | phenotype_difference_under_exposure |
-    # exposure_response | phenotype_by_exposure_interaction (docs/contrast_types.md)
+    resilience_classification: "exposure_only"
     contrast_type: "exposure_response"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 6
+    biological_replicates: 3
     results_file: null
+    meta_analysis_primary: true
 
-quality_flags: []
-limitations: null
+  - comparison_id: "zebra_tan96h_vs_zebra_control"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "96 h acute toxicity test with total ammonia nitrogen (TAN); the Zebra II group was exposed at 17.617 +/- 0.634 mg/L TAN (Ma et al. 2022 abstract). Sample aliases BC96_1-3 vs BD_1-3."
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: "17.617 +/- 0.634 mg/L TAN vs control seawater (control TAN not reported in the abstract)"
+    exposure_duration: "96 h"
+    exposure_timing: "sampled at the end of the 96 h acute test; mortality during the test is not known to AREE (paywalled), so the exposed clams may be survivors of a lethal exposure"
+    control_condition: "Zebra II clams held without added ammonia (condition B_D); 3 clams"
+    treatment_condition: "Zebra II clams after 96 h at about 17.6 mg/L TAN (condition B_C96); 3 clams"
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: false
+
+  - comparison_id: "zebra_vs_ordinary_control"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "No added ammonia: control arms of the 96 h TAN test (sample aliases BD_1-3 vs PD_1-3)."
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: "none (control seawater)"
+    exposure_duration: "96 h in control conditions"
+    exposure_timing: "both strains sampled unexposed, alongside the TAN arms"
+    control_condition: "Ordinary/wild clams, unexposed (condition P_D); 3 clams. Reference group."
+    treatment_condition: "Zebra II clams, unexposed (condition B_D); 3 clams. Positive log2FC = higher in Zebra II."
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: "TAN tolerance, higher in Zebra II as asserted by the authors (title and abstract of Ma et al. 2022). The measured basis (LC50, survival) is in the paywalled full text and was not verified; see limitations (1)."
+    resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+  - comparison_id: "zebra_vs_ordinary_tan96h"
+    tissue: "whole_animal"
+    life_stage: "juvenile"
+    stressor_original: "96 h acute TAN test, Zebra II at 17.617 mg/L vs wild population at 16.670 mg/L (sample aliases BC96_1-3 vs PC96_1-3)."
+    stressor_standardized: "pollutant_exposure"
+    exposure_intensity: "17.6 mg/L TAN (Zebra II) vs 16.7 mg/L TAN (ordinary): not the same dose"
+    exposure_duration: "96 h"
+    exposure_timing: "sampled at the end of the 96 h acute test; possible survivor selection in both arms"
+    control_condition: "Ordinary/wild clams after 96 h at about 16.7 mg/L TAN (condition P_C96); 3 clams. Reference group."
+    treatment_condition: "Zebra II clams after 96 h at about 17.6 mg/L TAN (condition B_C96); 3 clams. Positive log2FC = higher in Zebra II."
+    phenotype: "toxicant_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: "TAN tolerance, higher in Zebra II as asserted by the authors; basis not verified (limitations 1)."
+    resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) The tolerance difference is the authors' claim, not verified here. The
+  abstract states that Zebra II has improved TAN tolerance, but the measured
+  basis (LC50, survival curves, the number of animals tested) is in the
+  paywalled methods, which were not read. The two challenge concentrations
+  (17.6 and 16.7 mg/L) look like strain-specific test doses, possibly each
+  strain's 96 h LC50; if so, Zebra II's higher LC50 is the tolerance evidence,
+  and it is a modest one (about 6%). ambiguous_phenotype_definition is set
+  until the full text is read.
+  (2) Three clams per group, whole juveniles. n = 3 gives little power and
+  imprecise standard errors; the meta-analysis weights will reflect this.
+  That each library is one clam is inferred from the 12 distinct BioSamples
+  and isolates ("Cultured clam1-12"), not confirmed from the methods; tank or
+  container structure is unknown.
+  (3) The strains were challenged at different TAN concentrations, so
+  zebra_vs_ordinary_tan96h confounds strain with a ~1 mg/L dose difference,
+  and the two exposure responses are not at equal dose.
+  (4) Possible survivor selection. If the 96 h test ran at or near lethal
+  concentrations, the exposed transcriptomes come from clams that survived,
+  which biases both exposure responses and the under-exposure strain contrast
+  toward tolerant individuals.
+  (5) Strain is confounded with everything that differs between the two
+  groups' origins (rearing history, age, size, possibly population of origin
+  if P is the southern Putian population). The baseline contrast identifies
+  genes that differ between these two groups, not genes that cause tolerance.
+  (6) Whole-animal RNA mixes tissues, so composition differences between
+  strains (e.g. relative gonad or gill mass) can appear as expression
+  differences.
+  (7) TAN is mapped to pollutant_exposure, the closest stressor term; ammonia
+  here is an aquaculture water-quality stressor (waste accumulation in
+  hatcheries and ponds) rather than an external contaminant. The original
+  wording is preserved in stressor_original.
 
 provenance:
   registered_by: "Steven Roberts"
   date_registered: "2026-10-21"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA733332 --study-id
+    MA2022_AMMONIA_ZEBRA` (draft PR #109). Sample sheet and FASTQ manifest
+    generated from live ENA metadata with `aree fetch-samplesheet --bioproject
+    PRJNA733332 --study MA2022_AMMONIA_ZEBRA --label-field sample_alias
+    --label-pattern '^(?P<strain>[BP])(?P<tan>D|C96)_(?P<rep>[123])$'
+    --condition-attribute strain --condition-attribute tan --attribute isolate
+    --attribute tissue --attribute collection_date --library-strategy RNA-Seq`.
+    The design is in the aliases only; condition levels are B_D, B_C96, P_D
+    and P_C96.
+    ALIAS DECODING: B and P read as pinyin for zebra (banma) and ordinary
+    (putong), matching the BioProject title's two groups; D and C96 as control
+    (duizhao) and 96 h challenge, matching the abstract's 96 h acute test.
+    This is an inference from the labels, not from the methods; confirm when
+    the full text is read.
+    REPLICATION CHECK: 12 distinct BioSamples, isolates "Cultured clam1" to
+    "Cultured clam12" in alias order, all tissue "Complete individual", all
+    collected 2019-12 in Dalian, 3 per strain x treatment. Distinct names do
+    not prove distinct animals: run scripts/check_replicate_dispersion.py
+    after quantification.
+    INDEPENDENCE: different lab, country, stressor and year from the Padova
+    heat studies (TUCCI2025_HEAT_PRIMING, PERUZZA2023_HEATWAVE). Same
+    institution as NORTHSOUTH2024_TEMP_GILL (Dalian Ocean University), which
+    may also involve Zebra II, but a different experiment, stressor and tissue.
+    MAPPING: "Complete individual" maps to whole_animal (here individual
+    juveniles, not pools); the abstract says juveniles, so juvenile. TAN maps
+    to pollutant_exposure (limitations 7) and the tolerance phenotype to
+    toxicant_tolerance. The GCF_026571515.1 reference bundle and Salmon index
+    are those fetched and verified for TUCCI2025_HEAT_PRIMING on 2026-10-12.
+    PRIMARY COMPARISONS prespecified on 2026-10-21 before any data were
+    downloaded (see header). Exposure responses are fitted within strain and
+    strain contrasts within treatment, each as a two-level DESeq2 contrast on
+    its 6 libraries.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA733332"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA733332"
+    - "https://doi.org/10.1016/j.cbd.2022.101016"
+    - "https://pubmed.ncbi.nlm.nih.gov/35985189/"
