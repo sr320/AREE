@@ -191,13 +191,11 @@ def test_every_registered_assembly_has_a_built_crosswalk():
     assembly can be harmonized. A registered path that does not exist would make
     validation and harmonization disagree about what is possible. An assembly
     with no annotation at all (the basket cockle) has nothing to build from."""
+    annotated = {a["ncbi_taxid"] for a in load_assemblies().values() if a.get("annotation_release")}
     for record in load_assemblies().values():
-        if not record.get("annotation_release"):
-            if record["ncbi_taxid"] not in {
-                a["ncbi_taxid"] for a in load_assemblies().values() if a.get("annotation_release")
-            }:
-                assert record["identifier_crosswalk"] is None, record["assembly_id"]
-                continue
+        if record["ncbi_taxid"] not in annotated:
+            assert record["identifier_crosswalk"] is None, record["assembly_id"]
+            continue
         path = assembly_crosswalk_path(record)
         assert path is not None, record["assembly_id"]
         assert path.exists(), f"{record['assembly_id']}: {path} not built"
