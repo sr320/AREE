@@ -2,8 +2,9 @@
 
 AREE's evidence is generated as tables: the harmonized evidence table, ranked
 candidates, evidence cards and the study registry. There are two ways to query
-them without writing pipeline code. A third, a chat box on the website, is being
-built on the same query layer ([Ask AREE](ask_aree.md)). Both read the same outputs through the same
+them without writing pipeline code. A third, the [Ask AREE](ask.qmd) chat on the
+website, answers plain-language questions with the same query layer
+([how it works](ask_aree.md)). Both read the same outputs through the same
 read-only query layer (`src/query/`), so they always agree with each other and
 with the evidence cards.
 
