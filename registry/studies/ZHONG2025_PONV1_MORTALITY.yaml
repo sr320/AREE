@@ -209,9 +209,28 @@ provenance:
     (GenBank PQ030832.1 + PV579160.1, 41,709 + 22,622 bp, matching the
     paper) is committed under data/studies/ZHONG2025_PONV1_MORTALITY/
     pathogen_reference/ with a provenance file; data/reference/pathogens/ is
-    outside a study PR's scope. Mantle FASTQ (106 files, 437 GB) are being
-    downloaded from ENA to OWC-Express, each file checked against the ENA
-    MD5 in fastq_manifest.tsv.
+    outside a study PR's scope. Mantle (106 files) and hemolymph (86 files)
+    FASTQ downloaded from ENA to OWC-Express; every file matched its ENA MD5
+    in fastq_manifest.tsv (2026-10-21).
+    PONV1 CALLS, MANTLE (2026-10-22), by the rule fixed in the header
+    before any viral counts: 4 of 27 farm animals positive (L10, I8, I16,
+    I6: 319-1,303 PONV1 pairs per million, 6,800-75,000 pairs on each
+    segment), 23 negative; 0 of 26 wild. The positive arm has fewer than 5
+    animals, so, as prespecified, the within-farm PONV1-positive vs
+    PONV1-negative comparison is NOT registered. Per-segment counts, lanes
+    and the script are in data/studies/ZHONG2025_PONV1_MORTALITY/
+    ponv1_per_segment/. Agreement with the paper's 20 of 33 cannot be
+    checked one-to-one: its call is any assembled-contig signal (RPKM > 0)
+    in either tissue. With any read on both segments, 15 of 27 farm mantle
+    animals would be positive, and four more farm animals sit at 28-54 per
+    million, below the threshold. Not acted on, because the threshold was
+    fixed first. Two WILD animals carry PONV1 on both segments (E4, 2,575
+    pairs, 25.9 per million; D5, 740 pairs, 7.4 per million), below the
+    threshold. The paper reports no PONV1 in wild oysters. Both are on
+    flowcell HG5LKDSX2 lane 2, with no farm mantle library but 11 farm
+    hemolymph libraries, so index hopping from infected hemolymph is
+    possible and not yet tested (lanes from each library's first read
+    header).
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB77044"
     - "https://doi.org/10.1073/pnas.2426923122"
