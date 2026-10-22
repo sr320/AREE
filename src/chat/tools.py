@@ -77,7 +77,8 @@ TOOLS = [
         "name": "search_features",
         "description": "Find genes, proteins, methylation regions or metabolites whose identifier "
                        "(standardized, original, or orthogroup) contains query_text, e.g. 'LOC105333935' or "
-                       "'OG0001234'. One row per feature with its studies, phenotypes and directions.",
+                       "'OG0001234'. One row per feature with its studies, phenotypes and directions; "
+                       "features in the most studies first, then the most significant records.",
         "input_schema": _schema({"query_text": _TEXT, "limit": _limit(10, 25)}, ("query_text",)),
     },
     {
@@ -101,7 +102,10 @@ TOOLS = [
                        "min_studies studies (default 2). Use it for questions like 'which genes are "
                        "significant for thermal_tolerance in more than one study, and do any disagree?'. "
                        "Per feature: the studies, how many went up vs down, whether directions conflict, "
-                       "and the smallest adjusted p; plus how many matching features conflict overall.",
+                       "and the smallest adjusted p. Totals for the whole query: n_features, "
+                       "n_conflicting, and feature_type_counts (which kinds of feature the count covers). "
+                       "Rows come most studies first, then consistent before conflicting, then smallest "
+                       "adjusted p.",
         "input_schema": _schema({
             "phenotype": _TEXT, "stressor": _TEXT, "feature_type": _TEXT, "species": _TEXT,
             "tissue": _TEXT, "min_studies": {"type": "integer", "minimum": 2, "maximum": 50},
@@ -112,7 +116,8 @@ TOOLS = [
     {
         "name": "list_candidates",
         "description": "Ranked candidate biomarkers with transparent score components (k_studies, "
-                       "direction consistency, I-squared, pooled effect, adjusted p). tier: "
+                       "direction consistency, I-squared, pooled effect, adjusted p), in AREE's ranking "
+                       "(tier order, then score); n_candidates and tier_counts cover the whole query. tier: "
                        "high_priority_cross_study, multi_omics_convergence, metabolite_linked_convergence, "
                        "emerging. evidence_class: resilience_associated, stress_response, "
                        "disease_associated, exposure_only. contrast_type: baseline_phenotype_difference "
@@ -200,6 +205,21 @@ def _fit(result: dict) -> str:
     return text
 
 
+# (total, rows) pairs in query results: when fewer rows than the total come back, say so.
+_PAGED = (("n_records", "records"), ("n_features", "features"), ("n_candidates", "candidates"))
+
+
+def _mark_partial(result: dict) -> dict:
+    for total_key, rows_key in _PAGED:
+        total, rows = result.get(total_key), result.get(rows_key)
+        if isinstance(total, int) and isinstance(rows, list) and len(rows) < total:
+            result["partial_result"] = (
+                f"Only the first {len(rows)} of {total} {rows_key} are shown, in the order the tool "
+                f"describes. The totals cover all {total}; anything said about the other "
+                f"{total - len(rows)} must rest on those totals, or on a narrower query.")
+    return result
+
+
 def run_tool(name: str, args, sources: query.Sources) -> tuple[str, bool]:
     """Run one tool call; returns (JSON content for the model, whether it is an error)."""
     schema = _SCHEMAS.get(name)
@@ -214,4 +234,4 @@ def run_tool(name: str, args, sources: query.Sources) -> tuple[str, bool]:
     except Exception:
         log.exception("tool %s failed with input %r", name, args)
         return json.dumps({"error": f"{name} failed on the server; try a narrower question."}), True
-    return _fit(result), "error" in result
+    return _fit(_mark_partial(result)), "error" in result

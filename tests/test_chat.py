@@ -176,6 +176,14 @@ def test_replication_counts_real_studies_only(sources):
     assert "error" in one_study  # replication needs at least two studies
 
 
+def test_a_shortened_result_says_how_much_was_left_out(sources):
+    partial = json.loads(tools.run_tool("get_evidence", {"feature": GENE, "limit": 1}, sources)[0])
+    assert partial["n_records"] == 2 and len(partial["records"]) == 1
+    assert "first 1 of 2 records" in partial["partial_result"]
+    whole = json.loads(tools.run_tool("get_evidence", {"feature": GENE}, sources)[0])
+    assert "partial_result" not in whole
+
+
 def test_tool_inputs_are_validated_before_anything_runs(sources):
     for name, args in [("get_evidence", {"limit": 5000}), ("get_evidence", {"drop_table": "x"}),
                        ("get_study", {}), ("list_vocabulary", {"name": "../secrets"}), ("no_such_tool", {})]:

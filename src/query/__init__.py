@@ -634,8 +634,8 @@ def find_replicated_features(phenotype: str | None = None, stressor: str | None 
         LIMIT {n}""")
     criteria = {"min_studies": int(min_studies), "max_adjusted_p": float(max_adjusted_p)}
     if not rows:
-        return {"n_features": 0, "n_conflicting": 0, "features": [], "criteria": criteria,
-                "note": f"{REPLICATION_NOTE} {INTERPRETATION_NOTE}"}
+        return {"n_features": 0, "n_conflicting": 0, "feature_type_counts": {}, "features": [],
+                "criteria": criteria, "note": f"{REPLICATION_NOTE} {INTERPRETATION_NOTE}"}
 
     features = [{
         "feature_id_standardized": r["feature_id_standardized"],
@@ -656,7 +656,13 @@ def find_replicated_features(phenotype: str | None = None, stressor: str | None 
         "any_simulated": bool(r["any_simulated"]),
     } for r in rows]
     n_features = int(rows[0]["n_features"])
+    by_type = evidence.rows(f"""
+        SELECT coalesce(CAST(feature_type AS VARCHAR), 'unknown') AS t, count(*) AS n
+        FROM (SELECT feature_id_standardized, feature_type FROM {{table}} GROUP BY ALL
+              HAVING count(DISTINCT study_id) >= {int(min_studies)})
+        GROUP BY t ORDER BY n DESC, t""")
     return {"n_features": n_features, "n_conflicting": int(rows[0]["n_conflicting"]),
+            "feature_type_counts": {r["t"]: int(r["n"]) for r in by_type},
             "features": features, "truncated": n_features > n, "criteria": criteria,
             "note": f"{REPLICATION_NOTE} {INTERPRETATION_NOTE}"}
 

@@ -80,6 +80,8 @@ def test_replicated_features_are_counted_by_study_with_their_directions(demo_sou
     assert hit["n_studies"] >= 2 and len(hit["studies"]) == hit["n_studies"]
     assert hit["n_studies_up"] >= 1 and hit["n_studies_down"] >= 1 and hit["conflicting_directions"]
     assert out["n_conflicting"] >= 1 and all(f["n_studies"] >= 2 for f in out["features"])
+    # Which feature types a count covers, so "N genes" is never a guess.
+    assert sum(out["feature_type_counts"].values()) == out["n_features"]
     # Most studies first, and among equals, consistent before conflicting.
     keys = [(-f["n_studies"], f["conflicting_directions"]) for f in out["features"]]
     assert keys == sorted(keys)

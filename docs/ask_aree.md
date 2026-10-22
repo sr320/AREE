@@ -195,6 +195,23 @@ up. Cost: $3.92 for 52 answers (median 16 s each), plus $1.23 for grading. The j
 also varies: re-grading the same answers flipped two verdicts, so treat single-case
 differences with caution.
 
+**Variants tried** (same questions, model, judge and rubric; paired against the baseline):
+
+| Variant | Change | Pass | Paired change (95% CI) | Median length | Cost per answer |
+|---|---|---|---|---|---|
+| baseline | | 67% | | 292 words | $0.075 |
+| v1 | Results say when they're partial; ordering documented; replication counts by feature type | 60% | −8 (−23 to +7) | 292 words | $0.075 |
+| v2 (shipped) | v1, plus answers under 200 words with a few directly sourced facts | 69% | +2 (−14 to +18) | 220 words | $0.058 |
+
+Neither change measurably moved the pass rate. In both the baseline and v1,
+faithfulness fell as answers grew longer: 100% under 200 words, about 55% over 300.
+v2 was kept because it matches the baseline's quality with shorter answers, 23% lower
+cost and faster replies (median 13 s). One cost of brevity: answers about replication
+sometimes name no conflicting example, because results list consistent features first.
+At 26 questions × 2 runs this eval can't see differences much under 15 points, so
+further tuning needs more questions and runs, and a check of the judge against human
+grading.
+
 ## Roadmap
 
 1. **Cloud Run deployment**: a container with the published tables baked in, deployed
