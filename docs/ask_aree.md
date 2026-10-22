@@ -6,10 +6,9 @@ writes each answer by calling AREE's read-only query layer as tools, the same ni
 queries the [MCP server](querying_aree.md#the-mcp-server) offers. Its numbers
 therefore come from AREE's published tables, and it cites the `study_id`s behind them.
 
-Status: the service (`src/chat/`) and the chat page ([`ask.qmd`](ask.qmd)) run locally
-and are tested, and the deployment to Cloud Run is ready to switch on
-([Deploy to Cloud Run](#deploy-to-cloud-run)). Until it is live, the page isn't linked
-from the site's navigation, and on the public site it says the chat isn't available yet.
+Status: live at [Ask AREE](ask.qmd). The service runs on Cloud Run
+([Deploy to Cloud Run](#deploy-to-cloud-run)) and is redeployed with the fresh tables after
+each site build.
 
 ## How it works
 

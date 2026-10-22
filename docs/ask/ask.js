@@ -3,9 +3,9 @@
 (() => {
   "use strict";
 
-  // The deployed service's address. Empty until it is deployed: the public page
-  // then says the chat isn't live yet.
-  const PRODUCTION_API = "";
+  // The deployed service's address (Cloud Run, docs/ask_aree.md#deploy-to-cloud-run).
+  // Empty means the public page says the chat isn't live.
+  const PRODUCTION_API = "https://aree-chat-4l635c2jtq-uw.a.run.app";
   // Cloudflare Turnstile site key, needed when the service requires a bot check.
   const TURNSTILE_SITE_KEY = "";
 
