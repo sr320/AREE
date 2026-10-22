@@ -351,3 +351,22 @@ jobs:
         run: quarto render docs
       - name: Dashboard home page rendered
         run: test -f docs/_site/index.html && test -f docs/_site/about.html
+      - name: Ask AREE page rendered with its script
+        run: test -f docs/_site/ask.html && test -f docs/_site/ask/ask.js
+
+  chat-container:
+    name: Ask AREE container builds and starts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image (fetches the published site tables)
+        run: docker build -f containers/chat/Dockerfile -t aree-chat .
+      - name: Start it and check health
+        run: |
+          docker run -d --name chat -p 8080:8080 aree-chat
+          for i in $(seq 1 30); do curl -sf localhost:8080/api/health && break; sleep 2; done
+          curl -sf localhost:8080/api/health | tee health.json
+          grep -q '"ok":true' health.json
+      - name: Show the service log
+        if: always()
+        run: docker logs chat || true

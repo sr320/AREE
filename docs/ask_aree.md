@@ -7,9 +7,9 @@ queries the [MCP server](querying_aree.md#the-mcp-server) offers. Its numbers
 therefore come from AREE's published tables, and it cites the `study_id`s behind them.
 
 Status: the service (`src/chat/`) and the chat page ([`ask.qmd`](ask.qmd)) run locally
-and are tested. The Cloud Run deployment is next (see [Roadmap](#roadmap)). Until it is
-live, the page isn't linked from the site's navigation, and on the public site it says
-the chat isn't available yet.
+and are tested, and the deployment to Cloud Run is ready to switch on
+([Deploy to Cloud Run](#deploy-to-cloud-run)). Until it is live, the page isn't linked
+from the site's navigation, and on the public site it says the chat isn't available yet.
 
 ## How it works
 
@@ -212,8 +212,63 @@ At 26 questions × 2 runs this eval can't see differences much under 15 points, 
 further tuning needs more questions and runs, and a check of the judge against human
 grading.
 
-## Roadmap
+## Deploy to Cloud Run
 
-1. **Cloud Run deployment**: a container with the published tables baked in, deployed
-   by GitHub Actions after each site build, with the API key in Secret Manager. Then set
-   `PRODUCTION_API` in `docs/ask/ask.js` and add the page to the site's navigation.
+The service runs as one container on Google Cloud Run
+([`containers/chat/Dockerfile`](https://github.com/sr320/AREE/blob/main/containers/chat/Dockerfile)).
+The image holds the code, the study registry and the tables the site publishes,
+fetched when the image is built. Dependency versions are locked in
+`containers/chat/requirements.lock`. CI builds the image and checks that it starts on
+every pull request.
+
+After each successful site build, the **Deploy Ask AREE chat service** workflow
+(`.github/workflows/chat-deploy.yml`) builds a fresh image, so the chat answers from the
+same build as the Explore page. It then deploys the image and checks that it answers.
+GitHub signs in to Google through Workload Identity Federation, so no Google key file
+exists anywhere. The Anthropic API key lives only in Google Secret Manager.
+
+The service runs on one instance, which keeps the rate limits and daily budget exact
+and serves many visitors at once. It scales to zero when idle, so the first question
+after a quiet spell waits a few seconds for it to start.
+
+### One-time setup
+
+1. **A Google Cloud project with billing.** If your Google account belongs to an
+   organization (for example UW), its policies may forbid public (`allUsers`) access to
+   Cloud Run services. In that case, ask its administrators, or use a project outside
+   the organization.
+2. **An Anthropic API key in a dedicated workspace**, with a monthly spend limit set on
+   that workspace in the Claude Console. That limit is the hard cap behind the chat's
+   own daily budget. The key must belong to a workspace: an organization-level key is
+   refused.
+3. **Run the setup script in Google Cloud Shell** (the terminal button in the Cloud
+   console). Upload [`scripts/setup_cloud_run.sh`](https://github.com/sr320/AREE/blob/main/scripts/setup_cloud_run.sh)
+   or paste it, then run:
+
+   ```bash
+   bash setup_cloud_run.sh PROJECT_ID
+   ```
+
+   It enables the APIs and creates the image repository and the secret (you paste the
+   key; it isn't shown). It also creates a runtime account that can read only that
+   secret, and a deploy account that only GitHub Actions in `sr320/AREE` can use. It is
+   safe to run again.
+4. **Set the GitHub repository variables** the script prints (`GCP_PROJECT_ID`,
+   `GCP_REGION`, `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA`, `GCP_RUNTIME_SA`; none is a
+   secret). Optionally set `AREE_CHAT_DAILY_BUDGET_USD`; the default is 10.
+5. **Run the workflow** from the Actions tab. Its summary shows the service's address.
+
+### Going live
+
+1. Set `PRODUCTION_API` at the top of `docs/ask/ask.js` to the service's address.
+2. Add the page to the site's navigation in `docs/_quarto.yml`.
+3. Optionally, turn on the Cloudflare Turnstile bot check: put its secret key in Secret
+   Manager as `aree-turnstile-secret`, pass it to the service as
+   `AREE_CHAT_TURNSTILE_SECRET` (the `secrets` list in the workflow), and set
+   `TURNSTILE_SITE_KEY` in `docs/ask/ask.js`.
+
+To change the API key later, add a new secret version
+(`gcloud secrets versions add aree-anthropic-api-key --data-file=-`) and re-run the
+workflow. To stop the chat at once, set `AREE_CHAT_DAILY_BUDGET_USD` to 0 and re-run the
+workflow, or delete the Cloud Run service. The page then reports that the chat isn't
+reachable, and the Explore page is unaffected.

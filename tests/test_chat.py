@@ -390,3 +390,12 @@ def test_an_unexpected_failure_still_ends_the_stream_with_an_error(site):
 
     events = _events(_app(site, Broken()).post("/api/chat", json={"message": "hi"}))
     assert [e["type"] for e in events] == ["start", "error"] and events[-1]["code"] == "internal"
+
+
+def test_the_container_entry_point_serves_from_the_environment(monkeypatch, site):
+    from chat.server import app_from_env
+
+    monkeypatch.setenv("AREE_DATA_DIR", str(site))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    health = TestClient(app_from_env()).get("/api/health").json()
+    assert health["ok"] and health["data_build"] == "2026-10-01T00:00:00+00:00"

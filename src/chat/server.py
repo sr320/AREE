@@ -6,7 +6,7 @@
 
 It holds the Anthropic API key, so the static site never does. Every setting is an
 environment variable (`Settings.from_env`); run it with `aree chat-serve`, or in a
-container with `uvicorn --factory chat.server:create_app`.
+container with `uvicorn --factory chat.server:app_from_env`.
 """
 from __future__ import annotations
 
@@ -206,3 +206,10 @@ def create_app(settings: Settings | None = None, client=None, verify=verify_turn
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     return app
+
+
+def app_from_env() -> FastAPI:
+    """The container's entry point (`uvicorn --factory chat.server:app_from_env`): settings
+    from the environment, and one JSON line per chat turn on stdout for the platform's logs."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    return create_app()
