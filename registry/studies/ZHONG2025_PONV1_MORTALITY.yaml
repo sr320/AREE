@@ -1,0 +1,253 @@
+# FIRST REAL STUDY OF A FIELD MASS-MORTALITY EVENT in AREE: farmed adult
+# Pacific oysters dying in Baynes Sound, British Columbia (July-August 2020),
+# vs apparently healthy wild oysters from ten sites. Individually sequenced
+# (one BioSample per animal per tissue), with a per-animal disease state.
+#
+# Publication: Zhong et al. 2025, PNAS (open access, read via PubMed Central
+# PMC12377751). It reports a new nidovirus, PONV1, replicating in 20 of 33
+# diseased farmed oysters and in none of 26 wild ones. The link to the
+# deposit is CONFIRMED (2026-10-20): the paper's Data, Materials, and Software
+# Availability statement (Europe PMC full-text XML of PMC12377751) gives the
+# raw reads as ENA ERR13334386 to ERR13334481, exactly this deposit's 96 runs,
+# and the PONV1 genome as GenBank PQ030832 (segment 1) and PV579160
+# (segment 2). The station codes (StnA-H, J, K wild; StnI, StnL, StnM farm),
+# tissues, animal counts (33 farm, 26 wild) and year also match.
+#
+# NOT TO BE RUN ON THE MACHINE THAT REGISTERED IT. The libraries are
+# metatranscriptomes at ~175-200 M read pairs each: 792.6 GB of FASTQ (mantle
+# alone 437 GB). Registered and pre-screened on Pori (8 GB RAM, ~84 GB free),
+# claimed for Chlo, the workstation with external storage. Registered
+# 2026-10-14; not yet reanalyzed.
+
+study_id: ZHONG2025_PONV1_MORTALITY
+simulated: false
+
+accessions:
+  doi: "10.1073/pnas.2426923122"
+  bioproject: "PRJEB77044"
+  geo: null
+  sra: null
+  ena: "PRJEB77044 (ERR13334386-ERR13334481, 96 runs)"
+  proteomexchange: null
+  other: "PMID:40758866; PMCID:PMC12377751; BioSamples SAMEA115788887-SAMEA115788982 (one per animal per tissue)"
+
+citation: "Zhong KX, Chan AM, Miller KM, Saunders R, Suttle CA (2025). Evolutionarily divergent nidovirus with an exceptionally large genome identified in Pacific oysters undergoing mass mortality. Proceedings of the National Academy of Sciences USA 122(33):e2426923122. https://doi.org/10.1073/pnas.2426923122"
+
+species: "Magallana gigas"
+strain_or_population: "Two- to three-year-old adults. Farmed: two aquaculture farms in Baynes Sound, Vancouver Island, BC (farm 1 = StnI; farm 2 = StnL, StnM), sampled during a mass-mortality event, most showing gaping shells and tissue necrosis. Wild: beach oysters without obvious disease from ten sites (StnA-H, J, K), a few km to >100 km from the farms (Zhong et al. 2025)."
+
+# AREE reanalyzes against its current reference, matching the identifier
+# crosswalk and the other raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end, 96 libraries (mantle 53, hemolymph 43), ~175-200 M read pairs each; 792.6 GB FASTQ reported by ENA. Deposited as RNA-Seq / size fractionation (metatranscriptomics)."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 96 runs are public in ENA under PRJEB77044 (first public 2026-06-27). No host count matrix or DE table is deposited; the paper's analysis is viral discovery, not host expression. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+# ---------------------------------------------------------------------------
+# DESIGN AS DEPOSITED. Each animal has its own BioSample per tissue, and
+# sample_alias is Stn<site>_<Mantle|Hemolymph>_<animal>. The sample sheet
+# parses it, so condition = <station>_<tissue> (24 levels, n = 2-17). Station
+# is a sampling site, not a treatment, so comparisons pool station levels:
+#   farm (mortality event): StnI, StnL, StnM.   No StnM mantle was deposited.
+#   wild (no obvious disease): StnA-H, StnJ, StnK.  No StnB hemolymph.
+# Mantle: farm 27 (I 17, L 10) vs wild 26. Hemolymph: farm 19 (I 10, L 3,
+# M 6) vs wild 24. The paper's 33 farm animals = 17 + 10 + 6.
+#
+# COMPARISONS, PRESPECIFIED BEFORE ANY RESULT WAS COMPUTED (2026-10-14).
+# Registered now: diseased farm vs healthy wild, per tissue. Farm vs wild
+# confounds disease state with everything else that differs: genetics,
+# husbandry, density, site environment, collection logistics. These
+# comparisons are therefore recorded, but not flagged meta_analysis_primary.
+#
+# PLANNED PRIMARY, to be added after viral QC on the reanalysis machine:
+# within the 27 farm mantle animals, PONV1-positive vs PONV1-negative. Rule,
+# fixed now so that assignment cannot follow the results: run the workflow's
+# viral QC (--viral_reference) against the PONV1 genome (both segments; the
+# GenBank accessions are given in the paper's data availability statement)
+# and call an animal positive if it has PONV1 read pairs at >= 100 per million
+# in mantle (the workflow's --viral_detection_per_million default), with both
+# segments detected. That is CALLA2026_OSHV's viral-QC approach. (Corrected
+# 2026-10-14 from ">= 10", which misstated that default. No viral counts had
+# been computed for this study when the rule was written or corrected.) The paper's own call is RPKM > 0, from assembled-contig mapping;
+# record agreement with its 20 of 33. Same farms, same days, same
+# husbandry, so this is the least confounded disease contrast in the
+# deposit. If either arm has fewer than 5 animals, do not register it.
+#
+# CONTRAST TYPE (2026-10-20). Farm vs wild is exposure_response, the type
+# that claims least (docs/contrast_types.md). It is closest to infected vs
+# uninfected: nothing shows the wild arm met the same challenge, so it is not
+# a phenotype_difference_under_exposure. The planned within-farm
+# PONV1-positive vs PONV1-negative comparison will be
+# phenotype_difference_under_exposure, like CORPOREAU2014's high vs low load.
+# ON PHENOTYPE CLASSIFICATION. Disease state (gaping, necrosis, sampled during
+# mass mortality) was observed per animal, so these are disease
+# comparisons, not exposures. The cause is not established: the paper
+# implicates PONV1 but does not show causation. The stressor is the field
+# event as a whole, mapped to multi_stressor, with the original wording kept.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "farm_mortality_vs_wild_mantle"
+    tissue: "mantle"
+    life_stage: "adult"
+    stressor_original: "Summer 2020 mass-mortality event on two oyster farms in Baynes Sound, BC; diseased animals showed gaping shells and tissue necrosis; PONV1 nidovirus replicating in 20 of 33 (Zhong et al. 2025). Etiology not established."
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: "sampled during the mortality event, July-August 2020"
+    control_condition: "Wild beach oysters without obvious disease, ten sites (sample-sheet levels StnA_Mantle, StnB_Mantle, StnC_Mantle, StnD_Mantle, StnE_Mantle, StnF_Mantle, StnG_Mantle, StnH_Mantle, StnJ_Mantle, StnK_Mantle; 26 animals)"
+    treatment_condition: "Farmed oysters during the mass-mortality event, most with gaping shells and necrosis (StnI_Mantle, StnL_Mantle; 27 animals)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 53
+    biological_replicates: 26
+    results_file: null
+
+  - comparison_id: "farm_mortality_vs_wild_hemolymph"
+    tissue: "hemolymph"
+    life_stage: "adult"
+    stressor_original: "Summer 2020 mass-mortality event on two oyster farms in Baynes Sound, BC; diseased animals showed gaping shells and tissue necrosis; PONV1 nidovirus replicating in 20 of 33 (Zhong et al. 2025). Etiology not established."
+    stressor_standardized: "multi_stressor"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: "sampled during the mortality event, July-August 2020"
+    control_condition: "Wild beach oysters without obvious disease (StnA_Hemolymph, StnC_Hemolymph, StnD_Hemolymph, StnE_Hemolymph, StnF_Hemolymph, StnG_Hemolymph, StnH_Hemolymph, StnJ_Hemolymph, StnK_Hemolymph; 24 animals)"
+    treatment_condition: "Farmed oysters during the mass-mortality event (StnI_Hemolymph, StnL_Hemolymph, StnM_Hemolymph; 19 animals)"
+    phenotype: "disease_susceptibility"
+    phenotype_direction: "increase"
+    phenotype_unit: null
+    resilience_classification: "disease"
+    contrast_type: "exposure_response"
+    sample_size: 43
+    biological_replicates: 19
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - unbalanced_design
+  - single_timepoint
+
+limitations: >
+  (1) Farm vs wild is confounded with disease state. Genetics (farmed stock
+  vs naturalised wild), husbandry, density, site environment and sampling
+  logistics all differ, so the registered comparisons cannot attribute
+  expression differences to disease. The planned within-farm PONV1
+  comparison is the less confounded one. (2) Etiology is not established:
+  PONV1 is associated with the diseased animals, and its causal role is not
+  shown. Other agents may contribute and are not excluded. (3) Diseased
+  animals were sampled while dying (gaping, necrosis). Their expression
+  includes moribund and necrotic tissue states, not only a response to
+  infection. (4) Animals are nested in stations (2-17 per site) and the
+  design is unbalanced; StnI dominates the farm arm (17 of 27 mantle).
+  (5) These are total-RNA metatranscriptomes without rRNA depletion. In the
+  pre-screen, cytoplasmic LSU and SSU rRNA took 65-97% of gene-level counts.
+  The share differs by group: StnL farm libraries ran 82-85% at the top
+  transcript, wild 53-68%. Host mRNA depth is still ample at ~190 M pairs
+  per library. Run with --exclude_genes
+  data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt (PR #57;
+  68 genes with NCBI gene_biotype rRNA). It keeps rRNA genes out of the
+  results and records each library's rRNA share. Measured on 3 farm vs 3
+  wild libraries, it does NOT change DESeq2's size factors (ratio 1.00 for
+  every library). Median-of-ratios is robust to the few dominant rRNA genes,
+  so leaving rRNA in would not have biased normalization. The large
+  farm/wild difference in size factors (0.35-0.81 vs 1.53-1.83) is mRNA
+  depth, and DESeq2 accounts for it. (6) Single time point, one
+  region, one summer. (7) Hemolymph was collected "when possible", so the
+  hemolymph comparison is a non-random subset of animals. (8) The wild
+  oysters are "apparently healthy", not shown to be free of infection; the
+  paper detected no PONV1 in them.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-14"
+  curation_notes: >
+    Claimed with `aree start-study --machine "Chlo (registered and
+    pre-screened on Pori)"` (draft PR #56). Registered from live ENA metadata
+    for PRJEB77044 with `aree fetch-samplesheet --bioproject PRJEB77044
+    --study ZHONG2025_PONV1_MORTALITY --label-field sample_alias
+    --label-pattern
+    '^(?P<station>Stn[A-M])_(?P<tissue_label>Mantle|Hemolymph)_(?P<oyster>[A-M][0-9]+)$'
+    --condition-attribute station --condition-attribute tissue_label
+    --attribute oyster --attribute 'collection date' --attribute
+    'geographic location (country and/or sea)'`. The deposit's BioSample
+    attributes carry no disease or virus status, only organism, country
+    and collection date. Station, tissue and animal come from sample_alias,
+    and farm vs wild from the paper's station key. REPLICATION CHECK: 96
+    runs, 96 distinct BioSamples, one per animal per tissue.
+    PRE-SCREEN, PASSED (2026-10-14): scripts/prescreen_replicates.py (PR
+    #54) on 20 mantle libraries (5 StnI, 5 StnL, all StnC/D/E;
+    prescreen_subset_samplesheet.tsv), 1 M read pairs each from NCBI.
+    Median dispersion was 0.03-0.32 (prescreen_replicates.tsv). Recomputed
+    without the 69 rRNA transcripts' genes (picked by FASTA header; the
+    committed GTF-biotype list has 68), which dominate these libraries, it was
+    0.016-0.171 over 897-977 genes (prescreen_replicates_no_rrna.tsv). Every
+    group is well above 0.005 and in line with individually sequenced
+    animals. The diseased farm groups are the most variable (StnI 0.146,
+    StnL 0.171). Salmon mapping on the subsample: farm StnI 47-66%, StnL
+    75-78%, wild 61-75%. Most mapped reads are rRNA (see limitation 5).
+    PUBLICATION: Europe PMC search on oyster, British Columbia and
+    metatranscriptomics returned Zhong et al. 2025 (PMID 40758866). Its full
+    text (PMC12377751) gives the station codes, tissues, counts and dates
+    quoted above. Crossref gives the author list, volume 122(33) and article
+    e2426923122. FOR THE MACHINE THAT RUNS IT: stage only the libraries of
+    the comparison being run (mantle 437 GB, hemolymph 355 GB); add the
+    PONV1 genome for viral QC; then add the within-farm comparison
+    following the rule in the header. RUN ON CHLO (2026-10-20): PONV1
+    (GenBank PQ030832.1 + PV579160.1, 41,709 + 22,622 bp, matching the
+    paper) is committed under data/studies/ZHONG2025_PONV1_MORTALITY/
+    pathogen_reference/ with a provenance file; data/reference/pathogens/ is
+    outside a study PR's scope. Mantle (106 files) and hemolymph (86 files)
+    FASTQ downloaded from ENA to OWC-Express; every file matched its ENA MD5
+    in fastq_manifest.tsv (2026-10-21).
+    PONV1 CALLS, MANTLE (2026-10-22), by the rule fixed in the header
+    before any viral counts: 4 of 27 farm animals positive (L10, I8, I16,
+    I6: 319-1,303 PONV1 pairs per million, 6,800-75,000 pairs on each
+    segment), 23 negative; 0 of 26 wild. The positive arm has fewer than 5
+    animals, so, as prespecified, the within-farm PONV1-positive vs
+    PONV1-negative comparison is NOT registered. Per-segment counts, lanes
+    and the script are in data/studies/ZHONG2025_PONV1_MORTALITY/
+    ponv1_per_segment/. Agreement with the paper's 20 of 33 cannot be
+    checked one-to-one: its call is any assembled-contig signal (RPKM > 0)
+    in either tissue. With any read on both segments, 15 of 27 farm mantle
+    animals would be positive, and four more farm animals sit at 28-54 per
+    million, below the threshold. Not acted on, because the threshold was
+    fixed first. Two WILD animals carry PONV1 on both segments (E4, 2,575
+    pairs, 25.9 per million; D5, 740 pairs, 7.4 per million), below the
+    threshold. The paper reports no PONV1 in wild oysters. Both are on
+    flowcell HG5LKDSX2 lane 2, with no farm mantle library but 11 farm
+    hemolymph libraries.
+    PONV1 CALLS, HEMOLYMPH, AND THE INDEX-HOPPING TEST (2026-10-23): the same
+    rule gives 1 of 19 farm positive (L10, 133.6 per million; L10 is also
+    the top mantle animal) and 0 of 24 wild; 13 farm animals have sub-
+    threshold PONV1 on both segments. Lane 3 is the test: its 24 wild
+    hemolymph libraries sit beside 16,640 farm PONV1 pairs (L10 and StnM),
+    yet 20 of them have 0 PONV1 pairs and three have 1-3, so hopping there
+    is at most ~0.02% of the lane's viral reads. Lane 2 carries 5,441 farm
+    PONV1 pairs. At that rate it could donate about 1 pair, not E4's 2,575
+    or D5's 740. E4 is also PONV1-positive in hemolymph (188 pairs, both
+    segments), sequenced on a different lane (3). Full-file lane counts
+    confirm that each of these four libraries is on a single lane. Index
+    hopping therefore does not explain the wild signal: E4 carries PONV1 at
+    low level in both tissues. D5's is mantle-only (hemolymph 2 pairs).
+    Contamination before sequencing (sampling, extraction, library prep)
+    cannot be excluded from these data. This conflicts with the paper's
+    "none of 26 wild" and is recorded, not resolved. Neither wild animal
+    reaches the prespecified threshold, so no call changes. Tables:
+    ponv1_per_segment_{mantle,hemolymph}.tsv.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB77044"
+    - "https://doi.org/10.1073/pnas.2426923122"
+    - "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12377751/"

@@ -1,0 +1,21 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	station	tissue_label	oyster	collection_date	geographic_location__country_and_or_sea	library_layout	instrument_model	read_count
+StnI_Mantle_I1	ERR13334386	SAMEA115788887	StnI_Mantle_I1	StnI_Mantle	StnI	Mantle	I1	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	193802706
+StnI_Mantle_I2	ERR13334387	SAMEA115788888	StnI_Mantle_I2	StnI_Mantle	StnI	Mantle	I2	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	178466714
+StnI_Mantle_I3	ERR13334388	SAMEA115788889	StnI_Mantle_I3	StnI_Mantle	StnI	Mantle	I3	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	220548592
+StnI_Mantle_I4	ERR13334389	SAMEA115788890	StnI_Mantle_I4	StnI_Mantle	StnI	Mantle	I4	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	185509334
+StnI_Mantle_I5	ERR13334390	SAMEA115788891	StnI_Mantle_I5	StnI_Mantle	StnI	Mantle	I5	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	185139706
+StnL_Mantle_L1	ERR13334403	SAMEA115788904	StnL_Mantle_L1	StnL_Mantle	StnL	Mantle	L1	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	218597472
+StnL_Mantle_L2	ERR13334404	SAMEA115788905	StnL_Mantle_L2	StnL_Mantle	StnL	Mantle	L2	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	187675234
+StnL_Mantle_L3	ERR13334405	SAMEA115788906	StnL_Mantle_L3	StnL_Mantle	StnL	Mantle	L3	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	222963304
+StnL_Mantle_L4	ERR13334406	SAMEA115788907	StnL_Mantle_L4	StnL_Mantle	StnL	Mantle	L4	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	151463668
+StnL_Mantle_L5	ERR13334407	SAMEA115788908	StnL_Mantle_L5	StnL_Mantle	StnL	Mantle	L5	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	186329458
+StnC_Mantle_C3	ERR13334417	SAMEA115788918	StnC_Mantle_C3	StnC_Mantle	StnC	Mantle	C3	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	169111292
+StnC_Mantle_C4	ERR13334418	SAMEA115788919	StnC_Mantle_C4	StnC_Mantle	StnC	Mantle	C4	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	185584592
+StnD_Mantle_D5	ERR13334419	SAMEA115788920	StnD_Mantle_D5	StnD_Mantle	StnD	Mantle	D5	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	201558758
+StnD_Mantle_D6	ERR13334420	SAMEA115788921	StnD_Mantle_D6	StnD_Mantle	StnD	Mantle	D6	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	166860500
+StnE_Mantle_E6	ERR13334421	SAMEA115788922	StnE_Mantle_E6	StnE_Mantle	StnE	Mantle	E6	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	173979172
+StnE_Mantle_E7	ERR13334422	SAMEA115788923	StnE_Mantle_E7	StnE_Mantle	StnE	Mantle	E7	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	165074164
+StnC_Mantle_C7	ERR13334433	SAMEA115788934	StnC_Mantle_C7	StnC_Mantle	StnC	Mantle	C7	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	129814928
+StnD_Mantle_D9	ERR13334434	SAMEA115788935	StnD_Mantle_D9	StnD_Mantle	StnD	Mantle	D9	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	337688034
+StnC_Mantle_C10	ERR13334437	SAMEA115788938	StnC_Mantle_C10	StnC_Mantle	StnC	Mantle	C10	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	153527016
+StnE_Mantle_E4	ERR13334438	SAMEA115788939	StnE_Mantle_E4	StnE_Mantle	StnE	Mantle	E4	2020-07-01	Canada	PAIRED	Illumina NovaSeq 6000	200409012

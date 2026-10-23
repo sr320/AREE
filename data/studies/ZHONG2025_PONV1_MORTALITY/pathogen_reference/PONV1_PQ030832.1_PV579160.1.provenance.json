@@ -1,0 +1,15 @@
+{
+  "artifact": "PONV1_PQ030832.1_PV579160.1.fasta",
+  "artifact_sha256": "36018cd675bdc5f14e81f42683bc4757dbf1cb142b43840b86acb54f63824b71",
+  "organism": "Pacific oyster nidovirus 1 (PONV1, Megarnavirus gigas)",
+  "accession": ["PQ030832.1", "PV579160.1"],
+  "description": "PONV1 isolate PONV1, segment 1 (PQ030832.1, 41,709 bp) and segment 2 (PV579160.1, 22,622 bp), complete sequences (GenBank). Lengths match Zhong et al. 2025 (41.709 and 22.622 kb).",
+  "source_url": [
+    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=PQ030832&rettype=fasta&retmode=text",
+    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=PV579160&rettype=fasta&retmode=text"
+  ],
+  "accession_source": "Zhong et al. 2025 PNAS, Data, Materials, and Software Availability (PMC12377751): PONV1 = PQ030832 and PV579160.",
+  "date_retrieved": "2026-10-20",
+  "used_for": "Per-animal viral read QC (--viral_reference) for the prespecified within-farm PONV1-positive vs PONV1-negative mantle comparison. Per-segment detection is read from each library's VIRAL_QUANT quant.sf.",
+  "caveats": "Kept under the study's own directory because data/reference/pathogens/ is outside a study PR's scope. Counts are QC, not a titre."
+}
