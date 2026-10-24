@@ -4,8 +4,9 @@ The third real Manila clam study: gill of two wild populations (North,
 Golden Pebble Beach, Dalian; South, Guangxi) held at -1, 12 or 28 C, three
 clams per cell. These tests pin the design decoded from the sample aliases,
 the prespecified primary (heat) comparison with population as a covariate,
-the cold comparison kept out of pooling, and the exposure-only
-classification. Tests on the committed run belong here once it exists.
+the cold comparison kept out of pooling, the exposure-only classification,
+and that the committed heat run is the registered one (full-length path,
+population fitted, 6 vs 6 clams, reference as fetched).
 """
 from __future__ import annotations
 
@@ -41,6 +42,11 @@ def samplesheet():
 @pytest.fixture(scope="module")
 def ena_provenance():
     return json.loads((STUDY_DIR / "ena_provenance.json").read_text())
+
+
+@pytest.fixture(scope="module")
+def manifest():
+    return json.loads((STUDY_DIR / f"{STUDY_ID}_{PRIMARY}_workflow_manifest.json").read_text())
 
 
 def test_study_validates():
@@ -80,6 +86,34 @@ def test_heat_is_the_only_pooled_comparison_and_both_are_exposure_only(study):
         assert comp["phenotype"] == "thermal_tolerance"
         assert comp["tissue"] == "gill" and comp["stressor_standardized"] == "temperature"
         assert comp["sample_size"] == 12 and comp["biological_replicates"] == 6
+
+
+def test_only_the_heat_comparison_has_results(study):
+    comps = {c["comparison_id"]: c for c in study["comparisons"]}
+    assert (REPO_ROOT / comps[PRIMARY]["results_file"]).exists()
+    assert comps[COLD]["results_file"] is None
+    assert study["analysis_status"] == "harmonized"
+    assert study["qc_status"] == "passed_with_warnings"
+
+
+def test_the_committed_run_is_the_one_registered(manifest):
+    """Full-length path, population fitted, 6 vs 6 clams, reference as fetched."""
+    assert manifest["parameters"]["tag_seq"] is False
+    assert manifest["parameters"]["control_levels"] == ["2"]
+    assert manifest["parameters"]["treatment_levels"] == ["3"]
+    assert manifest["deseq2_design"]["design"] == "~population + condition"
+    assert manifest["deseq2_design"]["length_model"].startswith("tximport")
+    assert manifest["deseq2_design"]["n_libraries_or_units"] == 12
+    assert manifest["deseq2_design"]["residual_df"] == 9
+    assert all(f.get("matches_bundle_provenance", True) for f in manifest["reference"]["files"])
+    assert manifest["warnings"] == []
+
+
+def test_replicate_dispersion_qc_passes():
+    with open(STUDY_DIR / "replicate_dispersion_qc.tsv", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    assert {r["condition"] for r in rows} == {"2", "3"}
+    assert all(r["passes"] == "True" for r in rows)
 
 
 def test_undeposited_exposure_details_stay_missing(study):

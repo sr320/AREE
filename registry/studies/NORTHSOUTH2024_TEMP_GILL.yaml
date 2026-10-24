@@ -4,7 +4,15 @@
 # (TUCCI2025_HEAT_PRIMING + PERUZZA2023_HEATWAVE) from k = 2 to k = 3, and it
 # is the first in that pool from a different lab, population and tissue.
 #
-# DRAFT: registered from deposited metadata only. Not yet run.
+# Registered from deposited metadata only (no publication).
+#
+# REANALYZED 2026-10-23 on Hete, heat_28c_vs_12c only, fitted on clams with
+# ~ population + condition (6 vs 6, residual df 9). 28 C vs 12 C: 4,531 of
+# 39,323 genes at padj < 0.05 (2,225 up, 2,306 down). Salmon mapped
+# 62.5-70.6% of reads. Replicate dispersion QC passes (median 0.110 at
+# 12 C, 0.083 at 28 C). Tools are older than the Pori runs of the other two
+# pool members (see curation_notes). cold_minus1c_vs_12c is registered but
+# not run: its six -1 C libraries were not downloaded.
 #
 # NO PUBLICATION CONFIRMED (PubMed searched 2026-10-21). The study_id names
 # the design, not a lab, because the deposit does not name the submitting
@@ -74,8 +82,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 18 libraries are public in ENA/SRA under PRJNA738278. No processed results are deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 comparisons:
   - comparison_id: "heat_28c_vs_12c"
@@ -95,7 +103,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 6
-    results_file: null
+    results_file: "data/studies/NORTHSOUTH2024_TEMP_GILL/NORTHSOUTH2024_TEMP_GILL_heat_28c_vs_12c_dge_standardized.tsv"
     meta_analysis_primary: true
   - comparison_id: "cold_minus1c_vs_12c"
     tissue: "gill"
@@ -149,6 +157,10 @@ limitations: >
   in the pooled estimate is expected and should be read as such.
   (6) Contig-level RefSeq assembly (N50 183 kb); gene-level evidence is
   unaffected, as for the other Manila clam studies.
+  (7) Effect sizes are unshrunken DESeq2 log2 fold changes, as for every
+  AREE RNA-seq study. With 3 clams per population, genes with zero counts in
+  one arm reach |log2FC| > 10 (30 genes, 1 at padj < 0.05); their large
+  lfcSE keeps their pooled weight small.
 
 provenance:
   registered_by: "Steven Roberts"
@@ -179,6 +191,41 @@ provenance:
     variable is described.
     PRIMARY COMPARISON prespecified on 2026-10-21 before any data were
     downloaded (see header).
+    DOWNLOAD (Hete, 2026-10-21 to 23): the 12 runs at 12 and 28 C (24 files,
+    36.6 GB) were fetched over HTTPS from ENA and accepted only at manifest
+    size and ENA MD5. ENA repeatedly dropped connections and briefly
+    returned 403. Several attempts reached full size with a wrong MD5, at
+    least one over a single uninterrupted connection, so corruption occurred
+    in transit; each such file was discarded and fetched again until its MD5
+    matched. All 24 files were re-read from disk and re-verified against
+    ENA's MD5s before the run. The 6 runs at -1 C were not downloaded.
+    REANALYSIS (Hete, 2026-10-23): -profile local,workstation with a local
+    resource override for 8 cores / 16 GB (process_high capped at 10 GB);
+    work directory on an NVMe SSD. 42 tasks, 3 h 41 m, no failures. The
+    GCF_026571515.1 bundle was fetched fresh on Hete with `aree
+    fetch-reference --assembly ASM2657151v2`; rna.fna, genomic.gtf and
+    tx2gene.tsv are byte-identical (SHA-256) to the bundle used for
+    TUCCI2025_HEAT_PRIMING and PERUZZA2023_HEATWAVE, and the Salmon index
+    was built by this run. The manifest records design ~population +
+    condition, length_model "tximport average transcript length offsets",
+    12 libraries, residual df 9, every reference file matching the bundle
+    provenance, and no warnings.
+    TOOL VERSIONS DIFFER FROM THE OTHER POOL MEMBERS: Hete runs Salmon
+    2.3.4, fastp 1.3.6, DESeq2 1.42.1 / tximport 1.30.0 on R 4.3.2, MultiQC
+    1.9 and Python 3.8.5 / pandas 1.1.3, natively (no container); the Pori
+    runs used Salmon 2.8.0, fastp 1.4.0, DESeq2 1.50.2 / tximport 1.38.2 on
+    R 4.5.3. These were the versions available on the machine that ran it.
+    Re-running on Pori would remove this difference.
+    QC: Salmon mapping 62.5-70.6% (full-length libraries; the two 3'
+    Tag-seq pool members mapped 37.5-52.5%). Replicate dispersion
+    (scripts/check_replicate_dispersion.py, replicate_dispersion_qc.tsv)
+    passes: median 0.110 (12 C) and 0.083 (28 C) on about 5,900 genes per
+    group, with both populations in each group.
+    HARMONIZED against rphil_gene_id_crosswalk.tsv: all 39,323 records
+    resolve exact; 35,209 carry an orthogroup from the active run. DESeq2
+    calls at padj < 0.05: 4,531 (2,225 up, 2,306 down). A local trial
+    meta-analysis (not committed) with the two other Manila clam studies
+    gave 26,597 genes at k = 3 on exposure_response / thermal_tolerance.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA738278"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA738278"
