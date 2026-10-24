@@ -1,0 +1,3 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+2	6	G2S1,G2S2,G2S3,J2S1,J2S2,J2S3	5840	0.10983	True
+3	6	G3S1,G3S2,G3S3,J3S1,J3S2,J3S3	5959	0.0833	True
