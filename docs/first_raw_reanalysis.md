@@ -193,7 +193,41 @@ treated as independent and `lfcSE` is too small. Record the design with the
 
 Harmonize one comparison at a time with `--comparison`, as above. Plain
 `aree harmonize --study CALLA2026_OSHV` stops at the first comparison whose
-`results_file` is still null, and four are.
+`results_file` is still null, and three are.
+
+### Running the remaining comparisons
+
+The three unrun comparisons need 27 of the 42 libraries (about 142 GB):
+Midori control and USA, and Miyagi control, Australia and France. Those
+reads live only on Chlo, so that is where to run them. On Chlo, check out the
+`study/PRJNA1329250/CALLA2026_OSHV` branch, make sure `data/raw` and
+`data/reference/GCF_963853765.1` point at blue-block (see
+[Storage layout](#storage-layout)), and run:
+
+```bash
+bash scripts/run_calla2026_remaining.sh
+```
+
+It runs `midori_oshv1_usa_vs_control` (with `--exclude_samples DO_CT_4`),
+`miyagi_oshv1_australia_vs_control` and `miyagi_oshv1_france_vs_control` in
+that order. Pass one or more comparison ids to run only those. For each one it
+checks the size and MD5 of every FASTQ the comparison uses, runs the workflow
+with `-profile local,workstation` and
+`--outdir results/rnaseq/CALLA2026_OSHV/<comparison>`, copies the standardized
+table, workflow manifest, viral-load table and report into
+`data/studies/CALLA2026_OSHV/`, sets that comparison's `results_file`, and
+harmonizes it. A comparison whose table already exists is skipped, so a re-run
+picks up where it stopped. The levels use the deposited spelling `Myagi`, not
+`Miyagi`.
+
+Then, before committing: read each viral-load table (a virus-positive control
+or an uninfected challenged animal needs the same scrutiny DO_CT_4 got), update
+the status table at the top of this page and in
+[implementation_status.md](implementation_status.md), and update
+`test_analysis_status_reflects_partial_full_depth_reanalysis` in
+`tests/test_calla2026_study.py`, which lists the comparisons with results. If
+all six now have results, `analysis_status` can move to `harmonized`; set
+`qc_status` only after the viral-load review.
 
 ## What the pilot found
 
