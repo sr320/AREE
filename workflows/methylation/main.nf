@@ -131,7 +131,8 @@ workflow {
             dedup_bam_ch = BISMARK_DEDUPLICATE.out.dedup_bam
             align_versions_ch = TRIM_GALORE.out.versions
                 .mix(BISMARK_ALIGN.out.versions)
-            }
+                .mix(BISMARK_DEDUPLICATE.out.versions)
+        }
 
         extracted_ch = BISMARK_METHYLATION_EXTRACTOR(
             dedup_bam_ch,
