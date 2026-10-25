@@ -19,6 +19,11 @@ Layer 4: Meta-analysis & Prioritization
         v
 Layer 5: User-facing Outputs
            (app/, docs/, reports/)
+           |
+           |  read-only query layer (src/query) over reports/ or published Parquet
+           +--> Explore page (docs/explore.qmd, in the browser)
+           +--> MCP server (aree mcp, src/query/mcp_server.py)
+           +--> Ask AREE chat service (aree chat-serve, src/chat) --> Anthropic API
 ```
 
 ## Layer 1: Study Registry and Dataset Intake
@@ -104,11 +109,49 @@ set, renderable as a Quarto site), `reports/` (generated evidence table,
 meta-analysis tables, evidence cards — build artifacts, not source data).
 
 The interface layer reads only already-generated files under `registry/` and
-`reports/` — it does not perform analysis itself. `streamlit run app/main.py`
-launches the interactive filter/search layer; `quarto render docs/` builds
+`reports/` (or their published copies) — it does not perform analysis itself.
+`streamlit run app/main.py` launches the interactive filter/search layer; `quarto render docs/` builds
 the static documentation/report site. Neither requires login or a hosted
 deployment; both operate on the local filesystem. See
 [installation.md](installation.md) for how to launch each.
+
+### Query consumers of the evidence layer
+
+**Directories:** `src/query/` (`__init__.py`, `site_export.py`,
+`mcp_server.py`), `src/chat/`, `docs/explore.qmd`, `docs/ask.qmd`,
+`docs/ask/`, `containers/chat/`.
+
+Three consumers answer questions about the evidence without running the
+pipeline. All three go through one read-only query layer (`src/query/`), so
+they return the same numbers as each other and as the evidence cards. The
+layer reads what Layers 3 and 4 have already written, either the TSVs under
+`reports/` or the Parquet tables `aree export-site-data` publishes with the
+site, and queries them with DuckDB. It never recomputes a meta-analysis or
+writes anything. Every record keeps its provenance and its `simulated` flag,
+and a missing pipeline output is reported as missing, not as "no evidence".
+
+- **Explore page.** The published Parquet, queried in the visitor's browser
+  with DuckDB-WASM. Static; no server.
+- **MCP server.** `aree mcp` exposes nine read-only query tools to Claude or
+  another MCP client, over stdio on the user's machine
+  (`--transport streamable-http` serves HTTP, without authentication). Its server
+  instructions carry the interpretation rules: cite `study_id`s, flag
+  simulated and conflicting evidence, never call a candidate validated or
+  causal. With `--data-dir` it answers from the published tables
+  (`aree fetch-site-data`) instead of a local pipeline run. Optional `mcp`
+  extra.
+- **Ask AREE.** `aree chat-serve` is a FastAPI service in which Claude
+  answers website questions by calling the same nine queries, restricted to
+  real studies. The static Ask page streams answers from it. It is the only
+  part of AREE that runs as a hosted service and the only one that calls an
+  external API (Anthropic's). It holds the API key, so the site never does,
+  and it enforces the cost and abuse limits. The container is rebuilt with the
+  freshly published tables and redeployed to Cloud Run after each site build
+  (`.github/workflows/chat-deploy.yml`). Optional `chat` extra.
+
+None of these is a dependency of Layers 1–4, and nothing in them writes back
+into the registry or the evidence. See [querying_aree.md](querying_aree.md)
+and [ask_aree.md](ask_aree.md).
 
 ## Cross-cutting concerns
 
