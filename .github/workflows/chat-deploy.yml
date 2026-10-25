@@ -53,6 +53,9 @@ jobs:
 
       # One instance keeps the in-memory rate limits and daily budget exact; it serves
       # many visitors at once because a turn mostly waits on the API.
+      # The Cloudflare Turnstile bot check is on once the repository variable
+      # TURNSTILE_SITE_KEY is set and its secret is in Secret Manager as
+      # aree-turnstile-secret (docs/ask_aree.md#bot-check).
       - name: Deploy
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
@@ -71,11 +74,19 @@ jobs:
           env_vars: |
             AREE_CHAT_DAILY_BUDGET_USD=${{ vars.AREE_CHAT_DAILY_BUDGET_USD || '10' }}
             AREE_CHAT_ALLOWED_ORIGINS=https://sr320.github.io
+            AREE_CHAT_TURNSTILE_SITE_KEY=${{ vars.TURNSTILE_SITE_KEY }}
           secrets: |
             ANTHROPIC_API_KEY=aree-anthropic-api-key:latest
+            ${{ vars.TURNSTILE_SITE_KEY != '' && 'AREE_CHAT_TURNSTILE_SECRET=aree-turnstile-secret:latest' || '' }}
 
       - name: Check the deployed service
         run: |
           curl -sf "${{ steps.deploy.outputs.url }}/api/health" | tee health.json
           grep -q '"ok":true' health.json
           echo "Ask AREE is live at ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          if grep -q '"turnstile":true' health.json; then
+            echo "Bot check: Cloudflare Turnstile is on." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Ask AREE is running without the Turnstile bot check; only per-IP limits and the daily budget guard it. See docs/ask_aree.md#bot-check."
+            echo "Bot check: **off** (set TURNSTILE_SITE_KEY; see docs/ask_aree.md#bot-check)." >> "$GITHUB_STEP_SUMMARY"
+          fi
