@@ -55,7 +55,8 @@ class Settings:
     allowed_origins: list[str] = field(default_factory=lambda: ["https://sr320.github.io"])
     allow_localhost: bool = False
     turnstile_secret: str | None = None
-    # Behind Cloud Run's proxy the client address is the first X-Forwarded-For entry.
+    turnstile_site_key: str | None = None
+    # Behind Cloud Run's proxy the client address is the last X-Forwarded-For entry.
     trust_proxy: bool = False
     log_questions: bool = False
 
@@ -77,6 +78,7 @@ class Settings:
                              .split(",") if o.strip()],
             allow_localhost=_env_bool("AREE_CHAT_ALLOW_LOCALHOST", False),
             turnstile_secret=env("AREE_CHAT_TURNSTILE_SECRET") or None,
+            turnstile_site_key=env("AREE_CHAT_TURNSTILE_SITE_KEY") or None,
             trust_proxy=_env_bool("AREE_CHAT_TRUST_PROXY", False),
             log_questions=_env_bool("AREE_CHAT_LOG_QUESTIONS", False),
         )
@@ -93,10 +95,12 @@ class ChatRequest(BaseModel):
 
 
 def _client_ip(request: Request, trust_proxy: bool) -> str:
+    # Cloud Run's front end appends the address it saw to whatever the client sent, so
+    # only the last entry is trustworthy; earlier ones are the client's to forge.
     if trust_proxy:
         forwarded = request.headers.get("x-forwarded-for", "")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        if forwarded.strip():
+            return forwarded.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 
@@ -143,7 +147,8 @@ def create_app(settings: Settings | None = None, client=None, verify=verify_turn
     def health():
         return {"ok": True, "model": settings.model, "data_build": data_build,
                 "accepting_questions": not budget.exhausted(),
-                "turnstile": settings.turnstile_secret is not None}
+                "turnstile": settings.turnstile_secret is not None,
+                "turnstile_site_key": settings.turnstile_site_key if settings.turnstile_secret else None}
 
     @app.post("/api/chat")
     def chat(body: ChatRequest, request: Request):
