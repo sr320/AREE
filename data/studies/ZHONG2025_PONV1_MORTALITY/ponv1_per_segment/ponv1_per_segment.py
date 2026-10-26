@@ -21,22 +21,32 @@ FARM = {"StnI", "StnL", "StnM"}
 SEG1, SEG2 = "PQ030832.1", "PV579160.1"
 THRESHOLD_PER_MILLION = 100  # prespecified: --viral_detection_per_million default
 
+
+def read_lines(path):
+    with open(path, encoding="utf-8") as fh:
+        return [line.rstrip("\n") for line in fh if line.strip()]
+
+
+def read_tsv(path):
+    with open(path, encoding="utf-8") as fh:
+        return list(csv.DictReader(fh, delimiter="\t"))
+
+
 dirs = {}
-for line in open(sys.argv[1]):
-    if line.strip():
-        name, workdir = line.split("\t")[:2]
-        dirs[re.search(r"\((\w+)\)", name).group(1)] = workdir
-sheet = {r["run_accession"]: r for r in csv.DictReader(open(sys.argv[2]), delimiter="\t")}
-summed = {r["library_id"]: r for r in csv.DictReader(open(sys.argv[3]), delimiter="\t")}
-lanes = dict(line.rstrip("\n").split("\t") for line in open(sys.argv[4]) if line.strip())
+for line in read_lines(sys.argv[1]):
+    name, workdir = line.split("\t")[:2]
+    dirs[re.search(r"\((\w+)\)", name).group(1)] = workdir
+sheet = {r["run_accession"]: r for r in read_tsv(sys.argv[2])}
+summed = {r["library_id"]: r for r in read_tsv(sys.argv[3])}
+lanes = dict(line.split("\t") for line in read_lines(sys.argv[4]))
 
 w = csv.writer(sys.stdout, delimiter="\t", lineterminator="\n")
 w.writerow(["run_accession", "animal", "station", "arm", "flowcell_lane", "pairs_processed",
             "seg1_PQ030832_pairs", "seg2_PV579160_pairs", "ponv1_pairs", "ponv1_per_million",
             "both_segments_detected", "prespecified_call", "workflow_summed_call"])
 for run in sorted(dirs):
-    quant = {r["Name"]: float(r["NumReads"]) for r in
-             csv.DictReader(open(os.path.join(dirs[run], "viral_quant", "quant.sf")), delimiter="\t")}
+    quant = {r["Name"]: float(r["NumReads"])
+             for r in read_tsv(os.path.join(dirs[run], "viral_quant", "quant.sf"))}
     s = sheet[run]
     v = summed[run]
     n = int(v["pairs_processed"])
