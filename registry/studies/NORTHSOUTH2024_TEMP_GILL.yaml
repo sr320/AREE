@@ -1,0 +1,232 @@
+# THIRD REAL MANILA CLAM STUDY, claimed 2026-10-21 from the WP5 backlog
+# (docs/candidate_studies_mussels_clams.md, Tier 2: PRJNA738278). Its heat
+# comparison would extend the Manila clam thermal_tolerance pool
+# (TUCCI2025_HEAT_PRIMING + PERUZZA2023_HEATWAVE) from k = 2 to k = 3, and it
+# is the first in that pool from a different lab, population and tissue.
+#
+# Registered from deposited metadata only (no publication).
+#
+# REANALYZED 2026-10-23 on Hete, heat_28c_vs_12c only, fitted on clams with
+# ~ population + condition (6 vs 6, residual df 9). 28 C vs 12 C: 4,531 of
+# 39,323 genes at padj < 0.05 (2,225 up, 2,306 down). Salmon mapped
+# 62.5-70.6% of reads. Replicate dispersion QC passes (median 0.110 at
+# 12 C, 0.083 at 28 C). Tools are older than the Pori runs of the other two
+# pool members (see curation_notes). cold_minus1c_vs_12c is registered but
+# not run: its six -1 C libraries were not downloaded.
+#
+# NO PUBLICATION CONFIRMED (PubMed searched 2026-10-21). The study_id names
+# the design, not a lab, because the deposit does not name the submitting
+# lab. The North population is from Golden Pebble Beach (Jinshitan), Dalian.
+# Liu et al. 2024 (Comp Biochem Physiol D 52:101313,
+# https://doi.org/10.1016/j.cbd.2024.101313; Dalian Ocean University) reuse
+# "RNA-seq data ... under heat and cold stress" from "two populations" and
+# may be using this deposit, but they do not cite the accession in the
+# abstract, and it is not the primary report of the experiment. Read its data
+# availability statement before citing it; if a primary paper turns up, rename
+# the study before merge rather than after.
+#
+# DESIGN AS DEPOSITED (BioSample attributes and titles, checked 2026-10-21).
+# Two wild populations, North (Golden Pebble Beach, Dalian; collected
+# 2019-01) and South (Guangxi province; collected 2019-01), each held at -1,
+# 12 or 28 C ("acute temperature change", per the BioProject description).
+# Gill, 3 clams per population x temperature, 18 BioSamples, one per clam
+# (isolate "North population 1-9" / "South population 1-9"). Sample aliases
+# encode the design: G = South (Guangxi), J = North (Jinshitan); 1/2/3 =
+# -1/12/28 C; S1-S3 = replicate. All 18 aliases agree with the sample titles.
+# The sample sheet's condition column is that temperature code (1, 2, 3).
+#
+# TWO COMPARISONS, PRESPECIFIED 2026-10-21, BEFORE ANY DATA WERE RUN.
+#   heat_28c_vs_12c is meta_analysis_primary: 28 C vs 12 C in both
+#   populations, fitted ~ population + condition (6 vs 6). It pools with
+#   Tucci's naive_hw_vs_naive_control and Peruzza's
+#   heatwave_30c_vs_control_20c (all exposure_response on thermal_tolerance).
+#   Pooling both populations with population as a covariate was chosen over
+#   picking one population, so that no choice depends on which population
+#   responds more.
+#   cold_minus1c_vs_12c is secondary and does not pool (same contrast_type,
+#   not primary). It is the first Manila clam cold contrast.
+# The population x temperature interaction is not registered: no tolerance
+# outcome was measured on either population in this deposit, so it would be
+# a phenotype_by_exposure_interaction without a phenotype.
+# ---------------------------------------------------------------------------
+
+study_id: NORTHSOUTH2024_TEMP_GILL
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: "PRJNA738278"
+  geo: null
+  sra: "SRR14870435-SRR14870452 (18 RNA-seq runs)"
+  ena: "PRJNA738278"
+  proteomexchange: null
+  other: "BioSamples SAMN19717337-SAMN19717354 (one per clam). First public 2024-07-29."
+
+citation: "Unpublished deposit: NCBI BioProject PRJNA738278, 'Comparative transcriptome analysis of gill tissue under acute temperature change between two manila clam populations' (first public 2024-07-29). No primary publication found as of 2026-10-21; possibly reanalyzed in Liu T, Zhang Y, Nie H, Sun J, Yan X (2024). Characterization and expression patterns of the Fox gene family under heat and cold stress in Manila clam Ruditapes philippinarum based on genome-wide identification. Comp Biochem Physiol Part D Genomics Proteomics 52:101313. https://doi.org/10.1016/j.cbd.2024.101313 (unconfirmed link)."
+
+species: "Ruditapes philippinarum"
+strain_or_population: "Two wild populations: North, Golden Pebble Beach (Jinshitan), Dalian, Liaoning; South, Guangxi province. Both collected 2019-01. Size, age and sex not deposited."
+
+# AREE reanalyzes against the NCBI RefSeq annotation its Manila clam crosswalk
+# is built from, as for the other two Manila clam studies.
+genome_assembly: "ASM2657151v2"
+annotation_version: "GCF_026571515.1-RS_2023_10"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end, library_selection RANDOM (full-length libraries, not 3' Tag-seq); 20.4-24.2 M read pairs per library; 55.2 GB FASTQ reported by ENA (about 37 GB for the 12 runs the primary comparison needs)."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 18 libraries are public in ENA/SRA under PRJNA738278. No processed results are deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "heat_28c_vs_12c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Acute temperature change' (BioProject description): clams held at 28 C vs 12 C. BioSample titles 'North/South population under 28°C temperature' vs '... under 12°C temperature'; sample-sheet condition 3 vs 2."
+    stressor_standardized: "temperature"
+    exposure_intensity: "28 C vs 12 C (+16 C)"
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Clams held at 12 C (condition 2); 3 North + 3 South. Whether 12 C was the acclimation temperature is not deposited."
+    treatment_condition: "Clams held at 28 C (condition 3); 3 North + 3 South"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 6
+    results_file: "data/studies/NORTHSOUTH2024_TEMP_GILL/NORTHSOUTH2024_TEMP_GILL_heat_28c_vs_12c_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "cold_minus1c_vs_12c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Acute temperature change' (BioProject description): clams held at -1 C vs 12 C. BioSample titles '... under -1°C temperature' vs '... under 12°C temperature'; sample-sheet condition 1 vs 2."
+    stressor_standardized: "temperature"
+    exposure_intensity: "-1 C vs 12 C (-13 C)"
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Clams held at 12 C (condition 2); 3 North + 3 South"
+    treatment_condition: "Clams held at -1 C (condition 1); 3 North + 3 South"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 6
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) Design known only from the deposit. Exposure duration, rate of
+  temperature change, acclimation history and sampling time are not
+  deposited ("acute" is the only description), and no primary publication
+  has been found. These fields are left null rather than guessed. Whether
+  12 C is a control at the acclimation temperature or itself a change is
+  unknown.
+  (2) Three clams per population x temperature cell. The primary comparison
+  has 6 vs 6 only because both populations are fitted together with
+  population as a covariate, which assumes a common heat response; a
+  population-specific response is averaged. Per-population estimates (3 vs
+  3) are too small to register.
+  (3) Exposure only. No survival or other tolerance outcome is deposited for
+  these animals or populations, so the comparisons are heat and cold
+  responses, not tolerance. The North-South difference is a population
+  contrast of unknown tolerance and is not registered.
+  (4) Housing is not deposited. If each temperature was one tank, temperature
+  is confounded with tank and significance is an upper bound, as for the
+  other two pool members; add tank_level_replication if the methods show
+  this.
+  (5) Pool heterogeneity. Against the other Manila clam heat studies this one
+  differs in tissue (gill vs digestive gland), exposure (acute vs 30 d
+  chronic vs heatwave then recovery), population (wild Chinese vs French
+  hatchery stock) and library type (full-length vs 3' Tag-seq). Heterogeneity
+  in the pooled estimate is expected and should be read as such.
+  (6) Contig-level RefSeq assembly (N50 183 kb); gene-level evidence is
+  unaffected, as for the other Manila clam studies.
+  (7) Effect sizes are unshrunken DESeq2 log2 fold changes, as for every
+  AREE RNA-seq study. With 3 clams per population, genes with zero counts in
+  one arm reach |log2FC| > 10 (30 genes, 1 at padj < 0.05); their large
+  lfcSE keeps their pooled weight small.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-21"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJNA738278 --study-id
+    NORTHSOUTH2024_TEMP_GILL` (draft PR #107). Sample sheet and FASTQ
+    manifest generated from live ENA metadata with `aree fetch-samplesheet
+    --bioproject PRJNA738278 --study NORTHSOUTH2024_TEMP_GILL --label-field
+    sample_alias --label-pattern
+    '^(?P<population>[GJ])(?P<temp>[123])S(?P<rep>[123])$'
+    --condition-attribute temp --attribute population --attribute
+    isolation_source --library-strategy RNA-Seq`. The design is in the
+    aliases and titles, not in a design attribute.
+    ALIAS CHECK: every alias was compared with its BioSample title and
+    isolation_source: G = Guangxi = South, J = Golden Pebble Beach = North;
+    1/2/3 = -1/12/28 C. All 18 agree.
+    REPLICATION CHECK: 18 distinct BioSamples with distinct isolates
+    (North/South population 1-9), all tissue Gill, all collected 2019-01; 3
+    per population x temperature. Distinct names do not prove distinct
+    animals: run scripts/check_replicate_dispersion.py after quantification.
+    INDEPENDENCE: different lab, country, populations and year from
+    TUCCI2025_HEAT_PRIMING and PERUZZA2023_HEATWAVE (Padova, SATMAR hatchery
+    stock, 2021-2022). Counted as independent (k = 3).
+    MAPPING: tissue 'Gill' maps to gill. life_stage adult is assumed from
+    wild-collected clams used in a stress experiment; size and age are not
+    deposited. ambiguous_phenotype_definition is set because no outcome
+    variable is described.
+    PRIMARY COMPARISON prespecified on 2026-10-21 before any data were
+    downloaded (see header).
+    DOWNLOAD (Hete, 2026-10-21 to 23): the 12 runs at 12 and 28 C (24 files,
+    36.6 GB) were fetched over HTTPS from ENA and accepted only at manifest
+    size and ENA MD5. ENA repeatedly dropped connections and briefly
+    returned 403. Several attempts reached full size with a wrong MD5, at
+    least one over a single uninterrupted connection, so corruption occurred
+    in transit; each such file was discarded and fetched again until its MD5
+    matched. All 24 files were re-read from disk and re-verified against
+    ENA's MD5s before the run. The 6 runs at -1 C were not downloaded.
+    REANALYSIS (Hete, 2026-10-23): -profile local,workstation with a local
+    resource override for 8 cores / 16 GB (process_high capped at 10 GB);
+    work directory on an NVMe SSD. 42 tasks, 3 h 41 m, no failures. The
+    GCF_026571515.1 bundle was fetched fresh on Hete with `aree
+    fetch-reference --assembly ASM2657151v2`; rna.fna, genomic.gtf and
+    tx2gene.tsv are byte-identical (SHA-256) to the bundle used for
+    TUCCI2025_HEAT_PRIMING and PERUZZA2023_HEATWAVE, and the Salmon index
+    was built by this run. The manifest records design ~population +
+    condition, length_model "tximport average transcript length offsets",
+    12 libraries, residual df 9, every reference file matching the bundle
+    provenance, and no warnings.
+    TOOL VERSIONS DIFFER FROM THE OTHER POOL MEMBERS: Hete runs Salmon
+    2.3.4, fastp 1.3.6, DESeq2 1.42.1 / tximport 1.30.0 on R 4.3.2, MultiQC
+    1.9 and Python 3.8.5 / pandas 1.1.3, natively (no container); the Pori
+    runs used Salmon 2.8.0, fastp 1.4.0, DESeq2 1.50.2 / tximport 1.38.2 on
+    R 4.5.3. These were the versions available on the machine that ran it.
+    Re-running on Pori would remove this difference.
+    QC: Salmon mapping 62.5-70.6% (full-length libraries; the two 3'
+    Tag-seq pool members mapped 37.5-52.5%). Replicate dispersion
+    (scripts/check_replicate_dispersion.py, replicate_dispersion_qc.tsv)
+    passes: median 0.110 (12 C) and 0.083 (28 C) on about 5,900 genes per
+    group, with both populations in each group.
+    HARMONIZED against rphil_gene_id_crosswalk.tsv: all 39,323 records
+    resolve exact; 35,209 carry an orthogroup from the active run. DESeq2
+    calls at padj < 0.05: 4,531 (2,225 up, 2,306 down). A local trial
+    meta-analysis (not committed) with the two other Manila clam studies
+    gave 26,597 genes at k = 3 on exposure_response / thermal_tolerance.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA738278"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA738278"
+    - "https://doi.org/10.1016/j.cbd.2024.101313"

@@ -1,0 +1,68 @@
+{
+  "study_id": "NORTHSOUTH2024_TEMP_GILL",
+  "bioproject": "PRJNA738278",
+  "date_generated": "2026-10-21",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA738278&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "temp"
+  ],
+  "n_runs": 18,
+  "n_samples": 18,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "1": 6,
+    "2": 6,
+    "3": 6
+  },
+  "min_group_size": 6,
+  "total_fastq_bytes": 55217535758,
+  "fastq_sources": {
+    "fastq_ftp": 18,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/NORTHSOUTH2024_TEMP_GILL/samplesheet.tsv": "249dcae7118ff5174e153c1ef19a5088bb1be283e13bd8a5484dd5c42c5eb9d4",
+    "data/studies/NORTHSOUTH2024_TEMP_GILL/fastq_manifest.tsv": "8c4ebee65ad69876bc2e4e22de2bbeeb7bbbb6915113dd8786d7f25d65444a8b"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<population>[GJ])(?P<temp>[123])S(?P<rep>[123])$",
+    "labels": {
+      "SRR14870435": "J1S1",
+      "SRR14870436": "G3S3",
+      "SRR14870437": "G3S2",
+      "SRR14870438": "G3S1",
+      "SRR14870439": "G2S3",
+      "SRR14870440": "G2S2",
+      "SRR14870441": "G2S1",
+      "SRR14870442": "G1S3",
+      "SRR14870443": "J3S3",
+      "SRR14870444": "J3S2",
+      "SRR14870445": "J3S1",
+      "SRR14870446": "J2S3",
+      "SRR14870447": "J2S2",
+      "SRR14870448": "J2S1",
+      "SRR14870449": "J1S3",
+      "SRR14870450": "J1S2",
+      "SRR14870451": "G1S2",
+      "SRR14870452": "G1S1"
+    }
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 18
+    }
+  }
+}

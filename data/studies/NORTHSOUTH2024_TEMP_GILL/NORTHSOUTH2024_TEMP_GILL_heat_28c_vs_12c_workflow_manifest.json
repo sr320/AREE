@@ -1,0 +1,130 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "NORTHSOUTH2024_TEMP_GILL",
+  "comparison_id": "heat_28c_vs_12c",
+  "input_files": [
+    {
+      "name": "NORTHSOUTH2024_TEMP_GILL_heat_28c_vs_12c_dge_standardized.tsv",
+      "sha256": "3b65b7f60075c538379e8aea1f0b756805c71e8cdaec92783d5e5eb041e96490"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "NORTHSOUTH2024_TEMP_GILL",
+    "comparison_id": "heat_28c_vs_12c",
+    "outdir": "results/rnaseq/NORTHSOUTH2024_TEMP_GILL",
+    "exclude_samples": [],
+    "control_levels": [
+      "2"
+    ],
+    "treatment_levels": [
+      "3"
+    ],
+    "replicate_unit": null,
+    "covariates": [
+      "population"
+    ],
+    "single_end": false,
+    "se_adapter": null,
+    "tag_seq": false,
+    "viral_reference": null,
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~population + condition",
+    "covariates_requested": [
+      "population"
+    ],
+    "covariates_used": [
+      "population"
+    ],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "tximport average transcript length offsets",
+    "exclude_genes": null,
+    "n_libraries_or_units": 12,
+    "residual_df": 9
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.42.1",
+      "bioconductor-tximport": "1.30.0",
+      "r-base": "4.3.2"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.3.4"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.3.4"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.9"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "1.1.3",
+      "python": "3.8.5"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.8.5"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_026571515.1",
+    "annotation_version": "GCF_026571515.1-RS_2023_10",
+    "transcript_fasta": "data/reference/GCF_026571515.1/rna.fna",
+    "gtf": "data/reference/GCF_026571515.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_026571515.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "99299a6252c91d941eee4ae579ff540ef08019317ae3c44a7927500cdd46eb0b",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "reference_provenance.json",
+        "sha256": "f3e3d4cefd10e80596561e8f489341b4ac3d1aa2821362ab1549449d6389047e"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "2c45a6c9478b0ff312737772ee3c23019468042fd09bbf2a25a7f263cbfe4014",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "1f76e774cf67286927a3428f570f3f899246e7849e2a60a5a1459de2e396a961",
+        "matches_bundle_provenance": true
+      }
+    ],
+    "bundle": {
+      "bundle": "GCF_026571515.1",
+      "assembly_id": "ASM2657151v2",
+      "ncbi_assembly_accession": "GCF_026571515.1",
+      "annotation_source": "NCBI RefSeq GCF_026571515.1-RS_2023_10",
+      "annotation_release_matches_registry": true,
+      "date_generated": "2026-10-21",
+      "bundler_version": "1.0.0"
+    }
+  },
+  "workflow_start": "2026-10-23T22:24:34.549300-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}
