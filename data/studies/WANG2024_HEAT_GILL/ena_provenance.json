@@ -1,0 +1,70 @@
+{
+  "study_id": "WANG2024_HEAT_GILL",
+  "bioproject": "PRJNA970954",
+  "date_generated": "2026-10-11",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA970954&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,library_name",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "assay",
+    "species",
+    "heat"
+  ],
+  "n_runs": 24,
+  "n_samples": 12,
+  "library_strategies": [
+    "ATAC-seq",
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "ATAC_Seq_angulata_HC": 3,
+    "ATAC_Seq_angulata_NC": 3,
+    "ATAC_Seq_gigas_HC": 3,
+    "ATAC_Seq_gigas_NC": 3,
+    "RNA_Seq_angulata_HC": 3,
+    "RNA_Seq_angulata_NC": 3,
+    "RNA_Seq_gigas_HC": 3,
+    "RNA_Seq_gigas_NC": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 102753533596,
+  "outputs": {
+    "data/studies/WANG2024_HEAT_GILL/samplesheet.tsv": "1a1066fb6014a8474d3d2dab930d417ca13dfb9a3fe49b3c33a65b29a90043af",
+    "data/studies/WANG2024_HEAT_GILL/fastq_manifest.tsv": "16514f0c3f92d6c73d1238e04341a2c61c7a39e9c89786d9ef2081790a12ad74"
+  },
+  "run_labels": {
+    "field": "library_name",
+    "pattern": "^(?P<heat>HC|NC)\\.(?P<species>gigas|angulata)(?P<replicate>[1-3])_(?P<assay>RNA-Seq|ATAC-Seq)_fastq$",
+    "labels": {
+      "SRR24489460": "HC.gigas2_ATAC-Seq_fastq",
+      "SRR24489461": "HC.gigas2_RNA-Seq_fastq",
+      "SRR24489462": "HC.gigas1_ATAC-Seq_fastq",
+      "SRR24489463": "HC.gigas1_RNA-Seq_fastq",
+      "SRR24489464": "NC.gigas3_ATAC-Seq_fastq",
+      "SRR24489465": "NC.gigas3_RNA-Seq_fastq",
+      "SRR24489466": "NC.gigas2_ATAC-Seq_fastq",
+      "SRR24489467": "HC.angulata3_ATAC-Seq_fastq",
+      "SRR24489468": "HC.angulata3_RNA-Seq_fastq",
+      "SRR24489469": "HC.angulata2_ATAC-Seq_fastq",
+      "SRR24489470": "HC.angulata2_RNA-Seq_fastq",
+      "SRR24489471": "NC.gigas2_RNA-Seq_fastq",
+      "SRR24489472": "HC.angulata1_ATAC-Seq_fastq",
+      "SRR24489473": "HC.angulata1_RNA-Seq_fastq",
+      "SRR24489474": "NC.angulata3_ATAC-Seq_fastq",
+      "SRR24489475": "NC.angulata3_RNA-Seq_fastq",
+      "SRR24489476": "NC.angulata2_ATAC-Seq_fastq",
+      "SRR24489477": "NC.angulata2_RNA-Seq_fastq",
+      "SRR24489478": "NC.angulata1_ATAC-Seq_fastq",
+      "SRR24489479": "NC.angulata1_RNA-Seq_fastq",
+      "SRR24489480": "HC.gigas3_ATAC-Seq_fastq",
+      "SRR24489481": "HC.gigas3_RNA-Seq_fastq",
+      "SRR24489482": "NC.gigas1_ATAC-Seq_fastq",
+      "SRR24489483": "NC.gigas1_RNA-Seq_fastq"
+    }
+  }
+}

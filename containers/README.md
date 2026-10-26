@@ -1,8 +1,12 @@
 # AREE container strategy
 
-STATUS: documentation only. No images referenced below have been built or
-pushed as part of this build. This describes the *intended* strategy so a lab
+STATUS: documentation only for the workflow images below; none of them has been
+built or pushed as part of this build. This describes the *intended* strategy so a lab
 with real data and a container registry can make the scaffolds runnable.
+
+The exception is the **Ask AREE chat service** image, `containers/chat/Dockerfile`.
+It is real: CI builds it and checks that it starts, and `.github/workflows/chat-deploy.yml`
+deploys it to Cloud Run (docs/ask_aree.md#deploy-to-cloud-run).
 
 ## Approach
 
