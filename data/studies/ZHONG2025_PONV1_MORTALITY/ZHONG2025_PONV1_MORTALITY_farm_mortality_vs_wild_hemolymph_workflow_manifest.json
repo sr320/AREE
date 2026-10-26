@@ -1,0 +1,615 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "ZHONG2025_PONV1_MORTALITY",
+  "comparison_id": "farm_mortality_vs_wild_hemolymph",
+  "input_files": [
+    {
+      "name": "ZHONG2025_PONV1_MORTALITY_farm_mortality_vs_wild_hemolymph_dge_standardized.tsv",
+      "sha256": "2c65ae5235de953c8acd7cc1c08c8e318b2dee9f821d1703cae18dfcb765ce1f"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "ZHONG2025_PONV1_MORTALITY",
+    "comparison_id": "farm_mortality_vs_wild_hemolymph",
+    "outdir": "results/rnaseq/ZHONG2025_PONV1_MORTALITY/farm_mortality_vs_wild_hemolymph",
+    "exclude_samples": [],
+    "control_levels": [
+      "StnA_Hemolymph",
+      "StnC_Hemolymph",
+      "StnD_Hemolymph",
+      "StnE_Hemolymph",
+      "StnF_Hemolymph",
+      "StnG_Hemolymph",
+      "StnH_Hemolymph",
+      "StnJ_Hemolymph",
+      "StnK_Hemolymph"
+    ],
+    "treatment_levels": [
+      "StnI_Hemolymph",
+      "StnL_Hemolymph",
+      "StnM_Hemolymph"
+    ],
+    "replicate_unit": null,
+    "covariates": [],
+    "single_end": false,
+    "se_adapter": null,
+    "tag_seq": false,
+    "viral_reference": "data/studies/ZHONG2025_PONV1_MORTALITY/pathogen_reference/PONV1_PQ030832.1_PV579160.1.fasta",
+    "exclude_genes": "data/reference/gene_lists/GCF_963853765.1-RS_2024_06_rRNA.txt"
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "tximport average transcript length offsets",
+    "exclude_genes": {
+      "file": "GCF_963853765.1-RS_2024_06_rRNA.txt",
+      "md5": "62748724fc9215d260d804c9be131041",
+      "n_listed": 68,
+      "n_excluded": 6,
+      "count_fraction_min": 0.02473,
+      "count_fraction_median": 0.9024,
+      "count_fraction_max": 0.9926
+    },
+    "n_libraries_or_units": 43,
+    "residual_df": 41
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.1"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.6.0"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.6.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.21"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.14"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.3.6"
+    },
+    "VIRAL_INDEX": {
+      "salmon": "2.6.0"
+    },
+    "VIRAL_QUANT": {
+      "salmon": "2.6.0"
+    },
+    "VIRAL_SUMMARY": {
+      "python": "3.11.14"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.14"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386"
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "01e33df829eb4a89ddfee8b9e6b0555c3338c800f67e4d27b26886e91b2d7d91"
+      }
+    ],
+    "bundle": null
+  },
+  "workflow_start": "2026-10-22T08:35:50.450742-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": {
+    "reference": {
+      "file": "PONV1_PQ030832.1_PV579160.1.fasta",
+      "sha256": "36018cd675bdc5f14e81f42683bc4757dbf1cb142b43840b86acb54f63824b71",
+      "header": "PQ030832.1 Pacific oyster nidovirus 1 isolate PONV1 segment 1, complete sequence"
+    },
+    "threshold_viral_pairs_per_million": 100.0,
+    "samples": [
+      {
+        "sample_id": "StnI_Hemolymph_I1",
+        "library_id": "ERR13334439",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 111504520,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I2",
+        "library_id": "ERR13334440",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 93933417,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I3",
+        "library_id": "ERR13334441",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 103548707,
+        "viral_pairs": 234,
+        "viral_per_million": 2.26,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I11",
+        "library_id": "ERR13334442",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 142571236,
+        "viral_pairs": 591,
+        "viral_per_million": 4.15,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I12",
+        "library_id": "ERR13334443",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 97893508,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I13",
+        "library_id": "ERR13334444",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 87917520,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I14",
+        "library_id": "ERR13334445",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 76170757,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I15",
+        "library_id": "ERR13334446",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 111713869,
+        "viral_pairs": 444,
+        "viral_per_million": 3.97,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I16",
+        "library_id": "ERR13334447",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 79472670,
+        "viral_pairs": 4172,
+        "viral_per_million": 52.5,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnI_Hemolymph_I17",
+        "library_id": "ERR13334448",
+        "condition": "StnI_Hemolymph",
+        "pairs_processed": 212433875,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnL_Hemolymph_L8",
+        "library_id": "ERR13334449",
+        "condition": "StnL_Hemolymph",
+        "pairs_processed": 96281559,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnL_Hemolymph_L9",
+        "library_id": "ERR13334450",
+        "condition": "StnL_Hemolymph",
+        "pairs_processed": 96588298,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnL_Hemolymph_L10",
+        "library_id": "ERR13334451",
+        "condition": "StnL_Hemolymph",
+        "pairs_processed": 81788837,
+        "viral_pairs": 10924,
+        "viral_per_million": 133.56,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnM_Hemolymph_M1",
+        "library_id": "ERR13334452",
+        "condition": "StnM_Hemolymph",
+        "pairs_processed": 68855272,
+        "viral_pairs": 808,
+        "viral_per_million": 11.73,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnM_Hemolymph_M2",
+        "library_id": "ERR13334453",
+        "condition": "StnM_Hemolymph",
+        "pairs_processed": 103272579,
+        "viral_pairs": 1049,
+        "viral_per_million": 10.16,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnM_Hemolymph_M3",
+        "library_id": "ERR13334454",
+        "condition": "StnM_Hemolymph",
+        "pairs_processed": 60729754,
+        "viral_pairs": 287,
+        "viral_per_million": 4.73,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnM_Hemolymph_M4",
+        "library_id": "ERR13334455",
+        "condition": "StnM_Hemolymph",
+        "pairs_processed": 59104309,
+        "viral_pairs": 404,
+        "viral_per_million": 6.84,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnM_Hemolymph_M5",
+        "library_id": "ERR13334456",
+        "condition": "StnM_Hemolymph",
+        "pairs_processed": 95936253,
+        "viral_pairs": 1308,
+        "viral_per_million": 13.63,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnM_Hemolymph_M6",
+        "library_id": "ERR13334457",
+        "condition": "StnM_Hemolymph",
+        "pairs_processed": 99224760,
+        "viral_pairs": 1860,
+        "viral_per_million": 18.75,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnA_Hemolymph_A3",
+        "library_id": "ERR13334458",
+        "condition": "StnA_Hemolymph",
+        "pairs_processed": 95458694,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnA_Hemolymph_A4",
+        "library_id": "ERR13334459",
+        "condition": "StnA_Hemolymph",
+        "pairs_processed": 82966667,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnC_Hemolymph_C3",
+        "library_id": "ERR13334460",
+        "condition": "StnC_Hemolymph",
+        "pairs_processed": 103912969,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnC_Hemolymph_C4",
+        "library_id": "ERR13334461",
+        "condition": "StnC_Hemolymph",
+        "pairs_processed": 128994008,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnD_Hemolymph_D5",
+        "library_id": "ERR13334462",
+        "condition": "StnD_Hemolymph",
+        "pairs_processed": 92015538,
+        "viral_pairs": 2,
+        "viral_per_million": 0.02,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnD_Hemolymph_D6",
+        "library_id": "ERR13334463",
+        "condition": "StnD_Hemolymph",
+        "pairs_processed": 85901101,
+        "viral_pairs": 1,
+        "viral_per_million": 0.01,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnE_Hemolymph_E6",
+        "library_id": "ERR13334464",
+        "condition": "StnE_Hemolymph",
+        "pairs_processed": 148046139,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnE_Hemolymph_E7",
+        "library_id": "ERR13334465",
+        "condition": "StnE_Hemolymph",
+        "pairs_processed": 106063772,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnF_Hemolymph_F3",
+        "library_id": "ERR13334466",
+        "condition": "StnF_Hemolymph",
+        "pairs_processed": 101620623,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnF_Hemolymph_F4",
+        "library_id": "ERR13334467",
+        "condition": "StnF_Hemolymph",
+        "pairs_processed": 94123542,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnG_Hemolymph_G3",
+        "library_id": "ERR13334468",
+        "condition": "StnG_Hemolymph",
+        "pairs_processed": 104017820,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnG_Hemolymph_G4",
+        "library_id": "ERR13334469",
+        "condition": "StnG_Hemolymph",
+        "pairs_processed": 101528008,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnH_Hemolymph_H6",
+        "library_id": "ERR13334470",
+        "condition": "StnH_Hemolymph",
+        "pairs_processed": 80266523,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnH_Hemolymph_H7",
+        "library_id": "ERR13334471",
+        "condition": "StnH_Hemolymph",
+        "pairs_processed": 81652788,
+        "viral_pairs": 3,
+        "viral_per_million": 0.04,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnJ_Hemolymph_J5",
+        "library_id": "ERR13334472",
+        "condition": "StnJ_Hemolymph",
+        "pairs_processed": 77695046,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnJ_Hemolymph_J6",
+        "library_id": "ERR13334473",
+        "condition": "StnJ_Hemolymph",
+        "pairs_processed": 80593589,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnK_Hemolymph_K3",
+        "library_id": "ERR13334474",
+        "condition": "StnK_Hemolymph",
+        "pairs_processed": 108911092,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnK_Hemolymph_K4",
+        "library_id": "ERR13334475",
+        "condition": "StnK_Hemolymph",
+        "pairs_processed": 98611267,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnC_Hemolymph_C7",
+        "library_id": "ERR13334476",
+        "condition": "StnC_Hemolymph",
+        "pairs_processed": 99637675,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnD_Hemolymph_D9",
+        "library_id": "ERR13334477",
+        "condition": "StnD_Hemolymph",
+        "pairs_processed": 90662211,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnH_Hemolymph_H10",
+        "library_id": "ERR13334478",
+        "condition": "StnH_Hemolymph",
+        "pairs_processed": 71366896,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnG_Hemolymph_G1",
+        "library_id": "ERR13334479",
+        "condition": "StnG_Hemolymph",
+        "pairs_processed": 86510712,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnC_Hemolymph_C10",
+        "library_id": "ERR13334480",
+        "condition": "StnC_Hemolymph",
+        "pairs_processed": 80909621,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "StnE_Hemolymph_E4",
+        "library_id": "ERR13334481",
+        "condition": "StnE_Hemolymph",
+        "pairs_processed": 89479998,
+        "viral_pairs": 188,
+        "viral_per_million": 2.1,
+        "virus_detected": false,
+        "excluded_from_de": false
+      }
+    ],
+    "warnings": [
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I1 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I2 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I3 (StnI_Hemolymph) has 2.3 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I11 (StnI_Hemolymph) has 4.1 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I12 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I13 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I14 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I15 (StnI_Hemolymph) has 4.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I16 (StnI_Hemolymph) has 52.5 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I17 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnL_Hemolymph_L8 (StnL_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnL_Hemolymph_L9 (StnL_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M1 (StnM_Hemolymph) has 11.7 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M2 (StnM_Hemolymph) has 10.2 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M3 (StnM_Hemolymph) has 4.7 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M4 (StnM_Hemolymph) has 6.8 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M5 (StnM_Hemolymph) has 13.6 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M6 (StnM_Hemolymph) has 18.7 viral pairs per million, below the 100 threshold"
+    ]
+  },
+  "warnings": [
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I1 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I2 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I3 (StnI_Hemolymph) has 2.3 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I11 (StnI_Hemolymph) has 4.1 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I12 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I13 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I14 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I15 (StnI_Hemolymph) has 4.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I16 (StnI_Hemolymph) has 52.5 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnI_Hemolymph_I17 (StnI_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnL_Hemolymph_L8 (StnL_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnL_Hemolymph_L9 (StnL_Hemolymph) has 0.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M1 (StnM_Hemolymph) has 11.7 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M2 (StnM_Hemolymph) has 10.2 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M3 (StnM_Hemolymph) has 4.7 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M4 (StnM_Hemolymph) has 6.8 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M5 (StnM_Hemolymph) has 13.6 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: StnM_Hemolymph_M6 (StnM_Hemolymph) has 18.7 viral pairs per million, below the 100 threshold",
+    "reference_bundle_provenance_missing: no reference_provenance.json beside the reference files; fetch them with `aree fetch-reference` to record where they came from"
+  ]
+}
