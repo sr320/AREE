@@ -1,4 +1,4 @@
-version: "0.2.0"
+version: "0.3.0"
 terms:
   - id: gill
     label: Gill
@@ -27,3 +27,8 @@ terms:
     label: Byssal gland (mussel foot tissue secreting byssal threads)
   - id: siphon
     label: Siphon
+  # Added 2026-10-21 for parental-effect studies that sequence spawned eggs
+  # (TIMMINS2025_OA_PARENTAL). Not gonad: eggs are released gametes, sampled
+  # after spawning; pair with life_stage gamete.
+  - id: eggs
+    label: Eggs (spawned, unfertilized oocytes)
