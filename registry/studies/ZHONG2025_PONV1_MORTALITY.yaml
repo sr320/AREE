@@ -17,7 +17,10 @@
 # metatranscriptomes at ~175-200 M read pairs each: 792.6 GB of FASTQ (mantle
 # alone 437 GB). Registered and pre-screened on Pori (8 GB RAM, ~84 GB free),
 # claimed for Chlo, the workstation with external storage. Registered
-# 2026-10-14; not yet reanalyzed.
+# 2026-10-14. REANALYZED on Chlo 2026-10-21/23 at full depth, both
+# comparisons, with rRNA excluded and per-library PONV1 viral QC: mantle
+# 17,647 and hemolymph 18,768 genes at padj < 0.05 (confounded farm vs wild;
+# not for pooling). See provenance.curation_notes.
 
 study_id: ZHONG2025_PONV1_MORTALITY
 simulated: false
@@ -51,8 +54,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 96 runs are public in ENA under PRJEB77044 (first public 2026-06-27). No host count matrix or DE table is deposited; the paper's analysis is viral discovery, not host expression. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. Each animal has its own BioSample per tissue, and
@@ -114,7 +117,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 53
     biological_replicates: 26
-    results_file: null
+    results_file: "data/studies/ZHONG2025_PONV1_MORTALITY/ZHONG2025_PONV1_MORTALITY_farm_mortality_vs_wild_mantle_dge_standardized.tsv"
 
   - comparison_id: "farm_mortality_vs_wild_hemolymph"
     tissue: "hemolymph"
@@ -133,7 +136,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 43
     biological_replicates: 19
-    results_file: null
+    results_file: "data/studies/ZHONG2025_PONV1_MORTALITY/ZHONG2025_PONV1_MORTALITY_farm_mortality_vs_wild_hemolymph_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -168,7 +171,18 @@ limitations: >
   region, one summer. (7) Hemolymph was collected "when possible", so the
   hemolymph comparison is a non-random subset of animals. (8) The wild
   oysters are "apparently healthy", not shown to be free of infection; the
-  paper detected no PONV1 in them.
+  paper detected no PONV1 in them, but this reanalysis finds sub-threshold
+  PONV1 in wild E4 (both tissues) and D5 (mantle); see curation_notes.
+  (9) Host mapping is lowest in diseased farm hemolymph: six farm libraries
+  map 16-36% of read pairs (I3, I1, M3, I13, I14, I16), and two of them (M3,
+  I13) look unstranded to Salmon (IU; all others ISR). This fits a large
+  non-host or degraded RNA share in moribund animals. They are kept: mapping
+  tracks the disease arm, so excluding them would select on the contrast.
+  Farm hemolymph also shows a strongly one-sided result (17,150 of 18,768
+  significant genes higher in farm). (10) Sequencing lane is partly
+  confounded with arm (flowcell HG5LKDSX2): all 27 farm mantle libraries are
+  on lane 1 (with 5 wild) and lane 2 holds only wild mantle (21); in
+  hemolymph, lane 2 holds only farm (11) and lane 3 holds 8 farm and 24 wild.
 
 provenance:
   registered_by: "Steven Roberts"
@@ -247,6 +261,29 @@ provenance:
     "none of 26 wild" and is recorded, not resolved. Neither wild animal
     reaches the prespecified threshold, so no call changes. Tables:
     ponv1_per_segment_{mantle,hemolymph}.tsv.
+    REANALYSIS (Chlo, 2026-10-21/23): FASTQ from ENA, every file matched its
+    ENA MD5. Native Homebrew tools, versions in each workflow manifest:
+    fastp 1.3.6, Salmon 2.6.0 (index built by the run), DESeq2 1.50.2,
+    tximport 1.38.2, R 4.5.1, MultiQC 1.21, FastQC 0.12.1. Design ~condition
+    on farm vs wild station levels pooled per arm (mantle 53 libraries,
+    residual df 51; hemolymph 43, df 41). 68 rRNA genes were listed for
+    exclusion (6 present in the counts); they took 62-99% of mantle counts
+    (median 80%) and 2.5-99% of hemolymph counts (median 90%). Salmon mapped
+    41.6-97.4% of mantle pairs (54-168 M pairs per library) and 16.0-96.8% of
+    hemolymph pairs (59-212 M); see limitation 9. The mantle run first
+    failed at STANDARDIZE_OUTPUT (the host python3 lacked pandas) and was
+    resumed with the AREE venv's Python on PATH; no task before it was
+    rerun. MANIFEST WARNINGS, EXPECTED: no_viral_reads_in_challenged_sample
+    for every farm animal below 100 PONV1 pairs per million. The workflow
+    reads the treatment arm as "challenged", but farm vs wild is not a
+    PONV1 challenge, so these are not failures.
+    reference_bundle_provenance_missing: Chlo's reference copy has no
+    reference_provenance.json. Its rna.fna and genomic.gtf sha256 match the
+    provenance-checked bundle used by DUPERRET2025_HEAT_RNASEQ. Its
+    tx2gene.tsv differs only by a "transcript_id gene_id" header row: the
+    same 60,992 pairs, and intake.reference_bundle.build_tx2gene on that GTF
+    reproduces the bundle's file (sha256 170cae75...). Gene assignment is
+    therefore the same as in the other GCF_963853765.1 studies.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB77044"
     - "https://doi.org/10.1073/pnas.2426923122"
