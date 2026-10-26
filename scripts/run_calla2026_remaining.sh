@@ -28,12 +28,18 @@
 #                 and no path may contain a space.
 #   NXF_EXTRA     extra arguments for nextflow run, e.g. "-c my_machine.config"
 #   SKIP_MD5=1    check sizes only (MD5 of ~140 GB takes a while on an HDD)
+#   NCBI_PROV     provenance TSV written by a read-count-verified NCBI
+#                 fastq-dump download (default data/studies/CALLA2026_OSHV/
+#                 fastq_ncbi_provenance.tsv, if it exists). NCBI rebuilds the
+#                 FASTQ, so ENA's size and MD5 cannot apply to a file listed
+#                 there; it is checked against the recorded sha256 instead.
 set -euo pipefail
 
 STUDY=CALLA2026_OSHV
 D=data/studies/$STUDY
 YAML=registry/studies/$STUDY.yaml
 RAW_DIR=${RAW_DIR:-data/raw/$STUDY}
+NCBI_PROV=${NCBI_PROV:-$D/fastq_ncbi_provenance.tsv}
 ALL="midori_oshv1_usa_vs_control miyagi_oshv1_australia_vs_control miyagi_oshv1_france_vs_control"
 
 [ -f "$YAML" ] && [ -d workflows/rnaseq ] || { echo "run this from the AREE repository root"; exit 1; }
@@ -66,6 +72,12 @@ verify_reads() {
     while IFS=$'\t' read -r run mate _url md5 bytes; do
       f=$RAW_DIR/${run}_${mate}.fastq.gz; n=$((n+1))
       if [ ! -s "$f" ]; then echo "  MISSING $f"; bad=1; continue; fi
+      sha=""
+      [ -f "$NCBI_PROV" ] && sha=$(awk -F'\t' -v r="$run" -v m="$mate" '$1==r && $2==m {print $8}' "$NCBI_PROV")
+      if [ -n "$sha" ]; then
+        [ "$(shasum -a 256 "$f" | cut -d' ' -f1)" = "$sha" ] || { echo "  WRONG SHA256 $f (NCBI)"; bad=1; }
+        continue
+      fi
       [ "$(file_size "$f")" = "$bytes" ] || { echo "  WRONG SIZE $f"; bad=1; continue; }
       if [ "${SKIP_MD5:-0}" != 1 ] && [ "$(file_md5 "$f")" != "$md5" ]; then echo "  WRONG MD5 $f"; bad=1; fi
     done < <(awk -F'\t' -v r="$r" 'NR>1 && $1==r' "$D/fastq_manifest.tsv")
