@@ -110,6 +110,11 @@
           "control_condition", "treatment_condition", "phenotype", "phenotype_direction",
           "contrast_type", "sample_size", "biological_replicates"
         ],
+        "if": {
+          "properties": {"meta_analysis_primary": {"const": true}},
+          "required": ["meta_analysis_primary"]
+        },
+        "then": {"not": {"required": ["exclude_from_meta_analysis"]}},
         "additionalProperties": false,
         "properties": {
           "comparison_id": {"type": "string"},
@@ -161,6 +166,15 @@
           "meta_analysis_primary": {
             "type": "boolean",
             "description": "Prespecified comparison for cross-study pooling, chosen within its contrast_type. When any comparison of a given contrast_type in a study sets this to true, meta-analysis pools only the flagged comparisons of that type from that study; the rest stay in the evidence table and on evidence cards. Comparisons of other contrast types are unaffected, because they never pool with this one. Choose it before examining results, and record the rationale in provenance.curation_notes."
+          },
+          "exclude_from_meta_analysis": {
+            "type": "object",
+            "required": ["reason"],
+            "additionalProperties": false,
+            "description": "Keep this comparison out of every meta-analysis pool, whatever the study's other comparisons do. Use it for a contrast that should never pool, such as a field comparison confounded with genetics, site or husbandry. Unlike meta_analysis_primary, it lets a study keep all of its comparisons out of pooling. The comparison stays in the evidence table and on evidence cards and is counted in n_excluded_opted_out. Cannot be combined with meta_analysis_primary: true. Decide it before examining results.",
+            "properties": {
+              "reason": {"type": "string", "minLength": 20, "description": "Why this comparison must not pool, in one sentence."}
+            }
           }
         }
       }

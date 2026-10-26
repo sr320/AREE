@@ -7,7 +7,11 @@ remain visible in the evidence table, while repeated within-study contrasts
 fail closed because AREE does not yet model their covariance. A study with
 several comparisons can mark one as `meta_analysis_primary` in its registry
 YAML, within each contrast type; its other comparisons of that type are then
-left out of the pool and counted in `n_excluded_non_primary`.
+left out of the pool and counted in `n_excluded_non_primary`. A comparison can
+also opt out of pooling altogether with `exclude_from_meta_analysis` (and a
+reason), for contrasts that should never pool, such as a confounded field
+comparison; it is counted in `n_excluded_opted_out`. Opted-out and
+non-primary comparisons stay in the evidence table and on evidence cards.
 
 Every pooled p-value is then adjusted for multiple testing (Benjamini-Hochberg)
 within its test family — the set of features pooled for one phenotype, feature
@@ -72,7 +76,7 @@ RESULT_COLUMNS = [
     "feature_id_standardized", "phenotype", "feature_type", "simulated", "species_taxid",
     "contrast_type", "k_studies", "studies", "n_evidence_records", "n_available_records",
     "n_excluded_unpoolable", "n_excluded_duplicate_mappings", "n_excluded_non_primary",
-    "excluded_studies",
+    "n_excluded_opted_out", "excluded_studies",
     "contributing_evidence_ids", "total_sample_size",
     "pooled_effect", "pooled_se", "ci_lower", "ci_upper", "z",
     "p_value", "adjusted_p_value", "n_tests_in_family",
@@ -209,6 +213,25 @@ def _non_primary_comparisons() -> set[tuple[str, str]]:
     return excluded
 
 
+def _opted_out_comparisons() -> set[tuple[str, str]]:
+    """(study_id, comparison_id) pairs a curator has kept out of every pool.
+
+    `exclude_from_meta_analysis` is for a comparison that should never pool,
+    whatever else the study registers: for example a field contrast confounded
+    with genetics and site. Unlike `meta_analysis_primary`, it lets a study keep
+    all of its comparisons out of pooling. The schema forbids combining it with
+    `meta_analysis_primary: true`.
+    """
+    excluded = set()
+    for path in study_files():
+        study = load_yaml(path)
+        excluded |= {
+            (study["study_id"], c["comparison_id"])
+            for c in study.get("comparisons") or [] if c.get("exclude_from_meta_analysis")
+        }
+    return excluded
+
+
 def require_contrast_type(evidence: pd.DataFrame) -> pd.DataFrame:
     """Fail if any record lacks a contrast_type rather than guess one.
 
@@ -285,6 +308,10 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     primary_mask = np.array(
         [(s, c) not in non_primary for s, c in zip(df["study_id"], df["comparison_id"])], dtype=bool
     )
+    opted_out = _opted_out_comparisons()
+    opted_out_mask = np.array(
+        [(s, c) in opted_out for s, c in zip(df["study_id"], df["comparison_id"])], dtype=bool
+    )
     poolable_mask = np.isfinite(se) & (se > 0)
     sample_size = pd.to_numeric(df["sample_size"], errors="coerce").fillna(0).to_numpy()
     rank = df["mapping_confidence"].map(MAPPING_CONFIDENCE_RANK).fillna(-1).to_numpy()
@@ -303,8 +330,10 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     results = []
     for keys, positions in df.groupby(GROUP_KEYS, dropna=False, sort=True).indices.items():
         positions = np.asarray(positions)
-        eligible = positions[primary_mask[positions]]
-        n_non_primary = len(positions) - len(eligible)
+        is_opted_out = opted_out_mask[positions]
+        n_opted_out = int(is_opted_out.sum())
+        n_non_primary = int((~primary_mask[positions] & ~is_opted_out).sum())
+        eligible = positions[primary_mask[positions] & ~is_opted_out]
         pool_pos = eligible[poolable_mask[eligible]]
         if len(pool_pos) == 0:
             continue
@@ -334,6 +363,7 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
             "n_excluded_unpoolable": len(unpool_pos),
             "n_excluded_duplicate_mappings": n_duplicate_mappings,
             "n_excluded_non_primary": n_non_primary,
+            "n_excluded_opted_out": n_opted_out,
             "excluded_studies": _joined(cols["study_id"][unpool_pos]),
             "contributing_evidence_ids": _joined(cols["evidence_id"][pool_pos]),
             "total_sample_size": int(sample_size[pool_pos].sum()),
