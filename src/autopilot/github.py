@@ -92,6 +92,14 @@ def publish_status(gh, cfg: dict, body: str) -> int:
     return gh.create_issue(cfg["status_issue_title"], body, [cfg["status_label"]])["number"]
 
 
+def status_paused(gh, cfg: dict) -> bool:
+    """True when the open status issue carries the paused label."""
+    for issue in gh.open_issues(cfg["status_label"])[:1]:
+        names = {lab["name"] if isinstance(lab, dict) else lab for lab in issue.get("labels", [])}
+        return cfg["paused_label"] in names
+    return False
+
+
 def open_alert(gh, cfg: dict, key: str, body: str) -> bool:
     """Open `[autopilot-alert] <key>` unless an open alert with that title exists.
 

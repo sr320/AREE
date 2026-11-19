@@ -31,6 +31,29 @@ DEFAULTS = {
     "status_label": "autopilot-status",
     "alert_label": "autopilot-alert",
     "token_file": "~/.config/aree/github_token",
+    # "report": observe and report only (Phase 1). "resume": also resume runs
+    # that stopped for a recoverable reason (Phase 2). A PAUSE file in
+    # state_dir, or the paused_label on the status issue, forces "report".
+    "mode": "report",
+    "paused_label": "autopilot-paused",
+    # Resume budget per run; past it the run needs a person.
+    "max_resumes_per_day": 3,
+    "max_resumes_total": 10,
+    # New memory for a process that ran out = its peak RSS x this, rounded up
+    # to whole GB. One escalation per process.
+    "oom_memory_factor": 2.0,
+    # Head jobs submitted by `aree autopilot launch` (scripts/klone/head.sbatch).
+    "head_script": str(REPO_ROOT / "scripts" / "klone" / "head.sbatch"),
+    "head_account": "srlab",
+    "head_partition": "cpu-g2",
+    "head_time": "4-00:00:00",
+    "head_cpus": 2,
+    "head_mem": "8G",
+    # Exported to the head job (see docs/running_on_klone.md#running).
+    "miniforge": "~/miniforge3",
+    "nextflow_env": "nextflow",
+    "nxf_root": "/gscratch/scrubbed/$USER/aree",
+    "task_account": "srlab",
 }
 
 

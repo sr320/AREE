@@ -1,6 +1,7 @@
 # Plan: Klone autopilot (continuous monitoring, restart and backfill)
 
-Status: **Phase 1 (report-only) implemented** (2026-11-19); Phases 2-4 planned.
+Status: **Phases 1 (report) and 2 (resume) implemented** (2026-11-19); Phases 3-4 planned.
+Phase 2 is off until `mode: resume` is set in `config/autopilot.yaml`.
 Setup and use: [running_on_klone.md#autopilot](running_on_klone.md#autopilot).
 
 ## Goal
@@ -201,9 +202,10 @@ cap set in the Anthropic console.
 | `src/autopilot/storage.py` | free space (statvfs now; `hyakstorage` parsing if Phase 0 shows it is needed) |
 | `src/autopilot/github.py` | queue issues, status comment, PR comments, alerts (via `gh api`) |
 | `src/autopilot/tick.py` | one pass: observe → classify → act → report |
-| `src/aree/cli.py` | `aree autopilot tick [--dry-run]`, `status`, `enqueue`, `pause`/`unpause` |
+| `src/aree/cli.py` | `aree autopilot tick [--local-only]`, `status`, `track`/`untrack`, `launch`, `pause`/`unpause` (done); `enqueue` (Phase 3) |
+| `src/autopilot/actions.py` | resume planning, budget, OOM override (done, Phase 2) |
 | `config/autopilot.yaml` | limits, thresholds, account/partition, paths |
-| `scripts/klone/head.sbatch.tmpl` (Phase 2) | head job (the command from [running_on_klone.md](running_on_klone.md)), with `-resume` and run name |
+| `scripts/klone/head.sbatch` | head job (the command from [running_on_klone.md](running_on_klone.md)), always `-resume` (done, Phase 2) |
 | `scripts/klone/download.sbatch.tmpl` (Phase 3) | resumable, MD5-checked ENA download job |
 | `scripts/klone/autopilot.sbatch`, `autopilot.scrontab`, `autopilot_tick.sh` | watchdog (done, Phase 1) |
 | `.github/workflows/autopilot-heartbeat.yml` | dead-man switch |

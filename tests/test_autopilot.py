@@ -205,12 +205,12 @@ def test_tick_report_only(cfg, tmp_path):
     status = gh.open_issues("autopilot-status")
     assert len(status) == 1
     assert gh_mod.parse_heartbeat(status[0]["body"]).timestamp() == NOW
-    assert "Phase 2 would: -resume" in status[0]["body"]
+    assert "needs a person: not started by `aree autopilot launch`" in status[0]["body"]
     titles = sorted(i["title"] for i in gh.open_issues("autopilot-alert"))
     assert titles == [
+        "[autopilot-alert] GONE_STUDY: needs a person (job 1999)",
         "[autopilot-alert] GONE_STUDY: on scrubbed for 14+ days",
-        "[autopilot-alert] GONE_STUDY: stopped (job 1999)",
-        "[autopilot-alert] STALLED_STUDY: stalled (job 2002)",
+        "[autopilot-alert] STALLED_STUDY: needs a person (job 2002)",
     ]
 
     # The ledger and the local status page are written.
@@ -261,3 +261,174 @@ def test_heartbeat(cfg):
     assert gh_mod.check_heartbeat(gh, cfg, 2, now)[0] == "stale"
     assert gh_mod.check_heartbeat(gh, cfg, 2, now)[0] == "stale"
     assert [i["title"] for i in gh.open_issues("autopilot-alert")] == ["[autopilot-alert] heartbeat missing"]
+
+
+# --- Phase 2: resume ----------------------------------------------------------
+
+from autopilot.actions import override_path, plan_action  # noqa: E402
+from autopilot.nextflow import memory_gb, process_name  # noqa: E402
+from autopilot.slurm import sbatch  # noqa: E402
+from autopilot.tick import launch  # noqa: E402
+
+
+def _resume_runner(squeue_text="", sacct_by_job=None, new_ids=("5002", "5003")):
+    """Like _runner, but also answers sbatch (with successive job ids) and scancel."""
+    base = _runner(squeue_text, sacct_by_job)
+    ids = iter(new_ids)
+
+    def run(args):
+        if args[0] == "sbatch":
+            run.calls.append(args)
+            return f"{next(ids)};klone\n"
+        if args[0] == "scancel":
+            run.calls.append(args)
+            return ""
+        return base(args)
+    run.calls = base.calls
+    return run
+
+
+def _launched(cfg, tmp_path, study="EMSEQ_RUN"):
+    launch_dir = tmp_path / "launch" / study
+    launch_dir.mkdir(parents=True)
+    rec = launch(cfg, study, "workflows/methylation", "config/X.config", str(launch_dir),
+                 run_configs=["run_resources_klone.config"], run=_resume_runner(new_ids=("5001",)), now=NOW)
+    return rec, launch_dir
+
+
+def test_memory_and_process_helpers():
+    assert memory_gb("15.9 GB") == pytest.approx(15.9)
+    assert memory_gb("512 MB") == pytest.approx(0.5)
+    assert memory_gb("-") is None
+    assert process_name("METH:ALIGN:MERGE_DEDUP_CHUNKS (ERR1)") == "MERGE_DEDUP_CHUNKS"
+    assert sbatch(["sbatch", "x.sh"], run=lambda a: "123;klone\n") == "123"
+    with pytest.raises(RuntimeError):
+        sbatch(["sbatch", "x.sh"], run=lambda a: "error\n")
+
+
+def test_assess_head_just_submitted_is_pending():
+    acct = {"state": "PENDING", "state_detail": "PENDING", "exit_code": "0:0"}
+    assert assess(None, acct, {}, "", NOW, 6)["state"] == "pending"
+
+
+def test_launch_records_a_resumable_submission(cfg, tmp_path):
+    rec, launch_dir = _launched(cfg, tmp_path)
+    argv = rec["launch"]["argv"]
+    assert rec["job_id"] == "5001" and rec["state"] == "pending"
+    assert "--job-name=aree-EMSEQ_RUN" in argv and "--parsable" in argv
+    assert f"--chdir={launch_dir}" in argv
+    export = next(a for a in argv if a.startswith("--export="))
+    assert "ALL" not in export and "AREE_MINIFORGE=" in export  # no inherited TMPDIR
+    assert argv[-5:] == ["workflows/methylation", "config/X.config", rec["outdir"],
+                         str(override_path(cfg, "EMSEQ_RUN")), "run_resources_klone.config"]
+    with pytest.raises(RuntimeError, match="already has head job"):
+        launch(cfg, "EMSEQ_RUN", "w", "c", str(launch_dir), run=_resume_runner())
+
+
+def _rec(**kw):
+    base = {"study_id": "S", "state": "stopped", "recoverable": True, "failure_class": "head_interrupted",
+            "reason": "head job PREEMPTED", "launch": {"argv": ["sbatch", "head.sbatch"]}, "job_id": "1"}
+    base.update(kw)
+    return base
+
+
+def test_plan_action_rules(cfg):
+    assert plan_action(_rec(), cfg, NOW)["kind"] == "resume"
+    assert plan_action(_rec(state="stalled"), cfg, NOW)["kind"] == "cancel_and_resume"
+    assert plan_action(_rec(recoverable=False), cfg, NOW) is None
+    assert plan_action(_rec(state="running"), cfg, NOW) is None
+    assert "autopilot launch" in plan_action(_rec(launch=None), cfg, NOW)["why"]
+
+    three_today = [{"at": NOW - i * HOUR} for i in range(3)]
+    assert plan_action(_rec(resumes=three_today), cfg, NOW)["kind"] == "blocked"
+    spread_out = [{"at": NOW - (i + 2) * 86400} for i in range(9)]
+    assert plan_action(_rec(resumes=spread_out), cfg, NOW)["kind"] == "resume"
+    assert plan_action(_rec(resumes=spread_out + [{"at": NOW - 86400 * 20}]), cfg, NOW)["kind"] == "blocked"
+
+    oom = _rec(failure_class="task_oom",
+               failed_details=[{"name": "MERGE_DEDUP_CHUNKS (ERR1)", "exit": "137", "peak_rss": "5.2 GB"}])
+    action = plan_action(oom, cfg, NOW)
+    assert action["kind"] == "resume" and action["memory"] == {"MERGE_DEDUP_CHUNKS": 11}
+    oom["memory_escalations"] = {"MERGE_DEDUP_CHUNKS": 11}
+    assert plan_action(oom, cfg, NOW)["kind"] == "blocked"
+
+
+def test_tick_resumes_a_preempted_launched_run(cfg, tmp_path):
+    cfg["mode"] = "resume"
+    rec, launch_dir = _launched(cfg, tmp_path)
+    run = _resume_runner(sacct_by_job={"5001": "5001|aree-EMSEQ_RUN|PREEMPTED|0:0|a|b|3-00:00:00\n"})
+    gh = FakeGitHub()
+    res = tick(cfg, now=NOW + HOUR, run=run, gh=gh, free=lambda p: 50.0, host="h")
+
+    sbatches = [c for c in run.calls if c[0] == "sbatch"]
+    assert sbatches == [rec["launch"]["argv"]]  # the recorded command, unchanged
+    after = res["runs"]["EMSEQ_RUN"]
+    assert after["job_id"] == "5002" and after["state"] == "pending"
+    assert after["resumes"][0]["from_job"] == "5001"
+    assert res["actions"] == ["EMSEQ_RUN: resumed job 5001 as 5002 (head job PREEMPTED (b))"]
+    assert gh.open_issues("autopilot-alert") == []  # handled, so no alert
+    assert "**This tick:**" in res["body"] and "(resumed 1x)" in res["body"]
+
+    # Next tick: the resubmitted head job is running; nothing more is done.
+    squeue_text = f"5002|aree-EMSEQ_RUN|RUNNING|00:10:00|4-00:00:00|cpu-g2|{launch_dir}|None\n"
+    run2 = _resume_runner(squeue_text=squeue_text)
+    res2 = tick(cfg, now=NOW + 2 * HOUR, run=run2, gh=gh, free=lambda p: 50.0, host="h")
+    assert res2["runs"]["EMSEQ_RUN"]["state"] == "running"
+    assert {c[0] for c in run2.calls} == {"squeue"}
+
+
+def test_tick_oom_writes_override_and_stall_cancels_first(cfg, tmp_path):
+    cfg["mode"] = "resume"
+    rec, launch_dir = _launched(cfg, tmp_path)
+    (launch_dir / ".nextflow.log").write_text(OOM_LOG)
+    info = tmp_path / "results" / "EMSEQ_RUN" / "pipeline_info"
+    info.mkdir(parents=True)
+    (info / "execution_trace.txt").write_text(
+        TRACE_HEADER + "1\th\t9001\tMERGE_DEDUP_CHUNKS (ERR1)\tFAILED\t137\t-\t-\t-\t-\t6 GB\t-\n")
+    run = _resume_runner(sacct_by_job={"5001": "5001|aree-EMSEQ_RUN|FAILED|1:0|a|b|10:00:00\n"})
+    tick(cfg, now=NOW + HOUR, run=run, gh=None, free=lambda p: 50.0, host="h")
+    assert "withName: 'MERGE_DEDUP_CHUNKS' { memory = '12 GB' }" in override_path(cfg, "EMSEQ_RUN").read_text()
+    assert [c[0] for c in run.calls if c[0] in ("sbatch", "scancel")] == ["sbatch"]
+
+    # Now it stalls: cancel the head job, then resubmit.
+    os.utime(info / "execution_trace.txt", (NOW - 10 * HOUR, NOW - 10 * HOUR))
+    squeue_text = f"5002|aree-EMSEQ_RUN|RUNNING|09:00:00|4-00:00:00|cpu-g2|{launch_dir}|None\n"
+    run2 = _resume_runner(squeue_text=squeue_text, new_ids=("5003",))
+    res = tick(cfg, now=NOW, run=run2, gh=None, free=lambda p: 50.0, host="h")
+    assert [c for c in run2.calls if c[0] in ("sbatch", "scancel")][0] == ["scancel", "5002"]
+    assert res["runs"]["EMSEQ_RUN"]["job_id"] == "5003"
+
+
+@pytest.mark.parametrize("how", ["report_mode", "pause_file", "paused_label"])
+def test_tick_does_not_act_when_paused(cfg, tmp_path, how):
+    cfg["mode"] = "report" if how == "report_mode" else "resume"
+    rec, _ = _launched(cfg, tmp_path)
+    gh = FakeGitHub()
+    if how == "pause_file":
+        (tmp_path / "state" / "PAUSE").touch()
+    if how == "paused_label":
+        gh.create_issue("Klone autopilot status", "", ["autopilot-status", "autopilot-paused"])
+    run = _resume_runner(sacct_by_job={"5001": "5001|aree-EMSEQ_RUN|TIMEOUT|0:0|a|b|4-00:00:00\n"})
+    res = tick(cfg, now=NOW + HOUR, run=run, gh=gh, free=lambda p: 50.0, host="h")
+    assert not [c for c in run.calls if c[0] in ("sbatch", "scancel")]
+    assert res["runs"]["EMSEQ_RUN"]["state"] == "stopped"
+    assert "would resume" in res["body"]
+    # Nobody will act, so a person is alerted.
+    assert [i["title"] for i in gh.open_issues("autopilot-alert")] == [
+        "[autopilot-alert] EMSEQ_RUN: stopped (job 5001)"]
+
+
+def test_failed_resubmission_needs_a_person_and_the_tick_goes_on(cfg, tmp_path):
+    cfg["mode"] = "resume"
+    _launched(cfg, tmp_path)
+    base = _runner("", {"5001": "5001|aree-EMSEQ_RUN|PREEMPTED|0:0|a|b|3-00:00:00\n"})
+
+    def run(args):
+        if args[0] == "sbatch":
+            raise RuntimeError("sbatch: error: Batch job submission failed")
+        return base(args)
+    gh = FakeGitHub()
+    res = tick(cfg, now=NOW + HOUR, run=run, gh=gh, free=lambda p: 50.0, host="h")
+    assert "resume failed" in res["runs"]["EMSEQ_RUN"]["blocked"]
+    assert [i["title"] for i in gh.open_issues("autopilot-alert")] == [
+        "[autopilot-alert] EMSEQ_RUN: needs a person (job 5001)"]
