@@ -76,6 +76,13 @@ for the assumptions this roadmap is consistent with.
 - **CI, interface, and documentation.** `.github/workflows/ci.yml` runs Python,
   real-study, schema, documentation, and Nextflow smoke jobs; `app/main.py`
   provides the Streamlit browser; `docs/_quarto.yml` renders this site.
+- **Query layer, Explore page and MCP server.** `src/query/` is one read-only
+  query layer over the evidence, candidates, cards and registry, read from
+  `reports/` or from the Parquet tables the site publishes. The Explore page
+  queries those tables in the browser, and `aree mcp` exposes the same queries
+  as nine tools to Claude and other MCP clients, locally over stdio, from a
+  pipeline run or from the published tables (`aree fetch-site-data`). See
+  [querying_aree.md](querying_aree.md).
 
 ## Scaffolded but not yet production-ready
 
@@ -107,6 +114,15 @@ for the assumptions this roadmap is consistent with.
   real within-species pool outside the oyster (k = 2). The dashboard and app
   show per-species counts, species filters and species identity
   ([species_identity.md](species_identity.md)).
+- **Ask AREE public chat.** `aree chat-serve` (`src/chat/`) lets Claude answer
+  website questions by calling the query layer's nine tools, on real studies
+  only, behind a daily spend budget, per-visitor limits and an optional
+  Cloudflare Turnstile bot check. It is packaged as a container, built and
+  health-checked in CI, and redeployed to Cloud Run after each site build. On
+  2026-10-25 the deployed service is healthy but paused (its daily budget
+  variable is 0), and the bot check is not yet on. Its answer-quality eval
+  passes 69% of answers on every check, the failures all on faithfulness. See
+  [ask_aree.md](ask_aree.md).
 
 ## Next milestones
 
@@ -132,9 +148,17 @@ for the assumptions this roadmap is consistent with.
   vocabularies cover the terms specified in the founding proposal but will
   need extension as more species and study types are added (e.g. finfish
   tissue types, additional stressor classes).
+- **Reopen Ask AREE safely.** Turn on the Turnstile bot check, confirm in
+  Cloud Run logs that the last `X-Forwarded-For` entry is the visitor's
+  address, then raise the daily budget above 0. Before further prompt tuning,
+  grow the eval beyond 26 questions and check the judge against human grading.
 - **Hosted/authenticated deployment.** Explicitly out of scope for the first
   release per [design.md](design.md#9-explicit-assumptions-mvp-scope) — no
-  login or cloud dependency is planned for the near term.
+  login or cloud dependency is planned for the near term. Ask AREE is hosted,
+  but it is optional and unauthenticated, and nothing else depends on it; the
+  Streamlit interface and the MCP server still run locally, and
+  `aree mcp --transport streamable-http` needs authentication in front of it
+  before it is shared.
 
 ## Related documentation
 
