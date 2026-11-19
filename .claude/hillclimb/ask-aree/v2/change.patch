@@ -1,0 +1,137 @@
+diff --git a/src/chat/prompt.py b/src/chat/prompt.py
+index b159a18..b69c491 100644
+--- a/src/chat/prompt.py
++++ b/src/chat/prompt.py
+@@ -21,9 +21,17 @@ Scope:
+ - This chat sees real studies only. Simulated demo data is excluded.
+ 
+ How to answer:
+-- Lead with the direct answer, then the evidence behind it. Keep answers under about
+-  250 words unless the visitor asks for more detail.
+-- Use a short markdown table when listing several genes, candidates or studies.
++- Keep answers short: under 200 words unless the visitor asks for more. Give the direct
++  answer, then the few facts that support it (about five numbers or ids at most), then
++  the one caveat that matters most. When the visitor asks for a list (which studies,
++  which genes), give the whole list if it is short, or the totals and the top entries
++  if it is long. Otherwise offer to go deeper rather than listing everything: a visitor
++  can always ask a follow-up.
++- Every number you state is one a tool returned, or simple arithmetic on those numbers.
++  Don't count rows of a result yourself; use the totals the tool reports.
++- Don't add side remarks about phenotypes, studies or genes you didn't query.
++- Use a short markdown table (about six rows at most) when listing several genes,
++  candidates or studies.
+ - Cite study_ids, and evidence_ids for single records, inline.
+ - When AREE holds no evidence for what was asked (for example a phenotype with no real
+   records), say so plainly and name the phenotypes or stressors that do have evidence.
+@@ -33,6 +41,18 @@ How to answer:
+ - Gene identifiers are NCBI GeneIDs or LOC numbers for Crassostrea / Magallana gigas
+   unless a record says otherwise. Do not guess gene names or functions the tools did
+   not return.
++
++Stay within what you retrieved:
++- When a result has `partial_result`, you saw only its first rows. Claims about the whole
++  set must rest on the totals the tool reports (n_features, n_conflicting,
++  feature_type_counts, tier_counts, direction_counts). Describe patterns in the rows as
++  "among the top N shown", or run a narrower query; never extend them to rows you didn't see.
++- Say which kinds of feature a count covers only from feature_type_counts or the rows,
++  never from the word "features".
++- Describe a study's design, organism, tissue or treatment only from its get_study
++  record or list_studies row; look the study up first if you haven't. Never infer these
++  from a study id.
++- Never say you checked something you didn't query.
+ """
+ 
+ 
+diff --git a/src/chat/tools.py b/src/chat/tools.py
+index 8ba87ed..544c91c 100644
+--- a/src/chat/tools.py
++++ b/src/chat/tools.py
+@@ -77,7 +77,8 @@ TOOLS = [
+         "name": "search_features",
+         "description": "Find genes, proteins, methylation regions or metabolites whose identifier "
+                        "(standardized, original, or orthogroup) contains query_text, e.g. 'LOC105333935' or "
+-                       "'OG0001234'. One row per feature with its studies, phenotypes and directions.",
++                       "'OG0001234'. One row per feature with its studies, phenotypes and directions; "
++                       "features in the most studies first, then the most significant records.",
+         "input_schema": _schema({"query_text": _TEXT, "limit": _limit(10, 25)}, ("query_text",)),
+     },
+     {
+@@ -101,7 +102,10 @@ TOOLS = [
+                        "min_studies studies (default 2). Use it for questions like 'which genes are "
+                        "significant for thermal_tolerance in more than one study, and do any disagree?'. "
+                        "Per feature: the studies, how many went up vs down, whether directions conflict, "
+-                       "and the smallest adjusted p; plus how many matching features conflict overall.",
++                       "and the smallest adjusted p. Totals for the whole query: n_features, "
++                       "n_conflicting, and feature_type_counts (which kinds of feature the count covers). "
++                       "Rows come most studies first, then consistent before conflicting, then smallest "
++                       "adjusted p.",
+         "input_schema": _schema({
+             "phenotype": _TEXT, "stressor": _TEXT, "feature_type": _TEXT, "species": _TEXT,
+             "tissue": _TEXT, "min_studies": {"type": "integer", "minimum": 2, "maximum": 50},
+@@ -112,7 +116,8 @@ TOOLS = [
+     {
+         "name": "list_candidates",
+         "description": "Ranked candidate biomarkers with transparent score components (k_studies, "
+-                       "direction consistency, I-squared, pooled effect, adjusted p). tier: "
++                       "direction consistency, I-squared, pooled effect, adjusted p), in AREE's ranking "
++                       "(tier order, then score); n_candidates and tier_counts cover the whole query. tier: "
+                        "high_priority_cross_study, multi_omics_convergence, metabolite_linked_convergence, "
+                        "emerging. evidence_class: resilience_associated, stress_response, "
+                        "disease_associated, exposure_only. contrast_type: baseline_phenotype_difference "
+@@ -200,6 +205,21 @@ def _fit(result: dict) -> str:
+     return text
+ 
+ 
++# (total, rows) pairs in query results: when fewer rows than the total come back, say so.
++_PAGED = (("n_records", "records"), ("n_features", "features"), ("n_candidates", "candidates"))
++
++
++def _mark_partial(result: dict) -> dict:
++    for total_key, rows_key in _PAGED:
++        total, rows = result.get(total_key), result.get(rows_key)
++        if isinstance(total, int) and isinstance(rows, list) and len(rows) < total:
++            result["partial_result"] = (
++                f"Only the first {len(rows)} of {total} {rows_key} are shown, in the order the tool "
++                f"describes. The totals cover all {total}; anything said about the other "
++                f"{total - len(rows)} must rest on those totals, or on a narrower query.")
++    return result
++
++
+ def run_tool(name: str, args, sources: query.Sources) -> tuple[str, bool]:
+     """Run one tool call; returns (JSON content for the model, whether it is an error)."""
+     schema = _SCHEMAS.get(name)
+@@ -214,4 +234,4 @@ def run_tool(name: str, args, sources: query.Sources) -> tuple[str, bool]:
+     except Exception:
+         log.exception("tool %s failed with input %r", name, args)
+         return json.dumps({"error": f"{name} failed on the server; try a narrower question."}), True
+-    return _fit(result), "error" in result
++    return _fit(_mark_partial(result)), "error" in result
+diff --git a/src/query/__init__.py b/src/query/__init__.py
+index ddf55a6..8574d4f 100644
+--- a/src/query/__init__.py
++++ b/src/query/__init__.py
+@@ -634,8 +634,8 @@ def find_replicated_features(phenotype: str | None = None, stressor: str | None
+         LIMIT {n}""")
+     criteria = {"min_studies": int(min_studies), "max_adjusted_p": float(max_adjusted_p)}
+     if not rows:
+-        return {"n_features": 0, "n_conflicting": 0, "features": [], "criteria": criteria,
+-                "note": f"{REPLICATION_NOTE} {INTERPRETATION_NOTE}"}
++        return {"n_features": 0, "n_conflicting": 0, "feature_type_counts": {}, "features": [],
++                "criteria": criteria, "note": f"{REPLICATION_NOTE} {INTERPRETATION_NOTE}"}
+ 
+     features = [{
+         "feature_id_standardized": r["feature_id_standardized"],
+@@ -656,7 +656,13 @@ def find_replicated_features(phenotype: str | None = None, stressor: str | None
+         "any_simulated": bool(r["any_simulated"]),
+     } for r in rows]
+     n_features = int(rows[0]["n_features"])
++    by_type = evidence.rows(f"""
++        SELECT coalesce(CAST(feature_type AS VARCHAR), 'unknown') AS t, count(*) AS n
++        FROM (SELECT feature_id_standardized, feature_type FROM {{table}} GROUP BY ALL
++              HAVING count(DISTINCT study_id) >= {int(min_studies)})
++        GROUP BY t ORDER BY n DESC, t""")
+     return {"n_features": n_features, "n_conflicting": int(rows[0]["n_conflicting"]),
++            "feature_type_counts": {r["t"]: int(r["n"]) for r in by_type},
+             "features": features, "truncated": n_features > n, "criteria": criteria,
+             "note": f"{REPLICATION_NOTE} {INTERPRETATION_NOTE}"}
+ 

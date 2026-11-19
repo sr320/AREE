@@ -1,0 +1,74 @@
+{
+  "flow": "ask-aree",
+  "metrics": [
+    {
+      "id": "pass",
+      "label": "pass (all)",
+      "kind": "binary"
+    },
+    {
+      "id": "facts",
+      "label": "facts",
+      "kind": "binary"
+    },
+    {
+      "id": "grounded",
+      "label": "grounded ids",
+      "kind": "binary"
+    },
+    {
+      "id": "answers",
+      "label": "answers",
+      "kind": "binary"
+    },
+    {
+      "id": "faithful",
+      "label": "faithful",
+      "kind": "binary"
+    },
+    {
+      "id": "no_overclaim",
+      "label": "no overclaim",
+      "kind": "binary"
+    },
+    {
+      "id": "criterion",
+      "label": "case criterion",
+      "kind": "binary"
+    }
+  ],
+  "perf_fields": [
+    {
+      "id": "cost_usd",
+      "label": "cost",
+      "unit": "$"
+    },
+    {
+      "id": "judge_cost_usd",
+      "label": "judge cost",
+      "unit": "$"
+    },
+    {
+      "id": "latency_s",
+      "label": "latency",
+      "unit": "s"
+    },
+    {
+      "id": "tool_calls",
+      "label": "tool calls"
+    },
+    {
+      "id": "out_tokens",
+      "label": "output tokens"
+    }
+  ],
+  "harness_paths": [
+    "scripts/eval_ask_aree.py",
+    "evals/ask_aree/cases.yaml",
+    "src/chat/conversation.py",
+    "src/chat/tools.py",
+    "src/chat/prompt.py",
+    "src/query/__init__.py",
+    "src/query/mcp_server.py"
+  ]
+}

@@ -10,6 +10,9 @@
 * candidates.parquet — every ranked candidate, with gene symbol and description
                        for real genes (from the built crosswalks);
 * studies.parquet    — one row per registered study;
+* cards.parquet      — the markdown of every exported candidate's evidence card,
+                       keyed by card file name (read by `query` in site-data mode,
+                       for servers that answer without the pipeline's reports/);
 * meta.json          — build date, row counts, real/simulated split, and the
                        interpretation note shown on the page.
 
@@ -23,6 +26,8 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import shutil
+import urllib.request
 from pathlib import Path
 
 import pandas as pd
@@ -32,8 +37,13 @@ from common import REPO_ROOT, load_vocab
 
 DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "explore" / "data"
 
+# Where the Pages build publishes these tables.
+PUBLISHED_DATA_URL = "https://sr320.github.io/AREE/explore/data/"
+
 # Small row groups keep a single-gene lookup to a few hundred KB of transfer.
 ROW_GROUP_SIZE = 20_000
+# Cards are kilobytes of markdown each, so a card lookup decompresses one small group.
+CARD_ROW_GROUP_SIZE = 500
 
 # Columns written as real booleans, so `WHERE is_predictive_baseline` works in SQL.
 BOOLEAN_COLUMNS = {"simulated", "is_predictive_baseline"}
@@ -67,9 +77,9 @@ def _with_gene_names(candidates: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _write(df: pd.DataFrame, path: Path) -> None:
+def _write(df: pd.DataFrame, path: Path, row_group_size: int = ROW_GROUP_SIZE) -> None:
     try:
-        df.to_parquet(path, index=False, compression="zstd", row_group_size=ROW_GROUP_SIZE)
+        df.to_parquet(path, index=False, compression="zstd", row_group_size=row_group_size)
     except ImportError as exc:
         raise SystemExit('Exporting site data needs pyarrow: pip install -e ".[site]"') from exc
 
@@ -120,12 +130,15 @@ def export_site_data(out_dir: Path = DEFAULT_OUT_DIR,
               "candidates": candidates, "studies": studies}
     for name, df in tables.items():
         _write(df.reset_index(drop=True), out_dir / f"{name}.parquet")
+    cards = _cards(candidates, sources)
+    _write(cards, out_dir / "cards.parquet", row_group_size=CARD_ROW_GROUP_SIZE)
 
     meta = {
         "generated": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "aree_version": _aree_version(),
         "tables": {name: {"file": f"{name}.parquet", "columns": list(df.columns), **_split(df)}
                    for name, df in tables.items()},
+        "cards": {"file": "cards.parquet", "total": len(cards)},
         "facets": {
             "evidence": _facets(evidence, ["phenotype", "stressor", "species", "feature_type", "tissue",
                                            "life_stage", "mapping_confidence"]),
@@ -141,6 +154,15 @@ def export_site_data(out_dir: Path = DEFAULT_OUT_DIR,
     }
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=2))
     return meta
+
+
+def _cards(candidates: pd.DataFrame, sources: query.Sources) -> pd.DataFrame:
+    """One row per rendered card among the exported candidates, sorted by file name
+    so a lookup by name reads only the row groups that can hold it."""
+    names = sorted({n for n in candidates.get("card_file", pd.Series(dtype=object)).dropna() if n})
+    rows = [(name, (sources.cards_dir / name).read_text())
+            for name in names if (sources.cards_dir / name).exists()]
+    return pd.DataFrame(rows, columns=["card_file", "markdown"])
 
 
 FEATURE_INDEX_COLUMNS = ["feature_id_standardized", "feature_id_original", "orthogroup_id",
@@ -172,3 +194,28 @@ def _facets(df: pd.DataFrame, columns: list[str]) -> dict:
 def _aree_version() -> str:
     from aree import __version__
     return __version__
+
+
+def fetch_site_data(dest: Path = DEFAULT_OUT_DIR, base_url: str = PUBLISHED_DATA_URL) -> dict:
+    """Download the published tables and evidence cards into `dest`; return their meta.
+
+    With these, `aree mcp --data-dir` (or any `query.Sources.from_site_data`) answers
+    from the same data as the public site, without running the pipeline.
+    """
+    base_url = base_url.rstrip("/") + "/"
+    dest = Path(dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    with urllib.request.urlopen(base_url + "meta.json", timeout=60) as response:
+        meta = json.loads(response.read())
+    files = [table["file"] for table in meta["tables"].values()]
+    if "cards" in meta:
+        files.append(meta["cards"]["file"])
+    for name in files:
+        if Path(name).name != name:
+            raise ValueError(f"Refusing to write {name!r} outside {dest}")
+        partial = dest / f"{name}.part"
+        with urllib.request.urlopen(base_url + name, timeout=300) as response, partial.open("wb") as out:
+            shutil.copyfileobj(response, out)
+        partial.replace(dest / name)
+    (dest / "meta.json").write_text(json.dumps(meta, indent=2))
+    return meta

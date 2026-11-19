@@ -1,0 +1,92 @@
+name: Deploy Ask AREE chat service
+
+# Builds the chat container with the tables the site just published and deploys it to
+# Cloud Run, so the chat always answers from the build the Explore page serves.
+#
+# Runs after each successful Pages deploy, or by hand. It needs the one-time setup in
+# docs/ask_aree.md#deploy-to-cloud-run (scripts/setup_cloud_run.sh); until the
+# repository variable GCP_PROJECT_ID exists, it skips itself.
+
+on:
+  workflow_run:
+    workflows: ["Deploy dashboard to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # GitHub's OIDC token, exchanged for short-lived Google credentials
+
+concurrency:
+  group: chat-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy to Cloud Run
+    if: >-
+      vars.GCP_PROJECT_ID != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    env:
+      REGION: ${{ vars.GCP_REGION || 'us-west1' }}
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push the image
+        run: |
+          IMAGE="$REGION-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/aree/chat:$SHA"
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build -f containers/chat/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # One instance keeps the in-memory rate limits and daily budget exact; it serves
+      # many visitors at once because a turn mostly waits on the API.
+      # The Cloudflare Turnstile bot check is on once the repository variable
+      # TURNSTILE_SITE_KEY is set and its secret is in Secret Manager as
+      # aree-turnstile-secret (docs/ask_aree.md#bot-check).
+      - name: Deploy
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: aree-chat
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}
+          flags: >-
+            --allow-unauthenticated
+            --service-account=${{ vars.GCP_RUNTIME_SA }}
+            --max-instances=1
+            --concurrency=40
+            --cpu=1
+            --memory=1Gi
+            --timeout=300
+          env_vars: |
+            AREE_CHAT_DAILY_BUDGET_USD=${{ vars.AREE_CHAT_DAILY_BUDGET_USD || '10' }}
+            AREE_CHAT_ALLOWED_ORIGINS=https://sr320.github.io
+            AREE_CHAT_TURNSTILE_SITE_KEY=${{ vars.TURNSTILE_SITE_KEY }}
+          secrets: |
+            ANTHROPIC_API_KEY=aree-anthropic-api-key:latest
+            ${{ vars.TURNSTILE_SITE_KEY != '' && 'AREE_CHAT_TURNSTILE_SECRET=aree-turnstile-secret:latest' || '' }}
+
+      - name: Check the deployed service
+        run: |
+          curl -sf "${{ steps.deploy.outputs.url }}/api/health" | tee health.json
+          grep -q '"ok":true' health.json
+          echo "Ask AREE is live at ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          if grep -q '"turnstile":true' health.json; then
+            echo "Bot check: Cloudflare Turnstile is on." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Ask AREE is running without the Turnstile bot check; only per-IP limits and the daily budget guard it. See docs/ask_aree.md#bot-check."
+            echo "Bot check: **off** (set TURNSTILE_SITE_KEY; see docs/ask_aree.md#bot-check)." >> "$GITHUB_STEP_SUMMARY"
+          fi

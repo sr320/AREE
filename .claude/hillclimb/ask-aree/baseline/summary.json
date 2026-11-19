@@ -1,0 +1,40 @@
+{
+  "rows": 52,
+  "scored": 52,
+  "cases": 26,
+  "truncated": 0,
+  "metrics": {
+    "pass": {
+      "mean": 0.6730769230769231,
+      "ci95": 0.16255831907531437
+    },
+    "facts": {
+      "mean": 1.0,
+      "ci95": 0.0
+    },
+    "grounded": {
+      "mean": 1.0,
+      "ci95": 0.0
+    },
+    "answers": {
+      "mean": 1.0,
+      "ci95": 0.0
+    },
+    "faithful": {
+      "mean": 0.6730769230769231,
+      "ci95": 0.16255831907531437
+    },
+    "no_overclaim": {
+      "mean": 1.0,
+      "ci95": 0.0
+    },
+    "criterion": {
+      "mean": 1.0,
+      "ci95": 0.0
+    }
+  },
+  "cost_usd": 3.9174,
+  "judge_cost_usd": 1.2291,
+  "median_latency_s": 16.055,
+  "errors": 0
+}

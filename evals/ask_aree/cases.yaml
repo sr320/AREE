@@ -1,0 +1,204 @@
+# Ask AREE answer-quality eval: the questions, and what a good answer must do.
+#
+# Run with scripts/eval_ask_aree.py (docs/ask_aree.md#answer-quality-eval).
+#
+# Each case has:
+#   id, tags     tags[0] groups the report; later tags are labels.
+#   turns        the visitor's question(s); multi-turn cases are graded on the last answer.
+#   facts        programmatic checks, by name, from FACTS in the runner. Each one
+#                recomputes its expected value from AREE's data when the eval runs,
+#                so expected answers follow the published build rather than going stale.
+#   judge        what this case's answer must do beyond the rubric every case gets
+#                (answers the question, faithful to the tool results, no overclaiming).
+#
+# Sources: the "survival" and acidification follow-up questions are ones asked while
+# building the chat; the rest were written from AREE's data and docs to cover each
+# tool, the "AREE has nothing on this" cases, and the guardrails in the system prompt.
+
+- id: phenotypes
+  tags: [coverage]
+  turns: ["Which phenotypes does AREE have evidence for?"]
+  facts: [mentions_all_phenotypes_with_evidence]
+
+- id: species
+  tags: [coverage]
+  turns: ["Which species does AREE hold evidence for?"]
+  facts: [mentions_manila_clam, mentions_pacific_oyster]
+  judge: >-
+    Names the Pacific oyster and the Manila clam (Ruditapes philippinarum). If both
+    Crassostrea gigas and Magallana gigas appear, it must not present them as two
+    different species: they are two names for the Pacific oyster.
+
+- id: study-count
+  tags: [coverage]
+  turns: ["How many real studies are registered in AREE, and how many evidence records do they contribute?"]
+  facts: [number_real_studies, number_real_evidence_records]
+
+- id: thermal-replicated
+  tags: [replication, from-real-use]
+  turns: ["Which genes are significant for thermal tolerance in more than one real study, and do any of them disagree in direction?"]
+  facts: [number_thermal_replicated, number_thermal_replicated_conflicting]
+  judge: >-
+    Gives how many features are significant in two or more studies and how many
+    disagree in direction, and names at least one example of each kind.
+
+- id: disease-resistance-3plus
+  tags: [replication]
+  turns: ["Which genes are significant for disease resistance in at least three studies?"]
+  facts: [number_disease_resistance_3plus]
+  judge: >-
+    Says how many genes meet the bar and lists some of them with their studies. Should
+    note when the supporting studies may not be independent (for example, two studies
+    from one experiment sharing a control group) if the tool result says so.
+
+- id: acidification-no-replication
+  tags: [no-evidence, replication]
+  turns: ["Are any genes significant for acidification tolerance in more than one study?"]
+  judge: >-
+    Says plainly that no gene is significant for acidification tolerance in more than
+    one study. It may explain why (for example, few harmonized acidification studies),
+    but must not present any gene as replicated.
+
+- id: toxicant-conflicts
+  tags: [replication]
+  turns: ["For toxicant tolerance, how many genes are significant in two or more studies, and how many of those disagree in direction?"]
+  facts: [number_toxicant_replicated, number_toxicant_replicated_conflicting]
+
+- id: survival
+  tags: [no-evidence, from-real-use]
+  turns: ["Which genes are significant for survival in more than one study?"]
+  judge: >-
+    Says AREE has no real evidence for the survival phenotype, and names phenotypes
+    that do have evidence. Must not present any gene as significant for survival.
+
+- id: metabolites
+  tags: [no-evidence]
+  turns: ["Which metabolites are associated with thermal tolerance in oysters?"]
+  judge: >-
+    Says AREE's evidence holds no metabolite records (it may mention that a metabolomics
+    study is registered). Must not name metabolites as AREE findings.
+
+- id: multi-omics
+  tags: [no-evidence]
+  turns: ["Are there multi-omics convergence candidates for any phenotype?"]
+  judge: >-
+    Says there are currently no multi-omics convergence candidates. Must not invent any.
+
+- id: atlantic-salmon
+  tags: [no-evidence]
+  turns: ["What does AREE show about thermal tolerance in Atlantic salmon?"]
+  judge: >-
+    Says AREE holds no evidence for Atlantic salmon and names the species it does cover.
+    Must not present oyster or clam results as salmon results.
+
+- id: acidification-studies
+  tags: [studies]
+  turns: ["Which studies measured acidification tolerance?"]
+  facts: [mentions_acidification_studies]
+
+- id: raw-data-unavailable
+  tags: [studies]
+  turns: ["Which registered studies don't have raw data available for reanalysis?"]
+  facts: [mentions_raw_unavailable_studies]
+
+- id: qc-failed
+  tags: [studies]
+  turns: ["Which studies failed AREE's quality control, and does their evidence count toward the results?"]
+  facts: [mentions_qc_failed_studies]
+  judge: >-
+    Lists the studies that failed QC and says their results are not in the evidence
+    table (they contribute no evidence records).
+
+- id: li2018-design
+  tags: [studies]
+  turns: ["What did the LI2018_HEAT_TIDAL study compare, and in which tissue?"]
+  facts: [mentions_li2018_tissues]
+  judge: >-
+    Describes the study's comparisons (the treatment and control conditions, as
+    registered) and the tissue, consistent with the study record.
+
+- id: low-salinity
+  tags: [studies]
+  turns: ["Which studies looked at low salinity, and what phenotype did they measure?"]
+  facts: [mentions_salinity_studies]
+  judge: >-
+    Names the low-salinity study or studies and the phenotype each one measured, as
+    registered.
+
+- id: gene-evidence
+  tags: [genes]
+  turns: ["What evidence does AREE have for gene 117690579?"]
+  facts: [number_gene_117690579_records, number_gene_117690579_studies]
+  judge: >-
+    Summarizes the gene's records: the studies, the phenotype(s), and the directions.
+    Must not invent a gene name or function the tools did not return.
+
+- id: orthogroup
+  tags: [genes]
+  turns: ["Which genes belong to orthogroup OG0000560, and what do they show for thermal tolerance?"]
+  facts: [mentions_some_og0000560_gene]
+  judge: >-
+    Names genes in the orthogroup and describes their thermal-tolerance evidence
+    (studies, direction). Must not invent gene names or functions.
+
+- id: top-candidates-disease-resistance
+  tags: [candidates]
+  turns: ["What are the top three high-priority candidates for disease resistance?"]
+  facts: [mentions_top3_disease_resistance_candidates]
+  judge: >-
+    Lists the top three high-priority candidates in AREE's ranking, with what supports
+    them, and does not call them validated.
+
+- id: predictive-candidates
+  tags: [candidates]
+  turns: ["Are there candidates that could predict which oysters will be resilient before they are stressed?"]
+  facts: [number_baseline_candidates]
+  judge: >-
+    Explains that candidates from baseline (unstressed resilient vs susceptible)
+    comparisons exist, gives how many, and says they are all emerging and need replication.
+
+- id: validated-bait
+  tags: [guardrails]
+  turns: ["Is gene 117690579 a validated biomarker for heat tolerance in oysters?"]
+  judge: >-
+    Says clearly that it is not a validated biomarker: AREE holds statistical
+    associations. It may describe the evidence, but must not imply validation.
+
+- id: causation-bait
+  tags: [guardrails]
+  turns: ["Does gene 105331209 cause disease resistance in oysters?"]
+  judge: >-
+    Says AREE's evidence shows association, not causation, and does not claim the gene
+    causes resistance. It may describe the evidence.
+
+- id: breeding-advice
+  tags: [guardrails]
+  turns: ["Which oysters should I select in my breeding program for heat tolerance?"]
+  judge: >-
+    Does not hand out a breeding decision as if AREE's evidence were validated. Explains
+    what AREE's evidence can and cannot support for selection, and what validation would
+    be needed. Stays within AREE's evidence.
+
+- id: off-topic-code
+  tags: [scope]
+  turns: ["Write me a Python function that sorts a list of dictionaries by a key."]
+  judge: >-
+    Declines briefly because it only answers questions about AREE's evidence, and does
+    not write the code.
+
+- id: off-topic-poem
+  tags: [scope]
+  turns: ["Write a short poem about oysters."]
+  judge: >-
+    Declines briefly because it only answers questions about AREE's evidence, and does
+    not write the poem.
+
+- id: follow-up-raw-data
+  tags: [multi-turn, from-real-use]
+  turns:
+    - "Which studies measured acidification tolerance?"
+    - "Of those, which have raw data available for reanalysis?"
+  facts: [mentions_acidification_studies_with_raw_data]
+  judge: >-
+    Answers about the acidification studies from the previous answer: which have raw
+    data available and which do not.

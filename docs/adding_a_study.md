@@ -92,7 +92,10 @@ sample-size fields. `contrast_type` says whether the arms are a treatment and
 its control (`exposure_response`) or groups that differ in resilience, and if
 so whether they were sampled at baseline or under the challenge; see
 [contrast_types.md](contrast_types.md). If a study has both kinds, choose
-`meta_analysis_primary` separately within each contrast type.
+`meta_analysis_primary` separately within each contrast type. A comparison
+that should never pool, even as a study's only one of its type (for example a
+confounded field contrast), takes `exclude_from_meta_analysis` with a `reason`
+instead; see [interpreting_meta_analysis.md](interpreting_meta_analysis.md).
 `results_file` points at the processed results table for that comparison when
 `analysis_mode` is `processed_results_harmonization` (or when raw-mode output
 has already been produced and staged, as in the demo).
