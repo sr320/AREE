@@ -356,6 +356,19 @@ def test_chat_refuses_what_its_limits_forbid(site):
     guarded = _app(site, FakeClient(text_reply("ok")), turnstile_secret="s")
     assert guarded.post("/api/chat", json={"message": "hi", "turnstile_token": "forged"}).status_code == 403
     assert guarded.post("/api/chat", json={"message": "hi", "turnstile_token": "ok"}).status_code == 200
+    assert _app(site, FakeClient(), turnstile_secret="s", turnstile_site_key="0xKEY").get(
+        "/api/health").json()["turnstile_site_key"] == "0xKEY"
+
+
+def test_a_forged_forwarded_header_does_not_reset_the_visitor_limit(site):
+    # Cloud Run appends the real address; anything before it came from the client.
+    app = _app(site, FakeClient(*[text_reply("ok")] * 3), per_ip_hourly=1, trust_proxy=True)
+    real = "203.0.113.7"
+    assert app.post("/api/chat", json={"message": "one"},
+                    headers={"X-Forwarded-For": real}).status_code == 200
+    forged = app.post("/api/chat", json={"message": "two"},
+                      headers={"X-Forwarded-For": f"198.51.100.1, {real}"})
+    assert forged.status_code == 429
 
 
 def test_only_the_site_and_local_pages_may_call_the_api(site):

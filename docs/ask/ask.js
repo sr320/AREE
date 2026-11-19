@@ -6,7 +6,8 @@
   // The deployed service's address (Cloud Run, docs/ask_aree.md#deploy-to-cloud-run).
   // Empty means the public page says the chat isn't live.
   const PRODUCTION_API = "https://aree-chat-4l635c2jtq-uw.a.run.app";
-  // Cloudflare Turnstile site key, needed when the service requires a bot check.
+  // Cloudflare Turnstile site key. Normally empty: the service reports its own key in
+  // /api/health when it requires a bot check. Set it only to override that.
   const TURNSTILE_SITE_KEY = "";
 
   const LOCAL_ADDRESS = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -284,13 +285,13 @@
     if (turnstileWidget !== null && window.turnstile) window.turnstile.reset(turnstileWidget);
   }
 
-  function loadTurnstile() {
+  function loadTurnstile(siteKey) {
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async = true;
     script.onload = () => {
       turnstileWidget = window.turnstile.render("#aa-turnstile", {
-        sitekey: TURNSTILE_SITE_KEY,
+        sitekey: siteKey,
         callback: token => { turnstileToken = token; },
         "expired-callback": () => { turnstileToken = null; },
       });
@@ -311,12 +312,12 @@
       const health = await response.json();
       if (!health.accepting_questions) {
         setStatus("Ask AREE has reached today's limit. The Explore page still works.", "warning");
-      } else if (health.turnstile && !TURNSTILE_SITE_KEY) {
+      } else if (health.turnstile && !(TURNSTILE_SITE_KEY || health.turnstile_site_key)) {
         setStatus("Ask AREE requires a verification check this page isn't configured for.", "danger");
       } else {
         available = true;
         turnstileRequired = Boolean(health.turnstile);
-        if (turnstileRequired) loadTurnstile();
+        if (turnstileRequired) loadTurnstile(TURNSTILE_SITE_KEY || health.turnstile_site_key);
         const build = health.data_build ? ` published ${health.data_build.slice(0, 10)}` : "";
         setStatus(`Answers come from AREE's real studies (data${build}).`);
       }
