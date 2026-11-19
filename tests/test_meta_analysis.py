@@ -192,6 +192,94 @@ def test_primary_comparison_is_the_only_one_pooled(isolated_reports, tmp_path, m
     assert result["pooled_effect"] == 1.2
     assert result["n_available_records"] == 2
     assert result["n_excluded_non_primary"] == 1
+    assert result["n_excluded_opted_out"] == 0
+
+
+def _two_comparison_study(isolated_reports, tmp_path, monkeypatch, study_yaml, extra_study=False):
+    """Evidence for one feature from SHARED_STUDY (contrast_a, contrast_b) and,
+    optionally, from a second, independent study; registry YAML as given."""
+    import meta_analysis.run as meta_run
+
+    harmonize_all_demo_studies()
+    evidence = load_evidence_table()
+    source = evidence[
+        (evidence["feature_id_standardized"] == "LOC105331241")
+        & (evidence["phenotype"] == "larval_viability")
+    ].iloc[0]
+
+    specs = [("SHARED_STUDY", "contrast_a", 1.0), ("SHARED_STUDY", "contrast_b", 1.2)]
+    if extra_study:
+        specs.append(("OTHER_STUDY", "other", 0.8))
+    rows = []
+    for study_id, comparison_id, effect in specs:
+        row = source.copy()
+        row["evidence_id"] = comparison_id
+        row["study_id"] = study_id
+        row["comparison_id"] = comparison_id
+        row["effect_size"] = effect
+        row["standard_error"] = 0.2
+        row["p_value"] = 0.01
+        rows.append(row)
+
+    path = isolated_reports["evidence_table_path"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows).to_csv(path, sep="\t", index=False)
+
+    studies_dir = tmp_path / "studies"
+    studies_dir.mkdir()
+    (studies_dir / "SHARED_STUDY.yaml").write_text(study_yaml)
+    if extra_study:
+        (studies_dir / "OTHER_STUDY.yaml").write_text(
+            "study_id: OTHER_STUDY\ncomparisons:\n  - comparison_id: other\n")
+    monkeypatch.setattr(meta_run, "study_files", lambda: sorted(studies_dir.glob("*.yaml")))
+
+
+OPT_OUT = "    exclude_from_meta_analysis:\n      reason: confounded field contrast, never pooled\n"
+
+
+def test_study_with_every_comparison_opted_out_contributes_nothing(isolated_reports, tmp_path, monkeypatch):
+    """Without the opt-out these two comparisons trip the within-study guard
+    (test_multiple_comparisons_from_one_study_fail_closed); with it, the study
+    pools nothing and the other study's effect stands alone."""
+    _two_comparison_study(
+        isolated_reports, tmp_path, monkeypatch,
+        "study_id: SHARED_STUDY\ncomparisons:\n"
+        "  - comparison_id: contrast_a\n" + OPT_OUT +
+        "  - comparison_id: contrast_b\n" + OPT_OUT,
+        extra_study=True,
+    )
+    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
+    assert result["studies"] == "OTHER_STUDY"
+    assert result["contributing_evidence_ids"] == "other"
+    assert result["pooled_effect"] == pytest.approx(0.8)
+    assert result["n_available_records"] == 3
+    assert result["n_excluded_opted_out"] == 2
+    assert result["n_excluded_non_primary"] == 0
+
+
+def test_feature_seen_only_in_opted_out_comparisons_is_not_pooled(isolated_reports, tmp_path, monkeypatch):
+    _two_comparison_study(
+        isolated_reports, tmp_path, monkeypatch,
+        "study_id: SHARED_STUDY\ncomparisons:\n"
+        "  - comparison_id: contrast_a\n" + OPT_OUT +
+        "  - comparison_id: contrast_b\n" + OPT_OUT,
+    )
+    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene")
+    assert result.empty
+
+
+def test_opt_out_and_primary_are_counted_apart(isolated_reports, tmp_path, monkeypatch):
+    _two_comparison_study(
+        isolated_reports, tmp_path, monkeypatch,
+        "study_id: SHARED_STUDY\ncomparisons:\n"
+        "  - comparison_id: contrast_a\n" + OPT_OUT +
+        "  - comparison_id: contrast_b\n"
+        "    meta_analysis_primary: true\n",
+    )
+    result = run_meta_analysis(phenotype="larval_viability", feature_type="gene").iloc[0]
+    assert result["contributing_evidence_ids"] == "contrast_b"
+    assert result["n_excluded_opted_out"] == 1
+    assert result["n_excluded_non_primary"] == 0
 
 
 def test_lower_confidence_alias_is_not_pooled_as_a_second_effect(isolated_reports):
