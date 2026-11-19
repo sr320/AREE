@@ -197,6 +197,7 @@ def _study_rows(studies: list[dict], evidence: pd.DataFrame) -> tuple[list[dict]
                 "n_evidence_records": n_records,
                 "manifest_present": manifest_present,
                 "meta_analysis_primary": bool(comp.get("meta_analysis_primary", False)),
+                "excluded_from_meta_analysis": bool(comp.get("exclude_from_meta_analysis")),
                 "n_excluded_samples": len(comp.get("excluded_samples") or []),
             })
 

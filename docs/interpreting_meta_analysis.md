@@ -33,6 +33,22 @@ counted in `n_excluded_non_primary`. The choice is made within each
 so a primary heat response does not exclude the same study's baseline
 contrast ([contrast_types.md](contrast_types.md)).
 
+A primary is itself pooled, so it cannot keep *all* of a study's comparisons
+out of the pool. For a comparison that should never pool, such as a field
+contrast confounded with genetics, site or husbandry, set
+`exclude_from_meta_analysis` with a one-sentence `reason` instead:
+
+```yaml
+    exclude_from_meta_analysis:
+      reason: "Confounded field contrast: farm vs wild mixes disease state with genetics, site and husbandry."
+```
+
+Opted-out comparisons stay in the evidence table and on evidence cards, are
+counted in `n_excluded_opted_out`, and never reach the within-study guard. A
+comparison cannot be both opted out and `meta_analysis_primary: true`; the
+schema rejects that. Like the primary flag, decide it before looking at
+results and record why in `provenance.curation_notes`.
+
 ## Multiple testing
 
 Every pooled p-value is adjusted with the Benjamini–Hochberg procedure within
@@ -63,6 +79,7 @@ pool and a 23,000-gene real pool are corrected against their own sizes.
 | `n_excluded_unpoolable` / `excluded_studies` | records/studies visible as evidence but absent from the numerical pool |
 | `n_excluded_duplicate_mappings` | lower-confidence aliases removed when multiple source IDs resolve to one feature within a comparison |
 | `n_excluded_non_primary` | records from comparisons their study did not mark `meta_analysis_primary`, left out of the pool |
+| `n_excluded_opted_out` | records from comparisons marked `exclude_from_meta_analysis`, left out of every pool |
 | `total_sample_size` | sum of `sample_size` across the poolable study-level effects |
 | `pooled_effect` | random-effects pooled estimate of the effect size |
 | `pooled_se` | standard error of the pooled effect |
