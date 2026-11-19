@@ -75,6 +75,7 @@ def test_new_species_resolve_to_their_taxid(name, taxid):
         ("Tapes philippinarum", 129788),
         ("Ruditapes (Venerupis) philippinarum", 129788),
         ("Venus mercenaria", 6596),
+        ("Cardium nuttallii", 410350),
     ],
 )
 def test_ncbi_listed_synonyms_resolve(name, taxid):
@@ -113,17 +114,19 @@ def test_every_complex_has_at_least_two_members():
 
 def test_every_species_has_exactly_one_reference_assembly():
     """One NCBI reference assembly per species, except a species NCBI has not
-    annotated (GFF-route crosswalk, WP7), which has none."""
+    annotated (GFF-route crosswalk, WP7) or one with no annotated assembly at
+    all yet (the basket cockle), which has none."""
     from harmonize.identifiers import crosswalk_route
 
     species_taxids = {t["ncbi_taxid"] for t in load_vocab("species").values()}
     gff_route = {e["ncbi_taxid"] for e in registered_crosswalks() if crosswalk_route(e["path"]) == "gff_homology"}
+    annotated = {a["ncbi_taxid"] for a in load_assemblies().values() if a.get("annotation_release")}
     reference = {}
     for record in load_assemblies().values():
         if record.get("is_ncbi_reference"):
             reference.setdefault(record["ncbi_taxid"], []).append(record["assembly_id"])
     for taxid in species_taxids:
-        expected = 0 if taxid in gff_route else 1
+        expected = 0 if taxid in gff_route or taxid not in annotated else 1
         assert len(reference.get(taxid, [])) == expected, f"taxid {taxid}: {reference.get(taxid)}"
 
 
@@ -151,10 +154,21 @@ def test_every_assembly_records_a_verification_date_and_crosswalk_field():
         ("GCF_021730395.1", "MADL_Memer_1"),
         ("GCF_014805675.1", "ASM1480567v1.1"),
         ("GCF_026571515.1", "ASM2657151v2"),
+        ("GCA_977929165.1", "xbCliNutt1.hap2.1"),
     ],
 )
 def test_new_assemblies_resolve(value, expected):
     assert resolve_assembly(value)["assembly_id"] == expected
+
+
+def test_basket_cockle_is_registered_without_a_crosswalk():
+    """Registered ahead of any annotation: a study can name it, but nothing can
+    resolve identifiers against it until a crosswalk is built."""
+    assert resolve_species("Clinocardium nuttallii").ncbi_taxid == 410350
+    assembly = resolve_assembly("xbCliNutt1.hap2.1")
+    assert assembly["is_ncbi_reference"] is False
+    assert assembly["identifier_crosswalk"] is None
+    assert assembly_crosswalk_path(assembly) is None
 
 
 def test_registered_crosswalks_match_their_assemblys_taxon():
@@ -173,10 +187,15 @@ def test_both_oyster_assemblies_share_the_oyster_crosswalk():
 
 
 def test_every_registered_assembly_has_a_built_crosswalk():
-    """WP2 built a crosswalk for every species, so every assembly can be harmonized.
-    A registered path that does not exist would make validation and harmonization
-    disagree about what is possible."""
+    """WP2 built a crosswalk for every annotated species, so every annotated
+    assembly can be harmonized. A registered path that does not exist would make
+    validation and harmonization disagree about what is possible. An assembly
+    with no annotation at all (the basket cockle) has nothing to build from."""
+    annotated = {a["ncbi_taxid"] for a in load_assemblies().values() if a.get("annotation_release")}
     for record in load_assemblies().values():
+        if record["ncbi_taxid"] not in annotated:
+            assert record["identifier_crosswalk"] is None, record["assembly_id"]
+            continue
         path = assembly_crosswalk_path(record)
         assert path is not None, record["assembly_id"]
         assert path.exists(), f"{record['assembly_id']}: {path} not built"
