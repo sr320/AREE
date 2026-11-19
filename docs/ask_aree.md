@@ -76,8 +76,8 @@ DOMPurify because model output is untrusted. Each study id that a query returned
 linked to its registration record. **How this answer was found** under each answer
 lists every query and the exact result Claude received.
 
-Deployment sets two values at the top of `docs/ask/ask.js`: `PRODUCTION_API`, the
-service's address, and `TURNSTILE_SITE_KEY` when the service requires a bot check.
+Deployment sets `PRODUCTION_API` at the top of `docs/ask/ask.js` to the service's
+address. `TURNSTILE_SITE_KEY` there is only an override: the service reports its own key.
 
 ### The event stream
 
@@ -112,7 +112,8 @@ Everything is an environment variable, so a deployment needs no code change.
 | `AREE_CHAT_ALLOWED_ORIGINS` | `https://sr320.github.io` | Pages allowed to call the API (comma-separated) |
 | `AREE_CHAT_ALLOW_LOCALHOST` | `false` | Also allow `localhost` pages (`chat-serve` turns this on) |
 | `AREE_CHAT_TURNSTILE_SECRET` | none | When set, every question needs a valid Cloudflare Turnstile token |
-| `AREE_CHAT_TRUST_PROXY` | `false` | Take the visitor's address from `X-Forwarded-For` (set on Cloud Run) |
+| `AREE_CHAT_TURNSTILE_SITE_KEY` | none | The matching public site key, reported to the page by `/api/health` |
+| `AREE_CHAT_TRUST_PROXY` | `false` | Take the visitor's address from the last `X-Forwarded-For` entry, the one Cloud Run adds (set in the container) |
 | `AREE_CHAT_LOG_QUESTIONS` | `false` | Include question text in the logs, for quality review |
 
 ## Cost and abuse controls
@@ -122,9 +123,13 @@ Everything is an environment variable, so a deployment needs no code change.
   with a pointer to the Explore page until UTC midnight. A turn abandoned midway still
   counts.
 - **Per-visitor limits** on questions per hour and per day, and a per-question cap
-  on tool rounds and answer length.
+  on tool rounds and answer length. The visitor's address is the last
+  `X-Forwarded-For` entry, which Cloud Run appends; earlier entries come from the
+  client and are ignored, so a forged header can't reset the limit.
 - **Bot check.** With `AREE_CHAT_TURNSTILE_SECRET` set, the service verifies a
-  Cloudflare Turnstile token on every question.
+  Cloudflare Turnstile token on every question. Without it, a script can spend the
+  whole daily budget from many addresses, which shuts the chat for everyone until
+  UTC midnight; turn it on for any public deployment ([Bot check](#bot-check)).
 - **Origins.** Only the AREE site (and, locally, `localhost`) may call the API from a browser.
 - **The hard backstop** is a monthly spend limit on the API key's workspace in the
   Claude Console.
@@ -261,10 +266,33 @@ after a quiet spell waits a few seconds for it to start.
 
 1. Set `PRODUCTION_API` at the top of `docs/ask/ask.js` to the service's address.
 2. Add the page to the site's navigation in `docs/_quarto.yml`.
-3. Optionally, turn on the Cloudflare Turnstile bot check: put its secret key in Secret
-   Manager as `aree-turnstile-secret`, pass it to the service as
-   `AREE_CHAT_TURNSTILE_SECRET` (the `secrets` list in the workflow), and set
-   `TURNSTILE_SITE_KEY` in `docs/ask/ask.js`.
+3. Turn on the bot check (next section).
+
+### Bot check
+
+The deploy workflow turns on Cloudflare Turnstile once its keys exist. Both are free.
+
+1. In the Cloudflare dashboard, open **Turnstile > Add widget**. Name it `Ask AREE`,
+   add the hostname `sr320.github.io`, and choose **Managed** mode. Cloudflare shows a
+   site key (public) and a secret key.
+2. In Cloud Shell, store the secret key and let the runtime account read it (paste the
+   key at the prompt; it isn't shown):
+
+   ```bash
+   read -rs KEY && printf %s "$KEY" | gcloud secrets create aree-turnstile-secret --replication-policy=automatic --data-file=-
+   gcloud secrets add-iam-policy-binding aree-turnstile-secret --member="serviceAccount:aree-chat-runtime@PROJECT_ID.iam.gserviceaccount.com" --role=roles/secretmanager.secretAccessor
+   ```
+
+3. Set the site key as a repository variable, then re-run the workflow:
+
+   ```bash
+   gh variable set TURNSTILE_SITE_KEY --repo sr320/AREE --body "SITE_KEY"
+   ```
+
+The service reports the site key in `/api/health`, so the page needs no change. The
+workflow summary says whether the bot check is on, and warns when it is off. To turn it
+off again, delete the variable and remove the secret from the service
+(`gcloud run services update aree-chat --region REGION --remove-secrets=AREE_CHAT_TURNSTILE_SECRET`).
 
 To change the API key later, add a new secret version
 (`gcloud secrets versions add aree-anthropic-api-key --data-file=-`) and re-run the
