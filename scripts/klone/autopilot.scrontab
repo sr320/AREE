@@ -1,0 +1,12 @@
+# Klone autopilot watchdog: one report-only tick every 30 minutes.
+# Install on Klone with `scrontab scripts/klone/autopilot.scrontab` after
+# replacing <repo> and <miniforge>, and checking the account and partition.
+# See docs/running_on_klone.md#autopilot.
+#SCRON --job-name=aree-autopilot
+#SCRON --account=srlab
+#SCRON --partition=cpu-g2
+#SCRON --cpus-per-task=1
+#SCRON --mem=2G
+#SCRON --time=00:15:00
+#SCRON --output=/gscratch/srlab/%u/aree-autopilot/tick-%j.log
+*/30 * * * * <repo>/scripts/klone/autopilot_tick.sh <miniforge>

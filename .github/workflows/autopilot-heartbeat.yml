@@ -1,0 +1,37 @@
+name: Klone autopilot heartbeat
+
+# Dead-man switch for the Klone autopilot (docs/klone_autopilot_plan.md). The
+# watchdog on Klone cannot report its own death, so this checks from outside
+# that the status issue's last_tick is recent, and opens an autopilot-alert
+# issue when it is not. With no open autopilot-status issue (autopilot not
+# deployed, or decommissioned by closing it) the check passes and does nothing.
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: autopilot-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Check the autopilot's last tick
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: aree autopilot check-heartbeat --max-age-hours 2

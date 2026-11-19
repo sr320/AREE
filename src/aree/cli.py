@@ -1002,5 +1002,117 @@ def build_metabolite_links_cmd(taxid, offline):
                f"remapped from retired IDs, {cov['kegg_genes_unresolved']} unresolved")
     click.echo("  Not for redistribution: do not commit this file (docs/metabolite_gene_links.md).")
 
+
+@main.group("autopilot")
+def autopilot_group():
+    """Watch study runs on Klone and report their state (Phase 1: report-only).
+
+    See docs/klone_autopilot_plan.md and docs/running_on_klone.md#autopilot.
+    """
+
+
+_autopilot_config = click.option("--config", "config_path", default=None, type=click.Path(),
+                                 help="Settings file (default: config/autopilot.yaml).")
+
+
+def _autopilot_github(cfg, required):
+    from autopilot.github import GitHub, read_token
+
+    token = read_token(cfg["token_file"])
+    if token is None:
+        if required:
+            click.echo(click.style(f"No GitHub token: set GH_TOKEN or write one to {cfg['token_file']}.",
+                                   fg="red"))
+            sys.exit(1)
+        return None
+    return GitHub(cfg["github_repo"], token)
+
+
+@autopilot_group.command("tick")
+@_autopilot_config
+@click.option("--local-only", is_flag=True,
+              help="Write the ledger and status.md only; do not touch GitHub.")
+def autopilot_tick_cmd(config_path, local_only):
+    """One pass: read squeue/sacct, traces and logs; update the ledger, the status issue and alerts."""
+    from autopilot.config import load_config
+    from autopilot.github import open_alert
+    from autopilot.tick import tick
+
+    cfg = load_config(config_path)
+    gh = None if local_only else _autopilot_github(cfg, required=True)
+    try:
+        res = tick(cfg, gh=gh)
+    except Exception as exc:
+        click.echo(click.style(f"tick failed: {exc}", fg="red"))
+        if gh is not None:
+            try:
+                open_alert(gh, cfg, "tick error", f"`aree autopilot tick` failed:\n\n```\n{exc}\n```\n")
+            except Exception as alert_exc:
+                click.echo(click.style(f"could not open an alert either: {alert_exc}", fg="red"))
+        sys.exit(1)
+    click.echo(res["body"])
+    if res["status_issue"]:
+        click.echo(f"Status issue: #{res['status_issue']}; new alerts: {len(res['opened'])}")
+
+
+@autopilot_group.command("status")
+@_autopilot_config
+def autopilot_status_cmd(config_path):
+    """Print the status written by the last tick."""
+    from autopilot.config import load_config
+    from autopilot.tick import state_path
+
+    path = state_path(load_config(config_path)).parent / "status.md"
+    if not path.exists():
+        click.echo("No tick has run yet (aree autopilot tick --local-only).")
+        sys.exit(1)
+    click.echo(path.read_text())
+
+
+@autopilot_group.command("track")
+@_autopilot_config
+@click.option("--study", "study_id", required=True)
+@click.option("--launch-dir", required=True, type=click.Path(),
+              help="Directory nextflow was launched from (holds .nextflow.log).")
+@click.option("--outdir", default=None, help="The run's --outdir (default: results_template).")
+@click.option("--job-id", default=None, help="Current or last head job id.")
+def autopilot_track_cmd(config_path, study_id, launch_dir, outdir, job_id):
+    """Track a run whose head job is not named aree-<STUDY_ID>, or that already ended."""
+    from autopilot.config import load_config
+    from autopilot.tick import track
+
+    rec = track(load_config(config_path), study_id, launch_dir, outdir, job_id)
+    click.echo(f"Tracking {study_id}: launch dir {rec['launch_dir']}, results {rec['outdir']}")
+
+
+@autopilot_group.command("untrack")
+@_autopilot_config
+@click.argument("study_id")
+def autopilot_untrack_cmd(config_path, study_id):
+    """Stop tracking a run (after its outputs are copied off scrubbed, or it was abandoned)."""
+    from autopilot.config import load_config
+    from autopilot.tick import untrack
+
+    if not untrack(load_config(config_path), study_id):
+        click.echo(click.style(f"{study_id} was not tracked.", fg="yellow"))
+        sys.exit(1)
+    click.echo(f"Untracked {study_id}.")
+
+
+@autopilot_group.command("check-heartbeat")
+@_autopilot_config
+@click.option("--max-age-hours", default=2.0, show_default=True, type=float)
+def autopilot_check_heartbeat_cmd(config_path, max_age_hours):
+    """Dead-man switch (run by GitHub Actions): alert if the autopilot stopped reporting."""
+    from autopilot.config import load_config
+    from autopilot.github import check_heartbeat
+
+    cfg = load_config(config_path)
+    outcome, message = check_heartbeat(_autopilot_github(cfg, required=True), cfg, max_age_hours)
+    click.echo(f"{outcome}: {message}")
+    if outcome == "stale":
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()
