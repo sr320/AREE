@@ -36,7 +36,8 @@ _ERROR_MARK = "ERROR ~"
 def trace_summary(outdir: Path | str) -> dict:
     """Task counts by status, the failed task names and the trace file's mtime (or None)."""
     path = Path(outdir) / "pipeline_info" / TRACE_NAME
-    summary = {"trace_path": str(path), "trace_mtime": None, "status_counts": {}, "failed_tasks": []}
+    summary = {"trace_path": str(path), "trace_mtime": None, "status_counts": {}, "failed_tasks": [],
+               "failed_details": []}
     if not path.exists():
         return summary
     summary["trace_mtime"] = path.stat().st_mtime
@@ -47,6 +48,9 @@ def trace_summary(outdir: Path | str) -> dict:
             counts[status] += 1
             if status in ("FAILED", "ABORTED"):
                 summary["failed_tasks"].append(row.get("name", ""))
+                summary["failed_details"].append({"name": row.get("name", ""),
+                                                  "exit": (row.get("exit") or "").strip(),
+                                                  "peak_rss": (row.get("peak_rss") or "").strip()})
     summary["status_counts"] = dict(counts)
     return summary
 
@@ -85,3 +89,19 @@ def classify_log(log_text: str) -> tuple[str, bool, str]:
         if pattern.search(section):
             return name, recoverable, action
     return "unknown", False, "read the end of .nextflow.log"
+
+
+_MEM_UNITS = {"B": 1 / 1024**3, "KB": 1 / 1024**2, "MB": 1 / 1024, "GB": 1.0, "TB": 1024.0}
+
+
+def memory_gb(text: str) -> float | None:
+    """A trace memory value ("15.9 GB", "800 MB") in GB, or None."""
+    m = re.match(r"^\s*([\d.]+)\s*([KMGT]?B)\s*$", text or "", re.I)
+    if not m:
+        return None
+    return float(m.group(1)) * _MEM_UNITS[m.group(2).upper()]
+
+
+def process_name(task_name: str) -> str:
+    """'WF:SUB:MERGE_DEDUP_CHUNKS (ERR1)' -> 'MERGE_DEDUP_CHUNKS'."""
+    return task_name.split(" (")[0].split(":")[-1].strip()

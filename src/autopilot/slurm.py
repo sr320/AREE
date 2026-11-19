@@ -70,3 +70,18 @@ def elapsed_hours(text: str) -> float:
         fields.insert(0, 0)
     hours, minutes, seconds = fields[-3:]
     return days * 24 + hours + minutes / 60 + seconds / 3600
+
+
+def sbatch(argv: list, run: Runner = run_command) -> str:
+    """Submit with `sbatch --parsable ...` and return the job id."""
+    if "--parsable" not in argv:
+        argv = [argv[0], "--parsable", *argv[1:]]
+    out = run(argv).strip()
+    job_id = out.splitlines()[-1].split(";")[0].strip() if out else ""
+    if not job_id.isdigit():
+        raise RuntimeError(f"sbatch returned no job id: {out!r}")
+    return job_id
+
+
+def scancel(job_id: str, run: Runner = run_command) -> None:
+    run(["scancel", str(job_id)])

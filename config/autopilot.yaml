@@ -24,3 +24,27 @@ status_label: autopilot-status
 alert_label: autopilot-alert
 # Fine-grained token for sr320/AREE only, Issues: read and write. chmod 600.
 token_file: ~/.config/aree/github_token
+
+# --- Phase 2: resume -------------------------------------------------------
+# "report" (default) never submits or cancels. "resume" resubmits head jobs
+# started with `aree autopilot launch` that were preempted, timed out, hit a
+# Slurm controller error, stalled, or had a task run out of memory.
+# `aree autopilot pause` (or the autopilot-paused label on the status issue)
+# turns actions off without editing this file.
+mode: report
+paused_label: autopilot-paused
+max_resumes_per_day: 3
+max_resumes_total: 10
+oom_memory_factor: 2.0
+
+# Head job (scripts/klone/head.sbatch), see docs/running_on_klone.md#running.
+head_account: srlab
+head_partition: cpu-g2
+head_time: 4-00:00:00
+head_cpus: 2
+head_mem: 8G
+miniforge: ~/miniforge3
+nextflow_env: nextflow
+nxf_root: /gscratch/scrubbed/$USER/aree
+# Account the ckpt task jobs are charged to (AREE_SLURM_ACCOUNT).
+task_account: srlab

@@ -51,7 +51,9 @@ def assess(head: dict | None, acct: dict | None, trace: dict, log_text: str,
             return _result("pending", f"head job pending ({head.get('reason') or 'no reason'})")
         if head["state"] in ACTIVE_SQUEUE:
             mtime = trace.get("trace_mtime")
-            idle = (now - mtime) / 3600 if mtime else elapsed_hours(head.get("elapsed", ""))
+            elapsed = elapsed_hours(head.get("elapsed", ""))
+            # A fresh head job (e.g. just resumed) is not stalled by an old trace.
+            idle = min((now - mtime) / 3600, elapsed) if mtime else elapsed
             if idle >= stall_hours:
                 since = "no task has finished" if mtime else "no trace file yet"
                 return _result("stalled", f"head job running but {since} for {idle:.1f} h",
@@ -66,6 +68,9 @@ def assess(head: dict | None, acct: dict | None, trace: dict, log_text: str,
                        next_step="check the run by hand, or untrack it")
 
     state = acct["state"]
+    if state == "PENDING" or state in ACTIVE_SQUEUE:
+        # Just submitted and not yet visible in squeue.
+        return _result("pending" if state == "PENDING" else "running", f"head job {state.lower()} (sacct)")
     if state == "COMPLETED" and acct.get("exit_code", "0:0") == "0:0":
         return _result("finished", "head job completed, exit 0")
     if state in INTERRUPTED_STATES:

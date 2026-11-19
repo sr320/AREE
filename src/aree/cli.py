@@ -1005,7 +1005,7 @@ def build_metabolite_links_cmd(taxid, offline):
 
 @main.group("autopilot")
 def autopilot_group():
-    """Watch study runs on Klone and report their state (Phase 1: report-only).
+    """Watch study runs on Klone, report their state and (mode: resume) resume them.
 
     See docs/klone_autopilot_plan.md and docs/running_on_klone.md#autopilot.
     """
@@ -1083,6 +1083,63 @@ def autopilot_track_cmd(config_path, study_id, launch_dir, outdir, job_id):
 
     rec = track(load_config(config_path), study_id, launch_dir, outdir, job_id)
     click.echo(f"Tracking {study_id}: launch dir {rec['launch_dir']}, results {rec['outdir']}")
+
+
+@autopilot_group.command("launch")
+@_autopilot_config
+@click.option("--study", "study_id", required=True)
+@click.option("--workflow", required=True, help="Workflow directory, e.g. workflows/methylation.")
+@click.option("--study-config", required=True, help="The study's config, e.g. config/<STUDY_ID>.config.")
+@click.option("-c", "run_configs", multiple=True,
+              help="Run-only config(s), passed with -c in order (e.g. run_resources_klone.config).")
+@click.option("--launch-dir", default=".", show_default=True, type=click.Path(file_okay=False),
+              help="Directory the head job runs in (its .nextflow.log and Nextflow cache).")
+@click.option("--outdir", default=None, help="The run's --outdir (default: results_template).")
+def autopilot_launch_cmd(config_path, study_id, workflow, study_config, run_configs, launch_dir, outdir):
+    """Submit a study's Nextflow head job (scripts/klone/head.sbatch) so the autopilot can resume it.
+
+    The head job runs `nextflow run <workflow> -profile apptainer,klone -resume`.
+    The submission is recorded in the ledger; with `mode: resume`, a later tick
+    resubmits the same command if the head job is preempted or times out.
+    """
+    from autopilot.config import load_config
+    from autopilot.tick import launch
+
+    launch_dir = str(Path(launch_dir).resolve())
+    def resolve(p):
+        return str(Path(p).resolve())
+    try:
+        rec = launch(load_config(config_path), study_id, resolve(workflow), resolve(study_config),
+                     launch_dir, outdir, [resolve(c) for c in run_configs])
+    except (RuntimeError, subprocess.CalledProcessError, FileNotFoundError) as exc:
+        click.echo(click.style(f"launch failed: {exc}", fg="red"))
+        sys.exit(1)
+    click.echo(click.style(f"Submitted {study_id} as job {rec['job_id']}", fg="green"))
+    click.echo(f"  launch dir : {rec['launch_dir']}")
+    click.echo(f"  results    : {rec['outdir']}")
+
+
+@autopilot_group.command("pause")
+@_autopilot_config
+def autopilot_pause_cmd(config_path):
+    """Stop the autopilot acting (it keeps reporting): creates state_dir/PAUSE."""
+    from autopilot.config import load_config
+
+    path = Path(load_config(config_path)["state_dir"]) / "PAUSE"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+    click.echo(f"Paused ({path}). `aree autopilot unpause` resumes actions.")
+
+
+@autopilot_group.command("unpause")
+@_autopilot_config
+def autopilot_unpause_cmd(config_path):
+    """Let the autopilot act again (removes state_dir/PAUSE)."""
+    from autopilot.config import load_config
+
+    path = Path(load_config(config_path)["state_dir"]) / "PAUSE"
+    path.unlink(missing_ok=True)
+    click.echo("Unpaused. Actions also need `mode: resume` in config/autopilot.yaml.")
 
 
 @autopilot_group.command("untrack")

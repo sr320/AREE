@@ -124,8 +124,10 @@ Report a profile change that alters results in the study YAML.
 
 `aree autopilot` watches study runs on Klone and reports their state to a
 GitHub status issue, opening `autopilot-alert` issues when a run needs a
-person. **Phase 1 is report-only: it never submits or cancels a job.** The
-plan for the later phases (automatic resume, starting queued studies) is in
+person. With `mode: report` (the default) it never submits or cancels a job.
+With `mode: resume` it also resubmits runs it launched that stopped for a
+recoverable reason ([Resuming runs](#resuming-runs)). The plan, including
+starting queued studies (not built yet), is in
 [klone_autopilot_plan.md](klone_autopilot_plan.md).
 
 ### What it reports
@@ -181,3 +183,42 @@ issue turns that check off.
 `aree autopilot status` prints the last tick's report. When a run's outputs
 are copied off scrubbed, or the run is abandoned,
 `aree autopilot untrack <STUDY_ID>` removes it.
+
+### Resuming runs
+
+The autopilot can only resume a run whose submission it recorded, so start
+runs with `aree autopilot launch` instead of a hand-written sbatch script:
+
+```bash
+cd /gscratch/scrubbed/$USER/aree/launch/<STUDY_ID>     # the head job runs here
+aree autopilot launch --study <STUDY_ID> \
+  --workflow <repo>/workflows/methylation \
+  --study-config <repo>/config/<STUDY_ID>.config \
+  -c <repo>/run_resources_klone.config
+```
+
+This submits `scripts/klone/head.sbatch` as `aree-<STUDY_ID>` on the head-job
+partition (`head_*` settings), exporting only the `AREE_*` variables it needs
+(never `TMPDIR`). The head job runs
+`nextflow run ... -profile apptainer,klone -resume`, so resubmitting the same
+command continues from the cache. Set `miniforge` and `nextflow_env` in
+`config/autopilot.yaml` first.
+
+Then set `mode: resume`. Each tick, for each launched run:
+
+| Seen | Done |
+|---|---|
+| head job `PREEMPTED`, `TIMEOUT`, `NODE_FAIL`, `BOOT_FAIL`, or a Slurm controller error | resubmit the recorded command |
+| `stalled` | `scancel` the head job, then resubmit |
+| a task ran out of memory (exit 137) | write `<state_dir>/overrides/<STUDY_ID>.config` raising that process's memory to its peak RSS x `oom_memory_factor` (2), passed last with `-c`, then resubmit. Once per process |
+| task walltime, missing input, container, unknown, cancelled | nothing: alert, a person decides |
+
+A run gets at most `max_resumes_per_day` (3) resumes in 24 h and
+`max_resumes_total` (10) in all. Past that, or for a run not started with
+`launch`, it is marked *needs a person* and alerted. A resumed run is not
+alerted; the status issue lists what each tick did and how often each run
+was resumed.
+
+To stop the autopilot acting without stopping its reports:
+`aree autopilot pause` (creates `<state_dir>/PAUSE`; `unpause` removes it),
+or add the `autopilot-paused` label to the status issue from anywhere.
