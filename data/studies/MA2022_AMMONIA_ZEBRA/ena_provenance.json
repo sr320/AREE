@@ -1,0 +1,64 @@
+{
+  "study_id": "MA2022_AMMONIA_ZEBRA",
+  "bioproject": "PRJNA733332",
+  "date_generated": "2026-10-21",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA733332&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "strain",
+    "tan"
+  ],
+  "n_runs": 12,
+  "n_samples": 12,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "B_C96": 3,
+    "B_D": 3,
+    "P_C96": 3,
+    "P_D": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 38683064683,
+  "fastq_sources": {
+    "fastq_ftp": 12,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/MA2022_AMMONIA_ZEBRA/samplesheet.tsv": "e5d6f25732e5ad533eb6efe4ec836d6d474ba3c569de58a4d417b994965757be",
+    "data/studies/MA2022_AMMONIA_ZEBRA/fastq_manifest.tsv": "75426d3abf2a4d692fabb5368767dfa5d74f2fd7ff7e072224588d3cf2f01d6f"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<strain>[BP])(?P<tan>D|C96)_(?P<rep>[123])$",
+    "labels": {
+      "SRR14675931": "PC96_1",
+      "SRR14675932": "PD_3",
+      "SRR14675933": "PD_2",
+      "SRR14675934": "PD_1",
+      "SRR14675935": "BC96_3",
+      "SRR14675936": "BC96_2",
+      "SRR14675937": "BC96_1",
+      "SRR14675938": "BD_3",
+      "SRR14675939": "PC96_3",
+      "SRR14675940": "PC96_2",
+      "SRR14675941": "BD_2",
+      "SRR14675942": "BD_1"
+    }
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 12
+    }
+  }
+}
