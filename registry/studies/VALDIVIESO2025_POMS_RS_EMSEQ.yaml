@@ -50,7 +50,7 @@ data_availability:
   access_notes: "Raw paired-end FASTQ for all 40 runs are public in ENA under PRJEB81880 (first public 2024-11-06), all with ENA-generated FASTQ and MD5s. The paper's supplementary tables (S5-S18) list DSS DMRs and genes per comparison; they were not retrieved or inspected for this registration. They are significance-filtered DMR calls on cgigas_uk_roslin_v1 coordinates, so this study is registered for raw reanalysis. Sample sheet, methylKit sample sheet and FASTQ manifest were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
-analysis_status: "not_started"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED AND PUBLISHED. 40 libraries, parsed from
