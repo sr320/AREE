@@ -9,9 +9,9 @@
  * Branches on params.mode:
  *   - raw_reanalysis:
  *       FASTQC -> TRIM_GALORE -> BISMARK_GENOME_PREPARATION + BISMARK_ALIGN
- *       (or, with align_chunk_pairs, SPLIT_FASTQ_PAIRS -> BISMARK_ALIGN_CHUNK
- *       -> BISMARK_MERGE_CHUNKS)
  *       -> BISMARK_DEDUPLICATE -> BISMARK_METHYLATION_EXTRACTOR
+ *       (or, with align_chunk_pairs: COUNT_READ_PAIRS -> TRIM_ALIGN_CHUNK
+ *       -> MERGE_DEDUP_CHUNKS -> BISMARK_METHYLATION_EXTRACTOR)
  *       -> COVERAGE_FILTER -> DMR_METHYLKIT -> ANNOTATE_REGIONS
  *       -> STANDARDIZE_OUTPUT -> EMIT_MANIFEST -> RENDER_REPORT
  *   - processed_results_harmonization:
@@ -27,9 +27,9 @@ include { TRIM_GALORE }                     from '../../modules/methylation/trim
 include { BISMARK_GENOME_PREPARATION }      from '../../modules/methylation/bismark_align.nf'
 include { BISMARK_ALIGN }                   from '../../modules/methylation/bismark_align.nf'
 include { BISMARK_DEDUPLICATE }             from '../../modules/methylation/bismark_align.nf'
-include { SPLIT_FASTQ_PAIRS }               from '../../modules/methylation/bismark_chunked.nf'
-include { BISMARK_ALIGN_CHUNK }             from '../../modules/methylation/bismark_chunked.nf'
-include { BISMARK_MERGE_CHUNKS }            from '../../modules/methylation/bismark_chunked.nf'
+include { COUNT_READ_PAIRS }                from '../../modules/methylation/bismark_chunked.nf'
+include { TRIM_ALIGN_CHUNK }                from '../../modules/methylation/bismark_chunked.nf'
+include { MERGE_DEDUP_CHUNKS }              from '../../modules/methylation/bismark_chunked.nf'
 include { BISMARK_METHYLATION_EXTRACTOR }   from '../../modules/methylation/bismark_methylation_extractor.nf'
 include { COVERAGE_FILTER }                 from '../../modules/methylation/coverage_filter.nf'
 include { DMR_METHYLKIT }                   from '../../modules/methylation/dmr_methylkit.nf'
@@ -87,49 +87,55 @@ workflow {
         annotation_gtf_ch = Channel.fromPath(params.annotation_gtf, checkIfExists: true)
 
         FASTQC(reads_ch)
-        TRIM_GALORE(reads_ch)
 
         BISMARK_GENOME_PREPARATION(genome_fasta_ch)
 
-        // align_chunk_pairs > 0 splits each trimmed library into chunks of
-        // that many read pairs, aligns the chunks as separate tasks and
-        // concatenates them before deduplication (modules/methylation/
-        // bismark_chunked.nf). Unset or 0: one alignment task per library.
+        // align_chunk_pairs > 0: each library is trimmed, aligned and
+        // deduplicated as chunks of that many read pairs, with every
+        // read-sized intermediate on node-local scratch (modules/methylation/
+        // bismark_chunked.nf). Unset or 0: TRIM_GALORE -> BISMARK_ALIGN ->
+        // BISMARK_DEDUPLICATE, one task per library.
         def chunk_pairs = (params.methylation.align_chunk_pairs ?: 0) as long
         def align_versions_ch
         if (chunk_pairs > 0) {
-            SPLIT_FASTQ_PAIRS(TRIM_GALORE.out.trimmed_reads, chunk_pairs)
-            chunk_reads_ch = SPLIT_FASTQ_PAIRS.out.chunks.flatMap { sample_id, r1s, r2s ->
-                def r1 = (r1s instanceof List ? r1s : [r1s]).sort { it.name }
-                def r2 = (r2s instanceof List ? r2s : [r2s]).sort { it.name }
-                def key = groupKey(sample_id, r1.size())
-                [r1, r2].transpose().withIndex().collect { pair, i ->
-                    tuple(key, String.format('chunk%04d', i + 1), pair[0], pair[1])
+            COUNT_READ_PAIRS(reads_ch)
+            chunk_reads_ch = COUNT_READ_PAIRS.out.counted.flatMap { sample_id, reads, n_text ->
+                def n = n_text.trim() as long
+                if (n < 1) error "no read pairs counted for ${sample_id}"
+                def n_chunks = ((n + chunk_pairs - 1) / chunk_pairs) as int
+                def key = groupKey(sample_id, n_chunks)
+                (0..<n_chunks).collect { i ->
+                    def first = i * chunk_pairs + 1
+                    def last  = Math.min((i + 1) * chunk_pairs, n)
+                    tuple(key, String.format('chunk%04d', i + 1), first, last, reads)
                 }
             }
-            BISMARK_ALIGN_CHUNK(chunk_reads_ch, BISMARK_GENOME_PREPARATION.out.genome_dir.first())
-            BISMARK_MERGE_CHUNKS(
-                BISMARK_ALIGN_CHUNK.out.chunk_bam
+            TRIM_ALIGN_CHUNK(chunk_reads_ch, BISMARK_GENOME_PREPARATION.out.genome_dir.first())
+            MERGE_DEDUP_CHUNKS(
+                TRIM_ALIGN_CHUNK.out.chunk_bam
                     .groupTuple()
-                    .map { key, chunk_ids, bams, reports -> tuple(key.toString(), chunk_ids, bams, reports) }
+                    .map { key, chunk_ids, bams, reports, trim_reports ->
+                        tuple(key.toString(), chunk_ids, bams, reports, trim_reports.flatten())
+                    }
             )
-            aligned_bam_ch = BISMARK_MERGE_CHUNKS.out.bam
-            align_versions_ch = SPLIT_FASTQ_PAIRS.out.versions
-                .mix(BISMARK_ALIGN_CHUNK.out.versions)
-                .mix(BISMARK_MERGE_CHUNKS.out.versions)
+            dedup_bam_ch = MERGE_DEDUP_CHUNKS.out.dedup_bam
+            align_versions_ch = TRIM_ALIGN_CHUNK.out.versions
+                .mix(MERGE_DEDUP_CHUNKS.out.versions)
         } else {
+            TRIM_GALORE(reads_ch)
             BISMARK_ALIGN(
                 TRIM_GALORE.out.trimmed_reads,
                 BISMARK_GENOME_PREPARATION.out.genome_dir.first()
             )
-            aligned_bam_ch = BISMARK_ALIGN.out.bam
-            align_versions_ch = BISMARK_ALIGN.out.versions
+            BISMARK_DEDUPLICATE(BISMARK_ALIGN.out.bam)
+            dedup_bam_ch = BISMARK_DEDUPLICATE.out.dedup_bam
+            align_versions_ch = TRIM_GALORE.out.versions
+                .mix(BISMARK_ALIGN.out.versions)
+                .mix(BISMARK_DEDUPLICATE.out.versions)
         }
 
-        deduped_ch = BISMARK_DEDUPLICATE(aligned_bam_ch)
-
         extracted_ch = BISMARK_METHYLATION_EXTRACTOR(
-            deduped_ch.dedup_bam,
+            dedup_bam_ch,
             BISMARK_GENOME_PREPARATION.out.genome_dir.first()
         )
 
@@ -249,10 +255,8 @@ workflow {
         // manifest's software_versions. A process added to this DAG must add
         // its .out.versions here too (tests/test_workflow_versions.py checks).
         versions_ch = FASTQC.out.versions
-            .mix(TRIM_GALORE.out.versions)
             .mix(BISMARK_GENOME_PREPARATION.out.versions)
             .mix(align_versions_ch)
-            .mix(BISMARK_DEDUPLICATE.out.versions)
             .mix(BISMARK_METHYLATION_EXTRACTOR.out.versions)
             .mix(COVERAGE_FILTER.out.versions)
             // Only the DMR process that ran has outputs; the ternary reads that one.

@@ -1,0 +1,7 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	treatment	oyster	tissue	collection_date	geo_loc_name	isolation_source	library_layout	instrument_model	read_count
+2M-HS	SRR3286754	SAMN04577613	2M-HS	HS	HS	2M	mantle				SINGLE	Illumina HiSeq 2500	22814726
+2M-C	SRR3288136	SAMN04577614	2M-C	C	C	2M	mantle				SINGLE	Illumina HiSeq 2500	28854396
+4M-HS	SRR3288139	SAMN04577615	4M-HS	HS	HS	4M	mantle				SINGLE	Illumina HiSeq 2500	18787858
+4M-C	SRR3288141	SAMN04577616	4M-C	C	C	4M	mantle				SINGLE	Illumina HiSeq 2500	23895224
+6M-HS	SRR3288143	SAMN04577617	6M-HS	HS	HS	6M	mantle				SINGLE	Illumina HiSeq 2500	18964588
+6M-C	SRR3288145	SAMN04577618	6M-C	C	C	6M	mantle				SINGLE	Illumina HiSeq 2500	23863125

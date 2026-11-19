@@ -1,0 +1,268 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "DUPERRET2025_HEAT_RNASEQ",
+  "comparison_id": "heat30_oshv1_24hpc_vs_0hpc",
+  "input_files": [
+    {
+      "name": "DUPERRET2025_HEAT_RNASEQ_heat30_oshv1_24hpc_vs_0hpc_dge_standardized.tsv",
+      "sha256": "fa55003fe9770b94b011915e888ab9ad3c049b7a11c7fe668ca789340c9c8497"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "DUPERRET2025_HEAT_RNASEQ",
+    "comparison_id": "heat30_oshv1_24hpc_vs_0hpc",
+    "outdir": "results/rnaseq/DUPERRET2025_HEAT_RNASEQ/heat30_oshv1_24hpc_vs_0hpc",
+    "exclude_samples": [],
+    "control_levels": [
+      "4_0"
+    ],
+    "treatment_levels": [
+      "4_24"
+    ],
+    "replicate_unit": "tank_hpc",
+    "covariates": [],
+    "single_end": true,
+    "se_adapter": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA",
+    "tag_seq": false,
+    "viral_reference": "data/reference/pathogens/OsHV-1/NC_005881.2.fasta",
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "lengthScaledTPM counts summed per replicate unit",
+    "exclude_genes": null,
+    "n_libraries_or_units": 6,
+    "residual_df": 4
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.3"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.35"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.17"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.4.0"
+    },
+    "VIRAL_INDEX": {
+      "salmon": "2.8.0"
+    },
+    "VIRAL_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "VIRAL_SUMMARY": {
+      "python": "3.11.17"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.17"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06",
+    "transcript_fasta": "data/reference/GCF_963853765.1/rna.fna",
+    "gtf": "data/reference/GCF_963853765.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_963853765.1/tx2gene.tsv",
+    "salmon_index": "/Users/sr320/aree-data/reference/GCF_963853765.1/salmon_index",
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ab5443f889932ef3e860d47e23801dd94a2b6a4a508f807e0349dfaccea79600",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "reference_provenance.json",
+        "sha256": "61b2628562f4bb362789d95193c197ca77fbcc2b1c451227e37e3fde2bbbb3ec"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "297d49baac2fd3187db957c3dcd150e58ed2a61c3867b61dbdd83ba9b683c386",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "170cae75beb05c1afd9b7b3dbed4bdeb4225c16f9aab757ccc00c2b449092d18",
+        "matches_bundle_provenance": true
+      }
+    ],
+    "bundle": {
+      "bundle": "GCF_963853765.1",
+      "assembly_id": "xbMagGiga1.1",
+      "ncbi_assembly_accession": "GCF_963853765.1",
+      "annotation_source": "NCBI RefSeq GCF_963853765.1-RS_2024_06",
+      "annotation_release_matches_registry": true,
+      "date_generated": "2026-10-13",
+      "bundler_version": "1.0.0"
+    }
+  },
+  "workflow_start": "2026-10-18T14:17:16.156128-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": {
+    "reference": {
+      "file": "NC_005881.2.fasta",
+      "sha256": "cdd9a92f3db33d3f09ffdfd759c677b9296f87aff2eb6d3580546a0f910f98d9",
+      "header": "NC_005881.2 Ostreid herpesvirus 1, complete genome"
+    },
+    "threshold_viral_pairs_per_million": 100.0,
+    "samples": [
+      {
+        "sample_id": "P_F14R_4_0_1",
+        "library_id": "ERR14694101",
+        "condition": "4_0",
+        "pairs_processed": 28584544,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_4_0_2",
+        "library_id": "ERR14694102",
+        "condition": "4_0",
+        "pairs_processed": 24648401,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_4_0_3",
+        "library_id": "ERR14694103",
+        "condition": "4_0",
+        "pairs_processed": 25760395,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_4_24_1",
+        "library_id": "ERR14694113",
+        "condition": "4_24",
+        "pairs_processed": 28519259,
+        "viral_pairs": 16,
+        "viral_per_million": 0.56,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_4_24_2",
+        "library_id": "ERR14694114",
+        "condition": "4_24",
+        "pairs_processed": 29621218,
+        "viral_pairs": 148,
+        "viral_per_million": 5.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F14R_4_24_3",
+        "library_id": "ERR14694115",
+        "condition": "4_24",
+        "pairs_processed": 26773466,
+        "viral_pairs": 43,
+        "viral_per_million": 1.61,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_4_0_1",
+        "library_id": "ERR14694122",
+        "condition": "4_0",
+        "pairs_processed": 28116227,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_4_0_2",
+        "library_id": "ERR14694123",
+        "condition": "4_0",
+        "pairs_processed": 25173370,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_4_0_3",
+        "library_id": "ERR14694124",
+        "condition": "4_0",
+        "pairs_processed": 28011804,
+        "viral_pairs": 0,
+        "viral_per_million": 0.0,
+        "virus_detected": false,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_4_24_1",
+        "library_id": "ERR14694134",
+        "condition": "4_24",
+        "pairs_processed": 28035537,
+        "viral_pairs": 14259,
+        "viral_per_million": 508.6,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_4_24_2",
+        "library_id": "ERR14694135",
+        "condition": "4_24",
+        "pairs_processed": 25460711,
+        "viral_pairs": 90641,
+        "viral_per_million": 3560.03,
+        "virus_detected": true,
+        "excluded_from_de": false
+      },
+      {
+        "sample_id": "P_F11N_4_24_3",
+        "library_id": "ERR14694136",
+        "condition": "4_24",
+        "pairs_processed": 29113102,
+        "viral_pairs": 111596,
+        "viral_per_million": 3833.19,
+        "virus_detected": true,
+        "excluded_from_de": false
+      }
+    ],
+    "warnings": [
+      "no_viral_reads_in_challenged_sample: P_F14R_4_24_1 (4_24) has 0.6 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: P_F14R_4_24_2 (4_24) has 5.0 viral pairs per million, below the 100 threshold",
+      "no_viral_reads_in_challenged_sample: P_F14R_4_24_3 (4_24) has 1.6 viral pairs per million, below the 100 threshold"
+    ]
+  },
+  "warnings": [
+    "no_viral_reads_in_challenged_sample: P_F14R_4_24_1 (4_24) has 0.6 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: P_F14R_4_24_2 (4_24) has 5.0 viral pairs per million, below the 100 threshold",
+    "no_viral_reads_in_challenged_sample: P_F14R_4_24_3 (4_24) has 1.6 viral pairs per million, below the 100 threshold"
+  ]
+}

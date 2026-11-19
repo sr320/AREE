@@ -167,7 +167,9 @@ AREE/
 | `aree build-orthogroups --orthofinder <path> [--threads N] [--activate]` | Infer orthogroups across every species with a crosswalk (OrthoFinder on RefSeq proteomes); writes `data/reference/orthogroups/<run_id>/` |
 | `aree build-dashboard [--out <path>] [--include-simulated]` | Summarize registry, pipeline, and findings state into `docs/dashboard/data.json` (plus the top candidates' evidence cards) for the Quarto dashboard page. Simulated demo studies are left out unless `--include-simulated` |
 | `aree export-site-data [--out <dir>] [--include-simulated]` | Export evidence, candidates and studies as Parquet (`docs/explore/data/`) for the site's in-browser [Explore page](https://sr320.github.io/AREE/explore.html); simulated demo data left out unless `--include-simulated`; needs the `site` extra |
-| `aree mcp [--transport stdio\|streamable-http]` | Serve studies, evidence, candidates and evidence cards to MCP clients such as Claude, as read-only tools; needs the `mcp` extra (Python ≥ 3.10). See [docs/querying_aree.md](docs/querying_aree.md) |
+| `aree fetch-site-data [--dest <dir>] [--url <url>]` | Download the published Explore-page tables and evidence cards (default `docs/explore/data/`), so `aree mcp --data-dir` can answer without running the pipeline |
+| `aree chat-serve [--host <h>] [--port <p>] [--data-dir <dir>]` | Run the Ask AREE chat service locally: Claude answers plain-language questions by calling the read-only query tools, with rate and spend limits; needs the `chat` extra and an Anthropic API key. See [docs/ask_aree.md](docs/ask_aree.md) |
+| `aree mcp [--transport stdio\|streamable-http] [--data-dir <dir>]` | Serve studies, evidence, candidates and evidence cards to MCP clients such as Claude, as read-only tools, from `reports/` or from published tables (`--data-dir`); needs the `mcp` extra (Python ≥ 3.10). See [docs/querying_aree.md](docs/querying_aree.md) |
 
 ## Working with real data
 
@@ -275,14 +277,19 @@ Two ways to ask questions of AREE's evidence without writing pipeline code
   an effect plot, candidate and evidence filters, studies, and a SQL console,
   running in DuckDB-WASM in the browser against Parquet exports. No server, no login.
 - **MCP server** (`aree mcp`): connect Claude Desktop, Claude Code or another MCP
-  client and ask in plain language ("which genes are significant for survival
-  in more than one real study, and do any conflict in direction?"). Answers come
-  from read-only tools over the pipeline outputs, with study and evidence ids cited.
+  client and ask in plain language ("which genes are significant for thermal
+  tolerance in more than one real study, and do any conflict in direction?"). Answers
+  come from read-only tools over the pipeline outputs or the published tables, with
+  study and evidence ids cited.
 
 ```bash
 pip install -e ".[site,mcp]"
 aree export-site-data && quarto render docs   # Explore page, locally
 claude mcp add aree -- aree mcp               # MCP server, in Claude Code
+
+# Or, without running the pipeline: the published tables
+aree fetch-site-data
+claude mcp add aree -- aree mcp --data-dir "$PWD/docs/explore/data"
 ```
 
 ## Implementation status

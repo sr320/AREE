@@ -1,0 +1,4 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+0h	2	0h_replicate1,0h_replicate2	6125	0.0551	True
+48h	3	48h_replicate1,48h_replicate2,48h_replicate3	7449	0.01512	True
+6h	3	6h_replicate1,6h_replicate2,6h_replicate3	6797	0.04623	True

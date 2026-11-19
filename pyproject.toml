@@ -17,6 +17,7 @@ dependencies = [
     "scipy>=1.10",
     "jsonschema>=4.17",
     "tabulate>=0.9",
+    "duckdb>=1.1",
 ]
 
 [project.optional-dependencies]
@@ -28,11 +29,18 @@ intake = ["xlrd>=2.0.1", "openpyxl>=3.1"]
 # [tool.ruff.lint] below, but new ruff minors still add checks under existing
 # rule prefixes. Bumping this range is a deliberate act, not a CI surprise.
 # `aree mcp`: serve AREE to MCP clients such as Claude (docs/querying_aree.md).
-# The MCP SDK itself needs Python >= 3.10.
-mcp = ["mcp>=1.2; python_version >= '3.10'"]
+# The MCP SDK itself needs Python >= 3.10. Held below 2.0: an mcp 2.x server
+# rejects the initialize handshake that Claude Desktop and Claude Code send.
+mcp = ["mcp>=1.2,<2; python_version >= '3.10'"]
 # `aree export-site-data`: Parquet tables for the site's Explore page.
 site = ["pyarrow>=14"]
-dev = ["pytest>=7.4", "ruff>=0.16.5,<0.17"]
+# `aree chat-serve`: the Ask AREE chat service (docs/ask_aree.md).
+chat = [
+    "anthropic>=1.17,<2; python_version >= '3.10'",
+    "fastapi>=0.115; python_version >= '3.10'",
+    "uvicorn>=0.30; python_version >= '3.10'",
+]
+dev = ["pytest>=7.4", "ruff>=0.16.5,<0.17", "httpx>=0.27"]
 
 [project.scripts]
 aree = "aree.cli:main"
@@ -41,7 +49,7 @@ aree = "aree.cli:main"
 package-dir = { "" = "src" }
 packages = [
     "aree", "common", "intake", "harmonize", "meta_analysis",
-    "prioritize", "reporting", "validation", "mappings", "query",
+    "prioritize", "reporting", "validation", "mappings", "query", "chat",
 ]
 
 [tool.pytest.ini_options]

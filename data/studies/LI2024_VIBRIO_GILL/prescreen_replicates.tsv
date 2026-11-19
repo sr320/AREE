@@ -1,0 +1,4 @@
+condition	reads_per_library	source	n_samples	samples	n_genes	median_dispersion	passes
+0h	1000000	ncbi	3	0h_replicate1,0h_replicate2,0h_replicate3	5541	0.16726	True
+48h	1000000	ncbi	3	48h_replicate1,48h_replicate2,48h_replicate3	6581	0.01702	True
+6h	1000000	ncbi	3	6h_replicate1,6h_replicate2,6h_replicate3	5934	0.04566	True

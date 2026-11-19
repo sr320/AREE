@@ -1,0 +1,7 @@
+run_accession	mate	url	md5	bytes	source
+SRR3286754	1	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR328/004/SRR3286754/SRR3286754.fastq.gz	e8616b98b08eea68df5bfb883ae26ca9	1778405899	fastq_ftp
+SRR3288136	1	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR328/006/SRR3288136/SRR3288136.fastq.gz	0449c2b27cb5241f9915dcc5c3ea5090	2219833216	fastq_ftp
+SRR3288139	1	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR328/009/SRR3288139/SRR3288139.fastq.gz	93f98a9680121199442a88f8b969eab9	1388120196	fastq_ftp
+SRR3288141	1	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR328/001/SRR3288141/SRR3288141.fastq.gz	1663b543b8597bec96d4921f940e5f11	1845112506	fastq_ftp
+SRR3288143	1	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR328/003/SRR3288143/SRR3288143.fastq.gz	fbedf30089962c1aeef7b9575f1d2337	1338183182	fastq_ftp
+SRR3288145	1	ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR328/005/SRR3288145/SRR3288145.fastq.gz	fb54f16cc01ab0c6ca0d904e6280faa1	1821156437	fastq_ftp

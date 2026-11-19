@@ -70,3 +70,11 @@ data/reference/orthogroups/_work/
 # The simulated demo table (metabolite_gene_links_demo.*) IS committed.
 data/mappings/metabolite_gene_links_mgigas.*
 data/mappings/_sources/
+
+# Ask AREE eval output: keep results and summaries; transcripts and rendered reports are derived or bulky
+.claude/hillclimb/**/traces/
+.claude/hillclimb/**/report.html
+.claude/hillclimb/**/state.json
+.claude/hillclimb/**/trajectory/
+.claude/hillclimb/**/progress.txt
+.claude/hillclimb/**/.harness_approved

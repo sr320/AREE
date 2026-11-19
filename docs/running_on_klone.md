@@ -14,7 +14,8 @@ built around that limit.
 |---|---|---|
 | Nextflow head job | a non-preemptible partition you can use (e.g. `cpu-g2` under your group's account), 2 CPUs, 8 GB, a few days | if the head job is preempted, the whole run stops |
 | Every task | `ckpt-all` (`-profile klone`) | idle capacity; each task is short and retried |
-| Raw FASTQ, work dir, results | `/gscratch/scrubbed/$USER/aree/` | room for ~2–3 TB of intermediates. **Scrubbed deletes files untouched for 21 days:** copy what you keep before then |
+| Read-sized temporary files | the compute node's `/scr` (~350 GB per node) | chunk FASTQs, trimmed reads, Bismark temp files, merged BAMs and extractor context files never touch shared storage |
+| Raw FASTQ, work dir, results | `/gscratch/scrubbed/$USER/aree/` | with chunked alignment, about 1.8x the raw reads beyond the raw reads themselves. **Scrubbed is a shared fileset (153.6 TB) that is often >97% full, and deletes files untouched for 21 days.** Check `hyakstorage /gscratch/scrubbed` before a run, and copy what you keep before 21 days |
 | Repository checkout | `/gscratch/<group>/$USER/github/AREE` | small, and not scrubbed |
 
 Do not run Nextflow, downloads or tools on a login node. Submit them as jobs.
@@ -58,7 +59,7 @@ pattern as on the workstation, submitted as a job.
 #SBATCH --account=<group> --partition=cpu-g2 --cpus-per-task=2 --mem=8G --time=4-00:00:00
 source <miniforge>/etc/profile.d/conda.sh && conda activate nextflow
 export NXF_HOME=/gscratch/scrubbed/$USER/aree/nxf-home
-export TMPDIR=/gscratch/scrubbed/$USER/aree/tmp NXF_TEMP=$TMPDIR
+export NXF_TEMP=/gscratch/scrubbed/$USER/aree/tmp   # not TMPDIR: see below
 export AREE_SLURM_ACCOUNT=<group>          # account for the ckpt jobs (default srlab)
 nextflow run workflows/methylation \
   -config config/<STUDY_ID>.config \
@@ -82,18 +83,35 @@ do, and set at least:
 ```groovy
 params.methylation.align_chunk_pairs = 20000000   // ~1-1.5 h Bismark tasks at 12 CPUs
 process {
-    withName: 'TRIM_GALORE|BISMARK_.*|SPLIT_FASTQ_PAIRS|FASTQC|DMR_.*' { time = '4h 45m' }
+    withName: 'FASTQC|COUNT_READ_PAIRS|TRIM_ALIGN_CHUNK|MERGE_DEDUP_CHUNKS|BISMARK_.*|COVERAGE_FILTER|DMR_.*' { time = '4h 45m' }
 }
 ```
 
 ## Chunked alignment
 
-`methylation.align_chunk_pairs` splits each trimmed library into chunks of
-read pairs. It aligns each chunk as its own task, then concatenates the chunk
-BAMs in order before deduplication (see
+`methylation.align_chunk_pairs` trims, aligns and deduplicates each library
+as chunks of read pairs, with every read-sized intermediate on the node's
+`/scr` (see
 [workflows/methylation/README.md](../workflows/methylation/README.md#chunked-alignment-methylation-align_chunk_pairs)).
 A preempted chunk costs one chunk's work, not a library's, and the chunks of
-all libraries align in parallel.
+all libraries align in parallel. The chunk task uses a pinned conda
+environment, which `-profile klone` enables (cache in
+`/gscratch/scrubbed/$USER/aree/conda-cache`, or `AREE_CONDA_CACHEDIR`).
+
+**Do not export `TMPDIR` in the head job, and pin scratch to `/scr`.** Slurm
+passes the head job's environment to every task. A `TMPDIR` on gscratch then
+(1) puts `scratch true` back on shared storage, and (2) is forwarded into
+containers, where `/gscratch/...` is not mounted (only `/mmfs1/gscratch`).
+Quarto in `RENDER_REPORT` then fails with `NotFound ... tmpdir`. Use
+`NXF_TEMP` for Nextflow's own temporary files. The klone profile also sets
+`scratch = '/scr'` for the chunk, merge and extractor tasks.
+
+**Select a subset of libraries with a directory of links, not a brace
+pattern.** `fromFilePairs` names each sample from the part of the file name
+before the first wildcard. A pattern such as
+`ERR13913{46[2-9],47[0-9],48[01]}_{1,2}.fastq.gz` gave all 20 libraries the
+sample name `ERR13913`. Link the wanted files into their own directory and
+use `<dir>/ERR*_{1,2}.fastq.gz`.
 
 ## Provenance
 

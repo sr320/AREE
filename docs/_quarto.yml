@@ -5,6 +5,8 @@ project:
   # so Quarto must be told to copy them (written by `aree export-site-data`).
   resources:
     - explore/data/
+    # The Ask AREE page's script, loaded by a raw <script> tag Quarto doesn't scan.
+    - ask/ask.js
 
 website:
   title: "AREE"
@@ -17,6 +19,8 @@ website:
         href: index.qmd
       - text: "Explore"
         href: explore.qmd
+      - text: "Ask AREE"
+        href: ask.qmd
       - text: "About"
         href: about.qmd
       - text: "Docs"
@@ -35,8 +39,12 @@ website:
             href: about.qmd
           - text: "Explore the evidence"
             href: explore.qmd
+          - text: "Ask AREE (chat)"
+            href: ask.qmd
           - text: "Querying AREE (explorer + MCP)"
             href: querying_aree.md
+          - text: "Ask AREE chat service"
+            href: ask_aree.md
           - text: "Installation"
             href: installation.md
           - text: "Why this resource matters"

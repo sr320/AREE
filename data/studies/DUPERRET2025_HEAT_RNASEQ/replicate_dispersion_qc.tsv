@@ -1,0 +1,4 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+3_0	6	P_F11N_3_0_1,P_F11N_3_0_2,P_F11N_3_0_3,P_F14R_3_0_1,P_F14R_3_0_2,P_F14R_3_0_3	6709	0.00782	True
+4_0	6	P_F11N_4_0_1,P_F11N_4_0_2,P_F11N_4_0_3,P_F14R_4_0_1,P_F14R_4_0_2,P_F14R_4_0_3	7066	0.01204	True
+4_24	6	P_F11N_4_24_1,P_F11N_4_24_2,P_F11N_4_24_3,P_F14R_4_24_1,P_F14R_4_24_2,P_F14R_4_24_3	6883	0.03967	True

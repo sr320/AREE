@@ -1,0 +1,51 @@
+{
+  "study_id": "LI2024_VIBRIO_GILL",
+  "bioproject": "PRJNA830931",
+  "date_generated": "2026-10-15",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA830931&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "timepoint"
+  ],
+  "n_runs": 9,
+  "n_samples": 9,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "0h": 3,
+    "48h": 3,
+    "6h": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 28719308790,
+  "fastq_sources": {
+    "fastq_ftp": 9,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/LI2024_VIBRIO_GILL/samplesheet.tsv": "a961813059cd4a25e9bed31e244ed56089b874b6faa902f3d3ed2e0438032d54",
+    "data/studies/LI2024_VIBRIO_GILL/fastq_manifest.tsv": "e221a72435648c97c229be0c2fc7c939b68a5a077143166e8cb2a3ca7f9e1a23"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<timepoint>0h|6h|48h)_replicate(?P<replicate>[1-3])$",
+    "labels": {
+      "SRR19046233": "48h_replicate3",
+      "SRR19046234": "48h_replicate2",
+      "SRR19046235": "48h_replicate1",
+      "SRR19046236": "6h_replicate3",
+      "SRR19046237": "6h_replicate2",
+      "SRR19046238": "6h_replicate1",
+      "SRR19046239": "0h_replicate3",
+      "SRR19046240": "0h_replicate2",
+      "SRR19046241": "0h_replicate1"
+    }
+  }
+}

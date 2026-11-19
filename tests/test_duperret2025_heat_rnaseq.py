@@ -91,7 +91,6 @@ def test_comparisons_fit_three_tank_units_per_arm(samplesheet, study):
         assert set(Counter(r[unit] for r in rows).values()) == {2}
     for c in comps.values():
         assert c["sample_size"] == 12 and c["biological_replicates"] == 3
-        assert c["results_file"] is None
 
 
 def test_no_duplicate_23c_infection_contrast(study):
@@ -123,3 +122,91 @@ def test_fastq_manifest_covers_every_run_single_end(samplesheet):
     assert {r["run_accession"] for r in manifest} == {r["run_accession"] for r in samplesheet}
     assert len(manifest) == len(samplesheet)
     assert all(len(r["md5"]) == 32 for r in manifest)
+
+
+# ---- 2026-10-18 reanalysis outputs -------------------------------------------
+
+RUN = {
+    "heat30_vs_23c_0hpc": (["3_0"], ["4_0"], "tank", False),
+    "heat30_oshv1_24hpc_vs_0hpc": (["4_0"], ["4_24"], "tank_hpc", True),
+}
+
+
+def test_registry_points_at_committed_results(study):
+    assert study["qc_status"] == "passed_with_warnings"
+    assert study["analysis_status"] == "harmonized"
+    for comp in study["comparisons"]:
+        assert comp["results_file"] == (
+            f"data/studies/{STUDY_ID}/{STUDY_ID}_{comp['comparison_id']}_dge_standardized.tsv")
+        assert (REPO_ROOT / comp["results_file"]).exists()
+
+
+@pytest.mark.parametrize("comparison_id", list(RUN))
+def test_manifest_records_the_registered_fit(comparison_id):
+    control, treatment, unit, viral = RUN[comparison_id]
+    manifest = json.loads((STUDY_DIR / f"{STUDY_ID}_{comparison_id}_workflow_manifest.json").read_text())
+    params = manifest["parameters"]
+    assert manifest["mode"] == "raw_reanalysis"
+    assert params["control_levels"] == control and params["treatment_levels"] == treatment
+    assert params["replicate_unit"] == unit
+    assert params["single_end"] is True
+    assert bool(params["viral_reference"]) is viral
+    assert params["covariates"] == []
+    # Three tank units per arm, four residual df.
+    assert manifest["deseq2_design"]["design"] == "~condition"
+    assert manifest["deseq2_design"]["n_libraries_or_units"] == 6
+    assert manifest["deseq2_design"]["residual_df"] == 4
+    assert manifest["reference"]["genome_assembly"] == "GCF_963853765.1"
+
+
+@pytest.mark.parametrize("comparison_id", list(RUN))
+def test_results_have_standard_errors(comparison_id):
+    with open(STUDY_DIR / f"{STUDY_ID}_{comparison_id}_dge_standardized.tsv") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    assert len(rows) > 25000
+    assert all(r["lfcSE"] not in ("", "NA") for r in rows if r["log2FoldChange"] not in ("", "NA"))
+
+
+def test_every_fetched_run_matches_ena_read_count(samplesheet):
+    with open(STUDY_DIR / "read_source.tsv") as fh:
+        source = {r["run_accession"]: r for r in csv.DictReader(fh, delimiter="\t")}
+    used = {r["run_accession"]: r for r in samplesheet if r["condition"] in ("3_0", "4_0", "4_24")}
+    assert set(source) == set(used) and len(source) == 18
+    for run, r in source.items():
+        assert r["source_url"] == f"https://sra-pub-run-odp.s3.amazonaws.com/sra/{run}/{run}"
+        assert r["reads_verified"] == used[run]["read_count"]
+        assert len(r["sra_md5"]) == 32 and len(r["fastq_gz_md5"]) == 32
+
+
+def test_shared_control_reads_are_the_starvation_study_files():
+    # Same .sra bytes as DUPERRET2025_STARVE_RNASEQ used for its fed 0 hpc arm.
+    def sra_md5(path):
+        with open(path) as fh:
+            return {r["run_accession"]: r["sra_md5"] for r in csv.DictReader(fh, delimiter="\t")}
+    ours, theirs = sra_md5(STUDY_DIR / "read_source.tsv"), sra_md5(STARVE_DIR / "read_source.tsv")
+    shared = set(ours) & set(theirs)
+    assert len(shared) == 6
+    assert all(ours[r] == theirs[r] for r in shared)
+
+
+def test_dispersion_qc_is_committed_and_interpreted(study):
+    with open(STUDY_DIR / "replicate_dispersion_qc.tsv") as fh:
+        by_group = list(csv.DictReader(fh, delimiter="\t"))
+    assert {r["condition"] for r in by_group} == {"3_0", "4_0", "4_24"}
+    assert all(r["passes"] == "True" for r in by_group)
+    with open(STUDY_DIR / "replicate_dispersion_qc_by_family.tsv") as fh:
+        by_family = list(csv.DictReader(fh, delimiter="\t"))
+    assert len(by_family) == 6
+    # Pooled libraries fall below the single-oyster floor within a family; the
+    # registry must say why rather than leave it as a silent failure.
+    assert any(r["passes"] == "False" for r in by_family)
+    assert "not technical replicates" in study["limitations"]
+
+
+def test_infection_at_30c_took_in_f11n_only(study):
+    with open(STUDY_DIR / f"{STUDY_ID}_heat30_oshv1_24hpc_vs_0hpc_viral_load.tsv") as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    infected = {r["sample_id"] for r in rows if r["virus_detected"] == "True"}
+    assert infected == {f"P_F11N_4_24_{i}" for i in (1, 2, 3)}
+    assert not any(r["excluded_from_de"] == "True" for r in rows)
+    assert "infection took in one family only" in study["limitations"]

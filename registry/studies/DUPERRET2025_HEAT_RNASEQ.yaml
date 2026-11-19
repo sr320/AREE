@@ -21,8 +21,12 @@
 # are correlated through that arm. They are separate treatments of one
 # experiment, not independent studies, and must not be pooled as if they were.
 #
-# NOT YET RUN. Single-end 75 bp, 106.1 GB; the 23 C reads are the same files
-# DUPERRET2025_STARVE_RNASEQ fetched.
+# REANALYZED 2026-10-18: both comparisons at full depth, on the 18 libraries
+# they need (0 hpc at 23 and 30 C, 24 hpc at 30 C). As for
+# DUPERRET2025_STARVE_RNASEQ, ENA throttled this IP (~280 KB/s), so reads came
+# from NCBI's SRA open-data mirror, verified by read count (read_source.tsv).
+# The six 23 C .sra files are byte-identical to those the starvation study
+# used (same MD5s). See limitations (1) and (8)-(10) and curation_notes.
 
 study_id: DUPERRET2025_HEAT_RNASEQ
 simulated: false
@@ -52,10 +56,10 @@ data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "Raw single-end FASTQ for all 84 runs are public in ENA: PRJEB86646 (30 C, 42 runs, public 2025-08-01) and PRJEB86525 (23 C, 42 runs, public 2025-08-01). The paper's 84 libraries are all deposited. Every run has an ENA-processed FASTQ (fastq_ftp). Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The 23 C reads for 0 and 24 hpc are already staged for DUPERRET2025_STARVE_RNASEQ (fetched from NCBI's SRA mirror; see that study's read_source.tsv)."
+  access_notes: "Raw single-end FASTQ for all 84 runs are public in ENA: PRJEB86646 (30 C, 42 runs, public 2025-08-01) and PRJEB86525 (23 C, 42 runs, public 2025-08-01). The paper's 84 libraries are all deposited. Every run has an ENA-processed FASTQ (fastq_ftp). Sample sheet, FASTQ manifest with ENA MD5s, and provenance were generated from ENA metadata; sequence data are not committed. The 2026-10-18 reanalysis did not use ENA's FASTQ files: ENA was throttling this IP (about 280 KB/s). The 18 runs used were fetched as .sra files from NCBI's SRA open-data mirror (sra-pub-run-odp on AWS S3) and converted with fasterq-dump 3.4.1, as for DUPERRET2025_STARVE_RNASEQ. ENA's FASTQ MD5s therefore do not apply. Instead, each run's .sra size was checked against S3's content-length and its read count exactly against ENA's read_count. The .sra and output FASTQ MD5s are recorded in read_source.tsv. The six 23 C 0 hpc .sra files have the same MD5s as in the starvation study's read_source.tsv. The output .fastq.gz MD5s differ because that file was compressed differently. Quality scores are real binned NextSeq values, and the original Illumina read names are kept."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. 2 families (F11N, F14R) x 2 temperatures (23 C, code 3;
@@ -97,7 +101,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DUPERRET2025_HEAT_RNASEQ/DUPERRET2025_HEAT_RNASEQ_heat30_vs_23c_0hpc_dge_standardized.tsv"
     meta_analysis_primary: true
 
   - comparison_id: "heat30_oshv1_24hpc_vs_0hpc"
@@ -117,7 +121,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 12
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DUPERRET2025_HEAT_RNASEQ/DUPERRET2025_HEAT_RNASEQ_heat30_oshv1_24hpc_vs_0hpc_dge_standardized.tsv"
     meta_analysis_primary: false
 
 quality_flags:
@@ -126,7 +130,9 @@ quality_flags:
   - low_replication
 
 limitations: >
-  (1) Not yet run. (2) Shared control: the 23 C arm is the same 42 libraries
+  (1) Run 2026-10-18 on 18 of the 84 libraries, the ones the two registered
+  comparisons use. The other 66 (3-12 and 48-72 hpc) were not fetched.
+  (2) Shared control: the 23 C arm is the same 42 libraries
   as DUPERRET2025_STARVE_RNASEQ's fed arm, so this study's primary contrast
   and that study's starved_vs_fed_0hpc share their reference group. Their
   estimates are correlated and must not be pooled as independent studies.
@@ -149,7 +155,33 @@ limitations: >
   (7) In the infection contrast, time since tank set-up is confounded with
   infection time, and it is `disease` evidence, not resilience. The paper
   reports that 30 C prevented typical POMS development (its section 3.2),
-  so the 24 hpc infection response at 30 C may be small.
+  so the 24 hpc infection response at 30 C was expected to be small. It is
+  not: 34% of genes are DE (10,303 of 30,036, padj < 0.05). Viral reads
+  explain only part of this, see (9). (8) Replicate dispersion is low, as
+  expected for libraries that each pool 10 oysters. By group (two families
+  each) it is 0.0078 (23 C, 0 hpc), 0.012 (30 C, 0 hpc) and 0.040 (30 C,
+  24 hpc), all above the 0.005 floor. The 23 C value reproduces the
+  starvation study's 0.0080 for the same libraries. Within a family across
+  its three replicates it is 0.0031-0.0146, and 3 of 6 sets fall below the
+  floor, which was calibrated on single oysters. As in
+  DUPERRET2025_STARVE_RNASEQ, these are not technical replicates: viral
+  reads per million at 24 hpc differ several-fold among one family's three
+  libraries (F11N: 509 / 3,560 / 3,833; F14R: 0.6 / 5.0 / 1.6). Residual
+  variance is still small, so lfcSE is small, and the study should not
+  dominate an inverse-variance pool by pooling alone. (9) At 30 C the
+  infection took in one family only. At 24 hpc, all three F11N libraries
+  carry OsHV-1 (509-3,833 viral reads per million). No F14R library reaches
+  the 100-per-million detection threshold. This matches the paper's survival
+  at 30 C (F11N 11.7%, F14R 3.4% mortality). The tank-summed 24 vs 0 hpc
+  contrast therefore mixes an infected and a barely infected family, and
+  much of its DE is likely the shared effect of cohabitation and stopped
+  seawater flow, not viral infection. No library was excluded: a
+  low-infection F14R library is the real outcome at 30 C, not a failed
+  challenge. (10) The 0 hpc temperature contrast calls 36% of genes DE
+  (10,613 of 29,750; 5,516 up, 5,097 down). That fits 16 days at 30 C, and
+  it means a 0 hpc "candidate" is mostly a thermal-acclimation marker. It
+  can be read as a resilience marker only for this design, where the same
+  treatment raised POMS survival (see (4)).
 
 provenance:
   registered_by: sr320
@@ -177,7 +209,22 @@ provenance:
     Comparisons were chosen before any result was computed;
     heat30_vs_23c_0hpc is meta_analysis_primary. Europe PMC finds no paper
     citing PRJEB86646 by accession (2026-10-14); the paper names it in its
-    data availability statement.
+    data availability statement. REANALYSIS 2026-10-18 on Pori (8 GB
+    Apple Silicon): `nextflow run workflows/rnaseq -c
+    config/DUPERRET2025_HEAT_RNASEQ.config -profile local,workstation`, once
+    per comparison, with `--replicate_unit tank` for heat30_vs_23c_0hpc, and
+    with `--replicate_unit tank_hpc --viral_reference
+    data/reference/pathogens/OsHV-1/NC_005881.2.fasta` for
+    heat30_oshv1_24hpc_vs_0hpc. Salmon index is the saved GCF_963853765.1
+    index. Mapping rates are 65.7-70.5% across all 18 libraries. Parameters,
+    tool versions and input checksums are in each comparison's
+    workflow_manifest.json. Replicate dispersion QC
+    (scripts/check_replicate_dispersion.py) by group is in
+    replicate_dispersion_qc.tsv. The within-family breakdown, with condition
+    relabelled `<condition>_<family>`, is in
+    replicate_dispersion_qc_by_family.tsv. Both are interpreted in
+    limitations (8). Per-library viral load is in the 24 hpc comparison's
+    viral_load.tsv.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86646"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB86525"

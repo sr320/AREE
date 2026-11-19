@@ -1,0 +1,11 @@
+# PC1 70.6%, PC2 10.9%, PC3 6.3% of variance (VST, 2,000 most variable genes)
+sample_id	run_accession	timepoint	PC1	PC2	PC3	mean_r_0h	mean_r_6h	mean_r_48h
+48h_replicate3	SRR19046233	48h	-3.7	28.2	13.2	0.496	0.712	0.796
+48h_replicate2	SRR19046234	48h	-23.1	31.6	2.4	0.411	0.806	0.827
+48h_replicate1	SRR19046235	48h	-27.3	23.9	9.8	0.445	0.828	0.837
+6h_replicate3	SRR19046236	6h	-31	2.2	-17.1	0.411	0.861	0.807
+6h_replicate2	SRR19046237	6h	-27.4	-17.3	-22.4	0.427	0.864	0.769
+6h_replicate1	SRR19046238	6h	-28.4	-12.1	-25.1	0.436	0.851	0.771
+0h_replicate3	SRR19046239	0h	164.1	1.1	-5.9	-0.082	-0.274	-0.195
+0h_replicate2	SRR19046240	0h	-16	-16.1	21.3	0.356	0.803	0.807
+0h_replicate1	SRR19046241	0h	-7.2	-41.5	23.8	0.403	0.745	0.739
