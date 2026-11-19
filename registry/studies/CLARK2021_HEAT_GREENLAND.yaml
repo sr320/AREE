@@ -1,0 +1,231 @@
+# FIRST REAL MUSSEL STUDY CLAIMED IN AREE. Claimed 2026-10-17 from the WP5
+# backlog (docs/candidate_studies_mussels_clams.md, pool C: Mytilus edulis
+# heat), with PRJEB48959 (Barrett et al. 2022) as its intended partner for a
+# within-species pool on thermal_tolerance.
+#
+# REANALYZED 2026-10-18 on Pori (two of three comparisons; the inner-fjord
+# comparison is not run yet). Both ran cleanly: design ~ condition, standard
+# length offsets, 4 vs 5 mussels, residual df 7, reference matching the
+# bundle, no warnings. Replicate dispersion passes in every group.
+#   heat_32c_vs_subtidal_control (primary): 17,873 of 33,579 genes at
+#     padj < 0.05 (6,200 up, 11,673 down). REVIEW BEFORE POOLING: half of all
+#     genes differing after a 2 h heat shock is not a heat response. The field
+#     controls are three times as variable as either lab group (median
+#     dispersion 0.25 vs 0.08-0.09) and map at a different rate (mean 76% vs
+#     70% for 32 C and 62% for 22 C), so this contrast is dominated by
+#     field-vs-lab sampling (limitation 2), as feared before it was run.
+#   heat_32c_vs_22c: 3,516 of 29,624 genes (898 up, 2,618 down).
+# The primary designation was prespecified and is left unchanged here;
+# switching it after seeing results is a curation decision to record
+# explicitly, not to make silently.
+#
+# Registered from deposited metadata and the publication, which is CONFIRMED:
+# Clark, Peck and Thyrring (2021), Science of the Total Environment 767:144366,
+# open access. Its methods (gill, five sets of animals, Illumina PE150 at
+# Novogene) match the deposit (ArrayExpress E-MTAB-9786, ENA PRJEB41447).
+#
+# DESIGN AS PUBLISHED. Godthåbsfjorden, Nuuk, Greenland (64°N), summer 2018.
+# Five sets of gill transcriptomes:
+#   MC   subtidal outer-fjord animals sampled in situ (about 3 C), the control
+#   MI   intertidal inner-fjord animals sampled in situ on a warm day (about 27 C)
+#   MO   intertidal outer-fjord animals sampled in situ on a warm day (about 19 C)
+#   M22  subtidal outer-fjord animals held in lab aquaria, then 2 h at 22 C
+#   M32  the same, 2 h at 32 C
+# Heat shocks were given to individual animals in submerged 50 ml vials in
+# preheated water baths for 2 h (the low-intertidal emersion time near Nuuk),
+# and animals were sampled immediately afterwards. No animal died. The paper
+# says n = 5 per set; ENA and ArrayExpress hold 5 libraries for four sets and
+# 4 for M32, so 24 libraries in all.
+#
+# THREE COMPARISONS, PRESPECIFIED 2026-10-17, BEFORE ANY DATA WERE RUN.
+#   heat_32c_vs_subtidal_control (M32 vs MC) is meta_analysis_primary: an acute
+#     heat exposure against an unheated control of the same population, the
+#     design PRJEB48959 shares (33 C vs a 5 C control). Its caveat: the heated
+#     animals were held in the lab and the controls were sampled in the field,
+#     so lab handling is confounded with heat (limitations 2).
+#   heat_32c_vs_22c (M32 vs M22) removes that confound (both lab-held, same
+#     protocol) but its reference is itself a 22 C exposure. Not pooled.
+#   inner_fjord_warm_day_vs_subtidal_control (MI vs MC) is the in-situ
+#     acclimatization contrast. Not pooled. Its contrast_type is
+#     exposure_response, though its arms also differ in habitat (intertidal vs
+#     subtidal), so it is not a clean exposure contrast either.
+# CLASSIFICATION. All three are stress_response, following the phenotype
+# ontology's definition ("molecular/physiological response to a stressor, not
+# itself an outcome measure"): each compares the gill transcriptome of exposed
+# and unexposed animals, and no animal's own tolerance was scored. This matches
+# the oyster heat-vs-control studies (LI2018_HEAT_TIDAL, LIU2019_HEAT_HSF1,
+# GEORGE2023_HEATWAVE_PLOIDY). The two Manila clam studies classify the same
+# design exposure_only; that inconsistency is flagged for review, not settled
+# here.
+# Sample-sheet condition levels combine the BioSample attributes
+# "environmental history" and "stimulus".
+# ---------------------------------------------------------------------------
+
+study_id: CLARK2021_HEAT_GREENLAND
+simulated: false
+
+accessions:
+  doi: "10.1016/j.scitotenv.2020.144366"
+  bioproject: "PRJEB41447"
+  geo: null
+  sra: null
+  ena: "PRJEB41447 (runs ERR4859139-ERR4859162)"
+  proteomexchange: null
+  other: "ArrayExpress E-MTAB-9786; BioSamples SAMEA7590522-SAMEA7590545, one per mussel."
+
+citation: "Clark MS, Peck LS, Thyrring J (2021). Resilience in Greenland intertidal Mytilus: the hidden stress defense. Science of the Total Environment 767:144366. https://doi.org/10.1016/j.scitotenv.2020.144366"
+
+species: "Mytilus edulis"
+species_identity:
+  basis: collection_site
+  notes: >-
+    Collected in Godthåbsfjorden near Nuuk. The paper identifies the animals as
+    M. edulis from their location, citing that M. edulis occurs around Nuuk
+    while M. trossulus dominates northern Greenland, and itself notes ongoing
+    hybridization in Arctic Mytilus. No species-diagnostic markers are reported
+    for the sequenced animals.
+strain_or_population: "Wild Godthåbsfjorden population near Nuuk, Greenland (64°N): subtidal and intertidal animals from the outer fjord, intertidal animals from the inner fjord; sampled in summer 2018."
+
+# AREE reanalyzes against the NCBI RefSeq annotation its M. edulis crosswalk is
+# built from. The authors assembled a de novo transcriptome (Trinity) and
+# quantified with Bowtie2/RSEM; that pipeline is not reproduced.
+genome_assembly: "xbMytEdul2.2"
+annotation_version: "GCF_963676685.1-RS_2025_02"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end 150 bp, libraries prepared and sequenced by Novogene (China); 38-72 M read pairs per library; 84.9 GB FASTQ reported by ENA for all 24 libraries."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 24 libraries are public in ENA under PRJEB41447 (first public 2020-11-25), brokered from ArrayExpress E-MTAB-9786, whose sample table and BioSample attributes ('environmental history', 'stimulus') carry the design. Only the libraries in registered comparisons need staging. The authors' FPKM tables from a de novo assembly are not reused. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "in_progress"
+
+comparisons:
+  - comparison_id: "heat_32c_vs_subtidal_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Acute heat shock: subtidal mussels from the outer fjord, held in laboratory aquaria, placed individually in submerged 50 ml vials in a preheated water bath at 32 C for 2 h to mimic air exposure, then sampled (Clark et al. 2021, section 2.2). BioSample stimulus 'warmed to 32 degrees'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "32 C for 2 h vs about 3 C in situ"
+    exposure_duration: "2 h"
+    exposure_timing: "sampled immediately after the 2 h exposure; no mortality"
+    control_condition: "Subtidal outer-fjord mussels sampled in situ, about 3 C (condition collected_from_outer_fjord_none); 5 mussels"
+    treatment_condition: "Subtidal outer-fjord mussels warmed to 32 C for 2 h in the laboratory (condition collected_from_outer_fjord_warmed_to_32_degrees); 4 mussels"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 9
+    biological_replicates: 4
+    results_file: "data/studies/CLARK2021_HEAT_GREENLAND/CLARK2021_HEAT_GREENLAND_heat_32c_vs_subtidal_control_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "heat_32c_vs_22c"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Acute heat shock at 32 C vs 22 C, both for 2 h by the same laboratory protocol on subtidal outer-fjord mussels (Clark et al. 2021, section 2.2). BioSample stimulus 'warmed to 32 degrees' vs 'warmed to 22 degrees'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "32 C vs 22 C, 2 h each"
+    exposure_duration: "2 h"
+    exposure_timing: "both sampled immediately after the 2 h exposure; no mortality"
+    control_condition: "Subtidal outer-fjord mussels warmed to 22 C for 2 h in the laboratory (condition collected_from_outer_fjord_warmed_to_22_degrees); 5 mussels"
+    treatment_condition: "Subtidal outer-fjord mussels warmed to 32 C for 2 h in the laboratory (condition collected_from_outer_fjord_warmed_to_32_degrees); 4 mussels"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 9
+    biological_replicates: 4
+    results_file: "data/studies/CLARK2021_HEAT_GREENLAND/CLARK2021_HEAT_GREENLAND_heat_32c_vs_22c_dge_standardized.tsv"
+  - comparison_id: "inner_fjord_warm_day_vs_subtidal_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "In situ: intertidal mussels from the inner fjord sampled on a warm day (about 27 C) vs subtidal outer-fjord mussels (about 3 C) (Clark et al. 2021, sections 2.1 and 3). BioSample environmental history 'collected from inner fjord on warm day'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "about 27 C intertidal emersion vs about 3 C subtidal"
+    exposure_duration: "natural tidal emersion; acclimatized over the season"
+    exposure_timing: "sampled in situ on a warm day"
+    control_condition: "Subtidal outer-fjord mussels sampled in situ (condition collected_from_outer_fjord_none); 5 mussels"
+    treatment_condition: "Intertidal inner-fjord mussels sampled in situ on a warm day (condition collected_from_inner_fjord_on_warm_day_none); 5 mussels"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 5
+    results_file: "data/studies/CLARK2021_HEAT_GREENLAND/CLARK2021_HEAT_GREENLAND_inner_fjord_warm_day_vs_subtidal_control_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - species_assignment_unverified
+  - single_timepoint
+
+limitations: >
+  (1) Species identity. M. edulis is in the hybridizing M. edulis complex, and
+  the animals were assigned by collection site, not genotyped. The paper
+  itself notes M. trossulus dominates northern Greenland and that Arctic
+  Mytilus hybridize. Every record carries species_assignment_unverified
+  (docs/species_identity.md). (2) The primary comparison confounds heat with
+  handling: heated animals were held in lab aquaria and given the shock in
+  vials; controls were sampled in the field. heat_32c_vs_22c is free of that
+  confound but uses a 22 C exposure as its reference. (3) Small arms: 4 heated
+  vs 5 controls. The paper reports n = 5 per set but only 4 M32 libraries are
+  public; the missing library is not explained. (4) Acute exposure: 2 h,
+  sampled immediately, so this is the immediate transcriptional response, not
+  acclimation or recovery. No mortality occurred, so no animal's tolerance is
+  measured. (5) Single tissue (gill), single season, one population.
+  (6) Reference: AREE maps to the RefSeq M. edulis annotation
+  (GCF_963676685.1, from a Wellcome Sanger genome of unstated geographic
+  origin); Greenland animals, or any M. trossulus ancestry in them, will map
+  less completely.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-17"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB41447 --study-id
+    CLARK2021_HEAT_GREENLAND` (draft PR #92). Sample sheet and FASTQ manifest
+    generated from live ENA metadata with `aree fetch-samplesheet --bioproject
+    PRJEB41447 --study CLARK2021_HEAT_GREENLAND --condition-attribute
+    "environmental history" --condition-attribute stimulus --library-strategy
+    RNA-Seq`: 24 RNA-Seq runs, all paired-end, one per BioSample.
+    DESIGN SOURCE: the BioSample attributes and the ArrayExpress E-MTAB-9786
+    sample table agree on all 24 samples (five sets; 5, 5, 5, 5 and 4
+    libraries). REPLICATION CHECK: 24 distinct BioSamples and ArrayExpress
+    sample numbers; distinct names do not prove distinct animals, so run
+    scripts/check_replicate_dispersion.py after quantification. Sample IDs
+    are the ArrayExpress aliases ("E-MTAB-9786:Sample 1"); Salmon output is
+    keyed by run accession, so the spaces are only labels.
+    PUBLICATION: the backlog listed it; the open copy used for curation is
+    Aarhus University's repository PDF of the submitted version.
+    REANALYSIS (Pori, 2026-10-17 to 18): the 14 libraries of the first two
+    comparisons (48.5 GB) were downloaded fresh over HTTPS from ENA and
+    accepted only at manifest size and ENA MD5; ENA closed transfers early
+    repeatedly, so files needed 2 to 7 attempts. Both comparisons ran natively
+    (-profile local,workstation, 8 GB resource config), one at a time with the
+    work directory cleared between them, building and saving the
+    GCF_963676685.1 Salmon index: 33 and 32 tasks, about 1 h each, no
+    failures. Manifests record design ~condition, length_model "tximport
+    average transcript length offsets", 9 libraries, residual df 7, every
+    reference file matching the bundle provenance, and no warnings. Salmon
+    mapped 47.0-84.6% of read pairs (means by group: controls 76.2%, 22 C
+    61.5%, 32 C 69.5%). Replicate dispersion QC (replicate_dispersion_qc.tsv)
+    passes: median dispersion 0.255 (controls), 0.085 (22 C), 0.088 (32 C).
+    Harmonized per comparison against medul_gene_id_crosswalk.tsv: all 63,203
+    records exact; 55,770 carry an orthogroup. DESeq2 calls at padj < 0.05:
+    17,873 for heat_32c_vs_subtidal_control (see the header), 3,516 for
+    heat_32c_vs_22c. The inner-fjord comparison needs 5 more libraries
+    (18.6 GB) and is pending. contrast_type (added on main after the claim) is
+    exposure_response for all three.
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB41447"
+    - "https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-9786"
+    - "https://doi.org/10.1016/j.scitotenv.2020.144366"
+    - "https://pure.au.dk/ws/files/207546056/Resilience_in_Greenland_intertidal_Mytilus_The_hidden_stress_defense.pdf"
