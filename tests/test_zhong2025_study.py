@@ -86,10 +86,11 @@ def test_one_biosample_per_animal_per_tissue(samplesheet):
 
 def test_farm_vs_wild_is_a_confounded_exposure_contrast(comparisons):
     """Farm vs wild differs in genetics, husbandry and site as well as disease:
-    recorded, never flagged for pooling."""
+    recorded, opted out of every pool."""
     assert set(comparisons) == set(COMPARISONS)
     for c in comparisons.values():
         assert not c.get("meta_analysis_primary")
+        assert "confound" in c["exclude_from_meta_analysis"]["reason"]
         assert c["contrast_type"] == "exposure_response"
         assert c["stressor_standardized"] == "multi_stressor"
         assert c["phenotype"] == "disease_susceptibility"

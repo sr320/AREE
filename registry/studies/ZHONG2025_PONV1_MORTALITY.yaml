@@ -71,7 +71,8 @@ analysis_status: "harmonized"
 # Registered now: diseased farm vs healthy wild, per tissue. Farm vs wild
 # confounds disease state with everything else that differs: genetics,
 # husbandry, density, site environment, collection logistics. These
-# comparisons are therefore recorded, but not flagged meta_analysis_primary.
+# comparisons are therefore recorded, but not flagged meta_analysis_primary,
+# and both set exclude_from_meta_analysis (2026-11-18) so they never pool.
 #
 # PLANNED PRIMARY, to be added after viral QC on the reanalysis machine:
 # within the 27 farm mantle animals, PONV1-positive vs PONV1-negative. Rule,
@@ -115,6 +116,8 @@ comparisons:
     phenotype_unit: null
     resilience_classification: "disease"
     contrast_type: "exposure_response"
+    exclude_from_meta_analysis:
+      reason: "Farm vs wild field contrast: disease state is confounded with genetics, husbandry, density and site."
     sample_size: 53
     biological_replicates: 26
     results_file: "data/studies/ZHONG2025_PONV1_MORTALITY/ZHONG2025_PONV1_MORTALITY_farm_mortality_vs_wild_mantle_dge_standardized.tsv"
@@ -134,6 +137,8 @@ comparisons:
     phenotype_unit: null
     resilience_classification: "disease"
     contrast_type: "exposure_response"
+    exclude_from_meta_analysis:
+      reason: "Farm vs wild field contrast: disease state is confounded with genetics, husbandry, density and site."
     sample_size: 43
     biological_replicates: 19
     results_file: "data/studies/ZHONG2025_PONV1_MORTALITY/ZHONG2025_PONV1_MORTALITY_farm_mortality_vs_wild_hemolymph_dge_standardized.tsv"
