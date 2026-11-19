@@ -1,0 +1,49 @@
+{
+  "study_id": "BARRETT2022_HEAT_SALINITY",
+  "bioproject": "PRJEB48959",
+  "date_generated": "2026-10-17",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB48959&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "environmental stress",
+    "temperature"
+  ],
+  "n_runs": 35,
+  "n_samples": 35,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "15_percent_salinity_30": 5,
+    "15_percent_salinity_33": 5,
+    "15_percent_salinity_5": 5,
+    "23_percent_salinity_30": 5,
+    "23_percent_salinity_33": 5,
+    "23_percent_salinity_5": 5,
+    "5_percent_salinity_5": 5
+  },
+  "min_group_size": 5,
+  "total_fastq_bytes": 109296220230,
+  "fastq_sources": {
+    "fastq_ftp": 35,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/BARRETT2022_HEAT_SALINITY/samplesheet.tsv": "2cc82f0f01c189f58663d2860fa35fe6465a63bf1dd6aa8a532d597ab4ad5b95",
+    "data/studies/BARRETT2022_HEAT_SALINITY/fastq_manifest.tsv": "1de01df71c8593a0cb9aeb6a02a27095ceec8a47754f1c6429858a7a29b51596"
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 35
+    }
+  }
+}
