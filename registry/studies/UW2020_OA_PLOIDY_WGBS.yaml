@@ -16,7 +16,10 @@
 # Sister project of PRJNA678408 (diploid/triploid desiccation + heat, same
 # submitter, same tissue), which is not registered.
 #
-# REGISTERED 2026-11-23, RUN IN PROGRESS on Chlo (FASTQ downloading).
+# REGISTERED 2026-11-23, NOT YET RUN. Planned for Klone (see
+# docs/running_on_klone.md); the local Chlo run was dropped on 2026-11-23
+# after the subset check (data/studies/UW2020_OA_PLOIDY_WGBS/
+# mbias_check_2026-11-23.md) showed ~9-10 days of alignment there.
 
 study_id: UW2020_OA_PLOIDY_WGBS
 simulated: false
