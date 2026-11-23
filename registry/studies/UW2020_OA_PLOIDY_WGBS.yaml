@@ -1,6 +1,22 @@
-# Copy this file to registry/studies/<STUDY_ID>.yaml and fill in every field.
-# Validate with: aree validate-study registry/studies/<STUDY_ID>.yaml
-# See docs/adding_a_study.md for field-by-field guidance.
+# WGBS of adult ctenidia (gill) from diploid and triploid Pacific oysters held
+# at two seawater pH levels (8.2 vs 7.7). Oysters supplied by the University
+# of Hawaii at Hilo (Maria Haws; collected by Daniel Wilkie, 2020-08-16);
+# libraries sequenced and deposited by the University of Washington (Roberts
+# lab, submitter Samuel White, BioProject submitted 2020-12-06).
+#
+# UNPUBLISHED as of 2026-11-23: no PubMed record matches the design (searched
+# "gigas triploid methylation pH"), and the BioProject lists no publication.
+# The exposure system, duration, tank layout and acclimation are NOT in the
+# deposit. Everything below about the design comes from the BioSample
+# attributes (ploidy, water_pH, tissue, dev_stage, replicate) and the run
+# sample_alias (2N_HI_05 ... 3N_LOW_12). Because the source is the Roberts
+# lab, the missing metadata should be recoverable from the lab notebooks or
+# from D. Wilkie / M. Haws; that is the first open curation item.
+#
+# Sister project of PRJNA678408 (diploid/triploid desiccation + heat, same
+# submitter, same tissue), which is not registered.
+#
+# REGISTERED 2026-11-23, RUN IN PROGRESS on Chlo (FASTQ downloading).
 
 study_id: UW2020_OA_PLOIDY_WGBS
 simulated: false
@@ -9,63 +25,144 @@ accessions:
   doi: null
   bioproject: "PRJNA682817"
   geo: null
-  sra: null
-  ena: null
+  sra: "SRR13207050-SRR13207073"
+  ena: "PRJNA682817"
   proteomexchange: null
-  other: null
+  other: "BioSamples SAMN17011239-SAMN17011262 (one per oyster); sister project PRJNA678408 (ploidy x desiccation/heat WGBS, same submitter)"
 
-citation: "Author A, Author B (YEAR). Title. Journal. https://doi.org/..."
-species: "Crassostrea gigas"
-# Required only for species in a hybridizing complex (e.g. the Mytilus edulis
-# complex); see docs/adding_a_species.md. Any basis other than genotyped also
-# needs the quality flag species_assignment_unverified.
-# species_identity:
-#   basis: genotyped  # genotyped | morphology | collection_site | authors_statement | unstated
-#   notes: null
-strain_or_population: null
-genome_assembly: "cgigas_uk_roslin_v1"
-annotation_version: null
+citation: "University of Washington / University of Hawaii at Hilo (2020). Whole genome bisulfite sequencing (WGBS) of diploid and triploid Crassostrea gigas ctenidia exposed to different pH levels. NCBI BioProject PRJNA682817. Unpublished dataset."
 
-assay_type: ["rnaseq"]
-analysis_mode: "processed_results_harmonization"  # or raw_reanalysis
-platform: null
+species: "Magallana gigas"
+strain_or_population: "Diploid and triploid adults supplied by University of Hawaii at Hilo (biomaterial provider Maria Haws, collected by Daniel Wilkie, USA: Hawaii, 2020-08-16). Broodstock origin, triploidy method (chemical vs mated tetraploid) and whether diploids and triploids share parents are not recorded."
+
+# AREE reanalyzes against its current reference, as for the other
+# raw_reanalysis studies.
+genome_assembly: "GCF_963853765.1"
+annotation_version: "GCF_963853765.1-RS_2024_06"
+
+assay_type: ["methylation"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end whole-genome bisulfite sequencing; 24 libraries, 37.0-82.9 M read pairs each (1,240 M total); 145.2 GB FASTQ reported by ENA. Library kit not recorded in the deposit."
 
 data_availability:
-  raw_data_available: false
-  processed_data_available: true
-  status: "available"  # available | restricted | embargoed | unavailable
-  access_notes: null
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 24 runs are public in ENA/SRA under PRJNA682817 (released 2020-12-06). One BioSample per oyster, carrying ploidy, water_pH and a replicate code (e.g. 3NH11); the run sample_alias (e.g. 3N_HI_11) encodes the same and is used for the sample sheet. No methylation calls or DMR tables are deposited. Sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
+# ---------------------------------------------------------------------------
+# Comparisons, prespecified 2026-11-23 before any data were downloaded.
+#
+# RUN-TO-GROUP MAPPING. sample_alias = <ploidy>_<pH>_<replicate>, 2N/3N =
+# diploid/triploid, HI/LOW = BioSample water_pH 8.2 / 7.7. Six oysters per
+# ploidy x pH cell. Replicate numbers 01-12 are shared across ploidies, which
+# suggests one numbering per pH, but whether a number identifies a tank,
+# a position, or just the animal is not stated.
+#
+# REPLICATION. Each library is one oyster. Whether oysters were held in one
+# tank per pH, several tanks per pH, or in individual containers is NOT
+# recorded. Until the tank layout is known, the six oysters per cell are
+# treated as the replicates, and the study carries tank_level_replication
+# as a caution: if each pH was a single tank, pH is confounded with tank.
+#
+# Only the two within-ploidy pH contrasts are registered. Ploidy contrasts
+# are not registered: no resilience outcome was measured for either ploidy
+# in this deposit, and ploidy alone is not a stressor. A ploidy x pH
+# interaction can be added later if a phenotype is recovered.
+# ---------------------------------------------------------------------------
 comparisons:
-  - comparison_id: "comp1"
+  - comparison_id: "diploid_ph7_7_vs_ph8_2"
     tissue: "gill"
     life_stage: "adult"
-    stressor_original: "exact wording from the source paper"
-    stressor_standardized: "temperature"
-    exposure_intensity: null
+    stressor_original: "Diploid Crassostrea gigas ctenidia 'exposed to different pH levels' (BioProject PRJNA682817); BioSample water_pH 7.7 vs 8.2. Method of pH manipulation, duration and temperature not recorded."
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "water pH 7.7 vs 8.2 (scale, carbonate chemistry and variability not recorded)"
     exposure_duration: null
-    exposure_timing: null
-    control_condition: "describe control arm"
-    treatment_condition: "describe treatment arm"
-    phenotype: "thermal_tolerance"
-    phenotype_direction: "decrease"
+    exposure_timing: "single sampling; collection date 2020-08-16"
+    control_condition: "Diploid adults at water pH 8.2 (sample-sheet level 2N_HI; 2N_HI_05, 08-12); 6 oysters"
+    treatment_condition: "Diploid adults at water pH 7.7 (sample-sheet level 2N_LOW; 2N_LOW_01-06); 6 oysters"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
     phenotype_unit: null
-    resilience_classification: "resilience"
-    # baseline_phenotype_difference | phenotype_difference_under_exposure |
-    # exposure_response | phenotype_by_exposure_interaction (docs/contrast_types.md)
+    resilience_classification: "exposure_only"
     contrast_type: "exposure_response"
-    sample_size: 0
-    biological_replicates: 0
+    sample_size: 12
+    biological_replicates: 6
+    meta_analysis_primary: true
     results_file: null
 
-quality_flags: []
-limitations: null
+  - comparison_id: "triploid_ph7_7_vs_ph8_2"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Triploid Crassostrea gigas ctenidia 'exposed to different pH levels' (BioProject PRJNA682817); BioSample water_pH 7.7 vs 8.2. Method of pH manipulation, duration and temperature not recorded."
+    stressor_standardized: "ocean_acidification"
+    exposure_intensity: "water pH 7.7 vs 8.2 (scale, carbonate chemistry and variability not recorded)"
+    exposure_duration: null
+    exposure_timing: "single sampling; collection date 2020-08-16"
+    control_condition: "Triploid adults at water pH 8.2 (sample-sheet level 3N_HI; 3N_HI_02, 03, 05, 08, 10, 11); 6 oysters"
+    treatment_condition: "Triploid adults at water pH 7.7 (sample-sheet level 3N_LOW; 3N_LOW_06-08, 10-12); 6 oysters"
+    phenotype: "acidification_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 12
+    biological_replicates: 6
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - single_timepoint
+  - tank_level_replication   # tank layout unknown; pH may be confounded with tank
+
+limitations: >
+  (1) Unpublished, and the deposit records almost none of the exposure: how
+  pH was manipulated, for how long, at what temperature and salinity, and
+  with what carbonate chemistry are all unknown. pH 7.7 vs 8.2 is the only
+  description of the treatment. (2) The holding layout is unknown. If each
+  pH level was a single tank, the six oysters per cell are not independent
+  replicates of pH, and pH is confounded with tank. (3) No phenotype was
+  measured or deposited, so both comparisons are exposure_only; nothing
+  here says whether either ploidy tolerates low pH better. (4) The origin of
+  the diploids and triploids (shared parents or not, triploidy method) is
+  not recorded, so any ploidy difference in response is also a difference
+  in genetic background. (5) Sex and gametogenic stage are not recorded;
+  triploids are largely sterile, so reproductive state differs by ploidy.
+  (6) Triploid cells carry three alleles per locus, which changes the
+  expected methylation fractions at allele-specific sites relative to
+  diploids; within-ploidy contrasts avoid that, which is one reason only
+  those are registered. (7) Coordinate-based results are tied to
+  GCF_963853765.1.
 
 provenance:
   registered_by: "Steven Roberts"
   date_registered: "2026-11-23"
-  curation_notes: null
-  source_links: []
+  curation_notes: >
+    Claimed on Chlo with `aree start-study --accession PRJNA682817
+    --study-id UW2020_OA_PLOIDY_WGBS` (draft PR #121). Sample sheet from live
+    ENA metadata with `aree fetch-samplesheet --bioproject PRJNA682817
+    --study UW2020_OA_PLOIDY_WGBS --label-field sample_alias --label-pattern
+    '^(?P<ploidy>2N|3N)_(?P<ph>LOW|HI)_(?P<replicate>[0-9]{2})$'
+    --condition-attribute ploidy --condition-attribute ph --attribute
+    replicate --attribute tissue --methylkit-levels 2N_HI 2N_LOW`: 24 runs,
+    4 groups of 6. HI/LOW checked against the BioSample water_pH attribute
+    (8.2 / 7.7) and ploidy against the ploidy attribute. methylkit_samplesheet.csv
+    codes the diploid contrast (2N_HI = 0, 2N_LOW = 1); regenerate with
+    --methylkit-levels 3N_HI 3N_LOW for the triploid one. Orientation: low pH
+    is the treatment arm, so positive effects mean higher methylation at
+    pH 7.7. PRIMARY COMPARISON: both comparisons are exposure_response with
+    the same phenotype, so one must be primary. The diploid contrast was
+    chosen because every other OA study in AREE (LUTIER2022_OA_TIPPING,
+    TIMMINS2014_OA_GILL) is on diploids, so it is the like-for-like pool
+    member; decided before any data were downloaded. Ploidy contrasts were
+    deliberately not registered (see the comparisons header). No exclusions.
+    Publication search: PubMed "gigas triploid methylation pH" on
+    2026-11-23 returned no matching paper.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA682817"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA682817"
+    - "https://www.ncbi.nlm.nih.gov/biosample/SAMN17011247"
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA678408"

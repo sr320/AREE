@@ -1,0 +1,75 @@
+{
+  "study_id": "UW2020_OA_PLOIDY_WGBS",
+  "bioproject": "PRJNA682817",
+  "date_generated": "2026-11-23",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA682817&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "ploidy",
+    "ph"
+  ],
+  "n_runs": 24,
+  "n_samples": 24,
+  "library_strategies": [
+    "Bisulfite-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "2N_HI": 6,
+    "2N_LOW": 6,
+    "3N_HI": 6,
+    "3N_LOW": 6
+  },
+  "min_group_size": 6,
+  "total_fastq_bytes": 145239369140,
+  "fastq_sources": {
+    "fastq_ftp": 24,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/UW2020_OA_PLOIDY_WGBS/samplesheet.tsv": "42412f3b14b6134f3fd54e294b5440713731f44ec21bdb04df08215bfa1891a9",
+    "data/studies/UW2020_OA_PLOIDY_WGBS/fastq_manifest.tsv": "cadae1d5f0e4991712ab2b00e136b8df8e31a07fd820cef7362f6233a3c6da3d",
+    "data/studies/UW2020_OA_PLOIDY_WGBS/methylkit_samplesheet.csv": "815e94102c98d75e8b9edd7a57f3b9697144a5be8d40cd2472a970abd97140b8"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<ploidy>2N|3N)_(?P<ph>LOW|HI)_(?P<replicate>[0-9]{2})$",
+    "labels": {
+      "SRR13207050": "3N_HI_11",
+      "SRR13207051": "3N_HI_10",
+      "SRR13207052": "3N_HI_08",
+      "SRR13207053": "3N_LOW_06",
+      "SRR13207054": "3N_HI_05",
+      "SRR13207055": "3N_HI_03",
+      "SRR13207056": "3N_HI_02",
+      "SRR13207057": "2N_LOW_03",
+      "SRR13207058": "2N_LOW_01",
+      "SRR13207059": "2N_HI_12",
+      "SRR13207060": "2N_LOW_06",
+      "SRR13207061": "2N_LOW_02",
+      "SRR13207062": "2N_HI_11",
+      "SRR13207063": "2N_HI_10",
+      "SRR13207064": "2N_HI_09",
+      "SRR13207065": "2N_HI_08",
+      "SRR13207066": "3N_LOW_11",
+      "SRR13207067": "3N_LOW_10",
+      "SRR13207068": "3N_LOW_08",
+      "SRR13207069": "3N_LOW_12",
+      "SRR13207070": "3N_LOW_07",
+      "SRR13207071": "2N_HI_05",
+      "SRR13207072": "2N_LOW_05",
+      "SRR13207073": "2N_LOW_04"
+    }
+  },
+  "methylkit_samplesheet": {
+    "control_level": "2N_HI",
+    "treatment_level": "2N_LOW",
+    "n_control": 6,
+    "n_treatment": 6
+  }
+}
