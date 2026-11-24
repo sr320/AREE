@@ -61,7 +61,10 @@ crosswalk for each species are registered, so their studies can be harmonized.
    species use, with `assembly_id`, verified RefSeq and GenBank accessions,
    `ncbi_taxid`, annotation release, the date you `verified` it, and
    `identifier_crosswalk` (null until step 3). Exactly one assembly per species
-   is `is_ncbi_reference: true`; a test enforces it. Validation cross-checks the
+   is `is_ncbi_reference: true`; a test enforces it. The exception is a species
+   with no annotated assembly yet (the basket cockle): its assembly is
+   registered with `is_ncbi_reference: false` and a null crosswalk, even when
+   NCBI calls it the reference genome. Validation cross-checks the
    assembly taxid against the species. See
    [handling_genome_versions.md](handling_genome_versions.md); look accessions
    up yourself against the NCBI Datasets API.

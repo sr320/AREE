@@ -1,0 +1,6 @@
+condition	reads_per_library	source	n_samples	samples	n_genes	median_dispersion	passes
+StnC_Mantle	1000000	ncbi	4	StnC_Mantle_C10,StnC_Mantle_C3,StnC_Mantle_C4,StnC_Mantle_C7	1327	0.10776	True
+StnD_Mantle	1000000	ncbi	3	StnD_Mantle_D5,StnD_Mantle_D6,StnD_Mantle_D9	1414	0.0283	True
+StnE_Mantle	1000000	ncbi	3	StnE_Mantle_E4,StnE_Mantle_E6,StnE_Mantle_E7	1547	0.0595	True
+StnI_Mantle	1000000	ncbi	5	StnI_Mantle_I1,StnI_Mantle_I2,StnI_Mantle_I3,StnI_Mantle_I4,StnI_Mantle_I5	992	0.22114	True
+StnL_Mantle	1000000	ncbi	5	StnL_Mantle_L1,StnL_Mantle_L2,StnL_Mantle_L3,StnL_Mantle_L4,StnL_Mantle_L5	154	0.31716	True
