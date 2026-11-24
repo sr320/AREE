@@ -1,0 +1,53 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "LI2022_HEAT_PLOIDY",
+  "comparison_id": "triploid_acute_heat_12h_vs_baseline",
+  "input_files": [
+    {
+      "name": "LI2022_HEAT_PLOIDY_triploid_acute_heat_12h_vs_baseline_dge_standardized.tsv",
+      "sha256": "4822aec49fa424e04aa217b0ec0520f8c0388ce462247a30e913b2957aad5eb7"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "LI2022_HEAT_PLOIDY",
+    "comparison_id": "triploid_acute_heat_12h_vs_baseline",
+    "outdir": "results/rnaseq/LI2022_HEAT_PLOIDY/triploid_acute_heat_12h_vs_baseline",
+    "exclude_samples": [],
+    "control_levels": [
+      "t_0"
+    ],
+    "treatment_levels": [
+      "t_12"
+    ],
+    "replicate_unit": null,
+    "viral_reference": null
+  },
+  "software_versions": {
+    "fastqc": "0.12.1",
+    "fastp": "0.23.4",
+    "salmon": "1.10.3",
+    "star": "2.7.11b",
+    "multiqc": "1.21",
+    "bioconductor_docker": "RELEASE_3_18",
+    "deseq2": "1.42.0",
+    "tximport": "1.30.0",
+    "quarto": "1.5.57",
+    "python": "3.11"
+  },
+  "reference": {
+    "genome_assembly": "GCF_963853765.1",
+    "annotation_version": "GCF_963853765.1-RS_2024_06"
+  },
+  "workflow_start": "2026-10-11T15:39:54.668313-07:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

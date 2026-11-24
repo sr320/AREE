@@ -1,0 +1,50 @@
+# Klone autopilot settings (aree autopilot tick). See docs/klone_autopilot_plan.md.
+# $USER and ~ are expanded. Any key left out takes the default in src/autopilot/config.py.
+
+# Ledger (state.json) and the local copy of the status page. Keep it off
+# scrubbed so it outlives the 21-day purge.
+state_dir: ~/.local/share/aree-autopilot
+
+# Head jobs submitted as `sbatch --job-name=aree-<STUDY_ID>` are found without
+# `aree autopilot track`.
+head_job_prefix: aree-
+task_job_prefix: nf-
+
+# The run's --outdir; pipeline_info/execution_trace.txt is read from under it.
+results_template: /gscratch/scrubbed/$USER/aree/results/{study_id}
+
+scrubbed_root: /gscratch/scrubbed
+min_scrubbed_free_tb: 8
+stall_hours: 6
+scratch_alert_days: 14
+
+github_repo: sr320/AREE
+status_issue_title: Klone autopilot status
+status_label: autopilot-status
+alert_label: autopilot-alert
+# Fine-grained token for sr320/AREE only, Issues: read and write. chmod 600.
+token_file: ~/.config/aree/github_token
+
+# --- Phase 2: resume -------------------------------------------------------
+# "report" (default) never submits or cancels. "resume" resubmits head jobs
+# started with `aree autopilot launch` that were preempted, timed out, hit a
+# Slurm controller error, stalled, or had a task run out of memory.
+# `aree autopilot pause` (or the autopilot-paused label on the status issue)
+# turns actions off without editing this file.
+mode: report
+paused_label: autopilot-paused
+max_resumes_per_day: 3
+max_resumes_total: 10
+oom_memory_factor: 2.0
+
+# Head job (scripts/klone/head.sbatch), see docs/running_on_klone.md#running.
+head_account: srlab
+head_partition: cpu-g2
+head_time: 4-00:00:00
+head_cpus: 2
+head_mem: 8G
+miniforge: ~/miniforge3
+nextflow_env: nextflow
+nxf_root: /gscratch/scrubbed/$USER/aree
+# Account the ckpt task jobs are charged to (AREE_SLURM_ACCOUNT).
+task_account: srlab

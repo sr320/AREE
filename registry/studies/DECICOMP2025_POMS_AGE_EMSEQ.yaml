@@ -13,8 +13,9 @@
 # the same animals is not stated. No publication cites this accession; the
 # MetaboLights record names a manuscript in preparation (Valdivieso et al.).
 #
-# NOT YET RUN. 60 paired-end libraries, 710.5 GB of FASTQ; see the config for
-# storage and runtime notes.
+# NOT YET RUN. 60 paired-end libraries, 72-107 M read pairs each. FASTQ are
+# staged from NCBI's SRA copy on AWS, not from ENA; see the config for storage,
+# runtime and integrity notes.
 
 study_id: DECICOMP2025_POMS_AGE_EMSEQ
 simulated: false
@@ -40,13 +41,13 @@ annotation_version: "GCF_963853765.1-RS_2024_06"
 
 assay_type: ["methylation"]
 analysis_mode: "raw_reanalysis"
-platform: "Illumina NovaSeq 6000, paired-end Enzymatic Methyl-seq (EM-seq). 60 libraries, 143-213 M read pairs each (median about 173 M), 710.5 GB of FASTQ reported by ENA. ENA library_strategy is Bisulfite-Seq. The project description says NextSeq 550 and calls the assay 'RNA-Seq ... on extracted DNA using the EM-seq kit'; the run records (NovaSeq 6000, Bisulfite-Seq) are taken as authoritative."
+platform: "Illumina NovaSeq 6000, paired-end Enzymatic Methyl-seq (EM-seq). 60 libraries, 71.7-106.6 M read pairs each (median 86.9 M), 2 x 150 bp; 710.5 GB of FASTQ reported by ENA. ENA's read_count counts each mate, so it is twice the pair count (base_count = 2 x pairs x 150). ENA library_strategy is Bisulfite-Seq. The project description says NextSeq 550 and calls the assay 'RNA-Seq ... on extracted DNA using the EM-seq kit'; the run records (NovaSeq 6000, Bisulfite-Seq) are taken as authoritative."
 
 data_availability:
   raw_data_available: true
   processed_data_available: false
   status: "available"
-  access_notes: "Raw paired-end FASTQ for all 60 runs are public in ENA under PRJEB105019 (first public 2025-12-06). No methylation calls or publication are available. Sample sheet, methylKit sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. One run, ERR15996548 (F14R_C3_T0_S3, in the primary comparison's reference arm), has no ENA-processed FASTQ (empty fastq_ftp); only the submitter's files are listed (submitted_ftp, with MD5s). fastq_manifest.tsv uses those two files for it (source = submitted_ftp). Released before any publication: check reuse expectations with the submitters before publishing results."
+  access_notes: "Raw paired-end FASTQ for all 60 runs are public in ENA under PRJEB105019 (first public 2025-12-06). No methylation calls or publication are available. Sample sheet, methylKit sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. One run, ERR15996548 (F14R_C3_T0_S3, in the primary comparison's reference arm), has no ENA-processed FASTQ (empty fastq_ftp); only the submitter's files are listed (submitted_ftp, with MD5s). fastq_manifest.tsv uses those two files for it (source = submitted_ftp). ENA downloads ran at about 0.5 MB/s, so the FASTQ are staged instead from NCBI's SRA copy on AWS (sra-pub-run-odp; all 60 runs, ERR15996548 included). Those files are not byte-identical to ENA's, so the ENA MD5s in fastq_manifest.tsv do not apply to them; sra_provenance.tsv is the integrity record (vdb-validate result, .sra and .fastq.gz MD5s, and per-mate read and base counts that must sum to ENA's read_count and base_count). Released before any publication: check reuse expectations with the submitters before publishing results."
 
 qc_status: "not_started"
 analysis_status: "not_started"
@@ -144,9 +145,11 @@ quality_flags:
   - ambiguous_phenotype_definition
 
 limitations: >
-  (1) Not yet run: 710.5 GB of paired-end FASTQ. Staging needs a drive with
-  room (Monarch had 167 GB free on 2026-10-13), and Bismark at about 174 M
-  read pairs per library is a multi-day job. (2) Resistant vs susceptible:
+  (1) Not yet run: about 745 GB of paired-end FASTQ, staged on a dedicated
+  drive (Monarch had 167 GB free on 2026-10-13). Bismark at about 87 M read
+  pairs per library (72-107 M) is still a multi-day job. The FASTQ come from
+  NCBI's SRA copy, not ENA: checked against ENA's read and base counts, not
+  ENA's file MD5s. (2) Resistant vs susceptible:
   how individuals were classed R or S at 500 hpc is not deposited. Both
   classes were sampled at the same time point, so "susceptible" cannot simply
   mean "died": possibly infected but surviving, high viral load, or
@@ -209,6 +212,16 @@ provenance:
     "PRJEB105019" (13 DECICOMP-related papers, none using it). Ask the
     submitters (J. Vidal-Dupiol, IHPE) for the R/S assignment criteria, the
     cohort survival values, and whether these are the metabolomics animals.
+    2026-10-22: read-pair counts corrected. The earlier 143-213 M (median
+    about 173 M) "read pairs" were ENA read_count values, which count each
+    mate: ERR15996532 has 82,832,153 pairs in its SRA copy (R1 = R2), against
+    ENA read_count 165,664,306 and base_count 24,849,645,900 = 2 x 82,832,153
+    x 150. Halved for all 60 runs: 71.7-106.6 M pairs, median 86.9 M. Same
+    day, staging switched from ENA (about 0.5 MB/s) to NCBI's SRA copy on AWS
+    (sra-pub-run-odp): each run is downloaded as .sra, checked with
+    vdb-validate, split with fasterq-dump (sra-tools 3.4.1), required to
+    match ENA's read_count and base_count exactly, gzipped with pigz, and
+    recorded in sra_provenance.tsv.
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB105019"
     - "https://www.ebi.ac.uk/metabolights/MTBLS13463"

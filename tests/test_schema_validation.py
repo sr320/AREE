@@ -98,3 +98,35 @@ def test_excluded_sample_needs_a_reason_and_evidence(tmp_path):
         yaml.safe_dump(study, fh)
 
     assert not validate_study_file(path).valid
+
+
+def _heat01_with(tmp_path, name, **comparison_fields):
+    with open("registry/demo_studies/GIGAS_HEAT01.yaml") as fh:
+        study = yaml.safe_load(fh)
+    study["study_id"] = name
+    study["comparisons"][0].update(comparison_fields)
+    path = tmp_path / f"{name}.yaml"
+    with open(path, "w") as fh:
+        yaml.safe_dump(study, fh)
+    return validate_study_file(path)
+
+
+def test_meta_analysis_opt_out_with_a_reason_validates(tmp_path):
+    reason = "Confounded field contrast: farm vs wild mixes disease with genetics and site."
+    result = _heat01_with(tmp_path, "OPT_OUT", exclude_from_meta_analysis={"reason": reason})
+    assert result.valid, result.errors
+
+
+def test_meta_analysis_opt_out_needs_a_reason(tmp_path):
+    assert not _heat01_with(tmp_path, "OPT_OUT_NO_REASON", exclude_from_meta_analysis={}).valid
+    assert not _heat01_with(tmp_path, "OPT_OUT_BOOL", exclude_from_meta_analysis=True).valid
+
+
+def test_meta_analysis_opt_out_cannot_also_be_primary(tmp_path):
+    reason = "Confounded field contrast: farm vs wild mixes disease with genetics and site."
+    both = _heat01_with(tmp_path, "OPT_OUT_PRIMARY", meta_analysis_primary=True,
+                        exclude_from_meta_analysis={"reason": reason})
+    assert not both.valid
+    # meta_analysis_primary: false is just the default and does not conflict.
+    assert _heat01_with(tmp_path, "OPT_OUT_NOT_PRIMARY", meta_analysis_primary=False,
+                        exclude_from_meta_analysis={"reason": reason}).valid

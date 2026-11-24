@@ -119,3 +119,106 @@ Record the machine, partitions and storage in the study PR body (*Machine and
 storage used*), as for any run. The workflow manifest lists the tool
 versions, which come from the same pinned containers as the workstation runs.
 Report a profile change that alters results in the study YAML.
+
+## Autopilot
+
+`aree autopilot` watches study runs on Klone and reports their state to a
+GitHub status issue, opening `autopilot-alert` issues when a run needs a
+person. With `mode: report` (the default) it never submits or cancels a job.
+With `mode: resume` it also resubmits runs it launched that stopped for a
+recoverable reason ([Resuming runs](#resuming-runs)). The plan, including
+starting queued studies (not built yet), is in
+[klone_autopilot_plan.md](klone_autopilot_plan.md).
+
+### What it reports
+
+Each tick (every 30 minutes) reads `squeue`, `sacct`, each run's
+`pipeline_info/execution_trace.txt` and `.nextflow.log`, and free space on
+scrubbed, and classifies every tracked run:
+
+| State | Meaning | Alert |
+|---|---|---|
+| `pending` / `running` | head job queued / running, tasks finishing | no |
+| `stalled` | head job running, but no task has finished for `stall_hours` (6) | yes |
+| `stopped` | head job ended without success; the alert gives the failure class (preempted or timed-out head job, out-of-memory task, task walltime, missing input, container, Slurm controller, unknown) and the next step | yes |
+| `finished` | head job completed with exit 0 | no |
+| `unknown` | head job not in `squeue` and not in `sacct` | yes |
+
+It also alerts when a run has been tracked for 14 days (scrubbed deletes files
+untouched for 21) and when scrubbed free space falls below
+`min_scrubbed_free_tb`. An open alert is not reopened while it is open; close
+it once handled.
+
+A GitHub Action (`autopilot-heartbeat.yml`) checks every hour that the status
+issue was updated in the last 2 hours, and opens a `heartbeat missing` alert
+if not, since the watchdog cannot report its own death. Closing the status
+issue turns that check off.
+
+### Setup
+
+1. **GitHub token.** Create a fine-grained token for `sr320/AREE` only, with
+   *Issues: read and write*. On Klone:
+   `mkdir -p ~/.config/aree && umask 077 && cat > ~/.config/aree/github_token`
+   (paste, then Ctrl-D).
+2. **Environment.** A conda environment named `aree` with the repository
+   installed (`pip install -e .`) in the checkout under `/gscratch/<group>`.
+3. **Settings.** Check `config/autopilot.yaml`: `results_template` must match
+   the `--outdir` your runs use. The ledger lives in `state_dir`
+   (`~/.local/share/aree-autopilot`, not scrubbed).
+4. **Name head jobs `aree-<STUDY_ID>`** (`sbatch --job-name=aree-<STUDY_ID>`)
+   so the tick finds them. A run started otherwise, or one that already ended,
+   is added with
+   `aree autopilot track --study <STUDY_ID> --launch-dir <dir nextflow ran in> [--outdir ...] [--job-id ...]`.
+5. **Try one tick** from an interactive job (`salloc`), not the login node:
+   `aree autopilot tick --local-only`, then without `--local-only` to create
+   the status issue.
+6. **Schedule it.** Preferred, if scrontab is enabled for the account:
+   edit the placeholders in `scripts/klone/autopilot.scrontab`, `mkdir -p
+   /gscratch/srlab/$USER/aree-autopilot`, then `scrontab scripts/klone/autopilot.scrontab`.
+   Otherwise, from the repository root:
+   `sbatch scripts/klone/autopilot.sbatch <miniforge prefix>`. That job queues
+   its successor 30 minutes out; stop the chain with
+   `scancel -n aree-autopilot`.
+
+`aree autopilot status` prints the last tick's report. When a run's outputs
+are copied off scrubbed, or the run is abandoned,
+`aree autopilot untrack <STUDY_ID>` removes it.
+
+### Resuming runs
+
+The autopilot can only resume a run whose submission it recorded, so start
+runs with `aree autopilot launch` instead of a hand-written sbatch script:
+
+```bash
+cd /gscratch/scrubbed/$USER/aree/launch/<STUDY_ID>     # the head job runs here
+aree autopilot launch --study <STUDY_ID> \
+  --workflow <repo>/workflows/methylation \
+  --study-config <repo>/config/<STUDY_ID>.config \
+  -c <repo>/run_resources_klone.config
+```
+
+This submits `scripts/klone/head.sbatch` as `aree-<STUDY_ID>` on the head-job
+partition (`head_*` settings), exporting only the `AREE_*` variables it needs
+(never `TMPDIR`). The head job runs
+`nextflow run ... -profile apptainer,klone -resume`, so resubmitting the same
+command continues from the cache. Set `miniforge` and `nextflow_env` in
+`config/autopilot.yaml` first.
+
+Then set `mode: resume`. Each tick, for each launched run:
+
+| Seen | Done |
+|---|---|
+| head job `PREEMPTED`, `TIMEOUT`, `NODE_FAIL`, `BOOT_FAIL`, or a Slurm controller error | resubmit the recorded command |
+| `stalled` | `scancel` the head job, then resubmit |
+| a task ran out of memory (exit 137) | write `<state_dir>/overrides/<STUDY_ID>.config` raising that process's memory to its peak RSS x `oom_memory_factor` (2), passed last with `-c`, then resubmit. Once per process |
+| task walltime, missing input, container, unknown, cancelled | nothing: alert, a person decides |
+
+A run gets at most `max_resumes_per_day` (3) resumes in 24 h and
+`max_resumes_total` (10) in all. Past that, or for a run not started with
+`launch`, it is marked *needs a person* and alerted. A resumed run is not
+alerted; the status issue lists what each tick did and how often each run
+was resumed.
+
+To stop the autopilot acting without stopping its reports:
+`aree autopilot pause` (creates `<state_dir>/PAUSE`; `unpause` removes it),
+or add the `autopilot-paused` label to the status issue from anywhere.

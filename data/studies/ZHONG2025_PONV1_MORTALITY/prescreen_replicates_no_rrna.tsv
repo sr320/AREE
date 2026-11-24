@@ -1,0 +1,6 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+StnC_Mantle	4	StnC_Mantle_C10,StnC_Mantle_C3,StnC_Mantle_C4,StnC_Mantle_C7	977	0.03464	True
+StnD_Mantle	3	StnD_Mantle_D5,StnD_Mantle_D6,StnD_Mantle_D9	949	0.0163	True
+StnE_Mantle	3	StnE_Mantle_E4,StnE_Mantle_E6,StnE_Mantle_E7	897	0.02938	True
+StnI_Mantle	5	StnI_Mantle_I1,StnI_Mantle_I2,StnI_Mantle_I3,StnI_Mantle_I4,StnI_Mantle_I5	956	0.14608	True
+StnL_Mantle	5	StnL_Mantle_L1,StnL_Mantle_L2,StnL_Mantle_L3,StnL_Mantle_L4,StnL_Mantle_L5	953	0.17113	True
