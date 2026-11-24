@@ -1,0 +1,214 @@
+# SECOND REAL MUSSEL STUDY, claimed 2026-10-17 from the WP5 backlog
+# (docs/candidate_studies_mussels_clams.md, pool C: Mytilus edulis heat). With
+# CLARK2021_HEAT_GREENLAND it forms the first within-species mussel pool
+# (k = 2) on thermal_tolerance. NOT YET RUN.
+#
+# Registered from deposited metadata and the publication, which is CONFIRMED:
+# Barrett et al. 2022, Genes 13:155, open access (PMC8774603). Its methods
+# (35 individual gill samples, seven treatments of n = 5, Illumina PE150 at
+# Novogene) match the deposit (ArrayExpress E-MTAB-11178, ENA PRJEB48959).
+#
+# INDEPENDENCE FROM CLARK2021_HEAT_GREENLAND (checked 2026-10-17). Same
+# research group (British Antarctic Survey, Aarhus University; Clark, Peck and
+# Thyrring are authors of both), but different animals and experiments: these
+# mussels were collected in Kobbefjord, south of Nuuk, in August 2019 and
+# exposed at Aarhus; Clark's were collected in Godthåbsfjorden in summer 2018.
+# Counted as independent (k = 2).
+#
+# DESIGN AS PUBLISHED. Intertidal mussels held 1 week at 5 C and 23 per mille
+# (the collection-site salinity) with a simulated semi-diurnal tide, then
+# distributed in buckets of 10 (four buckets per treatment) across 12 aquaria
+# at 5, 15 or 23 per mille. Every 12 h for 6 days each bucket was exposed to
+# air at 5, 30 or 33 C for 1.5 h. Mortality was scored per treatment (Nielsen
+# et al. 2021); only treatments with mean mortality under 25% were sequenced
+# (36 C killed every animal, and heat at 5 per mille killed over half). Five
+# animals per treatment were sequenced: one from each of the four buckets plus
+# a fifth chosen by shell length, all of shell length near the mean.
+#
+# FOUR COMPARISONS, PRESPECIFIED 2026-10-17, BEFORE ANY DATA WERE RUN.
+#   heat_33c_vs_control (33 C vs 5 C air, both 23 per mille) is
+#     meta_analysis_primary for thermal_tolerance: the contrast that pools with
+#     CLARK2021_HEAT_GREENLAND's 32 C heat shock vs control.
+#   low_salinity_15_vs_control (15 vs 23 per mille, both 5 C) is
+#     meta_analysis_primary for salinity_tolerance. Different phenotype, so it
+#     never enters the same pool as the heat comparison.
+#   heat_30c_vs_control and very_low_salinity_5_vs_control are registered for
+#     completeness and not pooled.
+# CLASSIFICATION. stress_response throughout, as for CLARK2021_HEAT_GREENLAND:
+# gill transcriptomes of exposed vs unexposed animals, no animal's own
+# tolerance scored. Survival was measured per treatment, not per sequenced
+# animal.
+# Sample-sheet condition levels combine the BioSample attributes
+# "environmental stress" (salinity) and "temperature" (air temperature, C).
+# ---------------------------------------------------------------------------
+
+study_id: BARRETT2022_HEAT_SALINITY
+simulated: false
+
+accessions:
+  doi: "10.3390/genes13010155"
+  bioproject: "PRJEB48959"
+  geo: null
+  sra: null
+  ena: "PRJEB48959 (35 RNA-seq runs)"
+  proteomexchange: null
+  other: "ArrayExpress E-MTAB-11178; one BioSample per library."
+
+citation: "Barrett NJ, Thyrring J, Harper EM, Sejr MK, Sørensen JG, Peck LS, Clark MS (2022). Molecular responses to thermal and osmotic stress in Arctic intertidal mussels (Mytilus edulis): the limits of resilience. Genes 13(1):155. https://doi.org/10.3390/genes13010155 (PMC8774603)."
+
+species: "Mytilus edulis"
+species_identity:
+  basis: collection_site
+  notes: >-
+    Collected from the lower intertidal of Kobbefjord, south of Nuuk, West
+    Greenland, and identified as M. edulis by location. No species-diagnostic
+    markers are reported for the sequenced animals.
+strain_or_population: "Wild lower-intertidal population, Kobbefjord, south of Nuuk, Greenland (64°10'50.8\" N, 51°32'28.1\" W), collected August 2019; experiments at Aarhus University, Denmark. Shell length 34.7 +/- 0.13 mm."
+
+# AREE reanalyzes against the NCBI RefSeq annotation its M. edulis crosswalk is
+# built from. The authors assembled a de novo transcriptome (Trinity) and
+# quantified with Bowtie2/RSEM; that pipeline is not reproduced.
+genome_assembly: "xbMytEdul2.2"
+annotation_version: "GCF_963676685.1-RS_2025_02"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end 150 bp, libraries prepared and sequenced by Novogene (Cambridge, UK); 38-66 M read pairs per library; 109.3 GB FASTQ reported by ENA for all 35 libraries."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 35 libraries are public in ENA under PRJEB48959 (first public 2021-12-04), brokered from ArrayExpress E-MTAB-11178, whose BioSample attributes ('environmental stress', 'temperature') carry the design. Only the libraries in registered comparisons need staging. The authors' FPKM tables from a de novo assembly are not reused. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "not_started"
+analysis_status: "not_started"
+
+comparisons:
+  - comparison_id: "heat_33c_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Repeated air exposure at 33 C for 1.5 h every 12 h for 6 days, at 23 per mille, against 5 C air exposure at 23 per mille (Barrett et al. 2022, section 2.2). BioSample attributes 'environmental stress: 23 percent salinity', 'temperature: 33' vs '5'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "33 C vs 5 C air, 1.5 h per exposure"
+    exposure_duration: "6 d (12 exposures)"
+    exposure_timing: "sampled at the end of the 6-day experiment; survivors of a treatment with under 25% mean mortality"
+    control_condition: "23 per mille, 5 C air exposures (condition 23_percent_salinity_5); 5 mussels"
+    treatment_condition: "23 per mille, 33 C air exposures (condition 23_percent_salinity_33); 5 mussels"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 4
+    results_file: "data/studies/BARRETT2022_HEAT_SALINITY/BARRETT2022_HEAT_SALINITY_heat_33c_vs_control_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "heat_30c_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Repeated air exposure at 30 C for 1.5 h every 12 h for 6 days, at 23 per mille, against 5 C (Barrett et al. 2022, section 2.2). BioSample 'temperature: 30' vs '5', both '23 percent salinity'."
+    stressor_standardized: "temperature"
+    exposure_intensity: "30 C vs 5 C air, 1.5 h per exposure"
+    exposure_duration: "6 d (12 exposures)"
+    exposure_timing: "sampled at the end of the 6-day experiment; survivors"
+    control_condition: "23 per mille, 5 C air exposures (condition 23_percent_salinity_5); 5 mussels"
+    treatment_condition: "23 per mille, 30 C air exposures (condition 23_percent_salinity_30); 5 mussels"
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 4
+    results_file: "data/studies/BARRETT2022_HEAT_SALINITY/BARRETT2022_HEAT_SALINITY_heat_30c_vs_control_dge_standardized.tsv"
+  - comparison_id: "low_salinity_15_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Low salinity: 15 per mille for 6 days with 5 C air exposures, against 23 per mille (the collection-site salinity) (Barrett et al. 2022, section 2.2). BioSample 'environmental stress: 15 percent salinity' vs '23 percent salinity', both 'temperature: 5'."
+    stressor_standardized: "salinity"
+    exposure_intensity: "15 vs 23 per mille"
+    exposure_duration: "6 d"
+    exposure_timing: "sampled at the end of the 6-day experiment; 100% survival"
+    control_condition: "23 per mille, 5 C air exposures (condition 23_percent_salinity_5); 5 mussels"
+    treatment_condition: "15 per mille, 5 C air exposures (condition 15_percent_salinity_5); 5 mussels"
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 4
+    results_file: "data/studies/BARRETT2022_HEAT_SALINITY/BARRETT2022_HEAT_SALINITY_low_salinity_15_vs_control_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "very_low_salinity_5_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Very low salinity: 5 per mille for 6 days with 5 C air exposures, against 23 per mille (Barrett et al. 2022, section 2.2). BioSample 'environmental stress: 5 percent salinity' vs '23 percent salinity', both 'temperature: 5'."
+    stressor_standardized: "salinity"
+    exposure_intensity: "5 vs 23 per mille"
+    exposure_duration: "6 d"
+    exposure_timing: "sampled at the end of the 6-day experiment; survivors"
+    control_condition: "23 per mille, 5 C air exposures (condition 23_percent_salinity_5); 5 mussels"
+    treatment_condition: "5 per mille, 5 C air exposures (condition 5_percent_salinity_5); 5 mussels"
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 10
+    biological_replicates: 4
+    results_file: "data/studies/BARRETT2022_HEAT_SALINITY/BARRETT2022_HEAT_SALINITY_very_low_salinity_5_vs_control_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - species_assignment_unverified
+  - single_timepoint
+  - tank_level_replication
+
+limitations: >
+  (1) Species identity. M. edulis is in the hybridizing M. edulis complex, and
+  the animals were assigned by collection site, not genotyped; every record
+  carries species_assignment_unverified (docs/species_identity.md).
+  (2) Replication unit. Mussels were held in buckets of 10, four per
+  treatment, and the five sequenced animals are one per bucket plus a fifth
+  from one of the same buckets, which bucket is not recorded. Two of each
+  arm's five may therefore share a bucket. Fitted on mussels with
+  tank_level_replication; bucket IDs are not deposited. The authors tested
+  bucket effects on mortality only (none found). (3) Pool label conflict. Every
+  BioSample says "individual: mixed pool of 10 individuals", while the paper
+  says 35 individual samples were extracted and sequenced (section 2.3). The
+  paper is followed; the label most likely names the bucket of 10. If the
+  libraries were pools, each would average 10 animals and its variance would
+  be understated: check replicate dispersion before harmonizing. (4) Survivor
+  sampling: only treatments with mean mortality under 25% were sequenced, and
+  heated animals are survivors of 6 days of repeated exposure. (5) Repeated,
+  not acute: 12 air exposures over 6 days, so this is a response with some
+  acclimation, unlike CLARK2021_HEAT_GREENLAND's single 2 h shock; the pool
+  spans both, and heterogeneity will show it. (6) Single tissue, single
+  timepoint, one population, the same research group as its pool partner.
+  (7) Reference: the RefSeq M. edulis annotation (GCF_963676685.1); Greenland
+  animals, or any M. trossulus ancestry in them, will map less completely.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-10-17"
+  curation_notes: >
+    Claimed with `aree start-study --accession PRJEB48959 --study-id
+    BARRETT2022_HEAT_SALINITY` (draft PR #93). Sample sheet and FASTQ manifest
+    generated from live ENA metadata with `aree fetch-samplesheet --bioproject
+    PRJEB48959 --study BARRETT2022_HEAT_SALINITY --condition-attribute
+    "environmental stress" --condition-attribute temperature --attribute
+    individual --library-strategy RNA-Seq`: 35 RNA-Seq runs, all paired-end,
+    one per BioSample, seven groups of 5, matching the paper's seven
+    treatments. REPLICATION CHECK: 35 distinct BioSamples and ArrayExpress
+    sample names (E-MTAB-11178:A1 ...); the `individual` attribute is carried
+    into the sheet so the pool-label conflict stays visible (limitation 3).
+    Run scripts/check_replicate_dispersion.py after quantification.
+    PUBLICATION: Barrett et al. 2022, read in full from Europe PMC
+    (PMC8774603).
+  source_links:
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJEB48959"
+    - "https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-11178"
+    - "https://doi.org/10.3390/genes13010155"
+    - "https://pmc.ncbi.nlm.nih.gov/articles/PMC8774603/"
