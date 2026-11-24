@@ -29,6 +29,10 @@ CFGDIR="$LOGS/configs"
 
 source "${AREE_MINIFORGE:-/gscratch/srlab/$USER/miniforge3}/etc/profile.d/conda.sh"
 conda activate "${AREE_NF_ENV:-myflow}"
+# The myflow env was moved from ~/miniforge3 to group storage; its launcher
+# still points NXF_DIST at the old path, so name the bundled jar directly.
+jar=$(ls "$CONDA_PREFIX"/share/nextflow/dist/*/nextflow-*-one.jar 2>/dev/null | tail -1)
+[[ -n "$jar" ]] && export NXF_BIN="$jar"
 export NXF_HOME="$ROOT/nxf-home" NXF_TEMP="$ROOT/tmp"
 unset TMPDIR
 export AREE_SLURM_ACCOUNT="${AREE_SLURM_ACCOUNT:-srlab}"
