@@ -1,0 +1,25 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	environmental_history	stimulus	library_layout	instrument_model	read_count
+E-MTAB-9786:Sample 1	ERR4859139	SAMEA7590522	E-MTAB-9786:Sample 1	collected_from_outer_fjord_none	collected from outer fjord	none	PAIRED	Illumina HiSeq 2500	45471734
+E-MTAB-9786:Sample 2	ERR4859140	SAMEA7590523	E-MTAB-9786:Sample 2	collected_from_outer_fjord_none	collected from outer fjord	none	PAIRED	Illumina HiSeq 2500	44769650
+E-MTAB-9786:Sample 3	ERR4859141	SAMEA7590524	E-MTAB-9786:Sample 3	collected_from_outer_fjord_none	collected from outer fjord	none	PAIRED	Illumina HiSeq 2500	62409234
+E-MTAB-9786:Sample 4	ERR4859142	SAMEA7590525	E-MTAB-9786:Sample 4	collected_from_outer_fjord_none	collected from outer fjord	none	PAIRED	Illumina HiSeq 2500	47091326
+E-MTAB-9786:Sample 5	ERR4859143	SAMEA7590526	E-MTAB-9786:Sample 5	collected_from_outer_fjord_none	collected from outer fjord	none	PAIRED	Illumina HiSeq 2500	49525108
+E-MTAB-9786:Sample 10	ERR4859144	SAMEA7590527	E-MTAB-9786:Sample 10	collected_from_inner_fjord_on_warm_day_none	collected from inner fjord on warm day	none	PAIRED	Illumina HiSeq 2500	43638198
+E-MTAB-9786:Sample 6	ERR4859145	SAMEA7590528	E-MTAB-9786:Sample 6	collected_from_inner_fjord_on_warm_day_none	collected from inner fjord on warm day	none	PAIRED	Illumina HiSeq 2500	51147292
+E-MTAB-9786:Sample 7	ERR4859146	SAMEA7590529	E-MTAB-9786:Sample 7	collected_from_inner_fjord_on_warm_day_none	collected from inner fjord on warm day	none	PAIRED	Illumina HiSeq 2500	49389068
+E-MTAB-9786:Sample 8	ERR4859147	SAMEA7590530	E-MTAB-9786:Sample 8	collected_from_inner_fjord_on_warm_day_none	collected from inner fjord on warm day	none	PAIRED	Illumina HiSeq 2500	51274400
+E-MTAB-9786:Sample 9	ERR4859148	SAMEA7590531	E-MTAB-9786:Sample 9	collected_from_inner_fjord_on_warm_day_none	collected from inner fjord on warm day	none	PAIRED	Illumina HiSeq 2500	50442198
+E-MTAB-9786:Sample 11	ERR4859149	SAMEA7590532	E-MTAB-9786:Sample 11	collected_from_outer_fjord_on_warm_day_none	collected from outer fjord on warm day	none	PAIRED	Illumina HiSeq 2500	51298792
+E-MTAB-9786:Sample 12	ERR4859150	SAMEA7590533	E-MTAB-9786:Sample 12	collected_from_outer_fjord_on_warm_day_none	collected from outer fjord on warm day	none	PAIRED	Illumina HiSeq 2500	46148902
+E-MTAB-9786:Sample 13	ERR4859151	SAMEA7590534	E-MTAB-9786:Sample 13	collected_from_outer_fjord_on_warm_day_none	collected from outer fjord on warm day	none	PAIRED	Illumina HiSeq 2500	48939288
+E-MTAB-9786:Sample 14	ERR4859152	SAMEA7590535	E-MTAB-9786:Sample 14	collected_from_outer_fjord_on_warm_day_none	collected from outer fjord on warm day	none	PAIRED	Illumina HiSeq 2500	49133680
+E-MTAB-9786:Sample 15	ERR4859153	SAMEA7590536	E-MTAB-9786:Sample 15	collected_from_outer_fjord_on_warm_day_none	collected from outer fjord on warm day	none	PAIRED	Illumina HiSeq 2500	43884698
+E-MTAB-9786:Sample 16	ERR4859154	SAMEA7590537	E-MTAB-9786:Sample 16	collected_from_outer_fjord_warmed_to_22_degrees	collected from outer fjord	warmed to 22 degrees	PAIRED	Illumina HiSeq 2500	38088534
+E-MTAB-9786:Sample 17	ERR4859155	SAMEA7590538	E-MTAB-9786:Sample 17	collected_from_outer_fjord_warmed_to_22_degrees	collected from outer fjord	warmed to 22 degrees	PAIRED	Illumina HiSeq 2500	39246456
+E-MTAB-9786:Sample 18	ERR4859156	SAMEA7590539	E-MTAB-9786:Sample 18	collected_from_outer_fjord_warmed_to_22_degrees	collected from outer fjord	warmed to 22 degrees	PAIRED	Illumina HiSeq 2500	72148840
+E-MTAB-9786:Sample 19	ERR4859157	SAMEA7590540	E-MTAB-9786:Sample 19	collected_from_outer_fjord_warmed_to_22_degrees	collected from outer fjord	warmed to 22 degrees	PAIRED	Illumina HiSeq 2500	51454760
+E-MTAB-9786:Sample 20	ERR4859158	SAMEA7590541	E-MTAB-9786:Sample 20	collected_from_outer_fjord_warmed_to_22_degrees	collected from outer fjord	warmed to 22 degrees	PAIRED	Illumina HiSeq 2500	40154158
+E-MTAB-9786:Sample 21	ERR4859159	SAMEA7590542	E-MTAB-9786:Sample 21	collected_from_outer_fjord_warmed_to_32_degrees	collected from outer fjord	warmed to 32 degrees	PAIRED	Illumina HiSeq 2500	41645618
+E-MTAB-9786:Sample 22	ERR4859160	SAMEA7590543	E-MTAB-9786:Sample 22	collected_from_outer_fjord_warmed_to_32_degrees	collected from outer fjord	warmed to 32 degrees	PAIRED	Illumina HiSeq 2500	57634170
+E-MTAB-9786:Sample 23	ERR4859161	SAMEA7590544	E-MTAB-9786:Sample 23	collected_from_outer_fjord_warmed_to_32_degrees	collected from outer fjord	warmed to 32 degrees	PAIRED	Illumina HiSeq 2500	39703770
+E-MTAB-9786:Sample 24	ERR4859162	SAMEA7590545	E-MTAB-9786:Sample 24	collected_from_outer_fjord_warmed_to_32_degrees	collected from outer fjord	warmed to 32 degrees	PAIRED	Illumina HiSeq 2500	41814068
