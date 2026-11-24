@@ -357,6 +357,14 @@ provenance:
     Open questions for the submitters (J. Vidal-Dupiol): the code-21
     duplication; how the 10 animals were chosen; per-animal T1 sampling times
     and viral loads; whether T1 biopsies were taken from the T0 site.
+    FIRST KLONE RUN LOST (found 2026-11-23): all eight comparisons ran on
+    Klone 2026-10-20..22, but outputs were published as symlinks into the
+    work directory on /gscratch/scrubbed, which purges files after 21 days.
+    The results, the run-only configs and the 624.9 GB of FASTQ were purged
+    before being copied or committed; no numbers from that run were
+    recorded. The re-run uses the same settings, now committed under
+    data/studies/VALDIVIESO2025_POMS_RS_EMSEQ/run/, and copies each
+    comparison's outputs off scrubbed as soon as it finishes (harvest.sh).
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB81880"
     - "https://doi.org/10.1016/j.scitotenv.2025.178385"
