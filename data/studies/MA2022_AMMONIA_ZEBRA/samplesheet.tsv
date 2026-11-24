@@ -1,0 +1,13 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	strain	tan	isolate	tissue	collection_date	library_layout	instrument_model	read_count
+PC96_1	SRR14675931	SAMN19375787	PC96_1	P_C96	P	C96	Cultured clam10	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	22814019
+PD_3	SRR14675932	SAMN19375786	PD_3	P_D	P	D	Cultured clam9	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	23675154
+PD_2	SRR14675933	SAMN19375785	PD_2	P_D	P	D	Cultured clam8	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	25568998
+PD_1	SRR14675934	SAMN19375784	PD_1	P_D	P	D	Cultured clam7	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	25679567
+BC96_3	SRR14675935	SAMN19375783	BC96_3	B_C96	B	C96	Cultured clam6	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	23043842
+BC96_2	SRR14675936	SAMN19375782	BC96_2	B_C96	B	C96	Cultured clam5	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	23285462
+BC96_1	SRR14675937	SAMN19375781	BC96_1	B_C96	B	C96	Cultured clam4	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	26569801
+BD_3	SRR14675938	SAMN19375780	BD_3	B_D	B	D	Cultured clam3	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	23617365
+PC96_3	SRR14675939	SAMN19375789	PC96_3	P_C96	P	C96	Cultured clam12	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	23908427
+PC96_2	SRR14675940	SAMN19375788	PC96_2	P_C96	P	C96	Cultured clam11	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	22973314
+BD_2	SRR14675941	SAMN19375779	BD_2	B_D	B	D	Cultured clam2	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	22980862
+BD_1	SRR14675942	SAMN19375778	BD_1	B_D	B	D	Cultured clam1	Complete individual	2019-12	PAIRED	Illumina HiSeq 2500	22932417
