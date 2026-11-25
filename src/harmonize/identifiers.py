@@ -46,6 +46,7 @@ AMBIGUOUS_MAP_PATH = MAPPINGS_DIR / "ambiguous_symbol_map.yaml"
 CROSSWALK_PATH = DEMO_CROSSWALK_PATH
 
 _CROSSWALK_OVERRIDE: Path | None = None
+_CROSSWALK_MTIME: int | None = None
 
 STABLE_ID_COLUMNS = {
     "ncbi_gene_id": "ncbi_gene_id",
@@ -183,15 +184,21 @@ def crosswalk_for_study(study: dict) -> Path:
 
 
 def set_crosswalk_path(path) -> None:
-    """Select the crosswalk to resolve against, clearing cached lookups.
+    """Select the crosswalk to resolve against, clearing cached lookups when changed.
 
     Pass None to fall back to $AREE_CROSSWALK / the demo crosswalk. This sets the
     crosswalk that `resolve_identifier` uses; it does not influence which
     crosswalk `crosswalk_for_study` chooses for the next study.
     """
-    global _CROSSWALK_OVERRIDE
-    _CROSSWALK_OVERRIDE = Path(path) if path is not None else None
+    global _CROSSWALK_OVERRIDE, _CROSSWALK_MTIME
+    new_path = Path(path) if path is not None else None
+    new_mtime = new_path.stat().st_mtime_ns if new_path is not None and new_path.exists() else None
+    if new_path == _CROSSWALK_OVERRIDE and new_mtime == _CROSSWALK_MTIME and new_path is not None:
+        return
+    _CROSSWALK_OVERRIDE = new_path
+    _CROSSWALK_MTIME = new_mtime
     _load_crosswalk.cache_clear()
+    _column_index.cache_clear()
     _uniprot_index.cache_clear()
     _legacy_locus_index.cache_clear()
     _multi_id_index.cache_clear()
@@ -239,6 +246,42 @@ def _multi_id_index(path_str: str, column: str) -> dict:
     for pos, ids in enumerate(df[column]):
         for value in (v for v in ids.split(";") if v):
             index[value] = -1 if value in index and index[value] != pos else pos
+    return index
+
+
+@lru_cache(maxsize=16)
+def _column_index(path_str: str, column: str, lower: bool = False) -> dict[str, tuple[str, str | None, int]]:
+    """Map each value in `column` to (first_anchor, first_orthogroup, match_count) for O(1) lookup.
+
+    Preserves exact first-row semantics of `cw[cw[column] == candidate]`, including
+    ';'-delimited multi-valued entries in `ensembl_gene_id` and skipping empty
+    `ncbi_gene_id` values.
+    """
+    df = _load_crosswalk(path_str)
+    index: dict[str, tuple[str, str | None, int]] = {}
+    if column not in df.columns:
+        return index
+    split_semi = column == "ensembl_gene_id"
+    skip_empty = column == "ncbi_gene_id"
+    anchors = df["_anchor"].tolist()
+    ogs = df["orthogroup_id"].tolist()
+    vals = df[column].tolist()
+    for val, anchor, og in zip(vals, anchors, ogs):
+        if skip_empty and not val:
+            continue
+        og_val = og or None
+        if split_semi:
+            # Match both the full cell and each ';'-delimited token (deduped per row).
+            tokens = {val} if val else set()
+            tokens.update(t for t in val.split(";") if t)
+            for tok in tokens:
+                key = tok.lower() if lower else tok
+                prev = index.get(key)
+                index[key] = (anchor, og_val, 1) if prev is None else (prev[0], prev[1], prev[2] + 1)
+        else:
+            key = val.lower() if lower else val
+            prev = index.get(key)
+            index[key] = (anchor, og_val, 1) if prev is None else (prev[0], prev[1], prev[2] + 1)
     return index
 
 
@@ -481,35 +524,19 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
         if not columns:
             return ResolvedIdentifier(None, "unresolved", None)
 
+        cw_path_str = str(active_crosswalk_path())
         candidates = identifier_candidates(raw_id)
         for candidate in candidates:
             for column in columns:
-                # Ensembl xrefs can be multi-valued (';'-delimited) in a real crosswalk.
-                if column == "ensembl_gene_id":
-                    match = cw[
-                        (cw[column] == candidate)
-                        | cw[column].str.split(";").apply(
-                            lambda ids, wanted=candidate: wanted in ids
-                        )
-                    ]
-                else:
-                    match = cw[cw[column] == candidate]
-                if column == "ncbi_gene_id":
-                    match = match[match["ncbi_gene_id"] != ""]
-                if len(match) == 1:
-                    row = match.iloc[0]
-                    return ResolvedIdentifier(
-                        row["_anchor"], "exact", row["orthogroup_id"] or None
-                    )
-                if len(match) > 1:
-                    row = match.iloc[0]
-                    return ResolvedIdentifier(
-                        row["_anchor"], "many_to_one_ortholog", row["orthogroup_id"] or None
-                    )
+                hit = _column_index(cw_path_str, column).get(candidate)
+                if hit is not None:
+                    anchor, og, count = hit
+                    confidence = "exact" if count == 1 else "many_to_one_ortholog"
+                    return ResolvedIdentifier(anchor, confidence, og)
             # GFF route: the authors' transcript or protein ID names one gene.
             if id_type in ("ncbi_gene_id", "locus_id"):
                 for column in MULTI_ID_COLUMNS:
-                    pos = _multi_id_index(str(active_crosswalk_path()), column).get(candidate)
+                    pos = _multi_id_index(cw_path_str, column).get(candidate)
                     if pos is not None and pos >= 0:
                         row = cw.iloc[pos]
                         return ResolvedIdentifier(row["_anchor"], "exact", row["orthogroup_id"] or None)
@@ -517,37 +544,34 @@ def _resolve_identifier(raw_id: str, id_type: str) -> ResolvedIdentifier:
         # Nothing in the current annotation. The identifier may be a GeneID that
         # NCBI has since retired — common for studies run on an older annotation.
         if id_type in ("ncbi_gene_id", "locus_id"):
-            retired = _retired_map(str(active_crosswalk_path()))
+            retired = _retired_map(cw_path_str)
+            ncbi_idx = _column_index(cw_path_str, "ncbi_gene_id")
             for candidate in candidates:
                 probe = candidate[3:] if candidate.startswith("LOC") else candidate
                 current = retired.get(probe)
                 if not current:
                     continue
-                repl = cw[cw["ncbi_gene_id"] == current]
-                if len(repl) == 1:
-                    row = repl.iloc[0]
+                hit = ncbi_idx.get(current)
+                if hit is not None and hit[2] == 1:
                     # 'inferred', not 'exact': the remap crosses an annotation version.
-                    return ResolvedIdentifier(
-                        row["_anchor"], "inferred", row["orthogroup_id"] or None
-                    )
+                    return ResolvedIdentifier(hit[0], "inferred", hit[1])
         return ResolvedIdentifier(None, "unresolved", None)
 
     if id_type == "gene_symbol":
-        match = cw[cw["gene_symbol"].str.lower() == str(raw_id).lower()]
-        if len(match) == 1:
-            row = match.iloc[0]
+        cw_path_str = str(active_crosswalk_path())
+        hit = _column_index(cw_path_str, "gene_symbol", lower=True).get(str(raw_id).lower())
+        if hit is not None:
+            anchor, og, count = hit
             # Symbol-based match to a stable reference id, but symbols are not
             # guaranteed unique/stable, so this is "inferred" rather than "exact".
-            return ResolvedIdentifier(row["_anchor"], "inferred", row["orthogroup_id"] or None)
-        if len(match) > 1:
-            row = match.iloc[0]
-            return ResolvedIdentifier(row["_anchor"], "many_to_one_ortholog", row["orthogroup_id"] or None)
+            confidence = "inferred" if count == 1 else "many_to_one_ortholog"
+            return ResolvedIdentifier(anchor, confidence, og)
 
         ambiguous = _ambiguous_map().get(raw_id)
         if ambiguous:
             standardized = ambiguous["standardized_id"]
-            og_row = cw[cw["_anchor"] == standardized]
-            orthogroup = (og_row.iloc[0]["orthogroup_id"] or None) if len(og_row) else None
+            og_hit = _column_index(cw_path_str, "_anchor").get(standardized)
+            orthogroup = og_hit[1] if og_hit is not None else None
             return ResolvedIdentifier(standardized, ambiguous["mapping_confidence"], orthogroup)
 
         return ResolvedIdentifier(None, "unresolved", None)

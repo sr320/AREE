@@ -17,6 +17,31 @@ import streamlit as st
 
 st.set_page_config(page_title="AREE — Aquaculture Resilience Evidence Engine", layout="wide")
 
+
+@st.cache_data(show_spinner=False)
+def _cached_species_summary(include_simulated: bool, ev_mtime: int | None):
+    return da.load_species_summary(include_simulated)
+
+
+@st.cache_data(show_spinner=False)
+def _cached_registry(include_simulated: bool, reg_mtime: tuple[int | None, int | None]):
+    return da.load_registry(include_simulated)
+
+
+@st.cache_data(show_spinner=False)
+def _cached_evidence(include_simulated: bool, ev_mtime: int | None):
+    return da.load_evidence(include_simulated)
+
+
+@st.cache_data(show_spinner="Loading candidate biomarkers...")
+def _cached_candidates(phenotype: str | None, include_simulated: bool, mtimes: tuple[int | None, int | None]):
+    return da.load_candidates(phenotype=phenotype, include_simulated=include_simulated)
+
+
+@st.cache_data(show_spinner=False)
+def _cached_phenotype_labels():
+    return da.phenotype_labels()
+
 st.title("AREE — Aquaculture Resilience Evidence Engine")
 st.caption(
     "Harmonized, cross-study resilience biomarker evidence for the Pacific oyster (Magallana gigas), "
@@ -43,15 +68,18 @@ tab_studies, tab_evidence, tab_candidates, tab_search = st.tabs(
 
 
 # --------------------------------------------------------------------------- Studies
+ev_mtime = da.evidence_mtime()
+evidence_all = _cached_evidence(include_simulated, ev_mtime)
+
 with tab_studies:
     st.header("Registered studies")
     st.subheader("Species")
-    st.dataframe(da.load_species_summary(include_simulated), use_container_width=True, hide_index=True)
+    st.dataframe(_cached_species_summary(include_simulated, ev_mtime), use_container_width=True, hide_index=True)
     st.caption("Gene identifiers come from each species' own crosswalk: `ncbi_gene` (NCBI Gene) or "
                "`gff_homology` (the authors' annotation plus a recorded homology search). Species in a "
                "hybridizing `complex` carry a species-identity basis on every study; see "
                "docs/species_identity.md.")
-    registry = da.load_registry(include_simulated)
+    registry = _cached_registry(include_simulated, da.registry_mtime())
     if registry.empty:
         st.info("No studies registered yet. Run: `aree build-registry`")
     else:
@@ -76,7 +104,7 @@ with tab_studies:
 # --------------------------------------------------------------------------- Evidence
 with tab_evidence:
     st.header("Harmonized evidence records")
-    evidence = da.load_evidence(include_simulated)
+    evidence = evidence_all
     if evidence.empty:
         st.info("No evidence table yet. Run: `aree harmonize --study STUDY_ID` for each registered study.")
     else:
@@ -132,14 +160,14 @@ with tab_candidates:
     if not da.evidence_exists():
         st.info("No evidence table yet. Run `aree harmonize` first, then `aree build-evidence-cards`.")
     else:
-        labels = da.phenotype_labels()
-        evidence = da.load_evidence(include_simulated)
+        labels = _cached_phenotype_labels()
+        evidence = evidence_all
         phenotype_options = ["(all)"] + sorted(evidence["phenotype"].dropna().unique())
         chosen = st.selectbox("Phenotype", phenotype_options, format_func=lambda p: labels.get(p, p))
         phenotype = None if chosen == "(all)" else chosen
 
         try:
-            candidates = da.load_candidates(phenotype=phenotype, include_simulated=include_simulated)
+            candidates = _cached_candidates(phenotype, include_simulated, da.candidates_mtime())
         except ValueError as exc:
             # The meta-analysis refuses evidence it cannot pool honestly (e.g. an
             # evidence table harmonized by older code); say why instead of crashing.
@@ -207,7 +235,7 @@ with tab_candidates:
 # --------------------------------------------------------------------------- Search
 with tab_search:
     st.header("Search a gene / protein / feature")
-    evidence = da.load_evidence(include_simulated)
+    evidence = evidence_all
     if evidence.empty:
         st.info("No evidence table yet. Run `aree harmonize` first.")
     else:

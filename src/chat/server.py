@@ -144,7 +144,7 @@ def create_app(settings: Settings | None = None, client=None, verify=verify_turn
                        allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 
     @app.get("/api/health")
-    def health():
+    async def health():
         return {"ok": True, "model": settings.model, "data_build": data_build,
                 "accepting_questions": not budget.exhausted(),
                 "turnstile": settings.turnstile_secret is not None,

@@ -308,6 +308,19 @@ def test_rate_limits_and_the_daily_budget():
     assert limiter.check("a") is None
     assert "day" in limiter.check("a")
 
+    # Bounded memory: expired and oldest keys are evicted when max_keys is reached.
+    bounded = RateLimiter(per_hour=5, per_day=10, clock=lambda: now[0], max_keys=2)
+    assert bounded.check("ip1") is None
+    now[0] += 10
+    assert bounded.check("ip2") is None
+    now[0] += 90_000  # both expired
+    assert bounded.check("ip3") is None
+    assert set(bounded.hits) == {"ip3"}
+    assert bounded.check("ip4") is None
+    now[0] += 1
+    assert bounded.check("ip5") is None
+    assert len(bounded.hits) == 2 and "ip3" not in bounded.hits
+
     day = ["d1"]
     budget = DailyBudget(1.0, today=lambda: day[0])
     budget.add(0.6)

@@ -293,9 +293,9 @@ def run_meta_analysis(
         df = _load_evidence_for_pooling()
     else:
         df = require_contrast_type(evidence_df).copy()
-        if "simulated" in df.columns and df["simulated"].dtype == object:
+        if "simulated" in df.columns and not pd.api.types.is_bool_dtype(df["simulated"]):
             df["simulated"] = df["simulated"].astype(str).str.strip().str.lower().isin({"true", "1", "yes"})
-        if "species_taxid" in df.columns and df["species_taxid"].dtype == object:
+        if "species_taxid" in df.columns and not pd.api.types.is_integer_dtype(df["species_taxid"]):
             taxid = pd.to_numeric(df["species_taxid"], errors="coerce")
             if taxid.notna().all():
                 df["species_taxid"] = taxid.astype(int)

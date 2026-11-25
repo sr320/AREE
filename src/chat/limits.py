@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime as _dt
 import threading
 import time
-from collections import defaultdict, deque
+from collections import deque
 
 # USD per million tokens: input, output, 5-minute cache write, cache read.
 PRICES = {
@@ -39,24 +39,42 @@ def cost_usd(model: str, usage) -> float:
 class RateLimiter:
     """Questions per client over the last hour and the last day."""
 
-    def __init__(self, per_hour: int, per_day: int, clock=time.monotonic):
+    def __init__(self, per_hour: int, per_day: int, clock=time.monotonic, max_keys: int = 10_000):
         self.limits = ((3600, per_hour), (86400, per_day))
         self.clock = clock
-        self.hits: dict[str, deque] = defaultdict(deque)
+        self.max_keys = max_keys
+        self.hits: dict[str, deque] = {}
         self.lock = threading.Lock()
+
+    def _prune(self, now: float) -> None:
+        max_window = self.limits[-1][0]
+        stale = [k for k, dq in self.hits.items() if not dq or now - dq[-1] > max_window]
+        for k in stale:
+            del self.hits[k]
+        if len(self.hits) >= self.max_keys:
+            oldest = min(self.hits, key=lambda k: self.hits[k][-1])
+            del self.hits[oldest]
 
     def check(self, key: str) -> str | None:
         """Record a question from `key`; return why it is refused, or None if allowed."""
         now = self.clock()
         with self.lock:
-            hits = self.hits[key]
-            while hits and now - hits[0] > self.limits[-1][0]:
+            hits = self.hits.get(key)
+            if hits is None:
+                if len(self.hits) >= self.max_keys:
+                    self._prune(now)
+                hits = deque()
+            max_window = self.limits[-1][0]
+            while hits and now - hits[0] > max_window:
                 hits.popleft()
             for window, limit in self.limits:
                 if sum(1 for t in hits if now - t <= window) >= limit:
                     span = "hour" if window == 3600 else "day"
+                    if not hits:
+                        self.hits.pop(key, None)
                     return f"You have asked {limit} questions in the last {span}, the limit for this chat."
             hits.append(now)
+            self.hits[key] = hits
             return None
 
 

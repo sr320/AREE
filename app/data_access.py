@@ -41,6 +41,27 @@ def evidence_exists() -> bool:
     return EVIDENCE_TABLE_PATH.exists()
 
 
+def candidates_table_path() -> Path:
+    """Precomputed candidates.tsv sibling of EVIDENCE_TABLE_PATH."""
+    return EVIDENCE_TABLE_PATH.parents[1] / "evidence_cards" / "candidates.tsv"
+
+
+def file_mtime(path: Path) -> int | None:
+    return path.stat().st_mtime_ns if path.exists() else None
+
+
+def registry_mtime() -> tuple[int | None, int | None]:
+    return (file_mtime(STUDY_REGISTRY_CSV), file_mtime(DEMO_REGISTRY_CSV))
+
+
+def evidence_mtime() -> int | None:
+    return file_mtime(EVIDENCE_TABLE_PATH)
+
+
+def candidates_mtime() -> tuple[int | None, int | None]:
+    return (file_mtime(EVIDENCE_TABLE_PATH), file_mtime(candidates_table_path()))
+
+
 def _is_simulated(df: pd.DataFrame) -> pd.Series:
     return df["simulated"].astype(str).str.lower() == "true"
 
@@ -89,11 +110,20 @@ def load_evidence(include_simulated: bool = False) -> pd.DataFrame:
 
 
 def load_candidates(phenotype: str | None = None, include_simulated: bool = False) -> pd.DataFrame:
-    """Candidates computed live from the evidence table.
+    """Candidates from precomputed candidates.tsv when up to date, else computed live.
 
     Real and simulated evidence are never pooled together, so dropping the
     simulated candidates afterwards leaves the real ranking unchanged.
     """
+    cpath = candidates_table_path()
+    ev_mtime = file_mtime(EVIDENCE_TABLE_PATH)
+    cand_mtime = file_mtime(cpath)
+    if cand_mtime is not None and (ev_mtime is None or cand_mtime >= ev_mtime):
+        df = pd.read_csv(cpath, sep="\t", low_memory=False)
+        if phenotype and "phenotype" in df.columns:
+            df = df[df["phenotype"] == phenotype]
+        return _without_simulated(sort_candidates(df), include_simulated)
+
     evidence_df = load_evidence(include_simulated=True)
     if len(evidence_df) == 0:
         return pd.DataFrame()

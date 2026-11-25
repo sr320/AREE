@@ -177,10 +177,16 @@ class Sources:
     def _read(self, path: Path) -> pd.DataFrame:
         if not path.exists():
             return pd.DataFrame()
-        key = (str(path), path.stat().st_mtime_ns)
-        if key not in self._cache:
-            self._cache[key] = pd.read_parquet(path) if path.suffix == ".parquet" else _read_tsv(path)
-        return self._cache[key]
+        key = str(path)
+        mtime = path.stat().st_mtime_ns
+        with self._lock:
+            cached = self._cache.get(key)
+            if cached is not None and cached[0] == mtime:
+                return cached[1]
+        frame = pd.read_parquet(path) if path.suffix == ".parquet" else _read_tsv(path)
+        with self._lock:
+            self._cache[key] = (mtime, frame)
+        return frame
 
     def evidence(self) -> pd.DataFrame:
         """The whole evidence table as a DataFrame (for export; queries use `db`)."""
@@ -309,6 +315,8 @@ class _Table:
         """Match a standardized or original identifier, or an orthogroup."""
         cols = [c for c in ("feature_id_standardized", "feature_id_original", "orthogroup_id")
                 if c in self.columns]
+        if not cols:
+            return self.where("FALSE")
         test = "{} = lower(?)" if exact else "contains({}, lower(?))"
         return self.where("(" + " OR ".join(test.format(_text(c)) for c in cols) + ")",
                           *[value] * len(cols))

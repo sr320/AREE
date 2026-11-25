@@ -86,3 +86,23 @@ def test_candidate_loader_orders_stronger_tiers_before_emerging(app_on, monkeypa
     assert data_access.load_candidates()["tier"].tolist() == [
         "high_priority_cross_study", "multi_omics_convergence", "emerging",
     ]
+
+
+def test_candidate_loader_reads_precomputed_candidates_tsv_when_fresh(app_on, monkeypatch):
+    import data_access
+    import pandas as pd
+
+    cpath = data_access.candidates_table_path()
+    cpath.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({
+        "feature_id_standardized": ["G1", "G2"],
+        "phenotype": ["thermal_tolerance", "survival"],
+        "tier": ["emerging", "high_priority_cross_study"],
+        "score": [10.0, 80.0],
+        "simulated": [False, False],
+    }).to_csv(cpath, sep="\t", index=False)
+
+    # Should read candidates.tsv directly without invoking run_meta_analysis.
+    monkeypatch.setattr(data_access, "run_meta_analysis", lambda **kwargs: (_ for _ in ()).throw(AssertionError("should not recompute")))
+    out = data_access.load_candidates(phenotype="survival")
+    assert out["feature_id_standardized"].tolist() == ["G2"]
