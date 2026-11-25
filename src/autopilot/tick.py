@@ -190,7 +190,11 @@ def _tick_locked(cfg: dict, path: Path, now: float, run, gh, free, host: str) ->
     issue = opened = None
     if gh is not None:
         issue = gh_mod.publish_status(gh, cfg, body)
-        opened = [key for key, text in alerts if gh_mod.open_alert(gh, cfg, key, text + _footer(host))]
+        existing_alerts = {i["title"] for i in gh.open_issues(cfg["alert_label"])} if alerts else set()
+        opened = [
+            key for key, text in alerts
+            if gh_mod.open_alert(gh, cfg, key, text + _footer(host), existing_titles=existing_alerts)
+        ]
     return {"runs": runs, "alerts": [k for k, _ in alerts], "opened": opened, "actions": actions_log,
             "status_issue": issue, "body": body}
 

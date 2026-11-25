@@ -51,7 +51,10 @@ MAPPING_CONFIDENCE_SCORE = {
 
 
 def _clip01(x: float) -> float:
-    return max(0.0, min(1.0, x))
+    val = float(x)
+    if not math.isfinite(val):
+        raise ValueError(f"Score component input must be finite, got {x!r}")
+    return max(0.0, min(1.0, val))
 
 
 def _saturating(value: float, half: float) -> float:
@@ -73,7 +76,10 @@ def _saturating(value: float, half: float) -> float:
     therefore lower in absolute terms than before 2026-09-05; compare candidates
     within a run, not across this change.
     """
-    v = max(0.0, float(value))
+    val = float(value)
+    if not math.isfinite(val):
+        raise ValueError(f"Score component input must be finite, got {value!r}")
+    v = max(0.0, val)
     return v / (v + half)
 
 
@@ -165,7 +171,9 @@ def compute_components(
         "phenotype_relevance_score": PHENOTYPE_RELEVANCE_SCORE.get(relevance, 0.1),
         "mapping_confidence_score": worst_mapping,
         "quality_score": _clip01(1 - len(quality_flags) / 5.0),
-        "heterogeneity_penalty": _clip01(meta_row.get("i_squared", 0.0) / 100.0),
+        "heterogeneity_penalty": _clip01(
+            (meta_row.get("i_squared") if meta_row.get("i_squared") is not None and meta_row.get("i_squared") == meta_row.get("i_squared") else 0.0) / 100.0
+        ),
     }
 
 

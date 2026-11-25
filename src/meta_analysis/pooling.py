@@ -38,6 +38,9 @@ def two_sided_p_from_z(z: float) -> float:
     return float(2.0 * norm.sf(abs(z)))
 
 
+_Z_95 = float(norm.ppf(0.975))
+
+
 def dersimonian_laird(effect_sizes, standard_errors) -> PooledResult:
     """Pool a list of study-level effect sizes and standard errors.
 
@@ -48,6 +51,12 @@ def dersimonian_laird(effect_sizes, standard_errors) -> PooledResult:
     k = len(yi)
     if k == 0:
         raise ValueError("Cannot pool zero studies")
+    if len(sei) != k:
+        raise ValueError(f"effect_sizes ({k}) and standard_errors ({len(sei)}) must have equal length")
+    if not (np.all(np.isfinite(yi)) and np.all(np.isfinite(sei))):
+        raise ValueError("effect_sizes and standard_errors must be finite")
+    if np.any(sei <= 0):
+        raise ValueError("standard_errors must be strictly positive")
 
     wi = 1.0 / (sei ** 2)
     fixed_effect = float(np.sum(wi * yi) / np.sum(wi))
@@ -70,8 +79,8 @@ def dersimonian_laird(effect_sizes, standard_errors) -> PooledResult:
 
     z = pooled_effect / pooled_se if pooled_se > 0 else 0.0
     p_value = two_sided_p_from_z(z)
-    ci_lower = pooled_effect - 1.96 * pooled_se
-    ci_upper = pooled_effect + 1.96 * pooled_se
+    ci_lower = pooled_effect - _Z_95 * pooled_se
+    ci_upper = pooled_effect + _Z_95 * pooled_se
 
     return PooledResult(
         k=k,

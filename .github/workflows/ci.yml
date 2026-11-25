@@ -23,7 +23,7 @@ jobs:
           pip install -e ".[dev,app,intake,site,mcp,chat]"
 
       - name: Lint (ruff)
-        run: ruff check src tests scripts modules/shared
+        run: ruff check src tests scripts app modules/shared
 
       - name: Run tests
         run: pytest -q

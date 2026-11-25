@@ -10,6 +10,7 @@ import json
 import os
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -59,7 +60,8 @@ class GitHub:
                 raise
 
     def open_issues(self, label: str) -> list[dict]:
-        issues = self.request("GET", f"/repos/{self.repo}/issues?state=open&per_page=100&labels={label}") or []
+        encoded = urllib.parse.quote(label, safe="")
+        issues = self.request("GET", f"/repos/{self.repo}/issues?state=open&per_page=100&labels={encoded}") or []
         return [i for i in issues if "pull_request" not in i]
 
     def create_issue(self, title: str, body: str, labels: list[str]) -> dict:
@@ -100,17 +102,22 @@ def status_paused(gh, cfg: dict) -> bool:
     return False
 
 
-def open_alert(gh, cfg: dict, key: str, body: str) -> bool:
+def open_alert(gh, cfg: dict, key: str, body: str, existing_titles: set[str] | None = None) -> bool:
     """Open `[autopilot-alert] <key>` unless an open alert with that title exists.
 
     Returns True when a new issue was opened. A person closes the issue once the
-    problem is handled; the next occurrence then opens a new one.
+    problem is handled; the next occurrence then opens a new one. Pass
+    `existing_titles` (a mutable set) to avoid re-fetching open alert issues on
+    each call in a batch.
     """
     title = f"[autopilot-alert] {key}"
-    if any(issue["title"] == title for issue in gh.open_issues(cfg["alert_label"])):
+    if existing_titles is None:
+        existing_titles = {issue["title"] for issue in gh.open_issues(cfg["alert_label"])}
+    if title in existing_titles:
         return False
     gh.ensure_label(cfg["alert_label"], "d93f0b")
     gh.create_issue(title, body, [cfg["alert_label"]])
+    existing_titles.add(title)
     return True
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# One Klone autopilot tick (report-only). Called by scrontab or by
-# autopilot.sbatch; never run it on a login node.
+# One Klone autopilot tick (mode comes from config/autopilot.yaml). Called by
+# scrontab or by autopilot.sbatch; never run it on a login node.
 #
 #   autopilot_tick.sh <miniforge prefix> [conda env, default aree]
 set -euo pipefail

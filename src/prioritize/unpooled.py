@@ -22,6 +22,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from common import parse_flags
 from meta_analysis.run import _non_primary_comparisons, effective_standard_errors
 
 from .rank import (
@@ -40,15 +41,6 @@ POOLING_STATUS_POOLED = "pooled"
 POOLING_STATUS_UNPOOLED = "unpooled"
 
 UNPOOLED_REASON = "no_standard_error_or_unadjusted_p"
-
-
-def _parse_flags(value) -> list:
-    if isinstance(value, list):
-        return value
-    if isinstance(value, str) and value.startswith("["):
-        import ast
-        return ast.literal_eval(value)
-    return []
 
 
 def unpoolable_records(evidence_df: pd.DataFrame) -> pd.DataFrame:
@@ -112,7 +104,7 @@ def build_unpooled_candidates(evidence_df: pd.DataFrame, pooled_candidates: pd.D
         relevance = conservative_relevance(first["phenotype"], classifications)
         effects = pd.to_numeric(group["effect_size"], errors="coerce")
         signs = np.sign(effects[effects != 0])
-        flags = sorted({f for v in group["quality_flags"] for f in _parse_flags(v)})
+        flags = sorted({f for v in group["quality_flags"] for f in parse_flags(v)})
         studies = "|".join(sorted(set(group["study_id"].astype(str))))
         rows.append({
             **meta_like,

@@ -36,7 +36,7 @@ test:
 	pytest -q
 
 lint:
-	ruff check src tests
+	ruff check src tests scripts app modules/shared
 
 register:
 	@for sid in $(DEMO_STUDIES); do aree register-study "registry/demo_studies/$$sid.yaml" --update; done

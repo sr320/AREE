@@ -11,12 +11,11 @@ the whole table per candidate, which is what makes a genome-wide pool of
 """
 from __future__ import annotations
 
-import ast
 from functools import lru_cache
 
 import pandas as pd
 
-from common import load_vocab
+from common import load_vocab, parse_flags
 from mappings.metabolite_links import links_for_partition
 
 from .scoring import (
@@ -93,14 +92,6 @@ PARTITION_COLUMNS = ["_simulated", "_species_taxid"]
 CANDIDATE_GROUP_COLUMNS = ["feature_id_standardized", "phenotype", "feature_type", *PARTITION_COLUMNS,
                            "contrast_type"]
 FEATURE_GROUP_COLUMNS = ["feature_id_standardized", *PARTITION_COLUMNS]
-
-
-def _parse_flags(value) -> list:
-    if isinstance(value, list):
-        return value
-    if isinstance(value, str) and value.startswith("["):
-        return ast.literal_eval(value)
-    return []
 
 
 def _partition_value(value) -> str:
@@ -235,7 +226,7 @@ class EvidenceIndex:
         self._mapping_confidence = mapped["mapping_confidence"].to_numpy()
         flag_cache: dict = {}
         self._quality_flags = [
-            tuple(flag_cache.setdefault(v, _parse_flags(v)) if isinstance(v, str) else _parse_flags(v))
+            tuple(flag_cache.setdefault(v, parse_flags(v)) if isinstance(v, str) else parse_flags(v))
             for v in mapped["quality_flags"].tolist()
         ]
         self._resilience_classification = (
@@ -485,12 +476,18 @@ def build_candidates(
 
 
 def sort_candidates(candidates: pd.DataFrame) -> pd.DataFrame:
-    """Strongest tier first, then score descending within tier."""
+    """Strongest tier first, then score descending within tier, with deterministic tie-breaking."""
     if len(candidates) == 0:
         return candidates
     tier_rank = candidates["tier"].map({t: i for i, t in enumerate(TIER_ORDER)}).fillna(len(TIER_ORDER))
+    sort_cols = ["_tier_rank", "score"]
+    ascending = [True, False]
+    for col in ("adjusted_p_value", "feature_id_standardized"):
+        if col in candidates.columns:
+            sort_cols.append(col)
+            ascending.append(True)
     return (
         candidates.assign(_tier_rank=tier_rank)
-        .sort_values(["_tier_rank", "score"], ascending=[True, False])
+        .sort_values(sort_cols, ascending=ascending, na_position="last")
         .drop(columns="_tier_rank")
     )

@@ -186,9 +186,10 @@ def build_top_candidates_summary(
 def _summary_table(group: pd.DataFrame, with_phenotype: bool = False) -> str:
     table = group.copy()
     table.insert(0, "rank", range(1, len(table) + 1))
-    table["card_file"] = table["card_file"].fillna("").apply(
-        lambda p: Path(p).name if p else "(no significant signal — not rendered)"
-    )
+    table["card_file"] = [
+        Path(p).name if isinstance(p, str) and p else "(no significant signal — not rendered)"
+        for p in table["card_file"]
+    ]
     # One phenotype can hold candidates from several species, and the same
     # feature ID may appear once per species; name the species on every row.
     table["species"] = table["species_taxid"].map(_species_name)

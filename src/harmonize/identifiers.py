@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
 from numbers import Integral, Real
@@ -46,7 +47,7 @@ AMBIGUOUS_MAP_PATH = MAPPINGS_DIR / "ambiguous_symbol_map.yaml"
 CROSSWALK_PATH = DEMO_CROSSWALK_PATH
 
 _CROSSWALK_OVERRIDE: Path | None = None
-_CROSSWALK_MTIME: int | None = None
+_CACHED_MTIMES: dict[str, int | None] = {}
 
 STABLE_ID_COLUMNS = {
     "ncbi_gene_id": "ncbi_gene_id",
@@ -183,26 +184,46 @@ def crosswalk_for_study(study: dict) -> Path:
     return registered
 
 
-def set_crosswalk_path(path) -> None:
-    """Select the crosswalk to resolve against, clearing cached lookups when changed.
-
-    Pass None to fall back to $AREE_CROSSWALK / the demo crosswalk. This sets the
-    crosswalk that `resolve_identifier` uses; it does not influence which
-    crosswalk `crosswalk_for_study` chooses for the next study.
-    """
-    global _CROSSWALK_OVERRIDE, _CROSSWALK_MTIME
-    new_path = Path(path) if path is not None else None
-    new_mtime = new_path.stat().st_mtime_ns if new_path is not None and new_path.exists() else None
-    if new_path == _CROSSWALK_OVERRIDE and new_mtime == _CROSSWALK_MTIME and new_path is not None:
-        return
-    _CROSSWALK_OVERRIDE = new_path
-    _CROSSWALK_MTIME = new_mtime
+def _clear_crosswalk_caches() -> None:
     _load_crosswalk.cache_clear()
     _column_index.cache_clear()
     _uniprot_index.cache_clear()
     _legacy_locus_index.cache_clear()
     _multi_id_index.cache_clear()
     _retired_map.cache_clear()
+
+
+def set_crosswalk_path(path) -> None:
+    """Select the crosswalk to resolve against, clearing cached lookups if the file changed.
+
+    Pass None to fall back to $AREE_CROSSWALK / the demo crosswalk. This sets the
+    crosswalk that `resolve_identifier` uses; it does not influence which
+    crosswalk `crosswalk_for_study` chooses for the next study.
+    """
+    global _CROSSWALK_OVERRIDE
+    new_path = Path(path) if path is not None else None
+    _CROSSWALK_OVERRIDE = new_path
+    if new_path is None:
+        _CACHED_MTIMES.clear()
+        _clear_crosswalk_caches()
+        return
+    key = str(new_path)
+    mtime = new_path.stat().st_mtime_ns if new_path.exists() else None
+    if key in _CACHED_MTIMES and _CACHED_MTIMES[key] != mtime:
+        _clear_crosswalk_caches()
+    _CACHED_MTIMES[key] = mtime
+
+
+@contextmanager
+def use_crosswalk(path):
+    """Temporarily select a crosswalk for the duration of a block, restoring prior state."""
+    global _CROSSWALK_OVERRIDE
+    prev = _CROSSWALK_OVERRIDE
+    set_crosswalk_path(path)
+    try:
+        yield
+    finally:
+        _CROSSWALK_OVERRIDE = prev
 
 
 @lru_cache(maxsize=4)

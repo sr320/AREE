@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
-from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, load_yaml, study_files
+from common import EVIDENCE_TABLE_PATH, REPORTS_DIR, load_yaml, parse_flags, study_files
 
 from .effect_sizes import MIN_P
 from .pooling import benjamini_hochberg, dersimonian_laird
@@ -332,7 +332,7 @@ def run_meta_analysis(
     }
     flag_cache: dict = {}
     flags = np.array(
-        [tuple(flag_cache.setdefault(v, _parse_flags(v)) if isinstance(v, str) else _parse_flags(v))
+        [tuple(flag_cache.setdefault(v, parse_flags(v)) if isinstance(v, str) else parse_flags(v))
          for v in df["quality_flags"].tolist()],
         dtype=object,
     )
@@ -400,15 +400,6 @@ def run_meta_analysis(
         result_df = result_df[RESULT_COLUMNS]
         result_df = result_df.sort_values(["phenotype", "feature_type", "p_value"])
     return result_df
-
-
-def _parse_flags(value) -> list[str]:
-    if isinstance(value, list):
-        return value
-    if isinstance(value, str) and value.startswith("["):
-        import ast
-        return ast.literal_eval(value)
-    return []
 
 
 def write_orthogroup_meta_analysis(phenotype: str | None, feature_type: str | None,

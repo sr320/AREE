@@ -1,7 +1,6 @@
 """Dispatch harmonization by assay type and maintain the master evidence table."""
 from __future__ import annotations
 
-import ast
 import os
 import tempfile
 import warnings
@@ -14,6 +13,7 @@ from common import (
     REPO_ROOT,
     REPORTS_DIR,
     load_yaml,
+    parse_flags,
     sha256_file,
     study_yaml_path,
 )
@@ -22,7 +22,7 @@ from .identifiers import (
     active_crosswalk_path,
     crosswalk_for_study,
     retired_table_path,
-    set_crosswalk_path,
+    use_crosswalk,
 )
 from .metabolomics import harmonize_metabolomics
 from .methylation import harmonize_methylation
@@ -106,15 +106,14 @@ def _harmonize_comparison(
     # demo crosswalk if simulated), so that simulated and real studies, and real
     # studies of different species, coexist in one evidence table without
     # resolving against each other's identifiers.
-    set_crosswalk_path(crosswalk_for_study(study))
-
-    evidence_df = harmonizer(
-        study, comparison, results_path,
-        workflow_version=WORKFLOW_VERSION,
-        date_generated=date_generated,
-        generated_by=_generated_by(),
-    )
-    _write_harmonize_manifest(study, comparison, results_path, evidence_df, date_generated)
+    with use_crosswalk(crosswalk_for_study(study)):
+        evidence_df = harmonizer(
+            study, comparison, results_path,
+            workflow_version=WORKFLOW_VERSION,
+            date_generated=date_generated,
+            generated_by=_generated_by(),
+        )
+        _write_harmonize_manifest(study, comparison, results_path, evidence_df, date_generated)
     return evidence_df
 
 
@@ -302,9 +301,7 @@ def _read_evidence_table() -> pd.DataFrame:
         return pd.DataFrame(columns=EVIDENCE_COLUMNS)
     df = pd.read_csv(EVIDENCE_TABLE_PATH, sep="\t", dtype=str)
     if "quality_flags" in df.columns:
-        df["quality_flags"] = df["quality_flags"].apply(
-            lambda v: ast.literal_eval(v) if isinstance(v, str) and v.startswith("[") else []
-        )
+        df["quality_flags"] = df["quality_flags"].apply(parse_flags)
     for numeric_col in ("effect_size", "standard_error", "ci_lower", "ci_upper", "p_value", "adjusted_p_value", "sample_size"):
         if numeric_col in df.columns:
             df[numeric_col] = pd.to_numeric(df[numeric_col], errors="coerce")

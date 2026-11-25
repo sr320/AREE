@@ -1,6 +1,7 @@
 """Shared paths, IO helpers, and controlled-vocabulary loaders used across all AREE packages."""
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -36,6 +37,15 @@ def load_yaml(path) -> dict:
 def load_json(path) -> dict:
     with open(path) as fh:
         return json.load(fh)
+
+
+def parse_flags(value) -> list[str]:
+    """Parse a quality_flags cell from either an in-memory list or a TSV string repr."""
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str) and value.startswith("["):
+        return ast.literal_eval(value)
+    return []
 
 
 def sha256_file(path) -> str:
