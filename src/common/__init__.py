@@ -46,14 +46,26 @@ def sha256_file(path) -> str:
     return h.hexdigest()
 
 
+_VOCAB_CACHE: dict[tuple[str, int], dict] = {}
+_ASSEMBLIES_CACHE: tuple[int, dict] | None = None
+
+
 def load_vocab(name: str) -> dict:
     """Load a controlled vocabulary YAML file by stem name (e.g. 'phenotype_ontology').
 
-    Returns a dict keyed by term id -> full term record.
+    Returns a dict keyed by term id -> full term record. Cached by file mtime
+    so repeated lookups (e.g. per-card species labels) do not re-parse YAML.
     """
     path = VOCAB_DIR / f"{name}.yaml"
+    mtime = path.stat().st_mtime_ns
+    key = (name, mtime)
+    cached = _VOCAB_CACHE.get(key)
+    if cached is not None:
+        return cached
     doc = load_yaml(path)
-    return {term["id"]: term for term in doc["terms"]}
+    result = {term["id"]: term for term in doc["terms"]}
+    _VOCAB_CACHE[key] = result
+    return result
 
 
 def vocab_ids(name: str) -> set:
@@ -132,8 +144,14 @@ def species_term_for_taxid(taxid) -> dict | None:
 
 def load_assemblies() -> dict:
     """Assembly records keyed by assembly_id."""
+    global _ASSEMBLIES_CACHE
+    mtime = GENOME_ASSEMBLIES_PATH.stat().st_mtime_ns
+    if _ASSEMBLIES_CACHE is not None and _ASSEMBLIES_CACHE[0] == mtime:
+        return _ASSEMBLIES_CACHE[1]
     doc = load_yaml(GENOME_ASSEMBLIES_PATH)
-    return {a["assembly_id"]: a for a in doc["assemblies"]}
+    result = {a["assembly_id"]: a for a in doc["assemblies"]}
+    _ASSEMBLIES_CACHE = (mtime, result)
+    return result
 
 
 def resolve_assembly(value: str) -> dict | None:

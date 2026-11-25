@@ -29,7 +29,9 @@ from harmonize.core import load_evidence_table
 from prioritize.cross_species import (
     TIER_ORDER,
     build_cross_species_candidates,
+    index_species_estimates,
     species_estimates_for,
+    species_key,
 )
 from prioritize.rank import _partition_value, contrast_suffix
 
@@ -112,18 +114,64 @@ def _species_label(taxid) -> str:
     return f"*{term['scientific_name']}*" if term else f"taxid {taxid}"
 
 
+_CONTEXT_COLUMNS = ("feature_id_original", "tissue", "life_stage", "stressor", "study_id")
+
+
+def _build_evidence_context_index(evidence: pd.DataFrame, species_df: pd.DataFrame) -> dict[str, tuple]:
+    """Index only the evidence rows referenced by `species_df` for O(1) per-card lookup."""
+    needed = {
+        eid
+        for raw in species_df.get("contributing_evidence_ids", ())
+        if raw and raw == raw
+        for eid in str(raw).split("|")
+        if eid
+    }
+    if not needed or len(evidence) == 0:
+        return {}
+    ev_ids = evidence["evidence_id"].astype(str)
+    subset = evidence[ev_ids.isin(needed)]
+    col_arrays = [
+        subset[col].to_numpy() if col in subset.columns else [None] * len(subset)
+        for col in _CONTEXT_COLUMNS
+    ]
+    out: dict[str, tuple] = {}
+    for eid, *vals in zip(subset["evidence_id"].astype(str).to_numpy(), *col_arrays):
+        out[eid] = tuple(vals)
+    return out
+
+
+def _evidence_context_from_index(ev_index: dict[str, tuple], ids: list[str]) -> dict:
+    buckets = [set() for _ in _CONTEXT_COLUMNS]
+    for eid in ids:
+        vals = ev_index.get(eid)
+        if vals is None:
+            continue
+        for bucket, v in zip(buckets, vals):
+            if v is not None and v == v:
+                bucket.add(str(v))
+    return {col: sorted(bucket) for col, bucket in zip(_CONTEXT_COLUMNS, buckets)}
+
+
 def _evidence_context(evidence: pd.DataFrame, ids: list[str]) -> dict:
     subset = evidence[evidence["evidence_id"].astype(str).isin(set(ids))]
     return {col: sorted({str(v) for v in subset[col].dropna()}) if col in subset.columns else []
-            for col in ("feature_id_original", "tissue", "life_stage", "stressor", "study_id")}
+            for col in _CONTEXT_COLUMNS}
 
 
-def species_rows_for_card(candidate: dict, species_df: pd.DataFrame, evidence: pd.DataFrame) -> list[dict]:
+def species_rows_for_card(
+    candidate: dict,
+    species_df: pd.DataFrame,
+    evidence: pd.DataFrame,
+    *,
+    species_subset: pd.DataFrame | None = None,
+    ev_index: dict[str, tuple] | None = None,
+) -> list[dict]:
     """One dict per species, with the evidence context a reader needs to compare them."""
     rows = []
-    for r in species_estimates_for(species_df, candidate).to_dict("records"):
+    sub = species_subset if species_subset is not None else species_estimates_for(species_df, candidate)
+    for r in sub.to_dict("records"):
         ids = [i for i in str(r.get("contributing_evidence_ids") or "").split("|") if i]
-        ctx = _evidence_context(evidence, ids)
+        ctx = _evidence_context_from_index(ev_index, ids) if ev_index is not None else _evidence_context(evidence, ids)
         effect, se = float(r["pooled_effect"]), float(r["pooled_se"])
         rows.append({
             "species_taxid": r["species_taxid"], "species": _species_label(r["species_taxid"]),
@@ -290,12 +338,22 @@ def build_cross_species_cards_report(
     phenotype_vocab = load_vocab("phenotype_ontology")
     run_ref = active_run_ref()
 
+    species_index, has_contrast = index_species_estimates(species_df)
+    empty_species = species_df.iloc[0:0]
+    ev_index = _build_evidence_context_index(evidence, species_df)
+
     card_files, written = [], []
     for candidate in candidates.to_dict("records"):
-        species_rows = species_rows_for_card(candidate, species_df, evidence)
-        if not all_cards and not has_significant_signal(candidate, species_rows, max_adjusted_p):
-            card_files.append("")
-            continue
+        sub = species_index.get(species_key(candidate, has_contrast), empty_species)
+        if not all_cards:
+            q = candidate.get("adjusted_p_value")
+            pooled_sig = q is not None and q == q and q <= max_adjusted_p
+            if not pooled_sig:
+                sp_q = pd.to_numeric(sub["adjusted_p_value"], errors="coerce") if len(sub) else pd.Series(dtype=float)
+                if not ((sp_q <= max_adjusted_p).any()):
+                    card_files.append("")
+                    continue
+        species_rows = species_rows_for_card(candidate, species_df, evidence, species_subset=sub, ev_index=ev_index)
         label = phenotype_vocab.get(candidate["phenotype"], {}).get("label", candidate["phenotype"])
         path = out_dir / f"{card_slug(candidate)}.md"
         path.write_text(card_markdown(candidate, species_rows, label, run_ref))

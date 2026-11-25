@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import ast
+import os
+import tempfile
 import warnings
 from pathlib import Path
 
@@ -265,6 +267,36 @@ def harmonize_processed_table(
     return new_rows
 
 
+def harmonize_batch(
+    jobs: list[tuple[str, str, str | Path]],
+    date_generated: str,
+) -> list[tuple[str, str, int]]:
+    """Harmonize many (study_id, comparison_id, input_path) comparisons with one table upsert.
+
+    Writes each comparison's manifest as it runs, then upserts all harmonized
+    records into evidence_table.tsv in a single atomic pass instead of reading
+    and rewriting the growing table once per comparison.
+    """
+    studies: dict[str, dict] = {}
+    frames: list[pd.DataFrame] = []
+    counts: list[tuple[str, str, int]] = []
+    for study_id, comparison_id, input_path in jobs:
+        study = studies.get(study_id)
+        if study is None:
+            study = _load_study(study_id)
+            studies[study_id] = study
+        matches = [c for c in study["comparisons"] if c["comparison_id"] == comparison_id]
+        if not matches:
+            known = [c["comparison_id"] for c in study["comparisons"]]
+            raise ValueError(f"Study {study_id!r} has no comparison {comparison_id!r}. Known: {known}")
+        df = _harmonize_comparison(study, matches[0], date_generated, results_override=Path(input_path))
+        frames.append(df)
+        counts.append((study_id, comparison_id, len(df)))
+    if frames:
+        _upsert_evidence_table(pd.concat(frames, ignore_index=True))
+    return counts
+
+
 def _read_evidence_table() -> pd.DataFrame:
     if not EVIDENCE_TABLE_PATH.exists():
         return pd.DataFrame(columns=EVIDENCE_COLUMNS)
@@ -302,7 +334,15 @@ def _upsert_evidence_table(new_rows: pd.DataFrame) -> None:
             combined = new_rows
     # reindex, not [], so a table written before a column was added still loads.
     combined = combined.reindex(columns=EVIDENCE_COLUMNS)
-    combined.to_csv(EVIDENCE_TABLE_PATH, sep="\t", index=False)
+    fd, tmp = tempfile.mkstemp(dir=EVIDENCE_TABLE_PATH.parent, prefix=".evidence.", suffix=".tsv")
+    try:
+        with os.fdopen(fd, "w") as fh:
+            combined.to_csv(fh, sep="\t", index=False)
+        os.replace(tmp, EVIDENCE_TABLE_PATH)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
 
 
 def load_evidence_table() -> pd.DataFrame:

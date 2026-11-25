@@ -625,18 +625,25 @@ def _card_slug(candidate: dict) -> str:
     )
 
 
-def rank_all_candidates(evidence_df: pd.DataFrame, phenotype: str | None, feature_type: str | None) -> pd.DataFrame:
+def rank_all_candidates(
+    evidence_df: pd.DataFrame,
+    phenotype: str | None,
+    feature_type: str | None,
+    index: EvidenceIndex | None = None,
+) -> pd.DataFrame:
     """Meta-analyze and rank every candidate matching the filters, one evidence pass."""
     scope = evidence_df
     if phenotype:
         scope = scope[scope["phenotype"] == phenotype]
     feature_types = [feature_type] if feature_type else sorted(scope["feature_type"].dropna().unique())
+    if index is None and feature_types:
+        index = EvidenceIndex(evidence_df)
 
     frames = []
     for ftype in feature_types:
-        meta_df = run_meta_analysis(phenotype=phenotype, feature_type=ftype)
+        meta_df = run_meta_analysis(phenotype=phenotype, feature_type=ftype, evidence_df=evidence_df)
         if len(meta_df):
-            frames.append(build_candidates(meta_df, evidence_df))
+            frames.append(build_candidates(meta_df, evidence_df, index=index))
     pooled = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     # Features whose evidence is entirely unpoolable get an unscored `emerging`
     # row instead of vanishing (prioritize/unpooled.py).
@@ -676,21 +683,24 @@ def build_evidence_cards_report(
     all_cards: bool = False,
 ) -> CardBuildResult:
     evidence = add_partition_columns(load_evidence_table())
-    candidates_df = rank_all_candidates(evidence, phenotype, feature_type)
+    index = EvidenceIndex(evidence)
+    candidates_df = rank_all_candidates(evidence, phenotype, feature_type, index=index)
     if len(candidates_df) == 0:
         return CardBuildResult(index=[], n_candidates=0, candidates_path=None)
 
     EVIDENCE_CARDS_DIR.mkdir(parents=True, exist_ok=True)
-    index = EvidenceIndex(evidence)
     phenotype_vocab = load_vocab("phenotype_ontology")
 
     card_files = []
     written = []
     for candidate in candidates_df.to_dict("records"):
+        if not all_cards:
+            pooled_q = candidate.get("adjusted_p_value")
+            pooled_sig = pooled_q is not None and pooled_q == pooled_q and pooled_q <= max_adjusted_p
+            if not pooled_sig and not index.has_significant_record(candidate, max_adjusted_p):
+                card_files.append("")
+                continue
         forest_points = _forest_points(index, candidate)
-        if not all_cards and not has_significant_signal(candidate, forest_points, max_adjusted_p):
-            card_files.append("")
-            continue
 
         phenotype_label = phenotype_vocab.get(candidate["phenotype"], {}).get("label", candidate["phenotype"])
         card_path = EVIDENCE_CARDS_DIR / f"{_card_slug(candidate)}.md"

@@ -68,11 +68,14 @@ def main() -> int:
             print(f"would harmonize {sid} / {cid} <- {path}")
         return 0
 
-    from harmonize.core import harmonize_processed_table
+    from harmonize.core import harmonize_batch
 
-    for sid, cid, path in jobs:
-        df = harmonize_processed_table(sid, REPO_ROOT / path, date_generated=args.date, comparison_id=cid)
-        print(f"harmonized {sid} / {cid}: {len(df)} records")
+    counts = harmonize_batch(
+        [(sid, cid, REPO_ROOT / path) for sid, cid, path in jobs],
+        date_generated=args.date,
+    )
+    for sid, cid, n in counts:
+        print(f"harmonized {sid} / {cid}: {n} records")
     print(f"{len(jobs)} comparisons harmonized")
     return 0
 

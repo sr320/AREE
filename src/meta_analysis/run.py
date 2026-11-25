@@ -189,47 +189,45 @@ def _direction_consistency(effects: np.ndarray) -> float:
     return float(max((nonzero > 0).sum(), (nonzero < 0).sum()) / len(nonzero))
 
 
-def _non_primary_comparisons() -> set[tuple[str, str]]:
-    """(study_id, comparison_id) pairs a study has prespecified out of pooling.
+def _study_pooling_rules() -> tuple[set[tuple[str, str]], set[tuple[str, str]]]:
+    """Return (non_primary, opted_out) (study_id, comparison_id) sets in one pass over study YAMLs.
 
     The primary comparison is chosen within each contrast type: comparisons of
     different types never share a pool, so flagging a primary exposure response
     says nothing about the study's baseline contrast. A contrast type with no
     flagged comparison restricts nothing, so the within-study guard still sees
     every comparison of that type.
+
+    `exclude_from_meta_analysis` keeps a comparison out of every pool, whatever
+    the study's other comparisons do.
     """
-    excluded = set()
+    non_primary: set[tuple[str, str]] = set()
+    opted_out: set[tuple[str, str]] = set()
     for path in study_files():
         study = load_yaml(path)
+        sid = study["study_id"]
         by_type: dict[str, list] = {}
         for c in study.get("comparisons") or []:
             by_type.setdefault(c.get("contrast_type"), []).append(c)
+            if c.get("exclude_from_meta_analysis"):
+                opted_out.add((sid, c["comparison_id"]))
         for comparisons in by_type.values():
             if any(c.get("meta_analysis_primary") for c in comparisons):
-                excluded |= {
-                    (study["study_id"], c["comparison_id"])
+                non_primary |= {
+                    (sid, c["comparison_id"])
                     for c in comparisons if not c.get("meta_analysis_primary")
                 }
-    return excluded
+    return non_primary, opted_out
+
+
+def _non_primary_comparisons() -> set[tuple[str, str]]:
+    """(study_id, comparison_id) pairs a study has prespecified out of pooling."""
+    return _study_pooling_rules()[0]
 
 
 def _opted_out_comparisons() -> set[tuple[str, str]]:
-    """(study_id, comparison_id) pairs a curator has kept out of every pool.
-
-    `exclude_from_meta_analysis` is for a comparison that should never pool,
-    whatever else the study registers: for example a field contrast confounded
-    with genetics and site. Unlike `meta_analysis_primary`, it lets a study keep
-    all of its comparisons out of pooling. The schema forbids combining it with
-    `meta_analysis_primary: true`.
-    """
-    excluded = set()
-    for path in study_files():
-        study = load_yaml(path)
-        excluded |= {
-            (study["study_id"], c["comparison_id"])
-            for c in study.get("comparisons") or [] if c.get("exclude_from_meta_analysis")
-        }
-    return excluded
+    """(study_id, comparison_id) pairs a curator has kept out of every pool."""
+    return _study_pooling_rules()[1]
 
 
 def require_contrast_type(evidence: pd.DataFrame) -> pd.DataFrame:
@@ -282,12 +280,25 @@ def adjust_within_families(result_df: pd.DataFrame) -> pd.DataFrame:
     return result_df
 
 
-def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = None) -> pd.DataFrame:
-    if not EVIDENCE_TABLE_PATH.exists():
-        raise FileNotFoundError(
-            f"No evidence table at {EVIDENCE_TABLE_PATH}. Run `aree harmonize` for each study first."
-        )
-    df = _load_evidence_for_pooling()
+def run_meta_analysis(
+    phenotype: str | None = None,
+    feature_type: str | None = None,
+    evidence_df: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    if evidence_df is None:
+        if not EVIDENCE_TABLE_PATH.exists():
+            raise FileNotFoundError(
+                f"No evidence table at {EVIDENCE_TABLE_PATH}. Run `aree harmonize` for each study first."
+            )
+        df = _load_evidence_for_pooling()
+    else:
+        df = require_contrast_type(evidence_df).copy()
+        if "simulated" in df.columns and df["simulated"].dtype == object:
+            df["simulated"] = df["simulated"].astype(str).str.strip().str.lower().isin({"true", "1", "yes"})
+        if "species_taxid" in df.columns and df["species_taxid"].dtype == object:
+            taxid = pd.to_numeric(df["species_taxid"], errors="coerce")
+            if taxid.notna().all():
+                df["species_taxid"] = taxid.astype(int)
     df = df[df["mapping_confidence"] != "unresolved"]
     df = df[df["feature_id_standardized"].notna() & df["effect_size"].notna()]
 
@@ -304,11 +315,10 @@ def run_meta_analysis(phenotype: str | None = None, feature_type: str | None = N
     # milliseconds, and there are tens of thousands of groups.
     effect = pd.to_numeric(df["effect_size"], errors="coerce").to_numpy(dtype=float)
     se = effective_standard_errors(df)
-    non_primary = _non_primary_comparisons()
+    non_primary, opted_out = _study_pooling_rules()
     primary_mask = np.array(
         [(s, c) not in non_primary for s, c in zip(df["study_id"], df["comparison_id"])], dtype=bool
     )
-    opted_out = _opted_out_comparisons()
     opted_out_mask = np.array(
         [(s, c) in opted_out for s, c in zip(df["study_id"], df["comparison_id"])], dtype=bool
     )
@@ -414,8 +424,8 @@ def write_orthogroup_meta_analysis(phenotype: str | None, feature_type: str | No
 
     from .orthogroups import run_orthogroup_meta_analysis
 
-    gene_results = run_meta_analysis(phenotype, feature_type)
     evidence = _load_evidence_for_pooling()
+    gene_results = run_meta_analysis(phenotype, feature_type, evidence_df=evidence)
     result, species, summary = run_orthogroup_meta_analysis(
         gene_results, evidence, active_copy_classes(), include_multi_copy=include_multi_copy)
     META_ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)

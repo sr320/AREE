@@ -91,6 +91,35 @@ def _split(value) -> list[str]:
     return [x for x in str(value).split("|") if x]
 
 
+def species_key(row: dict, has_contrast: bool) -> tuple:
+    return (
+        str(row["orthogroup_id"]),
+        row["phenotype"],
+        row["feature_type"],
+        _partition_value(row["simulated"]),
+        row.get("contrast_type") if has_contrast else None,
+    )
+
+
+def index_species_estimates(species_df: pd.DataFrame) -> tuple[dict[tuple, pd.DataFrame], bool]:
+    """Pre-group per-species estimates by orthogroup key for O(1) lookup."""
+    has_contrast = "contrast_type" in species_df.columns
+    if len(species_df) == 0:
+        return {}, has_contrast
+    work = species_df.assign(
+        _og=species_df["orthogroup_id"].astype(str),
+        _sim=species_df["simulated"].map(_partition_value),
+    )
+    cols = ["_og", "phenotype", "feature_type", "_sim"]
+    if has_contrast:
+        cols.append("contrast_type")
+    grouped: dict[tuple, pd.DataFrame] = {}
+    for keys, positions in work.groupby(cols, dropna=False, sort=False).indices.items():
+        key = keys if has_contrast else (*keys, None)
+        grouped[key] = species_df.iloc[positions]
+    return grouped, has_contrast
+
+
 def species_estimates_for(species_df: pd.DataFrame, row: dict) -> pd.DataFrame:
     """The per-species estimates behind one orthogroup result row."""
     sim = _partition_value(row["simulated"])
@@ -189,9 +218,12 @@ def build_cross_species_candidates(
     if "resilience_classification" in evidence.columns:
         classification_by_id = dict(zip(evidence["evidence_id"].astype(str), evidence["resilience_classification"]))
 
+    species_index, has_contrast = index_species_estimates(species_df)
+    empty_species = species_df.iloc[0:0]
+
     rows = []
     for row in og_results.to_dict("records"):
-        species = species_estimates_for(species_df, row)
+        species = species_index.get(species_key(row, has_contrast), empty_species)
         relevance = _relevance(row, species, classification_by_id)
         components = compute_components(row, species, relevance)
         failed = gates_failed(row, components)

@@ -229,6 +229,25 @@ class EvidenceIndex:
         self.evidence = mapped
         self._by_candidate = mapped.groupby(CANDIDATE_GROUP_COLUMNS, sort=False).indices
         self._by_feature = mapped.groupby(FEATURE_GROUP_COLUMNS, sort=False).indices
+        # Flat arrays for O(1) per-candidate access in build_candidates / card filtering,
+        # avoiding hundreds of thousands of pandas DataFrame slices.
+        self._evidence_id = mapped["evidence_id"].astype(str).to_numpy()
+        self._mapping_confidence = mapped["mapping_confidence"].to_numpy()
+        flag_cache: dict = {}
+        self._quality_flags = [
+            tuple(flag_cache.setdefault(v, _parse_flags(v)) if isinstance(v, str) else _parse_flags(v))
+            for v in mapped["quality_flags"].tolist()
+        ]
+        self._resilience_classification = (
+            mapped["resilience_classification"].to_numpy()
+            if "resilience_classification" in mapped.columns else None
+        )
+        self._orthogroup_id = (
+            mapped["orthogroup_id"].to_numpy()
+            if "orthogroup_id" in mapped.columns else None
+        )
+        self._adjusted_p = adjusted.to_numpy(dtype=float)
+        self._link_tables: dict[tuple[str, str], object] = {}
         # Layers with at least one significant record, per feature + phenotype +
         # partition + contrast type. Expression differing at baseline and
         # methylation responding to heat are two questions, not convergence.
@@ -247,6 +266,34 @@ class EvidenceIndex:
     def for_candidate(self, meta_row: dict) -> pd.DataFrame:
         """All records for this feature / phenotype / feature type / partition / contrast type."""
         return self._slice(self._by_candidate, candidate_key(meta_row))
+
+    def contributing_positions(self, meta_row: dict):
+        """Integer positions in `self.evidence` of records that entered the pooled estimate."""
+        positions = self._by_candidate.get(candidate_key(meta_row))
+        if positions is None or len(positions) == 0:
+            return ()
+        ids = meta_row.get("contributing_evidence_ids")
+        if not ids or ids != ids:
+            return positions
+        wanted = set(str(ids).split("|"))
+        ev_ids = self._evidence_id
+        return [p for p in positions if ev_ids[p] in wanted]
+
+    def has_significant_record(self, candidate: dict, max_adjusted_p: float) -> bool:
+        """True if any record for this candidate has adjusted_p_value <= max_adjusted_p."""
+        positions = self._by_candidate.get(candidate_key(candidate))
+        if positions is None or len(positions) == 0:
+            return False
+        adj = self._adjusted_p[positions]
+        return bool(((adj == adj) & (adj <= max_adjusted_p)).any())
+
+    def link_table_for(self, simulated: str, species_taxid: str):
+        key = (simulated, species_taxid)
+        table = self._link_tables.get(key)
+        if table is None:
+            table = links_for_partition(simulated, species_taxid)
+            self._link_tables[key] = table
+        return table
 
     def contributing(self, meta_row: dict) -> pd.DataFrame:
         """The records that actually entered the pooled estimate."""
@@ -280,7 +327,7 @@ class EvidenceIndex:
         """Metabolite <-> gene links touching this candidate's feature, from the
         link table of its own partition (simulated demo or real)."""
         key = candidate_key(meta_row)
-        table = links_for_partition(key[3], key[4])
+        table = self.link_table_for(key[3], key[4])
         if not table.available:
             return []
         return table.links_for_feature(key[0], layer_of(meta_row["feature_type"]) == METABOLITE_LAYER)
@@ -331,31 +378,43 @@ class EvidenceIndex:
         return layers, links
 
 
-def build_candidates(meta_df: pd.DataFrame, evidence_df: pd.DataFrame) -> pd.DataFrame:
+def build_candidates(
+    meta_df: pd.DataFrame, evidence_df: pd.DataFrame, index: EvidenceIndex | None = None
+) -> pd.DataFrame:
     if len(meta_df) == 0:
         return pd.DataFrame()
 
-    index = EvidenceIndex(evidence_df)
+    if index is None:
+        index = EvidenceIndex(evidence_df)
+
+    mc_arr = index._mapping_confidence
+    qf_arr = index._quality_flags
+    rc_arr = index._resilience_classification
+    og_arr = index._orthogroup_id
 
     rows = []
     for meta_dict in meta_df.to_dict("records"):
-        subset = index.contributing(meta_dict)
-        mapping_confidences = sorted(subset["mapping_confidence"].unique())
-        quality_flags = sorted({f for flags in subset["quality_flags"] for f in _parse_flags(flags)})
+        pos = index.contributing_positions(meta_dict)
+        mapping_confidences = sorted({mc_arr[p] for p in pos})
+        quality_flags = sorted({f for p in pos for f in qf_arr[p]})
         own_layer = layer_of(meta_dict["feature_type"])
         supporting = index.supporting_layers(meta_dict)
         n_supporting_layers = len(supporting)
         linked_layers, linked_links = index.linked_support(meta_dict, supporting)
-        link_table = links_for_partition(_partition_value(meta_dict["simulated"]),
-                                         _partition_value(meta_dict["species_taxid"]))
+        link_table = index.link_table_for(_partition_value(meta_dict["simulated"]),
+                                          _partition_value(meta_dict["species_taxid"]))
 
-        classifications = (subset["resilience_classification"]
-                           if "resilience_classification" in subset.columns else [])
+        classifications = [rc_arr[p] for p in pos] if rc_arr is not None else ()
         relevance = conservative_relevance(meta_dict["phenotype"], classifications)
 
         meta_dict["n_supporting_layers"] = n_supporting_layers
-        orthogroups = (sorted(subset["orthogroup_id"].dropna().astype(str).unique())
-                       if "orthogroup_id" in subset.columns else [])
+        if og_arr is not None:
+            orthogroups = sorted({
+                str(og_arr[p]) for p in pos
+                if og_arr[p] is not None and og_arr[p] == og_arr[p]
+            })
+        else:
+            orthogroups = []
         components = compute_components(meta_dict, mapping_confidences, quality_flags, relevance)
         score = candidate_score(components)
 
