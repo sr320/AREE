@@ -40,8 +40,10 @@ DEFAULTS = {
     "max_resumes_per_day": 3,
     "max_resumes_total": 10,
     # New memory for a process that ran out = its peak RSS x this, rounded up
-    # to whole GB. One escalation per process.
+    # to whole GB, capped at oom_max_memory_gb so Slurm never queues an
+    # unsatisfiable request. One escalation per process.
     "oom_memory_factor": 2.0,
+    "oom_max_memory_gb": 192,
     # Head jobs submitted by `aree autopilot launch` (scripts/klone/head.sbatch).
     "head_script": str(REPO_ROOT / "scripts" / "klone" / "head.sbatch"),
     "head_account": "srlab",

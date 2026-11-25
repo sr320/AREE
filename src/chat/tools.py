@@ -171,7 +171,7 @@ def _study(sources, study_id):
 
 
 _HANDLERS = {
-    "aree_overview": lambda sources: query.overview(sources),
+    "aree_overview": lambda sources: query.overview(sources, include_simulated=False),
     "list_vocabulary": lambda sources, name: query.list_vocabulary(name),
     "list_studies": lambda sources, **args: query.list_studies(**args, include_simulated=False, sources=sources),
     "get_study": _study,

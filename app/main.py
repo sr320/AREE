@@ -215,9 +215,9 @@ with tab_search:
         if query:
             q = query.strip().lower()
             mask = (
-                evidence["feature_id_standardized"].astype(str).str.lower().str.contains(q, na=False)
-                | evidence["feature_id_original"].astype(str).str.lower().str.contains(q, na=False)
-                | evidence["orthogroup_id"].astype(str).str.lower().str.contains(q, na=False)
+                evidence["feature_id_standardized"].astype(str).str.lower().str.contains(q, na=False, regex=False)
+                | evidence["feature_id_original"].astype(str).str.lower().str.contains(q, na=False, regex=False)
+                | evidence["orthogroup_id"].astype(str).str.lower().str.contains(q, na=False, regex=False)
             )
             hits = evidence[mask]
             if hits.empty:

@@ -56,9 +56,11 @@ def resumes_left(rec: dict, cfg: dict, now: float) -> tuple[bool, str]:
 def _oom_override(rec: dict, cfg: dict) -> tuple[dict | None, str]:
     """New memory settings for the processes that ran out, or why there are none."""
     escalated = rec.get("memory_escalations", {})
+    max_gb = int(cfg.get("oom_max_memory_gb", 0) or 0)
     new = {}
+    capped = []
     for task in rec.get("failed_details", []):
-        if task.get("exit") not in ("137", "-1", ""):
+        if task.get("exit") not in ("137", "-1", "-", ""):
             continue
         proc = process_name(task["name"])
         if proc in escalated or proc in new:
@@ -66,9 +68,17 @@ def _oom_override(rec: dict, cfg: dict) -> tuple[dict | None, str]:
         peak = memory_gb(task.get("peak_rss", ""))
         if not peak:
             continue
-        new[proc] = int(math.ceil(peak * float(cfg["oom_memory_factor"])))
+        target = int(math.ceil(peak * float(cfg["oom_memory_factor"])))
+        if max_gb > 0:
+            if peak >= max_gb:
+                capped.append(f"{proc} (peak {peak:.1f} GB >= cap {max_gb} GB)")
+                continue
+            target = min(target, max_gb)
+        new[proc] = target
     if new:
         return new, ""
+    if capped:
+        return None, "peak memory already at cap for " + ", ".join(sorted(capped))
     if escalated:
         return None, "memory already raised once for " + ", ".join(sorted(escalated))
     return None, "no failed task with a recorded peak memory to scale from"
@@ -114,12 +124,15 @@ def apply_action(action: dict, rec: dict, cfg: dict, now: float, run) -> str:
     if action["kind"] == "blocked":
         rec["blocked"] = action["why"]
         return f"{sid}: needs a person ({action['why']})"
-    if action["kind"] == "cancel_and_resume" and rec.get("job_id"):
-        scancel(rec["job_id"], run=run)
+    old = rec.get("job_id")
+    argv = list(rec["launch"]["argv"])
+    if action["kind"] == "cancel_and_resume" and old:
+        scancel(old, run=run)
+        # Wait for the cancelled head job to exit and release Nextflow's cache lock.
+        argv = [argv[0], f"--dependency=afterany:{old}", *argv[1:]]
     if action.get("memory"):
         _write_override(cfg, rec, action["memory"])
-    old = rec.get("job_id")
-    new = sbatch(rec["launch"]["argv"], run=run)
+    new = sbatch(argv, run=run)
     rec.setdefault("resumes", []).append({"at": now, "from_job": old, "to_job": new, "why": action["why"]})
     rec.update(job_id=new, state="pending", state_since=now, reason=f"resumed as job {new}",
                recoverable=False, next_step="", failure_class="")

@@ -22,7 +22,7 @@ from autopilot import github as gh_mod
 from autopilot.actions import apply_action, launch_argv, plan_action
 from autopilot.nextflow import read_log_tail, trace_summary
 from autopilot.slurm import run_command, sacct, sbatch, squeue
-from autopilot.state import assess, load_state, save_state
+from autopilot.state import assess, load_state, save_state, state_lock
 from autopilot.storage import free_tb
 
 REPORT_NOTE = "Report-only: the autopilot submits and cancels nothing."
@@ -40,14 +40,15 @@ def state_path(cfg: dict) -> Path:
 def track(cfg: dict, study_id: str, launch_dir: str, outdir: str | None = None,
           job_id: str | None = None, now: float | None = None) -> dict:
     path = state_path(cfg)
-    data = load_state(path)
-    run = data["runs"].setdefault(study_id, {"study_id": study_id, "first_seen": now or time.time()})
-    run["launch_dir"] = str(launch_dir)
-    run["outdir"] = str(outdir or cfg["results_template"].format(study_id=study_id))
-    if job_id:
-        run["job_id"] = str(job_id)
-    save_state(path, data)
-    return run
+    with state_lock(path.parent):
+        data = load_state(path)
+        run = data["runs"].setdefault(study_id, {"study_id": study_id, "first_seen": now or time.time()})
+        run["launch_dir"] = str(launch_dir)
+        run["outdir"] = str(outdir or cfg["results_template"].format(study_id=study_id))
+        if job_id:
+            run["job_id"] = str(job_id)
+        save_state(path, data)
+        return run
 
 
 def launch(cfg: dict, study_id: str, workflow: str, config: str, launch_dir: str,
@@ -56,19 +57,20 @@ def launch(cfg: dict, study_id: str, workflow: str, config: str, launch_dir: str
     """Submit a study's head job (scripts/klone/head.sbatch) and record how, so it can be resumed."""
     now = now or time.time()
     path = state_path(cfg)
-    data = load_state(path)
-    rec = data["runs"].get(study_id)
-    if rec and rec.get("state") in ("pending", "running", "stalled"):
-        raise RuntimeError(f"{study_id} already has head job {rec.get('job_id')} ({rec['state']})")
-    outdir = str(outdir or cfg["results_template"].format(study_id=study_id))
-    argv = launch_argv(cfg, study_id, str(workflow), str(config), outdir, str(launch_dir),
-                       [str(c) for c in run_configs or []])
-    job_id = sbatch(argv, run=run)
-    rec = data["runs"].setdefault(study_id, {"study_id": study_id, "first_seen": now})
-    rec.update(launch_dir=str(launch_dir), outdir=outdir, job_id=job_id, state="pending",
-               state_since=now, reason=f"launched as job {job_id}", launch={"argv": argv, "at": now})
-    save_state(path, data)
-    return rec
+    with state_lock(path.parent):
+        data = load_state(path)
+        rec = data["runs"].get(study_id)
+        if rec and rec.get("state") in ("pending", "running", "stalled"):
+            raise RuntimeError(f"{study_id} already has head job {rec.get('job_id')} ({rec['state']})")
+        outdir = str(outdir or cfg["results_template"].format(study_id=study_id))
+        argv = launch_argv(cfg, study_id, str(workflow), str(config), outdir, str(launch_dir),
+                           [str(c) for c in run_configs or []])
+        job_id = sbatch(argv, run=run)
+        rec = data["runs"].setdefault(study_id, {"study_id": study_id, "first_seen": now})
+        rec.update(launch_dir=str(launch_dir), outdir=outdir, job_id=job_id, state="pending",
+                   state_since=now, reason=f"launched as job {job_id}", launch={"argv": argv, "at": now})
+        save_state(path, data)
+        return rec
 
 
 def paused(cfg: dict, gh=None) -> str:
@@ -84,10 +86,11 @@ def paused(cfg: dict, gh=None) -> str:
 
 def untrack(cfg: dict, study_id: str) -> bool:
     path = state_path(cfg)
-    data = load_state(path)
-    found = data["runs"].pop(study_id, None) is not None
-    save_state(path, data)
-    return found
+    with state_lock(path.parent):
+        data = load_state(path)
+        found = data["runs"].pop(study_id, None) is not None
+        save_state(path, data)
+        return found
 
 
 def tick(cfg: dict, now: float | None = None, run=run_command, gh=None, free=free_tb,
@@ -96,6 +99,11 @@ def tick(cfg: dict, now: float | None = None, run=run_command, gh=None, free=fre
     now = now or time.time()
     host = host or socket.gethostname()
     path = state_path(cfg)
+    with state_lock(path.parent):
+        return _tick_locked(cfg, path, now, run, gh, free, host)
+
+
+def _tick_locked(cfg: dict, path: Path, now: float, run, gh, free, host: str) -> dict:
     data = load_state(path)
     runs = data["runs"]
 

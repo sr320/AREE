@@ -6,9 +6,11 @@ on recorded output.
 """
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 from autopilot.nextflow import classify_log, log_succeeded
@@ -17,6 +19,19 @@ from autopilot.slurm import elapsed_hours
 # Head-job ends that say nothing about the pipeline: the job was interrupted.
 INTERRUPTED_STATES = {"PREEMPTED", "NODE_FAIL", "TIMEOUT", "BOOT_FAIL", "DEADLINE"}
 ACTIVE_SQUEUE = {"RUNNING", "COMPLETING", "CONFIGURING", "SUSPENDED", "STAGE_OUT", "RESIZING"}
+
+
+@contextmanager
+def state_lock(state_dir: Path):
+    """Serialize read-modify-write access to state.json across CLI commands and ticks."""
+    state_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = state_dir / "state.lock"
+    with lock_path.open("a+") as fh:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def load_state(path: Path) -> dict:
@@ -31,10 +46,15 @@ def save_state(path: Path, data: dict) -> None:
     """Write atomically, so a tick killed mid-write leaves the old ledger intact."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".state.", suffix=".json")
-    with os.fdopen(fd, "w") as fh:
-        json.dump(data, fh, indent=2, sort_keys=True)
-        fh.write("\n")
-    os.replace(tmp, path)
+    try:
+        with os.fdopen(fd, "w") as fh:
+            json.dump(data, fh, indent=2, sort_keys=True)
+            fh.write("\n")
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
 
 
 def assess(head: dict | None, acct: dict | None, trace: dict, log_text: str,

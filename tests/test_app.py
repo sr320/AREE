@@ -66,6 +66,9 @@ def test_app_on_the_demo_filters_by_species(app_on):
     shown = [d.value for d in at.dataframe
              if {"species_accepted", "feature_id_standardized"} <= set(d.value.columns)]
     assert shown and set(shown[0]["species_accepted"]) == {"Mytilus galloprovincialis"}
+    # Regex metacharacters in feature search must be treated as literal text, not crash.
+    at.text_input[0].set_value("LOC1053(1[").run()
+    assert not at.exception, at.exception
 
 
 def test_candidate_loader_orders_stronger_tiers_before_emerging(app_on, monkeypatch):

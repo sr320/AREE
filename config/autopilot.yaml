@@ -36,6 +36,7 @@ paused_label: autopilot-paused
 max_resumes_per_day: 3
 max_resumes_total: 10
 oom_memory_factor: 2.0
+oom_max_memory_gb: 192
 
 # Head job (scripts/klone/head.sbatch), see docs/running_on_klone.md#running.
 head_account: srlab

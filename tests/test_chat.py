@@ -165,6 +165,12 @@ def test_tools_serve_real_studies_only_with_compact_records(sources):
     missing = json.loads(tools.run_tool("get_study", {"study_id": "NOPE"}, sources)[0])
     assert not set(missing["known_study_ids"]) & set(ALL_DEMO_STUDY_IDS)
 
+    overview = json.loads(tools.run_tool("aree_overview", {}, sources)[0])
+    assert overview["studies"]["simulated"] == 0
+    assert overview["evidence_records"]["simulated"] == 0
+    assert overview["candidates"]["simulated"] == 0
+    assert overview["candidate_tiers"] == {"high_priority_cross_study": 1}
+
 
 def test_replication_counts_real_studies_only(sources):
     out = json.loads(tools.run_tool("find_replicated_features", {"phenotype": "thermal_tolerance"}, sources)[0])
@@ -257,8 +263,10 @@ def test_a_truncated_tool_input_is_not_run(sources):
 
 def test_a_refusal_is_reported_not_shown_as_an_answer(sources):
     client = FakeClient({"texts": [], "content": [], "stop_reason": "refusal"})
-    events, _ = _turn(client, sources)
-    assert events[0]["type"] == "error" and events[0]["code"] == "refusal"
+    events, conv = _turn(client, sources)
+    assert [e["type"] for e in events] == ["error"]
+    assert events[0]["code"] == "refusal"
+    assert conv.turns == 0 and conv.messages == []
 
 
 def test_an_unparseable_tool_input_retries_the_round(sources):

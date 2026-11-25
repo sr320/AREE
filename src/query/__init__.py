@@ -792,11 +792,11 @@ def list_vocabulary(name: str) -> dict:
     return {"vocabulary": stem, "n_terms": len(terms), "terms": terms}
 
 
-def overview(sources: Sources = DEFAULT_SOURCES) -> dict:
+def overview(sources: Sources = DEFAULT_SOURCES, include_simulated: bool = True) -> dict:
     """Counts of what AREE currently holds, split real vs simulated."""
-    studies = study_table(sources)
-    evidence = _Table(sources, "evidence")
-    candidates = _Table(sources, "candidates")
+    studies = _filter_simulated(study_table(sources), include_simulated)
+    evidence = _Table(sources, "evidence").real_only(include_simulated)
+    candidates = _Table(sources, "candidates").real_only(include_simulated)
 
     if studies.empty:
         study_split = {"real": 0, "simulated": 0}
@@ -804,18 +804,20 @@ def overview(sources: Sources = DEFAULT_SOURCES) -> dict:
         sim = _as_bool_series(studies["simulated"])
         study_split = {"real": int((~sim).sum()), "simulated": int(sim.sum())}
 
+    evidence_split = evidence.split()
+    candidates_split = candidates.split()
     out = {
         "studies": study_split,
-        "evidence_records": evidence.split(),
-        "candidates": candidates.split(),
+        "evidence_records": evidence_split,
+        "candidates": candidates_split,
         "artifacts": artifacts(sources),
         "note": INTERPRETATION_NOTE,
     }
-    if evidence.n_rows:
+    if evidence_split["real"] + evidence_split["simulated"]:
         out["phenotypes_with_evidence"] = evidence.distinct("phenotype")
         out["stressors_with_evidence"] = evidence.distinct("stressor")
         out["feature_types"] = evidence.distinct("feature_type")
         out["species_with_evidence"] = evidence.distinct("species")
-    if candidates.n_rows and "tier" in candidates.columns:
+    if (candidates_split["real"] + candidates_split["simulated"]) and "tier" in candidates.columns:
         out["candidate_tiers"] = candidates.count_by("tier")
     return out

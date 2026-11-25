@@ -148,10 +148,11 @@ def run_turn(client, conversation: Conversation, question: str, sources: query.S
             conversation.messages.append({"role": "assistant", "content": response.content})
 
             if response.stop_reason == "refusal":
+                del conversation.messages[start:]
                 yield {"type": "error", "code": "refusal",
                        "message": "The assistant could not answer this question. Try rephrasing it, "
                                   "or use the Explore page."}
-                break
+                return
             tool_uses = [b for b in response.content if b.type == "tool_use"]
             if not tool_uses:
                 if response.stop_reason == "max_tokens":

@@ -51,6 +51,25 @@ def _load_study(study_id: str) -> dict:
     return load_yaml(path)
 
 
+def _comparison_assay_type(study: dict, comparison: dict) -> str:
+    """Resolve the assay_type for a single comparison, failing closed on ambiguous multi-assay studies."""
+    assays = study.get("assay_type") or []
+    comp_assay = comparison.get("assay_type")
+    if comp_assay:
+        if assays and comp_assay not in assays:
+            raise ValueError(
+                f"comparison {comparison['comparison_id']!r} in study {study['study_id']!r} "
+                f"declares assay_type {comp_assay!r}, which is not in study assay_type {assays!r}"
+            )
+        return comp_assay
+    if len(assays) == 1:
+        return assays[0]
+    raise ValueError(
+        f"study {study['study_id']!r} declares multiple assay_types ({assays!r}); "
+        f"comparison {comparison['comparison_id']!r} must declare its own assay_type explicitly"
+    )
+
+
 def _harmonize_comparison(
     study: dict, comparison: dict, date_generated: str, results_override=None
 ) -> pd.DataFrame:
@@ -62,7 +81,7 @@ def _harmonize_comparison(
     raw_reanalysis study — whose `results_file` is null until a workflow run
     produces one — can be harmonized at all.
     """
-    assay_type = study["assay_type"][0]
+    assay_type = _comparison_assay_type(study, comparison)
     harmonizer = ASSAY_HARMONIZERS.get(assay_type)
     if harmonizer is None:
         raise ValueError(f"No harmonizer registered for assay_type {assay_type!r}")
@@ -129,7 +148,7 @@ def _write_harmonize_manifest(study: dict, comparison: dict, results_path, evide
     manifest = {
         "study_id": study["study_id"],
         "comparison_id": comparison["comparison_id"],
-        "assay_type": study["assay_type"][0],
+        "assay_type": _comparison_assay_type(study, comparison),
         "analysis_mode": study["analysis_mode"],
         # Workflow output legitimately lives outside the repo (results/, or a
         # staging volume), so fall back to the absolute path rather than raising.

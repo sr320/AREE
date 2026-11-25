@@ -118,6 +118,7 @@
         "additionalProperties": false,
         "properties": {
           "comparison_id": {"type": "string"},
+          "assay_type": {"type": "string", "description": "Assay type ontology term ID for this comparison (required when the study declares multiple assay types)."},
           "tissue": {"type": "string", "description": "Tissue ontology term ID."},
           "life_stage": {"type": "string", "description": "Life stage ontology term ID."},
           "stressor_original": {"type": "string", "description": "Free-text stressor/treatment description as reported by the source study."},

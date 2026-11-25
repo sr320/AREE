@@ -352,6 +352,14 @@ def test_plan_action_rules(cfg):
     oom["memory_escalations"] = {"MERGE_DEDUP_CHUNKS": 11}
     assert plan_action(oom, cfg, NOW)["kind"] == "blocked"
 
+    # Slurm OOM often records exit="-" in Nextflow's trace, and scaled memory is capped.
+    dash_oom = _rec(failure_class="task_oom",
+                    failed_details=[{"name": "ALIGN (ERR1)", "exit": "-", "peak_rss": "120 GB"}])
+    assert plan_action(dash_oom, cfg, NOW)["memory"] == {"ALIGN": 192}
+    at_cap = _rec(failure_class="task_oom",
+                  failed_details=[{"name": "ALIGN (ERR1)", "exit": "137", "peak_rss": "200 GB"}])
+    assert plan_action(at_cap, cfg, NOW)["kind"] == "blocked"
+
 
 def test_tick_resumes_a_preempted_launched_run(cfg, tmp_path):
     cfg["mode"] = "resume"
@@ -395,7 +403,10 @@ def test_tick_oom_writes_override_and_stall_cancels_first(cfg, tmp_path):
     squeue_text = f"5002|aree-EMSEQ_RUN|RUNNING|09:00:00|4-00:00:00|cpu-g2|{launch_dir}|None\n"
     run2 = _resume_runner(squeue_text=squeue_text, new_ids=("5003",))
     res = tick(cfg, now=NOW, run=run2, gh=None, free=lambda p: 50.0, host="h")
+    sbatch_calls = [c for c in run2.calls if c[0] == "sbatch"]
     assert [c for c in run2.calls if c[0] in ("sbatch", "scancel")][0] == ["scancel", "5002"]
+    assert "--dependency=afterany:5002" in sbatch_calls[0]
+    assert "--dependency=afterany:5002" not in res["runs"]["EMSEQ_RUN"]["launch"]["argv"]
     assert res["runs"]["EMSEQ_RUN"]["job_id"] == "5003"
 
 
