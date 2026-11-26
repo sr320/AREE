@@ -719,6 +719,8 @@ def build_cross_species_cards_cmd(phenotype, feature_type, max_adjusted_p, all_c
     click.echo(click.style(
         f"Tiered {report.n_candidates} cross-species rows ({report.candidates_path}); "
         f"wrote {len(report.index)} cards to {report.candidates_path.parent}/", fg="green"))
+    if report.n_stale_removed:
+        click.echo(f"  removed {report.n_stale_removed} cards left by an earlier build")
     counts = {}
     for row in report.index:
         counts[row["tier"]] = counts.get(row["tier"], 0) + 1

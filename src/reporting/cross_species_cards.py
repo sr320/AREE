@@ -12,6 +12,11 @@ reports/evidence_cards/cross_species/:
   below the threshold. The second clause keeps discordant rows on the page:
   two species each significant in opposite directions pool to nothing.
 
+The directory mirrors the latest build: a card this build did not write is
+deleted, so cards from an earlier orthogroup run (whose orthogroup IDs mean
+nothing under the active one), an earlier threshold or an earlier filter
+cannot sit beside the current ones.
+
 Each card shows both (or all) species side by side: each species' own
 gene-level estimate, then the pooled cross-species estimate and how much the
 species disagree.
@@ -102,6 +107,7 @@ class CrossSpeciesCardResult:
     n_candidates: int
     candidates_path: Path | None
     summary: dict
+    n_stale_removed: int = 0
 
 
 def cards_dir() -> Path:
@@ -363,12 +369,19 @@ def build_cross_species_cards_report(
             "species_taxids", "tier", "evidence_class", "score", "k_studies_by_species", "adjusted_p_value", "gates_failed")}
             | {"card_file": str(path)})
 
+    # index.json and candidates.tsv describe this build only, so the cards must too.
+    keep = {Path(row["card_file"]).name for row in written}
+    stale = [p for p in out_dir.glob("*.md") if p.name not in keep]
+    for p in stale:
+        p.unlink()
+
     candidates = candidates.assign(card_file=card_files)
     candidates_path = out_dir / "candidates.tsv"
     candidates.to_csv(candidates_path, sep="\t", index=False)
     (out_dir / "index.json").write_text(json.dumps(written, indent=2, default=str))
     return CrossSpeciesCardResult(index=written, n_candidates=len(candidates),
-                                  candidates_path=candidates_path, summary=summary)
+                                  candidates_path=candidates_path, summary=summary,
+                                  n_stale_removed=len(stale))
 
 
 __all__ = ["TIER_ORDER", "build_cross_species_cards_report", "card_markdown", "cards_dir"]
