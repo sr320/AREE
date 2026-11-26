@@ -165,6 +165,32 @@ def test_rebuild_removes_cards_from_an_earlier_build(isolated_reports):
     assert "removed" not in again.output
 
 
+def test_gene_card_rebuild_removes_stale_cards_but_not_cross_species_ones(isolated_reports):
+    from click.testing import CliRunner
+
+    from aree.cli import main
+
+    harmonize_all_demo_studies()
+    cards_dir = isolated_reports["cards_dir"]
+    runner = CliRunner()
+    assert runner.invoke(main, ["build-cross-species-cards", "--feature-type", "gene"]).exit_code == 0
+    cross_before = {p.name for p in (cards_dir / "cross_species").glob("*.md")}
+    assert cross_before
+    stale = cards_dir / "LOC999999999_thermal_tolerance_gene_real_taxid29159.md"
+    stale.write_text("# a card for a candidate that no longer qualifies\n")
+
+    out = runner.invoke(main, ["build-evidence-cards"])
+    assert out.exit_code == 0, out.output
+    assert not stale.exists()
+    assert "removed 1 cards left by an earlier build" in out.output
+    index = json.loads((cards_dir / "index.json").read_text())
+    assert {p.name for p in cards_dir.glob("*.md")} == {Path(r["card_file"]).name for r in index}
+    assert {p.name for p in (cards_dir / "cross_species").glob("*.md")} == cross_before
+    assert (cards_dir / "cross_species" / "index.json").exists()
+
+    assert "removed" not in runner.invoke(main, ["build-evidence-cards"]).output
+
+
 def test_demo_gene_cards_name_their_orthogroup(isolated_reports):
     from reporting.evidence_cards import build_evidence_cards_report
 

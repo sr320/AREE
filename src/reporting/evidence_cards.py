@@ -14,6 +14,13 @@ A genome-wide pool produces a candidate per gene. Rendering ~30,000 cards for
 genes that show no signal anywhere takes tens of minutes and buries the
 reader; the threshold is what makes the card set readable. Pass
 `all_cards=True` (CLI: `--all-cards`) to render every candidate regardless.
+
+The directory mirrors the latest build: a card this build did not write is
+deleted, so a candidate that no longer qualifies (it lost its significant
+signal, its study was withdrawn, or the build was filtered) leaves no card
+behind. Only cards directly in `reports/evidence_cards/` are touched; the
+cross-species cards in its `cross_species/` subdirectory belong to their own
+builder.
 """
 from __future__ import annotations
 
@@ -660,6 +667,7 @@ class CardBuildResult:
     index: list                  # one entry per card written (also saved as index.json)
     n_candidates: int            # every ranked candidate, written or not
     candidates_path: Path | None # reports/evidence_cards/candidates.tsv, or None if no candidates
+    n_stale_removed: int = 0     # cards from an earlier build that this one did not write
 
 
 def build_evidence_cards(
@@ -726,8 +734,16 @@ def build_evidence_cards_report(
             "card_file": str(card_path),
         })
 
+    # index.json and candidates.tsv describe this build only, so the cards must too.
+    # glob is not recursive: cross_species/ is left to its own builder.
+    keep = {Path(row["card_file"]).name for row in written}
+    stale = [p for p in EVIDENCE_CARDS_DIR.glob("*.md") if p.name not in keep]
+    for p in stale:
+        p.unlink()
+
     candidates_df = candidates_df.assign(card_file=card_files)
     candidates_path = EVIDENCE_CARDS_DIR / "candidates.tsv"
     candidates_df.to_csv(candidates_path, sep="\t", index=False)
     (EVIDENCE_CARDS_DIR / "index.json").write_text(json.dumps(written, indent=2, default=str))
-    return CardBuildResult(index=written, n_candidates=len(candidates_df), candidates_path=candidates_path)
+    return CardBuildResult(index=written, n_candidates=len(candidates_df), candidates_path=candidates_path,
+                           n_stale_removed=len(stale))

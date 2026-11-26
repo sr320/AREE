@@ -679,6 +679,8 @@ def build_evidence_cards_cmd(phenotype, feature_type, max_adjusted_p, all_cards)
         f"Ranked {report.n_candidates} candidates ({report.candidates_path}); "
         f"Wrote {len(index)} evidence cards to {report.candidates_path.parent}/", fg="green",
     ))
+    if report.n_stale_removed:
+        click.echo(f"  removed {report.n_stale_removed} cards left by an earlier build")
     if not all_cards:
         click.echo(f"  cards rendered for candidates with adjusted p <= {max_adjusted_p} "
                    "(pooled, or in any contributing study); pass --all-cards to render every candidate")
