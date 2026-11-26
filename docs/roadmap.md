@@ -101,12 +101,13 @@ for the assumptions this roadmap is consistent with.
 - **Containers.** `containers/README.md` documents the intended
   Docker/Apptainer approach, but container images/definitions themselves are
   not yet built.
-- **Ortholog mapping and cross-species evidence.** Orthogroups across the seven
+- **Ortholog mapping and cross-species evidence.** Orthogroups across the eight
   RefSeq-annotated species come from an OrthoFinder run and are attached to
   evidence at harmonization. Cross-species meta-analysis, cross-species
   candidates with their cards, and the dashboard gate exist; on real data the
-  oyster and Manila clam pool through 5,975 single-copy orthogroups on thermal
-  tolerance, none convergent because the clam studies are exposure-only. See
+  oyster and Manila clam pool through 6,060 single-copy orthogroups on thermal
+  tolerance (2026-11-26), none convergent because the pooled clam comparisons
+  are exposure-only. See
   [identifier_mapping.md](identifier_mapping.md#orthogroups).
 - **Species beyond the oyster.** Seven mussel and clam species are registered
   with crosswalks: six from NCBI Gene and one, *M. coruscus*, from its
@@ -115,7 +116,8 @@ for the assumptions this roadmap is consistent with.
   show per-species counts, species filters and species identity
   ([species_identity.md](species_identity.md)). The eastern oyster,
   *Crassostrea virginica*, was registered on 2026-11-25 with a crosswalk and
-  two assemblies; it has no study yet and is not in the orthogroup run.
+  two assemblies, and joined the orthogroup run on 2026-11-26; it has no
+  study yet.
 - **Ask AREE public chat.** `aree chat-serve` (`src/chat/`) lets Claude answer
   website questions by calling the query layer's nine tools, on real studies
   only, behind a daily spend budget, per-visitor limits and an optional

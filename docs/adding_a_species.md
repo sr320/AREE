@@ -173,7 +173,8 @@ data. Dates are when each step happened.
 
    The bundle held 65,336 transcripts and 47,388 genes, every one of them in the crosswalk. The
    proteome went into the first orthogroup run (`orthofinder3.1.5_2026-10-13`), which shares
-   85-88% of each clam's genes with at least one other species.
+   85-88% of each clam's genes with at least one other species. That run was replaced on
+   2026-11-26 by one that adds the eastern oyster.
 5. **First study (2026-10-12 to 13).** `aree start-study --accession
    PRJNA1132140 --study-id TUCCI2025_HEAT_PRIMING`, then `aree
    fetch-samplesheet ... --library-strategy RNA-Seq`. Three things the
@@ -196,7 +197,7 @@ data. Dates are when each step happened.
    `exposure_only`. That made the first within-species clam pool, k = 2.
 8. **Across species.** With two oyster thermal-tolerance studies already on
    `main`, oyster and clam then pooled through 5,975 single-copy
-   orthogroups. The dashboard gate opened for thermal tolerance. The
+   orthogroups (under the first orthogroup run; 6,060 as of 2026-11-26). The dashboard gate opened for thermal tolerance. The
    replication gate was met in 5,633 orthogroups, but no row converges:
    both clam comparisons are exposure-only.
 

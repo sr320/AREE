@@ -459,6 +459,10 @@ k ≥ 2 per taxon.
   present, 11,877 multi-copy and 14,047 species-specific. Shared with at least
   one other species: 95-98% of each mussel's genes, 85-88% of each clam's, 77%
   of the oyster's.
+  (Superseded 2026-11-26 by `orthofinder3.1.5_2026-11-26`, which adds the
+  eastern oyster; current figures are in
+  [identifier_mapping.md](identifier_mapping.md). The numbers in this section
+  describe the first run.)
 - Harmonization attaches the active run's orthogroup to every resolved real
   GeneID and records the run in its manifest. On HESSER2024_VCOR, 274 of 306
   resolved genes got one (the rest are non-coding), and 190 of those 274 sit
@@ -514,6 +518,10 @@ comparisons are exposure-only, so no oyster-clam row can converge on
 thermal tolerance until a clam study measures a tolerance outcome in its
 pooled comparison. The 6 discordant rows seen with one clam study did not
 survive the second.
+
+(These counts are from the first orthogroup run. Current figures under
+`orthofinder3.1.5_2026-11-26` are in
+[interpreting_candidate_scores.md](interpreting_candidate_scores.md#cross-species-candidates).)
 
 **Dashboard gate: done, 2026-10-17.** The dashboard's pools are now per
 species, and `cross_species_gate` opens a phenotype only when at least two
