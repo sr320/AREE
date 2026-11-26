@@ -241,6 +241,10 @@ same runs:
   with the submitter or ENA before going further. Do not hand-edit the
   manifest.
 
+To download, use `aree fetch-fastq --study STUDY_ID`. It takes each file from
+the lab's gannet mirror where one exists and from ENA otherwise, and verifies
+every file ([fastq_mirror.md](fastq_mirror.md)).
+
 **Before downloading** a `raw_reanalysis` study, pre-screen its replicates on
 the first ~1 M reads of each library:
 

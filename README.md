@@ -149,6 +149,8 @@ AREE/
 | `aree validate-study <file>` | Validate a study YAML against schema + controlled vocabularies |
 | `aree register-study <file> [--update]` | Add (or update) a study in the registry |
 | `aree fetch-samplesheet --bioproject <acc> --study <id> [--library-strategy RNA-Seq] [--design-table <tsv> --design-join <attr>]` | Build a sample sheet + checksummed FASTQ manifest from a BioProject's deposited metadata; warns and shows per-strategy group sizes when a project mixes RNA-seq with, e.g., 16S amplicon runs; `--design-table` joins groups from an authors' table when the BioSamples do not carry them |
+| `aree mirror-fastq [--plan] [--study <id>] [--max-gb <G>]` | Prefetch the FASTQ of studies still to be analysed to the lab data host (gannet), verified against NCBI's and ENA's checksums and read counts; rerun nightly from raven until complete ([docs/fastq_mirror.md](docs/fastq_mirror.md)) |
+| `aree fetch-fastq --study <id> [--dry-run] [--source auto\|mirror\|ena]` | Stage a study's FASTQ into `data/raw/<id>/`, from the gannet mirror where it has a file and ENA otherwise; resumes, MD5-verifies every file, and records what was checked in `fastq_staged.tsv` |
 | `aree intake-supplementary <config> [--check]` | Convert a published supplementary table into AREE result files; `--check` verifies committed files still reproduce |
 | `aree list-studies [--include-simulated]` | List registered real studies (and, with the flag, the demo studies) and their pipeline status |
 | `aree study-ids [--simulated \| --real]` | Print registered study_ids, one per line, read from `registry/studies/` and `registry/demo_studies/`; the demo list the Makefile and CI use |
