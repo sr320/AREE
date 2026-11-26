@@ -7,6 +7,9 @@ exercise. The mussel and clam work in
 [mussel_clam_integration_plan.md](mussel_clam_integration_plan.md) is the
 running example: six mussel and clam species, seven of their assemblies, and a
 crosswalk for each species are registered, so their studies can be harmonized.
+The eastern oyster, *Crassostrea virginica*, followed the same steps on
+2026-11-25 (two assemblies, one crosswalk); see
+[identifier_mapping.md](identifier_mapping.md#eastern-oyster-crosswalk).
 
 ## What is already species-agnostic
 

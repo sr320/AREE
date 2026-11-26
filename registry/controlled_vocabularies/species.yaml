@@ -31,7 +31,8 @@
 # Mussel and clam terms (added 2026-10-11) were checked against NCBI Taxonomy
 # (E-utilities efetch) on that date. See docs/mussel_clam_integration_plan.md.
 # The basket cockle (added 2026-10-21) was checked the same way on that date.
-version: "0.3.0"
+# The eastern oyster (added 2026-11-25) was checked the same way on that date.
+version: "0.4.0"
 terms:
   - id: magallana_gigas
     label: Pacific oyster
@@ -47,6 +48,24 @@ terms:
       taxonomy lists Magallana gigas as the scientific name and Crassostrea
       gigas as a synonym under the same taxid, so both resolve here. AREE's
       reference crosswalk is built from NCBI Gene for this taxid.
+
+  - id: crassostrea_virginica
+    label: Eastern oyster
+    scientific_name: "Crassostrea virginica"
+    accepted_synonyms:
+      - "Ostrea virginica"
+    common_names:
+      - "eastern oyster"
+      - "American oyster"
+    ncbi_taxid: 6565
+    notes: >-
+      Added 2026-11-25. "Ostrea virginica" (Gmelin, 1791), the original
+      combination, is the only synonym NCBI Taxonomy lists for this taxid.
+      Unlike the Pacific oyster it stays in Crassostrea, so "Crassostrea" in a
+      deposit is not enough to tell the two apart: this is taxid 6565, the
+      Pacific oyster 29159, and the two never pool except through orthogroups.
+      Two RefSeq-annotated assemblies are registered; see
+      data/reference/genome_assemblies.yaml.
 
   # ------------------------------------------------------------------------- #
   # Mussels

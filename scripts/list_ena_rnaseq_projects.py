@@ -18,7 +18,7 @@ import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
-TAXA = {"mgall": 29158, "medul": 6550, "mtros": 6551, "mcali": 6549, "mmerc": 6596, "rphil": 129788}
+TAXA = {"mgall": 29158, "medul": 6550, "mtros": 6551, "mcali": 6549, "mmerc": 6596, "rphil": 129788, "cvirg": 6565}
 FIELDS = (
     "run_accession,study_accession,secondary_study_accession,sample_accession,sample_alias,"
     "sample_title,experiment_title,run_alias,library_layout,library_source,library_selection,"

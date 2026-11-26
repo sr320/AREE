@@ -113,7 +113,9 @@ for the assumptions this roadmap is consistent with.
   authors' GFF with a recorded homology search. The Manila clam has the first
   real within-species pool outside the oyster (k = 2). The dashboard and app
   show per-species counts, species filters and species identity
-  ([species_identity.md](species_identity.md)).
+  ([species_identity.md](species_identity.md)). The eastern oyster,
+  *Crassostrea virginica*, was registered on 2026-11-25 with a crosswalk and
+  two assemblies; it has no study yet and is not in the orthogroup run.
 - **Ask AREE public chat.** `aree chat-serve` (`src/chat/`) lets Claude answer
   website questions by calling the query layer's nine tools, on real studies
   only, behind a daily spend budget, per-visitor limits and an optional
