@@ -1,0 +1,59 @@
+{
+  "study_id": "DOU2020_EMERSION",
+  "bioproject": "PRJNA621633",
+  "date_generated": "2026-11-25",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA621633&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "treatment"
+  ],
+  "n_runs": 9,
+  "n_samples": 9,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "AE": 3,
+    "Con": 3,
+    "RE": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 31255342872,
+  "fastq_sources": {
+    "fastq_ftp": 9,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/DOU2020_EMERSION/samplesheet.tsv": "5c5fd06bcafc38db4285db82d0d4c7d196c0aa53a41d5fd5d353c54905ea1d76",
+    "data/studies/DOU2020_EMERSION/fastq_manifest.tsv": "4ecf582138c4396db76c9160227ebd57eaa50a16a71f3beaca484ebbf8812465"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<treatment>Con|AE|RE)_(?P<rep>[123])$",
+    "labels": {
+      "SRR11455609": "Con_3",
+      "SRR11455610": "Con_2",
+      "SRR11455611": "Con_1",
+      "SRR11455612": "RE_3",
+      "SRR11455613": "RE_2",
+      "SRR11455614": "RE_1",
+      "SRR11455615": "AE_3",
+      "SRR11455616": "AE_2",
+      "SRR11455617": "AE_1"
+    }
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 9
+    }
+  }
+}

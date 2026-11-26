@@ -1,0 +1,10 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	treatment	isolation_source	tissue	library_layout	instrument_model	read_count
+Con_3	SRR11455609	SAMN14501593	Con_3	Con	Con	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	24047091
+Con_2	SRR11455610	SAMN14501592	Con_2	Con	Con	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	25144051
+Con_1	SRR11455611	SAMN14501591	Con_1	Con	Con	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	28745542
+RE_3	SRR11455612	SAMN14501590	RE_3	RE	RE	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	28276866
+RE_2	SRR11455613	SAMN14501589	RE_2	RE	RE	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	28856519
+RE_1	SRR11455614	SAMN14501588	RE_1	RE	RE	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	25082357
+AE_3	SRR11455615	SAMN14501587	AE_3	AE	AE	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	23870826
+AE_2	SRR11455616	SAMN14501586	AE_2	AE	AE	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	27305138
+AE_1	SRR11455617	SAMN14501585	AE_1	AE	AE	Golden Pebble Beach	wholesoftbody	PAIRED	Illumina HiSeq 2500	21321096

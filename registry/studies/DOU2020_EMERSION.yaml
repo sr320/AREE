@@ -1,0 +1,214 @@
+# FOURTH REAL MANILA CLAM STUDY, claimed 2026-11-25 on Pori from the WP5
+# backlog (docs/candidate_studies_mussels_clams.md, Tier 2: PRJNA621633). It
+# is the first AREE study to use the emersion_desiccation stressor, so it
+# opens a new stressor group at k = 1.
+#
+# Registered from deposited metadata only (no publication).
+#
+# REANALYZED 2026-11-26 on Pori, both comparisons, ~ condition, 3 vs 3 clams
+# (residual df 4). Emersion vs control: 74 of 32,125 tested genes at
+# padj < 0.05 (53 up, 21 down). Re-immersion vs control: 79 of 30,861
+# (49 up, 30 down). Salmon mapped 51.0-72.9% of reads (AE_3 lowest).
+# Replicate dispersion QC passes in all three groups (0.115-0.128).
+#
+# NO PUBLICATION CONFIRMED (PubMed searched 2026-11-25 for Manila clam /
+# Ruditapes philippinarum with aerial exposure, air exposure and
+# re-immersion; nothing found). The study_id names the submitting
+# institution (Dalian Ocean University) and the BioSample registration year
+# (2020). If a primary paper turns up, rename the study before merge rather
+# than after.
+#
+# DESIGN AS DEPOSITED (BioSample attributes, titles and sample aliases,
+# checked 2026-11-25). Wild Manila clams from Golden Pebble Beach (Jinshitan),
+# Dalian, collected 2017-05-01; whole soft body; 9 BioSamples, one per
+# library. Sample aliases encode the group: Con = control, AE = aerial
+# exposure, RE = re-immersion after aerial exposure; _1 to _3 = replicate.
+# All 9 aliases agree with the BioSample titles (WildmanilaclamCON1 ... AE3).
+# The sample sheet's condition column is that group code.
+#
+# TWO COMPARISONS, PRESPECIFIED 2026-11-25, BEFORE ANY DATA WERE RUN.
+#   emersion_vs_control (AE vs Con) is meta_analysis_primary. It is the
+#   first comparison in AREE on emersion_desiccation, so it pools with
+#   nothing yet (k = 1).
+#   reimmersion_vs_control (RE vs Con) is secondary: what remains changed
+#   after the clams are returned to water. It is not called a recovery
+#   phenotype because no recovery outcome was measured.
+# AE vs RE is not registered: it is a time-after-stress contrast without a
+# control, and its information is in the two comparisons above.
+# ---------------------------------------------------------------------------
+
+study_id: DOU2020_EMERSION
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: "PRJNA621633"
+  geo: null
+  sra: "SRR11455609-SRR11455617 (9 RNA-seq runs)"
+  ena: "PRJNA621633"
+  proteomexchange: null
+  other: "BioSamples SAMN14501585-SAMN14501593 (one per clam). First public 2023-02-01."
+
+citation: "Unpublished deposit: NCBI BioProject PRJNA621633, 'Transcriptome of aerial exposure and reimmersion of Manila clam' (Dalian Ocean University; first public 2023-02-01). No primary publication found as of 2026-11-25."
+
+species: "Ruditapes philippinarum"
+strain_or_population: "Wild clams, Golden Pebble Beach (Jinshitan), Dalian, Liaoning, China; collected 2017-05-01 (BioSample breed 'wild7', isolate 'wild Manila clam'). Size, age and sex not deposited."
+
+# AREE reanalyzes against the NCBI RefSeq annotation its Manila clam crosswalk
+# is built from, as for the other Manila clam studies.
+genome_assembly: "ASM2657151v2"
+annotation_version: "GCF_026571515.1-RS_2023_10"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, paired-end, library_selection RANDOM (full-length libraries, not 3' Tag-seq); 21.3-28.9 M read pairs per library; 31.3 GB FASTQ reported by ENA for all 9 runs."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 9 libraries are public in ENA/SRA under PRJNA621633. No processed results are deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "emersion_vs_control"
+    tissue: "whole_animal"
+    life_stage: "adult"
+    stressor_original: "'Aerial exposure' (BioProject title 'Transcriptome of aerial exposure and reimmersion of Manila clam'); sample aliases AE_1-3 vs Con_1-3."
+    stressor_standardized: "emersion_desiccation"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Control clams (Con_1-3); presumably kept immersed, but control husbandry is not deposited."
+    treatment_condition: "Clams held in air (AE_1-3), sampled at the end of aerial exposure. Duration, air temperature and humidity are not deposited."
+    phenotype: "emersion_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/DOU2020_EMERSION/DOU2020_EMERSION_emersion_vs_control_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "reimmersion_vs_control"
+    tissue: "whole_animal"
+    life_stage: "adult"
+    stressor_original: "'Reimmersion' after aerial exposure (BioProject title); sample aliases RE_1-3 vs Con_1-3."
+    stressor_standardized: "emersion_desiccation"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: "After return to seawater following aerial exposure; time since re-immersion not deposited."
+    control_condition: "Control clams (Con_1-3); presumably kept immersed."
+    treatment_condition: "Clams exposed to air and then re-immersed (RE_1-3)."
+    phenotype: "emersion_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/DOU2020_EMERSION/DOU2020_EMERSION_reimmersion_vs_control_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) Design known only from the deposit. Duration of aerial exposure, air
+  temperature and humidity, time after re-immersion, control husbandry and
+  acclimation are not deposited, and no primary publication has been found.
+  These fields are left null rather than guessed.
+  (2) Three clams per group, whole soft body. Whole-body RNA mixes tissues
+  whose responses to emersion may differ (gill, mantle, digestive gland,
+  foot, adductor), so tissue-specific effects are diluted and tissue
+  composition differences between clams add variance.
+  (3) Exposure only. No survival, valve-gape or other tolerance outcome is
+  deposited, so the comparisons are air-exposure responses, not emersion
+  tolerance, and re-immersion vs control is not a recovery phenotype.
+  (4) Housing is not deposited. If each group was one tank or container,
+  group is confounded with container and significance is an upper bound;
+  add tank_level_replication if the methods show this.
+  (5) Shared source population. The clams come from Golden Pebble Beach,
+  Dalian, the same site as the North population of NORTHSOUTH2024_TEMP_GILL,
+  probably from the same institution. That study is a different stressor and
+  collection year (2019 vs 2017), so the two do not pool and independence
+  is not at issue yet; record it if an emersion study from the same site is
+  added later.
+  (6) Contig-level RefSeq assembly (N50 183 kb); gene-level evidence is
+  unaffected, as for the other Manila clam studies.
+  (7) Effect sizes are unshrunken DESeq2 log2 fold changes, as for every
+  AREE RNA-seq study. With 3 clams per group, genes with zero counts in one
+  arm reach |log2FC| > 10 (32 genes in emersion_vs_control and 36 in
+  reimmersion_vs_control, 2 of each at padj < 0.05); their large lfcSE
+  keeps their pooled weight small.
+  (8) One aerial-exposure library (AE_3, SRR11455615) mapped 51.0% of reads
+  against 63.6-72.9% for the other eight. It passes the dispersion check and
+  was kept; with n = 3 it carries a third of the AE arm.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-11-25"
+  curation_notes: >
+    Claimed on Pori with `aree start-study --accession PRJNA621633 --study-id
+    DOU2020_EMERSION` (draft PR #123). Sample sheet and FASTQ manifest
+    generated with `aree fetch-samplesheet --bioproject PRJNA621633 --study
+    DOU2020_EMERSION --label-field sample_alias --label-pattern
+    '^(?P<treatment>Con|AE|RE)_(?P<rep>[123])$' --condition-attribute
+    treatment --attribute isolation_source --attribute tissue
+    --library-strategy RNA-Seq`. ENA's XML browser API was returning HTTP 500
+    and timeouts on 2026-11-25, so for this one run the BioSample attribute
+    lookup was read from the EBI BioSamples JSON API instead (a local shim,
+    not committed). Run metadata, labels, MD5s and sizes still come from the
+    ENA portal filereport.
+    ALIAS CHECK: every alias agrees with its BioSample title (Con_n =
+    WildmanilaclamCONn, AE_n = ...AEn, RE_n = ...REn).
+    REPLICATION CHECK: 9 distinct BioSamples, all tissue 'wholesoftbody',
+    isolation_source Golden Pebble Beach, collection_date 2017-05-01; 3 per
+    group. Distinct names do not prove distinct animals: run
+    scripts/check_replicate_dispersion.py after quantification.
+    MAPPING: tissue 'wholesoftbody' maps to whole_animal. life_stage adult is
+    assumed from wild-collected clams used in a stress experiment; size and
+    age are not deposited. phenotype emersion_tolerance is the axis term for
+    emersion_desiccation, added in phenotype ontology 0.4.0 (PR #124) for
+    this study. ambiguous_phenotype_definition is set because no outcome
+    variable is described.
+    PRIMARY COMPARISON prespecified on 2026-11-25 before any data were
+    downloaded (see header).
+    STORAGE (Pori): raw FASTQ, Nextflow work, stage and the GCF_026571515.1
+    reference bundle are on /Volumes/ST5/aree, because the omics drive was
+    not mounted. The bundle was fetched fresh with `aree fetch-reference
+    --assembly GCF_026571515.1`: annotation release matches the registry and
+    all 47,388 bundle GeneIDs are in rphil_gene_id_crosswalk.tsv.
+    DOWNLOAD (Pori, 2026-11-25 to 26): all 9 runs (18 files) came from NCBI
+    SRA with fastq-dump 3.4.1 --split-files --skip-technical, each accepted only
+    when both mates matched ENA's read count; SHA-256 of every file is in
+    fastq_ncbi_provenance.tsv. ENA HTTPS ran at about 245 KB/s on the first
+    attempt, and on a second attempt it dropped connections (curl 18) on
+    SRR11455609 for about 10 h without completing a file, so the two runs
+    first assigned to ENA were moved to NCBI as well. No ENA MD5 check
+    applies to these files; the read-count check replaces it.
+    REANALYSIS (Pori, 2026-11-26): -profile local,workstation with the Pori
+    8 GB resource override; work directory on /Volumes/ST5. emersion_vs_control
+    (24 tasks, 45 min including the Salmon index build) and
+    reimmersion_vs_control (23 tasks, 47 min), no failures. Salmon 2.8.0,
+    fastp 1.4.0, FastQC 0.12.1, DESeq2 1.50.2 / tximport 1.38.2 on R 4.5.3,
+    MultiQC 1.35, Python 3.11.17 / pandas 3.0.6, the same versions as the
+    other Pori Manila clam runs. Both manifests record design ~condition,
+    length_model "tximport average transcript length offsets", 6 libraries,
+    residual df 4, every reference file matching the bundle provenance, and
+    no warnings. Control libraries are shared by the two comparisons, so the
+    two results are not independent of each other.
+    QC: Salmon mapping 51.0-72.9% (AE_3 51.0%, all others 63.6-72.9%).
+    Replicate dispersion (scripts/check_replicate_dispersion.py,
+    replicate_dispersion_qc.tsv) passes: median 0.124 (Con), 0.128 (AE) and
+    0.115 (RE) on about 4,800-5,200 genes per group.
+    HARMONIZED against rphil_gene_id_crosswalk.tsv: all 40,162
+    (emersion_vs_control) and 40,669 (reimmersion_vs_control) records resolve
+    exact; 36,140 and 36,574 carry an orthogroup.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA621633"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA621633"

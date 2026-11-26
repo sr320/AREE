@@ -1,0 +1,19 @@
+run_accession	mate	file	source	tool	read_count_expected	read_count_observed	sha256
+SRR11455612	1	SRR11455612_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	28276866	28276866	c1a53639912aa5c649093f699c4e0d1a7be8edd297cbc0b9d7b25791e97c3cc6
+SRR11455612	2	SRR11455612_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	28276866	28276866	9435299d6b745e5f1a4fe871ec5f366c7cb2d70db5a9d4b0e203cca9a7f8e897
+SRR11455611	1	SRR11455611_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	28745542	28745542	8f0dc1c29e3cb289dfc36a7c2dbcaa964875baf78c01e00316bb5087b54182e7
+SRR11455611	2	SRR11455611_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	28745542	28745542	523e428d2582efae85621736e3f2707196e3c663cdfe3255a6d065e609a3cb30
+SRR11455614	1	SRR11455614_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	25082357	25082357	a49b4b827baf159e792e45049ac2d7ea7d81463d73dfe2af94031bda1fc8ebcb
+SRR11455614	2	SRR11455614_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	25082357	25082357	b814d2b4a013f15755af221ed136ce82fe10d0acdc3f3312a4fb023099ca1979
+SRR11455613	1	SRR11455613_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	28856519	28856519	ccc37de92ba1c5fc42c029ff6121e42381a39a7b7127f2592b4af6d428bbfbf3
+SRR11455613	2	SRR11455613_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	28856519	28856519	48b7823deed8e8b18b4dc304725e4896127cdf2ac8a6fdd780d6a9889fb6ea8e
+SRR11455616	1	SRR11455616_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	27305138	27305138	2a6dc63056e2128f14f3f51064677e547c3a83324c3b674416529abfaaa99d3f
+SRR11455616	2	SRR11455616_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	27305138	27305138	0ee2870781891068fae23bd1273e2bd3ce08ecbfe4e60844fae34075dbc284b7
+SRR11455615	1	SRR11455615_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	23870826	23870826	0950ff57e2014ffa1a514a6569f2ec62c47333f2b28ac6a1a25b575753ad179b
+SRR11455615	2	SRR11455615_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	23870826	23870826	22a1e2950ea07cc2c216b1a9b64c4d2c35e2c514792420bf29df708d1645b3e1
+SRR11455617	1	SRR11455617_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	21321096	21321096	532bf60547415c61487c84c852ab5e5e46f0d666c0500f98da999e24a0cd49d1
+SRR11455617	2	SRR11455617_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	21321096	21321096	e957537ceab2dcabf97b4c08295e7b1199ca0d9f47935688af65b2fc0cebb946
+SRR11455609	1	SRR11455609_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	24047091	24047091	c030b5e06924e662e2c51ea4e80aea0dfc54922060bdad66a9461b3c3f0ac4fd
+SRR11455609	2	SRR11455609_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	24047091	24047091	57351177f9b0bb81b66e3abc24c7d51679ab5d0867431b51d1ef86e94ef9c774
+SRR11455610	1	SRR11455610_1.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	25144051	25144051	f27aeb63d6bf027c8c2131b7dda88aa51d31cc177de0137e149b0905d803f414
+SRR11455610	2	SRR11455610_2.fastq.gz	NCBI SRA	fastq-dump 3.4.1 --gzip --split-files --skip-technical	25144051	25144051	344dc1abe08e2914ff91b9736c1072ac1f36fca2690d9cd0cd7a2b512e96cb89
