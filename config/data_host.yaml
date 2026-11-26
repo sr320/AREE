@@ -1,0 +1,16 @@
+# Where AREE keeps large files that are never committed. For now that is the
+# FASTQ mirror (docs/fastq_mirror.md): public reads prefetched from NCBI/ENA so
+# a raw reanalysis starts from a lab copy instead of a multi-day download.
+#
+# Checked 2026-11-25 from raven: gannet is reachable over SSH with key auth and
+# /volume1 has 164 TB free. /volume1/v1_web/aree did not exist yet; the first
+# `aree mirror-fastq` creates it. AREE's area is separate from
+# project-white-whale's on the same host.
+version: "0.1.0"
+host: gannet
+hostname: gannet.fish.washington.edu
+path: /volume1/v1_web/aree
+url_base: https://gannet.fish.washington.edu/v1_web/aree
+upload_target: sr320@gannet.fish.washington.edu:/volume1/v1_web/aree
+layout:
+  raw: "raw/<ACCESSION>/"   # FASTQ as ENA names it; ledger raw/<ACCESSION>/mirror_manifest.tsv

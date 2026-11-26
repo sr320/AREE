@@ -67,6 +67,8 @@ website:
             href: klone_autopilot_plan.md
           - text: "First raw reanalysis"
             href: first_raw_reanalysis.md
+          - text: "Mirroring study FASTQ to gannet"
+            href: fastq_mirror.md
           - text: "Reference bundles"
             href: reference_bundles.md
           - text: "Defining a phenotype"

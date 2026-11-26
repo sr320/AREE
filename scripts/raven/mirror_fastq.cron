@@ -1,0 +1,14 @@
+# Nightly FASTQ mirror to gannet (docs/fastq_mirror.md). Add with `crontab -e` on raven.
+#
+# Adapt before installing:
+#   - AREE: a checkout kept on an up-to-date main, with the package installed in VENV
+#   - STAGING / TMP: check `df -h` first; TMP needs 100-200 GB per deep run in flight
+#
+# 21:00 every night: update main, then mirror up to 500 GB, 3 runs at a time.
+# A run still going from the night before makes this one exit at once.
+AREE=/home/sr320/github/AREE-mirror
+VENV=/home/sr320/.venvs/aree
+STAGING=/home/shared/8TB_HDD_03/sr320/aree/mirror-staging
+TMP=/home/shared/16TB_HDD_01/sr320/aree/mirror-tmp
+
+0 21 * * * cd $AREE && git pull -q --ff-only; AREE_SRATOOLKIT=/home/shared/sratoolkit.3.0.2-ubuntu64 AREE_PIGZ=/home/shared/pigz-2.8/bin/pigz AREE_MIRROR_STAGING=$STAGING $VENV/bin/aree mirror-fastq --jobs 3 --threads 4 --tmp $TMP --max-gb 500 >> $HOME/aree-mirror.log 2>&1

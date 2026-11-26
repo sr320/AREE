@@ -312,6 +312,224 @@ def fetch_samplesheet_cmd(bioproject, study_id, condition_attributes, extra_attr
     click.echo(click.style(f"\nWrote samplesheet, FASTQ manifest, and provenance to {out_dir}", fg="green"))
 
 
+@main.command("mirror-fastq")
+@click.option("--study", "study_ids", multiple=True,
+              help="Mirror this study's BioProject (repeatable), whatever its analysis_status.")
+@click.option("--accession", "accessions", multiple=True,
+              help="BioProject to mirror (repeatable), registered or not.")
+@click.option("--all-studies", is_flag=True,
+              help="Default set: every registered study with a FASTQ manifest, harmonized ones included.")
+@click.option("--dest", default=None, type=click.Path(file_okay=False),
+              help="Mirror into this local directory instead of the data host's upload_target.")
+@click.option("--staging", default=None, type=click.Path(file_okay=False),
+              help="Where files are downloaded and checked before upload "
+                   "(default: $AREE_MIRROR_STAGING, else $AREE_RAW/.mirror-staging).")
+@click.option("--source", type=click.Choice(["ncbi", "ena"]), default="ncbi", show_default=True,
+              help="ncbi: .sra from NCBI's S3 bucket converted with fasterq-dump, ENA as fallback per run; "
+                   "ena: ENA's FASTQ only.")
+@click.option("--jobs", default=4, show_default=True, help="Runs fetched at once.")
+@click.option("--threads", default=4, show_default=True, help="fasterq-dump / pigz threads per run (ncbi).")
+@click.option("--tmp", default=None, type=click.Path(file_okay=False),
+              help="fasterq-dump scratch, ideally fast local disk (default: <staging>/tmp).")
+@click.option("--limit-rate", "rate_mb", default=None, type=float, help="Total download rate cap, MB/s.")
+@click.option("--max-gb", default=None, type=float,
+              help="Stop starting new runs once this much has been queued in this run.")
+@click.option("--library-strategy", "library_strategies", multiple=True,
+              help="For an unregistered --accession: mirror only runs with this ENA library_strategy "
+                   "(repeatable). Registered studies use their fastq_manifest.tsv.")
+@click.option("--no-verify-remote", is_flag=True, help="Skip re-computing each MD5 on the data host.")
+@click.option("--plan", "plan_only", is_flag=True, help="Show what is mirrored and what is left; download nothing.")
+def mirror_fastq_cmd(study_ids, accessions, all_studies, dest, staging, source, jobs, threads, tmp, rate_mb,
+                     max_gb, library_strategies, no_verify_remote, plan_only):
+    """Prefetch study FASTQ to the data host (gannet), verified and resumable.
+
+    With no --study or --accession, mirrors every registered study that has a
+    FASTQ manifest and is not yet harmonized. Each run is taken from NCBI as
+    .sra (MD5-checked), converted with fasterq-dump and checked against ENA's
+    read and base counts; ENA's FASTQ (MD5-checked) is the fallback. Safe to
+    rerun, e.g. nightly from cron on raven: files already mirrored are skipped,
+    partial downloads resume, and a second copy started while one is running
+    exits at once. See docs/fastq_mirror.md.
+    """
+    from intake.fastq_mirror import (
+        LocalStore,
+        MirrorError,
+        SSHStore,
+        default_staging,
+        load_data_host,
+        mirror,
+        mirror_targets,
+        plan_mirror,
+    )
+
+    repo = REPO_ROOT
+    every = {t["accession"]: t for t in mirror_targets(repo, None)}
+    by_study = {sid: t["accession"] for t in every.values() for sid in t["studies"]}
+    if study_ids or accessions:
+        unknown = [s for s in study_ids if s not in by_study]
+        if unknown:
+            raise click.ClickException(
+                f"no registered study with a BioProject and a fastq_manifest.tsv: {', '.join(unknown)}")
+        accs = list(dict.fromkeys([*(by_study[s] for s in study_ids), *accessions]))
+    else:
+        accs = [t["accession"] for t in (every.values() if all_studies else mirror_targets(repo))]
+    if not accs:
+        click.echo("Nothing to mirror: no registered study with a FASTQ manifest is waiting to be analysed.")
+        return
+    try:
+        store = LocalStore(Path(dest)) if dest else SSHStore(load_data_host(repo)["upload_target"])
+        if plan_only:
+            plans = plan_mirror(repo, accs, store, library_strategies=list(library_strategies) or None)
+        else:
+            res = mirror(repo, accs, store, staging=Path(staging) if staging else default_staging(repo),
+                         jobs=jobs, rate_mb=rate_mb, max_gb=max_gb, verify_remote=not no_verify_remote,
+                         source=source, threads=threads, tmp=Path(tmp) if tmp else None,
+                         library_strategies=list(library_strategies) or None, log=click.echo)
+            if res["locked"]:
+                click.echo("Another mirror-fastq is running with this staging directory; nothing to do.")
+                return
+            plans = res["plans"]
+    except MirrorError as exc:
+        raise click.ClickException(str(exc)) from None
+
+    just_done = set() if plan_only else set(res["mirrored"])
+    rows = []
+    for p in plans:
+        studies = ", ".join(every.get(p["accession"], {}).get("studies", [])) or "(not registered)"
+        if p.get("error"):
+            rows.append([p["accession"], studies, "", "", "", "", f"error: {p['error'][:60]}"])
+            continue
+        todo = [f for f in p["todo"] if f"{p['accession']}/{f['file']}" not in just_done]
+        total = sum(int(f["bytes"] or 0) for f in p["files"]) / 1e9
+        left = sum(int(f["bytes"] or 0) for f in todo) / 1e9
+        state = "complete" if p["files"] and not todo else ("no files" if not p["files"] else "")
+        rows.append([p["accession"], studies, len(p["files"]), f"{total:.1f}", len(p["files"]) - len(todo),
+                     f"{left:.1f}", state])
+    if plan_only:
+        click.echo(f"Mirror at {store.label}\n")
+    else:
+        click.echo(f"\nMirrored {len(res['mirrored'])} file(s), {res['bytes'] / 1e9:.1f} GB this run "
+                   f"({res['sources']['ncbi_sra']} converted from NCBI, {res['sources']['ena']} from ENA).\n")
+    click.echo(tabulate(rows, headers=["accession", "studies", "files", "GB", "mirrored", "left GB", "state"]))
+    for p in plans:
+        for n in p.get("notes", []):
+            click.echo(click.style(f"  {p['accession']}: {n}", fg="yellow"))
+    if not plan_only and res["failed"]:
+        click.echo(click.style(f"\n{len(res['failed'])} failed:", fg="red"))
+        for what, why in res["failed"]:
+            click.echo(click.style(f"  {what}: {why}", fg="red"))
+        sys.exit(1)
+
+
+@main.command("fetch-fastq")
+@click.option("--study", "study_id", required=True, help="Registered study whose FASTQ to stage.")
+@click.option("--manifest", default=None, type=click.Path(exists=True, dir_okay=False),
+              help="Default: data/studies/<study>/fastq_manifest.tsv.")
+@click.option("--dest", default=None, type=click.Path(file_okay=False),
+              help="Default: $AREE_RAW/<study>, else data/raw/<study>.")
+@click.option("--run", "runs", multiple=True, help="Only these run accessions (repeatable).")
+@click.option("--jobs", default=2, show_default=True, help="Files downloaded at once.")
+@click.option("--dry-run", is_flag=True, help="Show what would be downloaded and the free space; download nothing.")
+@click.option("--ignore-space", is_flag=True, help="Download even if free space looks short.")
+@click.option("--source", type=click.Choice(["auto", "mirror", "ena"]), default="auto", show_default=True,
+              help="auto: the gannet mirror where it has a file, ENA otherwise; mirror: refuse unless every "
+                   "file is mirrored; ena: ENA only.")
+@click.option("--accession", default=None,
+              help="BioProject whose mirror to use (default: ena_provenance.json's, else the study YAML's).")
+@click.option("--mirror-url", default=None,
+              help="Mirror folder URL (default: config/data_host.yaml url_base + /raw/<ACCESSION>).")
+def fetch_fastq_cmd(study_id, manifest, dest, runs, jobs, dry_run, ignore_space, source, accession, mirror_url):
+    """Stage a study's FASTQ from its manifest, resuming and MD5-verifying every file.
+
+    Files already on the gannet mirror (aree mirror-fastq) are copied from there
+    and checked against the mirror ledger's MD5; the rest, and any mirror copy
+    that fails, come from ENA. Verified files are recorded in
+    data/studies/<study>/fastq_staged.tsv. See docs/fastq_mirror.md.
+    """
+    from common import load_yaml
+    from intake.fastq_mirror import LEDGER_NAME, load_data_host, study_accession
+    from intake.fastq_stage import (
+        FastqError,
+        apply_mirror,
+        fetch_all,
+        load_ledger,
+        plan,
+        read_manifest,
+        record_staged,
+    )
+
+    repo = REPO_ROOT
+    study_dir = repo / "data" / "studies" / study_id
+    manifest_path = Path(manifest) if manifest else study_dir / "fastq_manifest.tsv"
+    if not manifest_path.exists():
+        raise click.ClickException(f"{manifest_path} is missing; run aree fetch-samplesheet first.")
+    raw = os.environ.get("AREE_RAW")
+    target = Path(dest) if dest else (Path(raw) if raw else repo / "data" / "raw") / study_id
+    try:
+        files = read_manifest(manifest_path, list(runs) or None)
+    except FastqError as exc:
+        raise click.ClickException(str(exc)) from None
+
+    if source != "ena":
+        prov = manifest_path.parent / "ena_provenance.json"
+        if accession is None and prov.exists():
+            accession = json.loads(prov.read_text()).get("bioproject")
+        study_yaml = repo / "registry" / "studies" / f"{study_id}.yaml"
+        if accession is None and study_yaml.exists():
+            accession = study_accession(load_yaml(study_yaml) or {})
+        if mirror_url is None and accession:
+            try:
+                base = load_data_host(repo).get("url_base")
+            except FileNotFoundError:
+                base = None
+            mirror_url = f"{base.rstrip('/')}/raw/{accession}" if base else None
+        if mirror_url is None:
+            if source == "mirror":
+                raise click.ClickException("no mirror to use: pass --accession or --mirror-url.")
+            click.echo("No mirror location known (no accession); using ENA.")
+        else:
+            try:
+                ledger = load_ledger(f"{mirror_url}/{LEDGER_NAME}")
+            except (OSError, ValueError) as exc:
+                if source == "mirror":
+                    raise click.ClickException(f"could not read the mirror ledger: {exc}") from None
+                click.echo(click.style(f"Could not read the mirror ledger ({exc}); using ENA.", fg="yellow"))
+                ledger = None
+            files, counts = apply_mirror(files, ledger, mirror_url)
+            click.echo(f"Mirror {mirror_url}: {counts['mirror']} file(s) from the mirror, "
+                       f"{counts['not_mirrored']} not mirrored, {counts['stale']} stale (ENA has changed them)")
+            if source == "mirror" and counts["mirror"] < len(files):
+                raise click.ClickException(f"{len(files) - counts['mirror']} file(s) are not usable from the "
+                                           "mirror; use --source auto to take them from ENA.")
+
+    p = plan(files, target)
+    gb = 1e9
+    click.echo(f"{study_id}: {p['files']} files, {p['total_bytes'] / gb:.1f} GB -> {target}")
+    click.echo(f"  verified already : {p['staged']}")
+    click.echo(f"  to download      : {len(p['todo'])} ({p['remaining_bytes'] / gb:.1f} GB left)")
+    click.echo(f"  free space       : {p['free_bytes'] / gb:.1f} GB")
+    short = p["remaining_bytes"] * 1.02 > p["free_bytes"]
+    if short:
+        click.echo(click.style("  Not enough free space for what is left.", fg="red"))
+    if dry_run:
+        return
+    if short and not ignore_space:
+        raise click.ClickException("not enough free space; free some or pass --ignore-space.")
+
+    try:
+        result = fetch_all(files, target, jobs=jobs, log=click.echo)
+    except FastqError as exc:
+        raise click.ClickException(str(exc)) from None
+    # Beside the manifest, so a --manifest outside the repo never writes into it.
+    record = manifest_path.parent / "fastq_staged.tsv"
+    record_staged(files, target, record)
+    click.echo(f"\n{result['downloaded']} downloaded, {result['skipped']} already verified, "
+               f"{len(result['failed'])} failed. Recorded in {record}.")
+    if result["failed"]:
+        click.echo(click.style("Re-run the same command to resume the failed files.", fg="yellow"))
+        sys.exit(1)
+
+
 @main.command("intake-supplementary")
 @click.argument("config", type=click.Path(exists=True))
 @click.option("--check", is_flag=True,
