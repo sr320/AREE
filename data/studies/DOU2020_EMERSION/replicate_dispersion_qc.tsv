@@ -1,0 +1,4 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+AE	3	AE_1,AE_2,AE_3	4835	0.12829	True
+Con	3	Con_1,Con_2,Con_3	5102	0.12353	True
+RE	3	RE_1,RE_2,RE_3	5224	0.11536	True

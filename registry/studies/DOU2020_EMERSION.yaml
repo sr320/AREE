@@ -5,6 +5,12 @@
 #
 # Registered from deposited metadata only (no publication).
 #
+# REANALYZED 2026-11-26 on Pori, both comparisons, ~ condition, 3 vs 3 clams
+# (residual df 4). Emersion vs control: 74 of 32,125 tested genes at
+# padj < 0.05 (53 up, 21 down). Re-immersion vs control: 79 of 30,861
+# (49 up, 30 down). Salmon mapped 51.0-72.9% of reads (AE_3 lowest).
+# Replicate dispersion QC passes in all three groups (0.115-0.128).
+#
 # NO PUBLICATION CONFIRMED (PubMed searched 2026-11-25 for Manila clam /
 # Ruditapes philippinarum with aerial exposure, air exposure and
 # re-immersion; nothing found). The study_id names the submitting
@@ -63,8 +69,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 9 libraries are public in ENA/SRA under PRJNA621633. No processed results are deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 comparisons:
   - comparison_id: "emersion_vs_control"
@@ -84,7 +90,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DOU2020_EMERSION/DOU2020_EMERSION_emersion_vs_control_dge_standardized.tsv"
     meta_analysis_primary: true
   - comparison_id: "reimmersion_vs_control"
     tissue: "whole_animal"
@@ -103,7 +109,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/DOU2020_EMERSION/DOU2020_EMERSION_reimmersion_vs_control_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -134,6 +140,14 @@ limitations: >
   added later.
   (6) Contig-level RefSeq assembly (N50 183 kb); gene-level evidence is
   unaffected, as for the other Manila clam studies.
+  (7) Effect sizes are unshrunken DESeq2 log2 fold changes, as for every
+  AREE RNA-seq study. With 3 clams per group, genes with zero counts in one
+  arm reach |log2FC| > 10 (32 genes in emersion_vs_control and 36 in
+  reimmersion_vs_control, 2 of each at padj < 0.05); their large lfcSE
+  keeps their pooled weight small.
+  (8) One aerial-exposure library (AE_3, SRR11455615) mapped 51.0% of reads
+  against 63.6-72.9% for the other eight. It passes the dispersion check and
+  was kept; with n = 3 it carries a third of the AE arm.
 
 provenance:
   registered_by: "Steven Roberts"
@@ -169,6 +183,32 @@ provenance:
     not mounted. The bundle was fetched fresh with `aree fetch-reference
     --assembly GCF_026571515.1`: annotation release matches the registry and
     all 47,388 bundle GeneIDs are in rphil_gene_id_crosswalk.tsv.
+    DOWNLOAD (Pori, 2026-11-25 to 26): all 9 runs (18 files) came from NCBI
+    SRA with fastq-dump 3.4.1 --split-files --skip-technical, each accepted only
+    when both mates matched ENA's read count; SHA-256 of every file is in
+    fastq_ncbi_provenance.tsv. ENA HTTPS ran at about 245 KB/s on the first
+    attempt, and on a second attempt it dropped connections (curl 18) on
+    SRR11455609 for about 10 h without completing a file, so the two runs
+    first assigned to ENA were moved to NCBI as well. No ENA MD5 check
+    applies to these files; the read-count check replaces it.
+    REANALYSIS (Pori, 2026-11-26): -profile local,workstation with the Pori
+    8 GB resource override; work directory on /Volumes/ST5. emersion_vs_control
+    (24 tasks, 45 min including the Salmon index build) and
+    reimmersion_vs_control (23 tasks, 47 min), no failures. Salmon 2.8.0,
+    fastp 1.4.0, FastQC 0.12.1, DESeq2 1.50.2 / tximport 1.38.2 on R 4.5.3,
+    MultiQC 1.35, Python 3.11.17 / pandas 3.0.6, the same versions as the
+    other Pori Manila clam runs. Both manifests record design ~condition,
+    length_model "tximport average transcript length offsets", 6 libraries,
+    residual df 4, every reference file matching the bundle provenance, and
+    no warnings. Control libraries are shared by the two comparisons, so the
+    two results are not independent of each other.
+    QC: Salmon mapping 51.0-72.9% (AE_3 51.0%, all others 63.6-72.9%).
+    Replicate dispersion (scripts/check_replicate_dispersion.py,
+    replicate_dispersion_qc.tsv) passes: median 0.124 (Con), 0.128 (AE) and
+    0.115 (RE) on about 4,800-5,200 genes per group.
+    HARMONIZED against rphil_gene_id_crosswalk.tsv: all 40,162
+    (emersion_vs_control) and 40,669 (reimmersion_vs_control) records resolve
+    exact; 36,140 and 36,574 carry an orthogroup.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA621633"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA621633"
