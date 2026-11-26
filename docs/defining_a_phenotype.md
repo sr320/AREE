@@ -30,14 +30,18 @@ them, instead of each study inventing its own free-text label.
 - `unit_examples` — illustrative, not enforced, units a study might report
   this phenotype in (`phenotype_unit` on the comparison is free text).
 
-The current ontology (version `0.3.0`) has 18 terms: `survival`, `mortality`,
+The current ontology (version `0.4.0`) has 19 terms: `survival`, `mortality`,
 `thermal_tolerance`, `growth_under_stress`, `pathogen_load`,
 `disease_susceptibility`, `disease_resistance`, `reproductive_performance`,
 `larval_viability`, `metabolic_resilience`, `recovery_following_stress`,
 `immune_responsiveness`, `acidification_tolerance`, `salinity_tolerance`,
 `hypoxia_tolerance`, `byssal_attachment` and `burrowing_performance` (added
-in `0.2.0` for mussels and clams), and `toxicant_tolerance` (added in
-`0.3.0`).
+in `0.2.0` for mussels and clams), `toxicant_tolerance` (added in
+`0.3.0`), and `emersion_tolerance` (added in `0.4.0`).
+
+`emersion_tolerance` is the axis for the `emersion_desiccation` stressor.
+Its default is also `resilience`; an air-exposure study with no measured
+survival or recovery outcome is `exposure_only`.
 
 `toxicant_tolerance` is the axis for the `harmful_algal_bloom` and
 `pollutant_exposure` stressors, which had none. Like the other `*_tolerance`
