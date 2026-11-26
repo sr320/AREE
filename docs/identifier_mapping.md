@@ -32,6 +32,7 @@ never merges any of them.
 | `data/mappings/gene_id_crosswalk.tsv` | 21 synthetic genes backing `data/demo/*` | Every study with `simulated: true`. Keeps `make demo` and the test suite self-contained. |
 | `data/reference/crosswalk/mgigas_gene_id_crosswalk.tsv` | 33,356 real *Magallana gigas* genes from NCBI Gene + UniProtKB | Real studies on either oyster assembly. |
 | `data/reference/crosswalk/{mgall,medul,mtros,mcali,mmerc,rphil}_gene_id_crosswalk.tsv` | Real genes for six mussel and clam species, same sources and builder (see below) | Real studies on that species' assemblies. |
+| `data/reference/crosswalk/cvirg_gene_id_crosswalk.tsv` | 35,740 real *Crassostrea virginica* genes, same sources and builder (see below) | Real studies on either eastern oyster assembly. |
 
 **The study decides, through its genome assembly.** Each entry in
 `data/reference/genome_assemblies.yaml` names its `identifier_crosswalk`.
@@ -220,6 +221,34 @@ What this means in practice:
   `data/reference/genome_assemblies.yaml`.
 - **No retirement history yet** for most mussels: their RefSeq annotations are
   first releases, so there are no older GeneIDs to remap.
+
+### Eastern oyster crosswalk
+
+Built 2026-11-25 (`aree build-crosswalk --taxid 6565 --slug cvirg`) against
+the current NCBI reference annotation, GCF_053477285.1-RS_2025_12.
+
+| Crosswalk | Species | Genes | Ensembl xref | Named symbol | UniProt-linked genes | Retired GeneIDs remapped / dead |
+|---|---|---|---|---|---|---|
+| `cvirg` | *Crassostrea virginica* | 35,740 | 99.9% | 1.2% | 3,194 | 9,068 / 5,186 |
+
+- **The reference changed under the literature.** Until the end of 2025 the
+  only annotated assembly was C_virginica-3.0 (GCF_002022765.2, Annotation
+  Release 100), and existing studies report its GeneIDs. NCBI re-annotated the
+  species on a new reference (ASM5347728v1) and discontinued a third of the
+  old GeneIDs in January 2026. Of the 39,505 GeneIDs on C_virginica-3.0,
+  25,276 are still live, 9,068 remap through `cvirg_retired_gene_ids.tsv`
+  (mapping confidence `inferred`), and 5,161 have no replacement and stay
+  `unresolved`. Expect about 13% of a C_virginica-3.0 study's genes to be
+  unresolved.
+- **The remaps merge genes.** 1,063 current genes each absorb more than one
+  retired GeneID, so a study on the old annotation can carry several rows for
+  one current gene. Nothing collapses them; check for it before pooling.
+- **UniProt is usable, unlike the mussels and clams**: 3,194 genes (8.9%)
+  carry a UniProt accession with a GeneID cross-reference.
+- **Not in the orthogroup run yet.** The active run
+  (`orthofinder3.1.5_2026-10-13`) predates this species, so eastern oyster
+  evidence has no `orthogroup_id` and cannot pool with the Pacific oyster
+  until `aree build-orthogroups` is rerun with its proteome.
 
 ### Genomes without NCBI Gene records (GFF route, WP7)
 

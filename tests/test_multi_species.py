@@ -45,6 +45,7 @@ NEW_SPECIES = {
     "Mytilus californianus": 6549,
     "Mercenaria mercenaria": 6596,
     "Ruditapes philippinarum": 129788,
+    "Crassostrea virginica": 6565,
 }
 
 
@@ -76,6 +77,7 @@ def test_new_species_resolve_to_their_taxid(name, taxid):
         ("Ruditapes (Venerupis) philippinarum", 129788),
         ("Venus mercenaria", 6596),
         ("Cardium nuttallii", 410350),
+        ("Ostrea virginica", 6565),
     ],
 )
 def test_ncbi_listed_synonyms_resolve(name, taxid):
@@ -155,6 +157,9 @@ def test_every_assembly_records_a_verification_date_and_crosswalk_field():
         ("GCF_014805675.1", "ASM1480567v1.1"),
         ("GCF_026571515.1", "ASM2657151v2"),
         ("GCA_977929165.1", "xbCliNutt1.hap2.1"),
+        ("GCF_053477285.1", "ASM5347728v1"),
+        ("C_virginica-3.0", "C_virginica-3.0"),
+        ("GCA_002022765.4", "C_virginica-3.0"),
     ],
 )
 def test_new_assemblies_resolve(value, expected):
@@ -384,6 +389,8 @@ def test_real_study_on_an_assembly_with_no_crosswalk_fails_with_the_build_comman
         ("MADL_Memer_1", "mmerc"),
         ("ASM1480567v1.1", "mmerc"),
         ("ASM2657151v2", "rphil"),
+        ("ASM5347728v1", "cvirg"),
+        ("C_virginica-3.0", "cvirg"),
     ],
 )
 def test_each_mussel_and_clam_assembly_selects_its_own_crosswalk(assembly, slug):

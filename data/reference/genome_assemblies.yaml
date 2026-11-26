@@ -72,6 +72,62 @@ assemblies:
       the assembly record here is real, the demo data referencing it is not.
 
   # ------------------------------------------------------------------------- #
+  # Eastern oyster (added 2026-11-25). Two RefSeq-annotated assemblies share
+  # one crosswalk, built 2026-11-25 with
+  # `aree build-crosswalk --taxid 6565 --slug cvirg`.
+  # ------------------------------------------------------------------------- #
+
+  - assembly_id: "ASM5347728v1"
+    species: "Crassostrea virginica"
+    ncbi_taxid: 6565
+    ncbi_assembly_accession: "GCF_053477285.1"
+    genbank_accession: "GCA_053477285.1"
+    assembly_level: "Chromosome"
+    submitter: "Yale University"
+    is_ncbi_reference: true
+    annotation_release: "GCF_053477285.1-RS_2025_12"
+    annotation_release_date: "2025-12-30"
+    identifier_crosswalk: "data/reference/crosswalk/cvirg_gene_id_crosswalk.tsv"
+    verified: "2026-11-25"
+    notes: >-
+      Current NCBI reference genome for the eastern oyster: PacBio HiFi
+      assembly of isolate SEPT_11B from Long Island Sound (BioProject
+      PRJNA1332763), released 2025-11-14 and annotated by RefSeq on
+      2025-12-30 (35,738 genes, 28,649 protein-coding). NCBI Gene for taxid
+      6565 now follows this annotation, so the crosswalk is built against it.
+      Studies published before 2026 were mapped to C_virginica-3.0 (next
+      entry); their GeneIDs cross to this annotation through NCBI Gene.
+
+  - assembly_id: "C_virginica-3.0"
+    species: "Crassostrea virginica"
+    ncbi_taxid: 6565
+    ncbi_assembly_accession: "GCF_002022765.2"
+    genbank_accession: "GCA_002022765.4"
+    assembly_level: "Chromosome"
+    submitter: "McDonnell Genome Institute - Washington University School of Medicine"
+    is_ncbi_reference: false
+    annotation_release: "NCBI Crassostrea virginica Annotation Release 100"
+    annotation_release_date: "2017-09-11"
+    identifier_crosswalk: "data/reference/crosswalk/cvirg_gene_id_crosswalk.tsv"
+    verified: "2026-11-25"
+    notes: >-
+      The only annotated eastern oyster assembly from 2017 until the end of
+      2025, so the one existing studies were mapped against. NCBI has
+      suppressed the RefSeq copy as superseded (GenBank GCA_002022765.4 stays
+      current; the RefSeq copy differs only by an added mitochondrial
+      chromosome), and it shares the taxid crosswalk with ASM5347728v1.
+      Checked 2026-11-25 against the NCBI feature tables of both annotations
+      and NCBI gene_history: of the 39,505 GeneIDs annotated on this assembly,
+      25,276 are live, 9,068 were discontinued in January 2026 and remapped by
+      NCBI to a current GeneID (resolved through cvirg_retired_gene_ids.tsv,
+      mapping confidence 'inferred'), and 5,161 were discontinued with no
+      replacement. A study mapped to this assembly will therefore leave about
+      13% of its genes unresolved (11% of protein-coding genes). The remaps
+      are not one-to-one: 1,063 current genes each absorb more than one
+      retired GeneID, so one current gene can carry several rows from one
+      study. Prefer ASM5347728v1 for raw reanalysis.
+
+  # ------------------------------------------------------------------------- #
   # Mussels and clams (added 2026-10-11; docs/mussel_clam_integration_plan.md).
   # All are NCBI RefSeq-annotated. Their crosswalks were built 2026-10-11 with
   # `aree build-crosswalk --taxid <ncbi_taxid> --slug <slug>` (WP2).

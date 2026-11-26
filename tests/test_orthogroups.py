@@ -134,8 +134,9 @@ def test_demo_crosswalk_keeps_its_own_orthogroups(active_run):
 
 def test_run_species_are_the_registered_reference_assemblies():
     species = {s["slug"]: s for s in og.run_species()}
-    assert set(species) == {"mgigas", "mgall", "medul", "mtros", "mcali", "mmerc", "rphil"}
+    assert set(species) == {"mgigas", "cvirg", "mgall", "medul", "mtros", "mcali", "mmerc", "rphil"}
     assert species["mmerc"]["assembly_id"] == "MADL_Memer_1"  # the reference, not ASM1480567v1.1
+    assert species["cvirg"]["assembly_id"] == "ASM5347728v1"  # the reference, not C_virginica-3.0
     assert all(s["proteome"].name == "primary_proteins.faa" for s in species.values())
 
 
@@ -167,9 +168,17 @@ def test_active_run_outputs_match_their_provenance(committed_run):
         assert sha256_file(run_dir / name) == sha, f"{name} changed since the run was written"
 
 
+# Species registered with a reference crosswalk after the active run was built.
+# Orthogroups are inferred jointly, so they get none until the run is rebuilt
+# (`aree build-orthogroups --activate`). Remove a slug here when a run includes it.
+AWAITING_ORTHOGROUP_RUN = {"cvirg"}  # eastern oyster, registered 2026-11-25
+
+
 def test_active_run_covers_every_registered_species(committed_run):
     _, prov = committed_run
-    assert {s["slug"] for s in prov["species"]} == {s["slug"] for s in og.run_species()}
+    in_run = {s["slug"] for s in prov["species"]}
+    assert not in_run & AWAITING_ORTHOGROUP_RUN, "now in the run; drop it from AWAITING_ORTHOGROUP_RUN"
+    assert in_run == {s["slug"] for s in og.run_species()} - AWAITING_ORTHOGROUP_RUN
     for sp in prov["species"]:
         assert prov["per_species"][sp["slug"]]["genes"] == sp["proteins"], sp["slug"]
 
