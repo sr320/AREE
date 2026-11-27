@@ -183,6 +183,20 @@ Curation notes:
 | `PRJNA914271` | *M. edulis* | Hypoxia, low salinity, food × two sites × adult and seed, 112 runs | Multi-stressor | Design is in neither attributes nor aliases; 343 GB. |
 | `PRJNA748538` | Manila clam | Low salinity vs control at 12 h, n = 3 | Salinity | Aliases (C123, T456) suggest each library pools three animals. |
 
+## Update 2026-11-27: new projects for single-workstation runs
+
+From the same ENA pass described in
+[candidate_studies.md](candidate_studies.md) (2026-11-27 update): every
+RNA-seq project for the registered taxa not yet named anywhere in the repo,
+screened on deposited metadata only. **No publications were checked.**
+
+| Project | Species | Runs, size | Design (from deposit) | Context | Caveat |
+|---|---|---|---|---|---|
+| `PRJNA1417745` | *M. galloprovincialis* | 18, 14 GB | Normoxia / hypoxia / reoxygenation, n = 3, ganglia | Hypoxia | Nervous tissue only; single-end. Small and quick. |
+| `PRJNA1510489` | *M. coruscus* | 24, 291 GB | Heat hardening, control vs hardened at recovery days 1, 3, (7), 11, n = 3, gill | Thermal tolerance (acquired) | *M. coruscus* has only a GenBank annotation submitted by the authors' institute, not RefSeq (see `species.yaml`). |
+| `PRJNA955399` | *M. coruscus* | 6, 39 GB | Heat-hardened vs wild, 3 vs 3 | Thermal tolerance | Small; same species caveat. May come from the same group as `PRJNA1510489`, so check before counting both. |
+| `PRJNA1190343` | Manila clam | 6, 47 GB | Northern vs southern population under high temperature, 3 vs 3, gill | Heat, population contrast | No unheated control in the deposit. |
+
 ## Same program, not independent: hard clam acidification
 
 `PRJNA887747` (larvae to 10 months, acidified vs normal seawater, n = 4 per age),
