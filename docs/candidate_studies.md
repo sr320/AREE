@@ -531,6 +531,65 @@ complements it when libraries are single animals or small pools of unrelated
 animals. It cannot decide for large pools of siblings, which converge on
 their parents' allele frequencies whether or not they are independent.
 
+## Update 2026-11-27: RNA-seq screen for single-workstation runs
+
+A new pass over ENA, aimed at studies small enough to run on one Mac
+workstation (Hete). Methylation was left out on purpose: it is too heavy for
+that machine. Studies over about 300 GB of reads were also set aside for Klone
+or raven (listed at the end of this section).
+
+**How it was done.** Every public run with `library_strategy="RNA-Seq"` was
+listed by project for all ten taxa in `species.yaml`. Any BioProject already
+named in the repo (registry, docs, `data/studies`), on a remote study branch, or
+in a PR was dropped. About 250 projects with 6 or more runs were left. Titles
+were read. For the ~30 that looked relevant, groups and replication were read
+from ENA run, experiment and sample metadata (sample aliases, experiment
+titles, BioSample attributes, project descriptions). **No publications were
+checked in this pass**, so every "Design" cell below is what the deposit says,
+and the phenotype claims come from the project descriptions. Confirm both from
+the paper before registering.
+
+### Pacific oyster
+
+| BioProject | Runs, size | Design (from deposit) | Context | Caveat |
+|---|---|---|---|---|
+| `PRJNA900427` | 9, 65 GB | Intraspecific hybrid (OH1–3) vs maternal (OO1–3) and paternal (HH1–3) lines, selected for nine generations | Survival heterosis (description: hybrid shows higher survival and stress resistance) | No stressor in the sequenced experiment; replicates are labelled as families, so n may be families, not oysters. |
+| `PRJNA1329333` | 16, 66 GB | Poly(I:C) immune priming of spat before OsHV-1 cohabitation; 16 libraries of pooled whole spat (`cg_01`–`cg_16`) | Disease resistance (POMS), Australian industry | Group labels are not deposited; recover them from the paper or submitter. Libraries are pools. |
+| `PRJNA748527` | 18, 139 GB | *Vibrio parahaemolyticus*, digestive gland and mantle × 0/12/24 h, n = 3 | Pathogen challenge (exposure) | Exposure only. |
+| `PRJNA282703` | 33, 26 GB | OsHV-1 injection vs seawater, 6/12/24/48/120 h plus T0 | Pathogen challenge time course | **33 runs, only 11 BioSamples**: the three runs per sample (`SW1`–`SW3`, `inj1`–`inj3`) may be pools or repeat sequencing. This is the `IOCAS2024_OA_TRANSGEN` failure mode; check replicate dispersion before trusting n = 3. |
+
+Not shortlisted: `PRJNA1526462` ("hypoxia response") has only 6 RNA
+libraries, of gonad, alongside WGS runs. `PRJNA637240` (hemocytes, CO₂) is Ion
+Torrent with every library under one BioSample.
+
+### Eastern oyster (*C. virginica*)
+
+The eastern oyster was registered in #126, and it has the best designs this
+screen turned up. Its three tolerance studies are the first public hypoxia
+and Dermo contrasts found for AREE.
+
+| BioProject | Runs, size | Design (from deposit) | Context | Caveat |
+|---|---|---|---|---|
+| `PRJNA1153018` | 48, 31 GB | More hypoxia-tolerant Texas vs less tolerant Louisiana population × hypoxia vs control, 12 per group, gill | **Hypoxia tolerance**, population contrast | 101 bp single-end, `PCR` selection, ~6M reads per library: probably 3′ Tag-seq, so run with `--tag_seq`. Group codes in the aliases (CY, CO, HY, HO); confirm which letter is which population and treatment. |
+| `PRJNA590205` | 62, 149 GB | Two families with divergent Dermo resistance (ABC/VIMS 2014 families 242 and 266) × control vs *Perkinsus marinus*-injected, biological replicates 1–6 | **Disease resistance** (Dermo) | Two sequencing batches (2015, 2017) that must be in the model. Mantle. |
+| `PRJNA719567` | 24, 178 GB | New Brunswick vs Louisiana × 10/20/30 °C acclimation, n = 4 | Thermal, population contrast | Clean labels. Acclimation, not a lethal challenge. |
+| `PRJNA508205` | 24, 195 GB | Louisiana low-salinity-site oysters, 20/30 °C × 25/15/7 PSU, n = 4, gill | Temperature × salinity (exposure) | Fully crossed; multi-stressor term. |
+| `PRJNA1052297` | 40, 270 GB | Acute temperature: control / high / low, about 7 per group, whole tissue | Thermal (exposure) | Two runs per sample (lanes), so 20 animals. |
+| `PRJNA909786` | 23, 179 GB | Ocean acidification vs control × bacterial challenge vs none × 6 h / 3 d | Acidification × pathogen | Aliases carry tank IDs; find the unit the treatment was applied to before counting replicates. |
+
+Too large for Hete, but worth sending to a cluster: `PRJNA894694` (Dermo
+tolerance, 61 runs, 818 GB).
+
+### Other large projects (cluster only)
+
+`PRJNA423079` (ANR DECIPHER, POMS, 246 runs, 899 GB), `PRJEB58194` (PESTO
+pesticide project, 72 runs, 666 GB), `PRJEB106886` (*Vibrio aestuarianus*
+× salinity, 103 runs, 972 GB) and `PRJEB105132` (180 runs, 1 TB, control and
+stress conditions) were found but not screened in detail.
+
+Mussel and clam candidates from the same pass are in
+[candidate_studies_mussels_clams.md](candidate_studies_mussels_clams.md).
+
 ## Sourcing notes
 
 - 93 candidate BioProjects were found for *C. gigas* / *M. gigas* across the
@@ -541,6 +600,8 @@ their parents' allele frequencies whether or not they are independent.
   useful corpus is in SRA/ENA. Do not treat a GEO search as sufficient.
 - Hypoxia is badly underrepresented: exactly one BioProject matched, and it has
   no reads in ENA. AREE's phenotype ontology carries `hypoxia_tolerance`, but
-  there may be no public transcriptomic dataset to populate it.
+  there may be no public transcriptomic dataset to populate it. For
+  *C. gigas* that is still true; the 2026-11-27 screen found one for the
+  eastern oyster (`PRJNA1153018`).
 
 Bibliographic metadata for every cited paper was retrieved from PubMed — including the author order, which one of them had wrong until 2026-09-05.
