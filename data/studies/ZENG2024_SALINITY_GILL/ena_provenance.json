@@ -1,0 +1,59 @@
+{
+  "study_id": "ZENG2024_SALINITY_GILL",
+  "bioproject": "PRJNA1159784",
+  "date_generated": "2026-11-27",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1159784&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "group"
+  ],
+  "n_runs": 9,
+  "n_samples": 9,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "control": 3,
+    "hypersalinity": 3,
+    "hyposalinity": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 60152068392,
+  "fastq_sources": {
+    "fastq_ftp": 9,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/ZENG2024_SALINITY_GILL/samplesheet.tsv": "b35b32ecfa2aa571ae60f9c835949ad40cdeb2c6ef356badc84b5fcc3cf387fd",
+    "data/studies/ZENG2024_SALINITY_GILL/fastq_manifest.tsv": "22685282f7fbaf799f0a8a46d2c5d233117c07cfe251e6802f0760678f402220"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<group>control|hyposalinity|hypersalinity)_(?P<rep>[123])$",
+    "labels": {
+      "SRR30635633": "hypersalinity_3",
+      "SRR30635634": "hypersalinity_2",
+      "SRR30635635": "hypersalinity_1",
+      "SRR30635636": "control_3",
+      "SRR30635637": "control_2",
+      "SRR30635638": "control_1",
+      "SRR30635639": "hyposalinity_3",
+      "SRR30635640": "hyposalinity_2",
+      "SRR30635641": "hyposalinity_1"
+    }
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 9
+    }
+  }
+}

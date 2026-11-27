@@ -1,0 +1,160 @@
+# SECOND REAL HARD CLAM (Mercenaria mercenaria) STUDY, claimed 2026-11-27 on
+# Pori from the WP5 backlog (docs/candidate_studies_mussels_clams.md, Tier 1 B:
+# hard clam salinity, PRJNA1159784). With ZHOU2023_SALINITY_GILL (IOCAS
+# lineage, Tianjin) it makes the hyposalinity gill pool k = 2, from two
+# independent labs.
+#
+# PUBLICATION: Zeng X, Zeng Y, Yee JC, Yang H (2024) Fish Shellfish Immunol
+# 154:109888, doi 10.1016/j.fsi.2024.109888 (PubMed 39250983). Only the
+# abstract was read. It states a three-month challenge at 15 (hyposalinity),
+# 25 (control) and 35 ppt (hypersalinity) on market-sized northern quahogs,
+# no mortality in any group, and a larger body-weight gain at 35 ppt.
+#
+# DESIGN AS DEPOSITED (BioSample attributes and aliases, checked 2026-11-27).
+# University of Florida, Gainesville; gill; all sampled 2022-10-25. Three
+# groups, three libraries each: control (25 ppt), hyposalinity (15 ppt),
+# hypersalinity (35 ppt). Every alias agrees with its env_broad_scale. Each
+# library is a distinct BioSample with its own isolate number (1-9) and
+# sample title (MM15_02 ... MM35_05), so the unit is one clam; no pooling is
+# recorded.
+#
+# SEQUENCING DEPTH: 28.6-41.0 M read pairs per run, except hypersalinity_3
+# (SRR30635633) at 118.9 M, about 3x the others. DESeq2 size factors absorb
+# depth; note it in case that library behaves as an outlier.
+#
+# TWO COMPARISONS, PRESPECIFIED 2026-11-27, BEFORE ANY DATA WERE DOWNLOADED.
+#   hyposal_15_vs_25ppt (hyposalinity vs control) is meta_analysis_primary,
+#   matching ZHOU2023_SALINITY_GILL's chronic_hyposal_10_vs_30psu so the hard
+#   clam pool compares chronic hyposalinity with chronic hyposalinity in gill.
+#   hypersal_35_vs_25ppt (hypersalinity vs control) is secondary.
+# ---------------------------------------------------------------------------
+
+study_id: ZENG2024_SALINITY_GILL
+simulated: false
+
+accessions:
+  doi: "10.1016/j.fsi.2024.109888"
+  bioproject: "PRJNA1159784"
+  geo: null
+  sra: "SRR30635633-SRR30635641 (9 RNA-seq runs)"
+  ena: "PRJNA1159784"
+  proteomexchange: null
+  other: "BioSamples SAMN43583609-SAMN43583617 (one per clam). PubMed 39250983."
+
+citation: "Zeng X, Zeng Y, Yee JC, Yang H (2024). Biochemical and molecular responses to long-term salinity challenges in northern quahogs Mercenaria mercenaria. Fish & Shellfish Immunology 154:109888. https://doi.org/10.1016/j.fsi.2024.109888"
+
+species: "Mercenaria mercenaria"
+strain_or_population: "Market-sized northern quahogs held at the University of Florida, Gainesville (BioSample geo_loc_name); source population, broodstock line and sex not deposited (breed recorded as 'miss')."
+
+genome_assembly: "MADL_Memer_1"
+annotation_version: "GCF_021730395.1-RS_2023_01"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq X Plus, paired-end; 60.2 GB FASTQ reported by ENA, 28.6-118.9 M read pairs per run."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 9 libraries are public in ENA/SRA under PRJNA1159784. No processed results are deposited with the BioProject. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "in_progress"
+analysis_status: "in_progress"
+
+comparisons:
+  - comparison_id: "hyposal_15_vs_25ppt"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Long-term hypo-salinity' challenge at 15 ppt for three months vs 25 ppt control (paper abstract); BioSample env_broad_scale 15 ppt vs 25 ppt; aliases hyposalinity_1-3 vs control_1-3."
+    stressor_standardized: "salinity"
+    exposure_intensity: "15 ppt vs 25 ppt"
+    exposure_duration: "three months"
+    exposure_timing: null
+    control_condition: "Gill of market-sized clams held for three months at 25 ppt (control_1-3), one clam per library."
+    treatment_condition: "Gill of market-sized clams held for three months at 15 ppt (hyposalinity_1-3), one clam per library. Acclimation and transfer rate not read."
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+    meta_analysis_primary: true
+  - comparison_id: "hypersal_35_vs_25ppt"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Long-term hyper-salinity' challenge at 35 ppt for three months vs 25 ppt control (paper abstract); BioSample env_broad_scale 35 ppt vs 25 ppt; aliases hypersalinity_1-3 vs control_1-3."
+    stressor_standardized: "salinity"
+    exposure_intensity: "35 ppt vs 25 ppt"
+    exposure_duration: "three months"
+    exposure_timing: null
+    control_condition: "Gill of market-sized clams held for three months at 25 ppt (control_1-3), one clam per library."
+    treatment_condition: "Gill of market-sized clams held for three months at 35 ppt (hypersalinity_1-3), one clam per library."
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: null
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) Exposure only. Survival was measured but no clam died in any group,
+  and body weight was compared between groups, not linked to the sequenced
+  animals, so the comparisons are salinity responses, not tolerance.
+  (2) Only the abstract was read. Acclimation, transfer rate and housing
+  are not recorded; if each salinity was one tank, group is confounded with
+  tank and significance is an upper bound (add tank_level_replication if the
+  methods show this).
+  (3) n = 3 clams per group.
+  (4) hypersalinity_3 (SRR30635633) is sequenced about 3x deeper than the
+  other libraries (118.9 M vs 28.6-41.0 M read pairs).
+  (5) The two comparisons share the control libraries, so they are not
+  independent of each other.
+  (6) The control is 25 ppt, against 30 psu in ZHOU2023_SALINITY_GILL, so
+  pooled hyposalinity contrasts differ in both baseline and step size
+  (10 ppt down here, 20 psu there).
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-11-27"
+  curation_notes: >
+    Claimed on Pori with `aree start-study --accession PRJNA1159784 --study-id
+    ZENG2024_SALINITY_GILL` (draft PR #132). Sample sheet and FASTQ manifest
+    generated with `aree fetch-samplesheet --bioproject PRJNA1159784 --study
+    ZENG2024_SALINITY_GILL --label-field sample_alias --label-pattern
+    '^(?P<group>control|hyposalinity|hypersalinity)_(?P<rep>[123])$'
+    --condition-attribute group --attribute env_broad_scale --attribute
+    isolate --attribute tissue --attribute collection_date
+    --library-strategy RNA-Seq`.
+    ALIAS CHECK: every alias agrees with its deposited env_broad_scale
+    (control 25 ppt, hyposalinity 15 ppt, hypersalinity 35 ppt); all gill,
+    all collected 2022-10-25.
+    REPLICATION CHECK: 9 distinct BioSamples with isolates 1-9 and distinct
+    sample titles; no pooling recorded. Run
+    scripts/check_replicate_dispersion.py after quantification.
+    BACKLOG CORRECTION: the backlog lists 5.2 GB; ENA reports 60.2 GB, and
+    the run report now carries read counts.
+    MAPPING: life_stage adult (market-sized clams). phenotype
+    salinity_tolerance is the axis term for salinity; exposure_only because
+    no outcome separated the sequenced animals. exposure_duration from the
+    abstract.
+    PRIMARY COMPARISON prespecified on 2026-11-27 before any data were
+    downloaded (see header).
+    STORAGE (Pori): raw FASTQ, Nextflow work and stage are on
+    /Volumes/ST5/aree. The GCF_021730395.1 reference bundle and Salmon index
+    there were built for ZHOU2023_SALINITY_GILL and are reused.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1159784"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA1159784"
+    - "https://doi.org/10.1016/j.fsi.2024.109888"
+    - "https://pubmed.ncbi.nlm.nih.gov/39250983/"
