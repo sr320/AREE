@@ -69,6 +69,20 @@ def unpoolable_records(evidence_df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _as_bool(value) -> bool:
+    """`simulated` is text when the evidence table comes from its TSV; pooled
+    candidates carry a bool (meta_analysis/run.py), and so must these."""
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    return str(value).strip().lower() in {"true", "1", "yes"}
+
+
+def _as_taxid(value):
+    """An int where the taxid is numeric, as on pooled candidates; otherwise unchanged."""
+    number = pd.to_numeric(value, errors="coerce")
+    return int(number) if pd.notna(number) and float(number).is_integer() else value
+
+
 def build_unpooled_candidates(evidence_df: pd.DataFrame, pooled_candidates: pd.DataFrame,
                               phenotype: str | None = None, feature_type: str | None = None) -> pd.DataFrame:
     """One `emerging`, unscored row per feature/phenotype/feature type/partition/
@@ -93,8 +107,8 @@ def build_unpooled_candidates(evidence_df: pd.DataFrame, pooled_candidates: pd.D
             "feature_id_standardized": first["feature_id_standardized"],
             "phenotype": first["phenotype"],
             "feature_type": first["feature_type"],
-            "simulated": first["simulated"],
-            "species_taxid": first["species_taxid"],
+            "simulated": _as_bool(first["simulated"]),
+            "species_taxid": _as_taxid(first["species_taxid"]),
             "contrast_type": contrast_type_of(first),
         }
         if candidate_key(meta_like) in pooled_keys:

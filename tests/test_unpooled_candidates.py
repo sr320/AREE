@@ -4,6 +4,7 @@ out of every pooled estimate yet remain visible as an unscored candidate.
 HESSER2024_VCOR publishes only a significance-filtered DEG list with log2FC and
 padj; before this, its `disease_resistance` comparison — the only real
 resilience-classified comparison in the registry — vanished from the ranking."""
+import json
 import math
 from pathlib import Path
 
@@ -79,6 +80,15 @@ def test_unpoolable_only_feature_gets_an_unscored_emerging_row_and_card(isolated
     # Unscored rows sort after every scored candidate.
     assert candidates.index[candidates["pooling_status"] == "unpooled"].min() > \
         candidates.index[candidates["pooling_status"] == "pooled"].max()
+
+    # The evidence table is read from TSV, where simulated and species_taxid are
+    # text. Pooled and unpooled entries must reach index.json with the same types:
+    # the text "False" is truthy to anything that reads the index.
+    index = json.loads((Path(report.candidates_path).parent / "index.json").read_text())
+    assert {r["phenotype"] for r in index} >= {"disease_resistance", "larval_viability"}
+    for entry in [*index, *report.index]:
+        assert isinstance(entry["simulated"], bool), entry
+        assert isinstance(entry["species_taxid"], int), entry
 
     card = Path(row["card_file"]).read_text()
     assert "not scored (unpooled)" in card
