@@ -168,17 +168,10 @@ def test_active_run_outputs_match_their_provenance(committed_run):
         assert sha256_file(run_dir / name) == sha, f"{name} changed since the run was written"
 
 
-# Species registered with a reference crosswalk after the active run was built.
-# Orthogroups are inferred jointly, so they get none until the run is rebuilt
-# (`aree build-orthogroups --activate`). Remove a slug here when a run includes it.
-AWAITING_ORTHOGROUP_RUN = {"cvirg"}  # eastern oyster, registered 2026-11-25
-
-
 def test_active_run_covers_every_registered_species(committed_run):
     _, prov = committed_run
     in_run = {s["slug"] for s in prov["species"]}
-    assert not in_run & AWAITING_ORTHOGROUP_RUN, "now in the run; drop it from AWAITING_ORTHOGROUP_RUN"
-    assert in_run == {s["slug"] for s in og.run_species()} - AWAITING_ORTHOGROUP_RUN
+    assert in_run == {s["slug"] for s in og.run_species()}
     for sp in prov["species"]:
         assert prov["per_species"][sp["slug"]]["genes"] == sp["proteins"], sp["slug"]
 

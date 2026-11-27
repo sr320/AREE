@@ -356,6 +356,16 @@ limit, as they do for its single-species candidates). With one clam study
 (2026-10-16) the same pool had 5,681 rows, 64 emerging and 6 discordant; the
 discordant rows did not survive the second clam study.
 
+Those figures are from the first orthogroup run. Under
+`orthofinder3.1.5_2026-11-26`, which adds the eastern oyster, and with more
+studies harmonized (2026-11-26: five oyster studies and three clam studies,
+adding NORTHSOUTH2024_TEMP_GILL), the pool has 6,060 rows: 71 emerging, 5,988
+unsupported, 1 discordant and none convergent. The replication gate is met in
+5,755 rows. All 71 emerging rows fail only phenotype relevance and quality.
+The discordant row (OG0012244) is below the replication gate. Both the run
+and the study set changed, so the differences from 2026-10-17 cannot be
+assigned to either one.
+
 **On the dashboard.** The home page shows cross-species tiers, rows and cards
 only for a phenotype past the WP6 gate: at least two species each with a
 within-species gene pool of k >= 2. A row for a gated phenotype is counted as

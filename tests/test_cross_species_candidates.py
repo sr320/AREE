@@ -2,6 +2,7 @@
 src/reporting/cross_species_cards.py)."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -135,6 +136,59 @@ def test_demo_builds_cross_species_cards_without_claiming_convergence(isolated_r
         text = card.read_text()
         assert "*Magallana gigas*" in text and "*Mytilus" in text
         assert "simulated demo evidence" in text and "not from an OrthoFinder run" in text
+
+
+def test_rebuild_removes_cards_from_an_earlier_build(isolated_reports):
+    """A new orthogroup run renumbers orthogroups; cards under the old IDs must not linger."""
+    from click.testing import CliRunner
+
+    from aree.cli import main
+
+    harmonize_all_demo_studies()
+    cards_dir = isolated_reports["cards_dir"] / "cross_species"
+    cards_dir.mkdir(parents=True)
+    stale = cards_dir / "OG9999999_thermal_tolerance_gene_real.md"
+    stale.write_text("# a card from an earlier orthogroup run\n")
+    gene_level_card = isolated_reports["cards_dir"] / "not_a_cross_species_card.md"
+    gene_level_card.write_text("# belongs to another builder\n")
+
+    out = CliRunner().invoke(main, ["build-cross-species-cards", "--feature-type", "gene"])
+    assert out.exit_code == 0, out.output
+    assert not stale.exists()
+    assert "removed 1 cards left by an earlier build" in out.output
+    assert gene_level_card.exists()
+    index = json.loads((cards_dir / "index.json").read_text())
+    assert {p.name for p in cards_dir.glob("*.md")} == {Path(r["card_file"]).name for r in index}
+    assert (cards_dir / "candidates.tsv").exists()
+
+    again = CliRunner().invoke(main, ["build-cross-species-cards", "--feature-type", "gene"])
+    assert "removed" not in again.output
+
+
+def test_gene_card_rebuild_removes_stale_cards_but_not_cross_species_ones(isolated_reports):
+    from click.testing import CliRunner
+
+    from aree.cli import main
+
+    harmonize_all_demo_studies()
+    cards_dir = isolated_reports["cards_dir"]
+    runner = CliRunner()
+    assert runner.invoke(main, ["build-cross-species-cards", "--feature-type", "gene"]).exit_code == 0
+    cross_before = {p.name for p in (cards_dir / "cross_species").glob("*.md")}
+    assert cross_before
+    stale = cards_dir / "LOC999999999_thermal_tolerance_gene_real_taxid29159.md"
+    stale.write_text("# a card for a candidate that no longer qualifies\n")
+
+    out = runner.invoke(main, ["build-evidence-cards"])
+    assert out.exit_code == 0, out.output
+    assert not stale.exists()
+    assert "removed 1 cards left by an earlier build" in out.output
+    index = json.loads((cards_dir / "index.json").read_text())
+    assert {p.name for p in cards_dir.glob("*.md")} == {Path(r["card_file"]).name for r in index}
+    assert {p.name for p in (cards_dir / "cross_species").glob("*.md")} == cross_before
+    assert (cards_dir / "cross_species" / "index.json").exists()
+
+    assert "removed" not in runner.invoke(main, ["build-evidence-cards"]).output
 
 
 def test_demo_gene_cards_name_their_orthogroup(isolated_reports):

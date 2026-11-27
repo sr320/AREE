@@ -217,7 +217,11 @@ clam study reached `main`: oyster and Manila clam thermal-tolerance evidence
 pooled through 5,681 single-copy orthogroups, none past the gate with one
 clam study. With the second clam study (2026-10-17) it pools through 5,975
 (5,152 multi-copy orthogroups set aside), and 5,633 meet the replication
-gate. The demo adds
+gate. Under the run that adds the eastern oyster
+(`orthofinder3.1.5_2026-11-26`), with five oyster and three clam studies
+harmonized on 2026-11-26, it pools through 6,060 (5,741 multi-copy
+orthogroups set aside) and 5,755 meet the gate. Orthogroup IDs are not
+comparable between the two runs. The demo adds
 oyster and mussel larval rows sharing demo orthogroups, also below the gate.
 
 `aree build-cross-species-cards` tiers these rows and writes a card for each

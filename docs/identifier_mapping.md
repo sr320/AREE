@@ -154,20 +154,35 @@ those are the families stress studies report most. A `multi_copy` orthogroup
 links a gene to all of its paralogs in another species, not to one
 counterpart, so cross-species comparisons must say which class they rest on.
 
-The active run, `orthofinder3.1.5_2026-10-13` (OrthoFinder 3.1.5, 7 species,
-228,833 proteins):
+The active run, `orthofinder3.1.5_2026-11-26` (OrthoFinder 3.1.5, 8 species,
+257,482 proteins):
 
 | Copy class | Orthogroups |
 |---|---|
-| `single_copy_all` | 5,552 |
-| `single_copy` | 7,031 |
-| `multi_copy` | 11,877 |
-| `species_specific` | 14,047 |
+| `single_copy_all` | 5,292 |
+| `single_copy` | 8,267 |
+| `multi_copy` | 12,752 |
+| `species_specific` | 13,175 |
+
+It replaced the first run, `orthofinder3.1.5_2026-10-13` (7 species), when the
+eastern oyster was added. The seven earlier proteomes are byte-identical in
+both runs. Orthogroups are inferred jointly, so a new run renumbers every
+orthogroup: an `orthogroup_id` means something only together with its run, and
+evidence harmonized under the old run must be re-harmonized (`make real-pool`)
+before it is pooled with anything new. The old run stays in the repository so
+that earlier manifests still point at something.
+
+A second oyster changed the Pacific oyster's picture most. The share of its
+genes in an orthogroup shared with another species rose from 77% (20,159 of
+26,073) to 93% (24,136), because 23,173 of them now share an orthogroup with
+an eastern oyster gene. The two oysters share 14,851 orthogroups, 11,766 of
+them with one gene in each oyster, and 2,122 found in no other species.
 
 On a real oyster study (HESSER2024_VCOR), 274 of 306 resolved genes received
-an orthogroup (the rest are non-coding genes, which have no protein), and 190
-of those 274 are in `multi_copy` orthogroups. Expect most cross-species links
-for stress-response genes to be one-to-many.
+an orthogroup (the rest are non-coding genes, which have no protein), and 220
+of those 274 are in `multi_copy` orthogroups, 37 in single-copy ones and 17 in
+oyster-only ones. Expect most cross-species links for stress-response genes to
+be one-to-many.
 
 What the run is used for:
 
@@ -245,10 +260,11 @@ the current NCBI reference annotation, GCF_053477285.1-RS_2025_12.
   one current gene. Nothing collapses them; check for it before pooling.
 - **UniProt is usable, unlike the mussels and clams**: 3,194 genes (8.9%)
   carry a UniProt accession with a GeneID cross-reference.
-- **Not in the orthogroup run yet.** The active run
-  (`orthofinder3.1.5_2026-10-13`) predates this species, so eastern oyster
-  evidence has no `orthogroup_id` and cannot pool with the Pacific oyster
-  until `aree build-orthogroups` is rerun with its proteome.
+- **In the orthogroup run since 2026-11-26.** The reference annotation's
+  28,649 protein-coding genes are in `orthofinder3.1.5_2026-11-26`, and 26,262
+  of them (92%) share an orthogroup with another species. A gene retired from
+  C_virginica-3.0 reaches an orthogroup only through its remap to a current
+  GeneID.
 
 ### Genomes without NCBI Gene records (GFF route, WP7)
 
