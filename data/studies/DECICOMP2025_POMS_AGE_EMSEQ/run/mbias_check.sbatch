@@ -69,7 +69,15 @@ rm -f "${RUN}"_sub_1_val_1.fq.gz.temp.* "${RUN}_sub_1_val_1_bismark_bt2_pe.bam"
   -p 10 --temp_dir "$OUT/tmp" -1 "${RUN}_sub_1_val_1.fq.gz" -2 "${RUN}_sub_2_val_2.fq.gz"
 
 echo "== $(date -Is) M-bias"
-run bismark bismark_methylation_extractor --paired-end --mbias_only --multicore 4 "$ALN"
+# The extractor refuses to start without samtools, so it runs from the
+# pinned conda environment the workflow's chunked-alignment task declares
+# (modules/methylation/bismark_chunked.nf), built once on group storage.
+ENVDIR="$BASE/conda-envs/bismark-0.24.2"
+source "${AREE_MINIFORGE:-/gscratch/srlab/$USER/miniforge3}/etc/profile.d/conda.sh"
+[[ -x "$ENVDIR/bin/samtools" ]] || conda create -y -q -p "$ENVDIR" -c conda-forge -c bioconda \
+  bismark=0.24.2 trim-galore=0.6.10 samtools=1.18 pigz=2.8
+conda activate "$ENVDIR"
+bismark_methylation_extractor --paired-end --mbias_only --multicore 4 "$ALN"
 
 grep -E "Sequence pairs analysed|unique best hit|Mapping efficiency|C methylated in" "$REPORT"
 echo "== $(date -Is) done: $OUT/${ALN%.sam.gz}.M-bias.txt"
