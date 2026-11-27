@@ -60,12 +60,16 @@ echo "== $(date -Is) trim_galore"
 [[ -s "${RUN}_sub_1_val_1.fq.gz" ]] || run trim-galore trim_galore --paired --cores 4 "${RUN}_sub_1.fastq.gz" "${RUN}_sub_2.fastq.gz"
 
 echo "== $(date -Is) bismark (directional, --score_min L,0,-0.6)"
-BAM="${RUN}_sub_1_val_1_bismark_bt2_pe.bam"
-[[ -s "$BAM" && -s "${BAM%.bam}_PE_report.txt" ]] || run bismark bismark --genome "$IDX" --score_min L,0,-0.6 \
-  --multicore 3 --temp_dir "$OUT/tmp" -1 "${RUN}_sub_1_val_1.fq.gz" -2 "${RUN}_sub_2_val_2.fq.gz"
+# The Bismark image has no samtools, so Bismark writes SAM (.sam.gz) and must
+# run without --multicore (merging its per-core outputs needs samtools).
+ALN="${RUN}_sub_1_val_1_bismark_bt2_pe.sam.gz"
+REPORT="${RUN}_sub_1_val_1_bismark_bt2_PE_report.txt"
+rm -f "${RUN}"_sub_1_val_1.fq.gz.temp.* "${RUN}_sub_1_val_1_bismark_bt2_pe.bam"
+[[ -s "$ALN" && -s "$REPORT" ]] || run bismark bismark --genome "$IDX" --score_min L,0,-0.6 \
+  -p 10 --temp_dir "$OUT/tmp" -1 "${RUN}_sub_1_val_1.fq.gz" -2 "${RUN}_sub_2_val_2.fq.gz"
 
 echo "== $(date -Is) M-bias"
-run bismark bismark_methylation_extractor --paired-end --mbias_only --multicore 4 "$BAM"
+run bismark bismark_methylation_extractor --paired-end --mbias_only --multicore 4 "$ALN"
 
-grep -E "Sequence pairs analysed|unique best hit|Mapping efficiency|C methylated in" "${BAM%.bam}_PE_report.txt"
-echo "== $(date -Is) done: $OUT/${BAM%.bam}.M-bias.txt"
+grep -E "Sequence pairs analysed|unique best hit|Mapping efficiency|C methylated in" "$REPORT"
+echo "== $(date -Is) done: $OUT/${ALN%.sam.gz}.M-bias.txt"
