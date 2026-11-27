@@ -7,6 +7,15 @@
 #
 # Registered from deposited metadata only (no publication).
 #
+# REANALYZED 2026-11-27 on Pori, both tissues, ~ condition, 3 vs 3 mussels
+# (residual df 4). Gill: 2,544 of 22,097 tested genes at padj < 0.05 (1,585
+# up, 959 down). Mantle: 1,838 of 20,691 (1,000 up, 838 down). 654 genes are
+# significant in both tissues, 643 of them in the same direction. The top
+# genes in both tissues are a canonical heat-shock response (HSP70 B2-like,
+# HSP68-like, alpha-crystallin-like small HSPs, DnaJ B4-like, IAPs), which
+# supports the deposited temperature labels. Salmon mapped 54.9-70.8% of
+# reads. Replicate dispersion QC passes in all four groups (0.067-0.159).
+#
 # NO PUBLICATION CONFIRMED (PubMed searched 2026-11-26 for Mytilus
 # galloprovincialis heat stress transcriptome of gill and mantle; nothing
 # found). The study_id names the submitting institution (Zhejiang Ocean
@@ -62,8 +71,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 12 libraries are public in ENA/SRA under PRJNA954971. No processed results are deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
 
-qc_status: "in_progress"
-analysis_status: "in_progress"
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
 
 comparisons:
   - comparison_id: "heat_30c_vs_18c_gill"
@@ -83,7 +92,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/ZJOU2023_HEAT/ZJOU2023_HEAT_heat_30c_vs_18c_gill_dge_standardized.tsv"
     meta_analysis_primary: true
   - comparison_id: "heat_30c_vs_18c_mantle"
     tissue: "mantle"
@@ -102,7 +111,7 @@ comparisons:
     contrast_type: "exposure_response"
     sample_size: 6
     biological_replicates: 3
-    results_file: null
+    results_file: "data/studies/ZJOU2023_HEAT/ZJOU2023_HEAT_heat_30c_vs_18c_mantle_dge_standardized.tsv"
 
 quality_flags:
   - raw_data_available
@@ -126,7 +135,20 @@ limitations: >
   deposited (each library has its own BioSample). If they do, the two
   comparisons are not independent of each other.
   (6) Species identity rests on the submitters' label (see
-  species_identity).
+  species_identity). Salmon mapped 54.9-70.8% of reads against the
+  M. galloprovincialis RefSeq transcriptome, in line with the 51-73% seen
+  for other highly polymorphic bivalves against their own reference, which
+  argues against a mislabelled species but does not exclude M. edulis
+  introgression.
+  (7) Effect sizes are unshrunken DESeq2 log2 fold changes, as for every
+  AREE RNA-seq study. 102 gill and 76 mantle genes reach |log2FC| > 10 (23
+  and 28 at padj < 0.05). Most significant ones are well-expressed
+  heat-shock genes (12 of each with baseMean >= 1,000) that are near-silent
+  at 18 C, so the fold changes are real but scale-sensitive; 4 gill and 6
+  mantle are low-count (baseMean < 50) and are kept with their large lfcSE.
+  (8) The heat response is very large (about 1 in 9 tested genes changes in
+  gill). Without a deposited duration, ramp or survival record, it cannot
+  be told whether 30 C was sublethal or near-lethal for these mussels.
 
 provenance:
   registered_by: "Steven Roberts"
@@ -158,6 +180,29 @@ provenance:
     not mounted. The bundle was fetched fresh with `aree fetch-reference
     --assembly GCF_965363235.1`: annotation release matches the registry and
     all 43,185 bundle GeneIDs are in mgall_gene_id_crosswalk.tsv.
+    DOWNLOAD (Pori, 2026-11-26 to 27): all 12 runs (24 files) came from NCBI
+    SRA with fastq-dump 3.4.1 --split-files --skip-technical --gzip in two
+    streams (gill, mantle), each run accepted only when both mates matched
+    ENA's read count (21.1-21.7 M pairs per run, all on the first attempt);
+    SHA-256 of every file is in fastq_ncbi_provenance.tsv. ENA was skipped
+    because its HTTPS downloads were unusable on 2026-11-25/26 (see
+    DOU2020_EMERSION), so no ENA MD5 check applies; the read-count check
+    replaces it. Took 13 h (12:01 to 01:02).
+    REANALYSIS (Pori, 2026-11-27): -profile local,workstation with the Pori
+    8 GB resource override; work directory on /Volumes/ST5.
+    heat_30c_vs_18c_gill (24 tasks, 39 min including the Salmon index build)
+    and heat_30c_vs_18c_mantle (23 tasks, 35 min), no failures. Salmon 2.8.0,
+    fastp 1.4.0, FastQC 0.12.1, DESeq2 1.50.2 / tximport 1.38.2 on R 4.5.3,
+    MultiQC 1.35, Python 3.11.17 / pandas 3.0.6. Both manifests record design
+    ~condition, 6 libraries, residual df 4 and no warnings. The two tissues
+    share no libraries.
+    QC: Salmon mapping, gill 54.9-66.9% (GC2, SRR24150746, lowest), mantle
+    61.1-70.8%. Replicate dispersion (scripts/check_replicate_dispersion.py,
+    replicate_dispersion_qc.tsv) passes: median 0.068 (G_C), 0.067 (G_H),
+    0.102 (M_C) and 0.159 (M_H) on 2,900-5,100 genes per group.
+    HARMONIZED against mgall_gene_id_crosswalk.tsv: all 27,565 (gill) and
+    27,295 (mantle) records resolve exact; 21,774 and 21,737 carry an
+    orthogroup.
   source_links:
     - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA954971"
     - "https://www.ebi.ac.uk/ena/browser/view/PRJNA954971"
