@@ -1,0 +1,124 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "ZHOU2023_SALINITY_GILL",
+  "comparison_id": "chronic_hyposal_10_vs_30psu",
+  "input_files": [
+    {
+      "name": "ZHOU2023_SALINITY_GILL_chronic_hyposal_10_vs_30psu_dge_standardized.tsv",
+      "sha256": "405a386306fbde81277dad6ee159c93b3958420733846d64bf58161049014d54"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "ZHOU2023_SALINITY_GILL",
+    "comparison_id": "chronic_hyposal_10_vs_30psu",
+    "outdir": "results/rnaseq/ZHOU2023_SALINITY_GILL/chronic_hyposal_10_vs_30psu",
+    "exclude_samples": [],
+    "control_levels": [
+      "NS"
+    ],
+    "treatment_levels": [
+      "CL"
+    ],
+    "replicate_unit": null,
+    "covariates": [],
+    "single_end": false,
+    "se_adapter": null,
+    "tag_seq": false,
+    "viral_reference": null,
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "tximport average transcript length offsets",
+    "exclude_genes": null,
+    "n_libraries_or_units": 6,
+    "residual_df": 4
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.3"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_INDEX": {
+      "salmon": "2.8.0"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.35"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.17"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.4.0"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.17"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_021730395.1",
+    "annotation_version": "GCF_021730395.1-RS_2023_01",
+    "transcript_fasta": "data/reference/GCF_021730395.1/rna.fna",
+    "gtf": "data/reference/GCF_021730395.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_021730395.1/tx2gene.tsv",
+    "salmon_index": null,
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "58d20bf1d993f565f9018aac701b04337278442638dba0e7de161b6db432864f",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "reference_provenance.json",
+        "sha256": "35ea0ad8671f80ab8ea21f0463eabb91e9ef9a8a5cf61dfaf937ce55fa069488"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "20e8b07695e150ae892139f1123468975a1fc55a5b279b85887715867ba32add",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "7469a43df5b5bac34ed242072c70bb0e7b8631af795efe097ccfb0a2e0b4649c",
+        "matches_bundle_provenance": true
+      }
+    ],
+    "bundle": {
+      "bundle": "GCF_021730395.1",
+      "assembly_id": "MADL_Memer_1",
+      "ncbi_assembly_accession": "GCF_021730395.1",
+      "annotation_source": "NCBI RefSeq GCF_021730395.1-RS_2023_01",
+      "annotation_release_matches_registry": true,
+      "date_generated": "2026-11-27",
+      "bundler_version": "1.0.0"
+    }
+  },
+  "workflow_start": "2026-11-27T10:29:19.510497-08:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}

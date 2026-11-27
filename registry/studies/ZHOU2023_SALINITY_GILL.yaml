@@ -1,0 +1,205 @@
+# FIRST REAL HARD CLAM (Mercenaria mercenaria) STUDY, claimed 2026-11-27 on
+# Pori from the WP5 backlog (docs/candidate_studies_mussels_clams.md, Tier 1 B:
+# hard clam salinity, PRJNA975821). It is the first of three independent hard
+# clam salinity studies listed there (with PRJNA1159784 and PRJNA1288005), so
+# the hyposalinity pool opens at k = 1.
+#
+# PUBLICATION: Zhou C, Yang M-J, Hu Z, et al. (2023) Mar Environ Res 192:106198,
+# doi 10.1016/j.marenvres.2023.106198 (PubMed 37757610). Not in PMC; only the
+# abstract was read, so exposure durations are left null.
+#
+# DESIGN AS DEPOSITED (BioSample attributes and sample aliases, checked
+# 2026-11-27). One-year-old hard clams from Tianjin, China, held at 20 C;
+# gill. Seven groups, three libraries each: NS (30 psu control), acute
+# short-term hyposalinity AL1 and AL5 (10 psu), acute short-term
+# hypersalinity AH1 and AH5 (45 psu), chronic long-term hyposalinity CL
+# (10 psu) and chronic long-term hypersalinity CH (45 psu). Every alias agrees
+# with its deposited store_cond salinity. The 1 and 5 in the acute aliases are
+# probably sampling times (unit not deposited).
+#
+# POOLED LIBRARIES: every BioSample says "3 individuals pooled into one
+# sample". The unit of replication is the pool: n = 3 pools (9 clams) per
+# group. sample_size counts libraries, as for LI2018_HEAT_TIDAL.
+#
+# TWO COMPARISONS, PRESPECIFIED 2026-11-27, BEFORE ANY DATA WERE DOWNLOADED.
+#   chronic_hyposal_10_vs_30psu (CL vs NS) is meta_analysis_primary: the
+#   backlog plan pools one hyposalinity comparison per hard clam study, and
+#   the chronic arm is the closest match to PRJNA1159784 (three months at 15
+#   vs 25 ppt).
+#   chronic_hypersal_45_vs_30psu (CH vs NS) is secondary.
+# The four acute groups (12 runs) are not downloaded yet: their timing is not
+# deposited and the paper's methods were not available. Add them as further
+# comparisons once the sampling times are confirmed.
+#
+# RESULTS (reanalysed on Pori 2026-11-27, DESeq2 ~condition, 3 vs 3 pools):
+#   chronic_hyposal_10_vs_30psu: 3,036 of 32,727 genes at padj < 0.05
+#   (1,722 up).
+#   chronic_hypersal_45_vs_30psu: 12,716 of 32,572 (6,189 up), 39% of tested
+#   genes. CH pools correlate at 0.98 with each other (NS 0.94-0.96) and CH
+#   alone separates on PC1 (54% of variance), so the hypersaline response is
+#   large; pooling also shrinks lfcSE (limitation 1).
+#   2,057 genes are significant in both, 1,783 (87%) in the same direction.
+#   Autophagy-annotated genes significant under hypersalinity are mostly up
+#   (10 of 12), in line with the paper's abstract. Salmon mapping 69.9-73.2%;
+#   replicate dispersion passes in all three groups.
+# ---------------------------------------------------------------------------
+
+study_id: ZHOU2023_SALINITY_GILL
+simulated: false
+
+accessions:
+  doi: "10.1016/j.marenvres.2023.106198"
+  bioproject: "PRJNA975821"
+  geo: null
+  sra: "SRR24733763-SRR24733783 (21 RNA-seq runs; 9 used: NS, CL, CH)"
+  ena: "PRJNA975821"
+  proteomexchange: null
+  other: "BioSamples SAMN35344898-SAMN35344918 (one per library). PubMed 37757610."
+
+citation: "Zhou C, Yang M-J, Hu Z, Zou Y, Shi P, Li Y-R, Guo Y-J, Song H, Zhang T (2023). Autophagy contributes to increase the content of intracellular free amino acids in hard clam (Mercenaria mercenaria) during prolonged exposure to hypersaline environments. Marine Environmental Research 192:106198. https://doi.org/10.1016/j.marenvres.2023.106198"
+
+species: "Mercenaria mercenaria"
+strain_or_population: "Tianjin, China (39.09 N 117.10 E, intertidal mudflat per BioSample); one year old, about 5 cm shell length; collected 2022-04-11. Wild or farmed origin and sex not deposited."
+
+genome_assembly: "MADL_Memer_1"
+annotation_version: "GCF_021730395.1-RS_2023_01"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina NovaSeq 6000, paired-end; 52.5 GB FASTQ reported by ENA for all 21 runs, about 20-27 M read pairs per run."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 21 libraries are public in ENA/SRA under PRJNA975821. No processed results are deposited with the BioProject. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "chronic_hyposal_10_vs_30psu"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Chronic long-term hyposalinity (CL)' (paper abstract; BioProject description); BioSample store_cond 10 psu seawater vs 30 psu for the control (NS); aliases CL_1-3 vs NS_1-3."
+    stressor_standardized: "salinity"
+    exposure_intensity: "10 psu vs 30 psu"
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Gill of clams held at 30 psu, 20 C (NS_1-3); each library pools 3 clams."
+    treatment_condition: "Gill of clams held long-term at 10 psu, 20 C (CL_1-3); each library pools 3 clams. Duration and transfer rate not deposited."
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/ZHOU2023_SALINITY_GILL/ZHOU2023_SALINITY_GILL_chronic_hyposal_10_vs_30psu_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "chronic_hypersal_45_vs_30psu"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Chronic long-term hypersalinity (CH)' (paper abstract; BioProject description); BioSample store_cond 45 psu seawater vs 30 psu; aliases CH_1-3 vs NS_1-3."
+    stressor_standardized: "salinity"
+    exposure_intensity: "45 psu vs 30 psu"
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Gill of clams held at 30 psu, 20 C (NS_1-3); each library pools 3 clams."
+    treatment_condition: "Gill of clams held long-term at 45 psu, 20 C (CH_1-3); each library pools 3 clams."
+    phenotype: "salinity_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/ZHOU2023_SALINITY_GILL/ZHOU2023_SALINITY_GILL_chronic_hypersal_45_vs_30psu_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+
+limitations: >
+  (1) Pooled libraries. Each library pools the gills of 3 clams, so n = 3
+  pools per group. Pooling averages out individual variation, which makes
+  lfcSE smaller than three single animals would give.
+  (2) Exposure durations, transfer rate and housing are not deposited and
+  only the abstract was read; the fields are left null rather than guessed.
+  (3) Exposure only. The paper reports free amino acid content and autophagy
+  activity, not survival or another tolerance outcome on the sequenced
+  animals, so the comparisons are salinity responses, not tolerance.
+  (4) Housing is not deposited. If each salinity was one tank, group is
+  confounded with tank and significance is an upper bound; add
+  tank_level_replication if the methods show this.
+  (5) The two comparisons share the NS control libraries, so they are not
+  independent of each other.
+  (6) The four acute groups (AL1, AL5, AH1, AH5) are registered in the
+  sample sheet but not yet analysed.
+  (7) The hypersalinity comparison calls 39% of tested genes significant.
+  The response is large (CH separates on PC1), but pooled libraries and a
+  very tight CH group (median dispersion 0.009) make many small shifts
+  significant; rank on effect size rather than padj alone.
+  (8) A few genes have |log2FC| > 10 (11 in hyposalinity, 21 in
+  hypersalinity), mostly uncharacterized LOC genes near zero in one group.
+  Treat these magnitudes as on/off calls, not precise fold changes.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-11-27"
+  curation_notes: >
+    Claimed on Pori with `aree start-study --accession PRJNA975821 --study-id
+    ZHOU2023_SALINITY_GILL` (draft PR #130). Sample sheet and FASTQ manifest
+    generated with `aree fetch-samplesheet --bioproject PRJNA975821 --study
+    ZHOU2023_SALINITY_GILL --label-field sample_alias --label-pattern
+    '^(?P<group>NS|CL|CH|AL1|AL5|AH1|AH5)_(?P<rep>[123])$'
+    --condition-attribute group --attribute store_cond --attribute temp
+    --attribute sieving --attribute collection_date --library-strategy
+    RNA-Seq`.
+    ALIAS CHECK: every alias agrees with its deposited store_cond (NS 30 psu;
+    CL, AL1, AL5 10 psu; CH, AH1, AH5 45 psu); all at 20 C.
+    REPLICATION CHECK: 21 distinct BioSamples, 3 per group, each recorded as
+    "3 individuals pooled into one sample". Run
+    scripts/check_replicate_dispersion.py after quantification.
+    MAPPING: life_stage adult from BioSample host_life_stage. phenotype
+    salinity_tolerance is the axis term for salinity; exposure_only because
+    no outcome was measured on the sequenced animals. 10 psu is reduced
+    salinity, not freshwater, so the stressor is salinity rather than
+    freshwater_exposure.
+    PRIMARY COMPARISON prespecified on 2026-11-27 before any data were
+    downloaded (see header).
+    STORAGE (Pori): raw FASTQ, Nextflow work, stage and the GCF_021730395.1
+    reference bundle are on /Volumes/ST5/aree, because the omics drive is
+    not mounted. The bundle was fetched fresh with `aree fetch-reference
+    --assembly GCF_021730395.1`: 72,829 transcripts, 44,880 genes, all in
+    mmerc_gene_id_crosswalk.tsv.
+    DOWNLOAD (Pori, 2026-11-27): the 9 NS, CL and CH runs (18 files) came
+    from NCBI SRA with fastq-dump 3.4.1 --split-files --skip-technical --gzip
+    in two streams, each run accepted only when both mates matched ENA's
+    read count (20.4-26.7 M pairs per run, all on the first attempt);
+    SHA-256 of every file is in fastq_ncbi_provenance.tsv. ENA was skipped
+    because its HTTPS downloads ran at about 59 KB/s on 2026-11-27, so the
+    read-count check replaces the ENA MD5 check. Took 4.8 h (05:41 to 10:28).
+    REANALYSIS (Pori, 2026-11-27): -profile local,workstation with the Pori
+    8 GB resource override; work directory on /Volumes/ST5.
+    chronic_hyposal_10_vs_30psu (24 tasks, 65 min including the Salmon index
+    build) and chronic_hypersal_45_vs_30psu (23 tasks, 69 min), no failures.
+    Salmon 2.8.0, fastp 1.4.0, FastQC 0.12.1, DESeq2 1.50.2 / tximport 1.38.2
+    on R 4.5.3, MultiQC 1.35, Python 3.11.17 / pandas 3.0.6. Both manifests
+    record design ~condition, 6 libraries, residual df 4 and no warnings.
+    QC: Salmon mapping 69.9% (CH_2, SRR24733772, lowest) to 73.2% (CL_3).
+    Replicate dispersion (scripts/check_replicate_dispersion.py,
+    replicate_dispersion_qc.tsv) passes: median 0.015 (NS), 0.029 (CL) and
+    0.009 (CH) on 5,300-6,100 genes per group. These are low, as expected
+    for pools of 3 clams; distinct pools, not duplicated libraries, since
+    within-group correlation of log CPM is 0.93-0.98, not about 1.
+    HARMONIZED against mmerc_gene_id_crosswalk.tsv: all 32,727 (hyposalinity)
+    and 32,572 (hypersalinity) records resolve exact; 28,903 and 28,731
+    carry an orthogroup.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA975821"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA975821"
+    - "https://doi.org/10.1016/j.marenvres.2023.106198"
+    - "https://pubmed.ncbi.nlm.nih.gov/37757610/"

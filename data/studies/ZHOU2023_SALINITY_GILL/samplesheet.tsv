@@ -1,0 +1,22 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	group	store_cond	temp	sieving	collection_date	library_layout	instrument_model	read_count
+AH1_1	SRR24733763	SAMN35344907	AH1_1	AH1	AH1	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	20304850
+AL5_2	SRR24733764	SAMN35344905	AL5_2	AL5	AL5	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	22141284
+AL1_3	SRR24733765	SAMN35344903	AL1_3	AL1	AL1	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	23621214
+AL1_1	SRR24733766	SAMN35344901	AL1_1	AL1	AL1	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	23653375
+NS_3	SRR24733767	SAMN35344900	NS_3	NS	NS	30 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	23182200
+CH_3	SRR24733768	SAMN35344918	CH_3	CH	CH	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	24458740
+AL1_2	SRR24733769	SAMN35344902	AL1_2	AL1	AL1	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	22829210
+AL5_1	SRR24733770	SAMN35344904	AL5_1	AL5	AL5	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	23363256
+AL5_3	SRR24733771	SAMN35344906	AL5_3	AL5	AL5	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	21492850
+CH_2	SRR24733772	SAMN35344917	CH_2	CH	CH	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	21089878
+CL_3	SRR24733773	SAMN35344915	CL_3	CL	CL	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	23611185
+CL_1	SRR24733774	SAMN35344913	CL_1	CL	CL	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	20391936
+AH5_2	SRR24733775	SAMN35344911	AH5_2	AH5	AH5	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	20628298
+AH5_1	SRR24733776	SAMN35344910	AH5_1	AH5	AH5	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	21095444
+AH5_3	SRR24733777	SAMN35344912	AH5_3	AH5	AH5	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	21322389
+CL_2	SRR24733778	SAMN35344914	CL_2	CL	CL	10 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	26651144
+CH_1	SRR24733779	SAMN35344916	CH_1	CH	CH	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	21834008
+AH1_3	SRR24733780	SAMN35344909	AH1_3	AH1	AH1	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	22683066
+AH1_2	SRR24733781	SAMN35344908	AH1_2	AH1	AH1	45 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	22497567
+NS_2	SRR24733782	SAMN35344899	NS_2	NS	NS	30 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	23841847
+NS_1	SRR24733783	SAMN35344898	NS_1	NS	NS	30 psu seatwater	20℃	3 individuals pooled into one sample	2022-04-11	PAIRED	Illumina NovaSeq 6000	20864236
