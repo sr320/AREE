@@ -13,6 +13,8 @@
 # the same animals is not stated. No publication cites this accession; the
 # MetaboLights record names a manuscript in preparation (Valdivieso et al.).
 #
+# RUN CLAIMED 2026-11-26 on Klone (UW Hyak); FASTQ staged there from the
+# gannet mirror of ENA's files (run/fetch_fastq.sbatch), not from the SRA copy.
 # NOT YET RUN. 60 paired-end libraries, 72-107 M read pairs each. FASTQ are
 # staged from NCBI's SRA copy on AWS, not from ENA; see the config for storage,
 # runtime and integrity notes.
@@ -49,8 +51,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 60 runs are public in ENA under PRJEB105019 (first public 2025-12-06). No methylation calls or publication are available. Sample sheet, methylKit sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed. One run, ERR15996548 (F14R_C3_T0_S3, in the primary comparison's reference arm), has no ENA-processed FASTQ (empty fastq_ftp); only the submitter's files are listed (submitted_ftp, with MD5s). fastq_manifest.tsv uses those two files for it (source = submitted_ftp). ENA downloads ran at about 0.5 MB/s, so the FASTQ are staged instead from NCBI's SRA copy on AWS (sra-pub-run-odp; all 60 runs, ERR15996548 included). Those files are not byte-identical to ENA's, so the ENA MD5s in fastq_manifest.tsv do not apply to them; sra_provenance.tsv is the integrity record (vdb-validate result, .sra and .fastq.gz MD5s, and per-mate read and base counts that must sum to ENA's read_count and base_count). Released before any publication: check reuse expectations with the submitters before publishing results."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED. 60 libraries, one whole individual oyster each, parsed
