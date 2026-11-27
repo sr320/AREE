@@ -1,0 +1,75 @@
+{
+  "study_id": "ZHOU2023_SALINITY_GILL",
+  "bioproject": "PRJNA975821",
+  "date_generated": "2026-11-27",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA975821&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "group"
+  ],
+  "n_runs": 21,
+  "n_samples": 21,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "AH1": 3,
+    "AH5": 3,
+    "AL1": 3,
+    "AL5": 3,
+    "CH": 3,
+    "CL": 3,
+    "NS": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 52490168675,
+  "fastq_sources": {
+    "fastq_ftp": 21,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/ZHOU2023_SALINITY_GILL/samplesheet.tsv": "968da3dc77322e51b4f8886a8415158ae2f519a72f1b3210ebcabdb179a2f6aa",
+    "data/studies/ZHOU2023_SALINITY_GILL/fastq_manifest.tsv": "a3b1d452150b7583d6b7358dd8d867d3e5e074a23d6a4b5b54ef1de38d70c660"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<group>NS|CL|CH|AL1|AL5|AH1|AH5)_(?P<rep>[123])$",
+    "labels": {
+      "SRR24733763": "AH1_1",
+      "SRR24733764": "AL5_2",
+      "SRR24733765": "AL1_3",
+      "SRR24733766": "AL1_1",
+      "SRR24733767": "NS_3",
+      "SRR24733768": "CH_3",
+      "SRR24733769": "AL1_2",
+      "SRR24733770": "AL5_1",
+      "SRR24733771": "AL5_3",
+      "SRR24733772": "CH_2",
+      "SRR24733773": "CL_3",
+      "SRR24733774": "CL_1",
+      "SRR24733775": "AH5_2",
+      "SRR24733776": "AH5_1",
+      "SRR24733777": "AH5_3",
+      "SRR24733778": "CL_2",
+      "SRR24733779": "CH_1",
+      "SRR24733780": "AH1_3",
+      "SRR24733781": "AH1_2",
+      "SRR24733782": "NS_2",
+      "SRR24733783": "NS_1"
+    }
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 21
+    }
+  }
+}
