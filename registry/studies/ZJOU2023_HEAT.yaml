@@ -1,0 +1,208 @@
+# FIRST REAL MEDITERRANEAN MUSSEL (Mytilus galloprovincialis) STUDY, claimed
+# 2026-11-26 on Pori from the WP5 backlog
+# (docs/candidate_studies_mussels_clams.md, Tier 2: PRJNA954971). It is the
+# only M. galloprovincialis heat study with n >= 3 found so far, so it pools
+# with nothing in its own species (k = 1); cross-species comparison goes
+# through orthogroups only.
+#
+# Registered from deposited metadata only (no publication).
+#
+# REANALYZED 2026-11-27 on Pori, both tissues, ~ condition, 3 vs 3 mussels
+# (residual df 4). Gill: 2,544 of 22,097 tested genes at padj < 0.05 (1,585
+# up, 959 down). Mantle: 1,838 of 20,691 (1,000 up, 838 down). 654 genes are
+# significant in both tissues, 643 of them in the same direction. The top
+# genes in both tissues are a canonical heat-shock response (HSP70 B2-like,
+# HSP68-like, alpha-crystallin-like small HSPs, DnaJ B4-like, IAPs), which
+# supports the deposited temperature labels. Salmon mapped 54.9-70.8% of
+# reads. Replicate dispersion QC passes in all four groups (0.067-0.159).
+#
+# NO PUBLICATION CONFIRMED (PubMed searched 2026-11-26 for Mytilus
+# galloprovincialis heat stress transcriptome of gill and mantle; nothing
+# found). The study_id names the submitting institution (Zhejiang Ocean
+# University) and the BioProject registration year (2023). If a primary
+# paper turns up, rename the study before merge rather than after.
+#
+# DESIGN AS DEPOSITED (BioSample attributes and sample aliases, checked
+# 2026-11-26). Mussels from Zhoushan, Zhejiang, collected 2022-12-01, age
+# "2.5" (unit not deposited), dev_stage adult. 12 BioSamples, one per
+# library: tissue (G = gill, M = mantle) x temperature (C = control, 18 C;
+# H = heat stress, 30 C) x replicate 1-3. Every alias agrees with its
+# BioSample title and its `temp` and `tissue` attributes. The sample sheet's
+# condition column is <tissue>_<temperature>, e.g. G_H.
+#
+# TWO COMPARISONS, PRESPECIFIED 2026-11-26, BEFORE ANY DATA WERE RUN.
+#   heat_30c_vs_18c_gill (G_H vs G_C) is meta_analysis_primary: gill is the
+#   tissue most AREE heat studies report.
+#   heat_30c_vs_18c_mantle (M_H vs M_C) is secondary.
+# Tissues are fitted separately, not as one model with a tissue term, because
+# whether gill and mantle came from the same mussels is not deposited.
+# ---------------------------------------------------------------------------
+
+study_id: ZJOU2023_HEAT
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: "PRJNA954971"
+  geo: null
+  sra: "SRR24150741-SRR24150752 (12 RNA-seq runs)"
+  ena: "PRJNA954971"
+  proteomexchange: null
+  other: "BioSamples SAMN34161779-SAMN34161790 (one per library). First public 2023-07-18."
+
+citation: "Unpublished deposit: NCBI BioProject PRJNA954971, 'RNA-seq of Mytilus galloprovincialis under the thermal stress' (Zhejiang Ocean University; registered 2023-04-12, first public 2023-07-18). No primary publication found as of 2026-11-26."
+
+species: "Mytilus galloprovincialis"
+species_identity:
+  basis: authors_statement
+  notes: "Deposited as Mytilus galloprovincialis by the submitters; no genotyping is described. Zhoushan lies within the range of introduced M. galloprovincialis and native M. coruscus, which are not interfertile with it; the M. edulis complex hybrid zones are not in this region. Salmon mapping rate against the M. galloprovincialis RefSeq transcriptome is recorded after the run as a coarse check."
+strain_or_population: "Zhoushan, Zhejiang, China; collected 2022-12-01 by Zhenyu Dong (BioSample collected_by). Wild or farmed origin, size and sex not deposited; age '2.5', unit not stated."
+
+genome_assembly: "xbMytGall1.hap1.1"
+annotation_version: "GCF_965363235.1-RS_2025_08"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "BGISEQ-500 (DNBSEQ), paired-end; 28.5 GB FASTQ reported by ENA for all 12 runs."
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw paired-end FASTQ for all 12 libraries are public in ENA/SRA under PRJNA954971. No processed results are deposited. Sample sheet and FASTQ manifest with ENA MD5s were generated from ENA metadata; sequence data are not committed."
+
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+comparisons:
+  - comparison_id: "heat_30c_vs_18c_gill"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'Thermal stress' (BioProject title); BioSample temp 30℃ for the heat stress group vs 18℃ for the control group; aliases GH1-3 vs GC1-3."
+    stressor_standardized: "temperature"
+    exposure_intensity: "30 °C vs 18 °C (+12 °C)"
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Gill of control mussels held at 18 °C (GC1-3)."
+    treatment_condition: "Gill of mussels held at 30 °C (GH1-3). Duration, ramp rate and acclimation are not deposited."
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/ZJOU2023_HEAT/ZJOU2023_HEAT_heat_30c_vs_18c_gill_dge_standardized.tsv"
+    meta_analysis_primary: true
+  - comparison_id: "heat_30c_vs_18c_mantle"
+    tissue: "mantle"
+    life_stage: "adult"
+    stressor_original: "'Thermal stress' (BioProject title); BioSample temp 30℃ vs 18℃; aliases MH1-3 vs MC1-3."
+    stressor_standardized: "temperature"
+    exposure_intensity: "30 °C vs 18 °C (+12 °C)"
+    exposure_duration: null
+    exposure_timing: null
+    control_condition: "Mantle of control mussels held at 18 °C (MC1-3)."
+    treatment_condition: "Mantle of mussels held at 30 °C (MH1-3)."
+    phenotype: "thermal_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "exposure_only"
+    contrast_type: "exposure_response"
+    sample_size: 6
+    biological_replicates: 3
+    results_file: "data/studies/ZJOU2023_HEAT/ZJOU2023_HEAT_heat_30c_vs_18c_mantle_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - low_replication
+  - single_timepoint
+  - ambiguous_phenotype_definition
+  - species_assignment_unverified
+
+limitations: >
+  (1) Design known only from the deposit. Exposure duration, ramp rate,
+  acclimation, housing and survival at 30 °C are not deposited, and no
+  primary publication has been found. These fields are left null rather
+  than guessed.
+  (2) Three mussels per tissue and temperature.
+  (3) Exposure only. No survival or other tolerance outcome is deposited, so
+  the comparisons are heat responses, not thermal tolerance.
+  (4) Housing is not deposited. If each temperature was one tank, group is
+  confounded with tank and significance is an upper bound; add
+  tank_level_replication if the methods show this.
+  (5) Whether gill and mantle libraries come from the same mussels is not
+  deposited (each library has its own BioSample). If they do, the two
+  comparisons are not independent of each other.
+  (6) Species identity rests on the submitters' label (see
+  species_identity). Salmon mapped 54.9-70.8% of reads against the
+  M. galloprovincialis RefSeq transcriptome, in line with the 51-73% seen
+  for other highly polymorphic bivalves against their own reference, which
+  argues against a mislabelled species but does not exclude M. edulis
+  introgression.
+  (7) Effect sizes are unshrunken DESeq2 log2 fold changes, as for every
+  AREE RNA-seq study. 102 gill and 76 mantle genes reach |log2FC| > 10 (23
+  and 28 at padj < 0.05). Most significant ones are well-expressed
+  heat-shock genes (12 of each with baseMean >= 1,000) that are near-silent
+  at 18 C, so the fold changes are real but scale-sensitive; 4 gill and 6
+  mantle are low-count (baseMean < 50) and are kept with their large lfcSE.
+  (8) The heat response is very large (about 1 in 9 tested genes changes in
+  gill). Without a deposited duration, ramp or survival record, it cannot
+  be told whether 30 C was sublethal or near-lethal for these mussels.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-11-26"
+  curation_notes: >
+    Claimed on Pori with `aree start-study --accession PRJNA954971 --study-id
+    ZJOU2023_HEAT` (draft PR #128). Sample sheet and FASTQ manifest
+    generated with `aree fetch-samplesheet --bioproject PRJNA954971 --study
+    ZJOU2023_HEAT --label-field sample_alias --label-pattern
+    '^(?P<tissue_code>[GM])(?P<temp_code>[CH])(?P<rep>[123])$'
+    --condition-attribute tissue_code --condition-attribute temp_code
+    --attribute temp --attribute tissue --attribute age --library-strategy
+    RNA-Seq`.
+    ALIAS CHECK: every alias agrees with its BioSample title ("The gill in
+    the heat stress group No.1" = GH1, and so on) and with the deposited
+    temp (C = 18℃, H = 30℃) and tissue attributes.
+    REPLICATION CHECK: 12 distinct BioSamples, 3 per tissue x temperature
+    cell, all collected 2022-12-01 in Zhoushan, age 2.5. Distinct names do
+    not prove distinct animals: run scripts/check_replicate_dispersion.py
+    after quantification.
+    MAPPING: life_stage adult from BioSample dev_stage. phenotype
+    thermal_tolerance is the axis term for temperature; exposure_only
+    because no outcome was measured. exposure_intensity is the deposited
+    pair of temperatures.
+    PRIMARY COMPARISON prespecified on 2026-11-26 before any data were
+    downloaded (see header).
+    STORAGE (Pori): raw FASTQ, Nextflow work, stage and the GCF_965363235.1
+    reference bundle are on /Volumes/ST5/aree, because the omics drive was
+    not mounted. The bundle was fetched fresh with `aree fetch-reference
+    --assembly GCF_965363235.1`: annotation release matches the registry and
+    all 43,185 bundle GeneIDs are in mgall_gene_id_crosswalk.tsv.
+    DOWNLOAD (Pori, 2026-11-26 to 27): all 12 runs (24 files) came from NCBI
+    SRA with fastq-dump 3.4.1 --split-files --skip-technical --gzip in two
+    streams (gill, mantle), each run accepted only when both mates matched
+    ENA's read count (21.1-21.7 M pairs per run, all on the first attempt);
+    SHA-256 of every file is in fastq_ncbi_provenance.tsv. ENA was skipped
+    because its HTTPS downloads were unusable on 2026-11-25/26 (see
+    DOU2020_EMERSION), so no ENA MD5 check applies; the read-count check
+    replaces it. Took 13 h (12:01 to 01:02).
+    REANALYSIS (Pori, 2026-11-27): -profile local,workstation with the Pori
+    8 GB resource override; work directory on /Volumes/ST5.
+    heat_30c_vs_18c_gill (24 tasks, 39 min including the Salmon index build)
+    and heat_30c_vs_18c_mantle (23 tasks, 35 min), no failures. Salmon 2.8.0,
+    fastp 1.4.0, FastQC 0.12.1, DESeq2 1.50.2 / tximport 1.38.2 on R 4.5.3,
+    MultiQC 1.35, Python 3.11.17 / pandas 3.0.6. Both manifests record design
+    ~condition, 6 libraries, residual df 4 and no warnings. The two tissues
+    share no libraries.
+    QC: Salmon mapping, gill 54.9-66.9% (GC2, SRR24150746, lowest), mantle
+    61.1-70.8%. Replicate dispersion (scripts/check_replicate_dispersion.py,
+    replicate_dispersion_qc.tsv) passes: median 0.068 (G_C), 0.067 (G_H),
+    0.102 (M_C) and 0.159 (M_H) on 2,900-5,100 genes per group.
+    HARMONIZED against mgall_gene_id_crosswalk.tsv: all 27,565 (gill) and
+    27,295 (mantle) records resolve exact; 21,774 and 21,737 carry an
+    orthogroup.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA954971"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA954971"

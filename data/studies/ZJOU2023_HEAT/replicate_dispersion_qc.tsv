@@ -1,0 +1,5 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+G_C	3	GC1,GC2,GC3	5136	0.06804	True
+G_H	3	GH1,GH2,GH3	3644	0.06702	True
+M_C	3	MC1,MC2,MC3	4294	0.10201	True
+M_H	3	MH1,MH2,MH3	2899	0.15884	True

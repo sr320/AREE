@@ -1,0 +1,64 @@
+{
+  "study_id": "ZJOU2023_HEAT",
+  "bioproject": "PRJNA954971",
+  "date_generated": "2026-11-26",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA954971&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "tissue_code",
+    "temp_code"
+  ],
+  "n_runs": 12,
+  "n_samples": 12,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "PAIRED"
+  ],
+  "group_sizes": {
+    "G_C": 3,
+    "G_H": 3,
+    "M_C": 3,
+    "M_H": 3
+  },
+  "min_group_size": 3,
+  "total_fastq_bytes": 28473515282,
+  "fastq_sources": {
+    "fastq_ftp": 12,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/ZJOU2023_HEAT/samplesheet.tsv": "6da26ba6838d86b8ec5e02bba419cc28ed96e1b4c5df398429dde2bd75bf49fb",
+    "data/studies/ZJOU2023_HEAT/fastq_manifest.tsv": "82785f1dca4a5ea4cc8feff735160d71aa123dfe579f121df8893254fefa9501"
+  },
+  "run_labels": {
+    "field": "sample_alias",
+    "pattern": "^(?P<tissue_code>[GM])(?P<temp_code>[CH])(?P<rep>[123])$",
+    "labels": {
+      "SRR24150741": "MC1",
+      "SRR24150742": "MH3",
+      "SRR24150743": "MH2",
+      "SRR24150744": "MH1",
+      "SRR24150745": "GC3",
+      "SRR24150746": "GC2",
+      "SRR24150747": "GC1",
+      "SRR24150748": "GH3",
+      "SRR24150749": "MC3",
+      "SRR24150750": "MC2",
+      "SRR24150751": "GH2",
+      "SRR24150752": "GH1"
+    }
+  },
+  "library_strategy_filter": {
+    "kept": [
+      "RNA-Seq"
+    ],
+    "runs_by_strategy_before_filter": {
+      "RNA-Seq": 12
+    }
+  }
+}

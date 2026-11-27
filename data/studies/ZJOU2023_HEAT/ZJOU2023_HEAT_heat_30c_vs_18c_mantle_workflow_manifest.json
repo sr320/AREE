@@ -1,0 +1,121 @@
+{
+  "workflow_name": "aree-rnaseq",
+  "workflow_version": "0.1.0-scaffold",
+  "mode": "raw_reanalysis",
+  "study_id": "ZJOU2023_HEAT",
+  "comparison_id": "heat_30c_vs_18c_mantle",
+  "input_files": [
+    {
+      "name": "ZJOU2023_HEAT_heat_30c_vs_18c_mantle_dge_standardized.tsv",
+      "sha256": "8855dda5526bd3d2f8a6acafc57c77f7bfbab63afc310a6b516ab7c587746c2a"
+    }
+  ],
+  "parameters": {
+    "mode": "raw_reanalysis",
+    "study_id": "ZJOU2023_HEAT",
+    "comparison_id": "heat_30c_vs_18c_mantle",
+    "outdir": "results/rnaseq/ZJOU2023_HEAT/heat_30c_vs_18c_mantle",
+    "exclude_samples": [],
+    "control_levels": [
+      "M_C"
+    ],
+    "treatment_levels": [
+      "M_H"
+    ],
+    "replicate_unit": null,
+    "covariates": [],
+    "single_end": false,
+    "se_adapter": null,
+    "tag_seq": false,
+    "viral_reference": null,
+    "exclude_genes": null
+  },
+  "deseq2_design": {
+    "design": "~condition",
+    "covariates_requested": [],
+    "covariates_used": [],
+    "covariates_dropped_constant": [],
+    "tag_seq": false,
+    "length_model": "tximport average transcript length offsets",
+    "exclude_genes": null,
+    "n_libraries_or_units": 6,
+    "residual_df": 4
+  },
+  "software_versions": {
+    "DIFFERENTIAL_EXPRESSION_DESEQ2": {
+      "bioconductor-deseq2": "1.50.2",
+      "bioconductor-tximport": "1.38.2",
+      "r-base": "4.5.3"
+    },
+    "FASTQC": {
+      "fastqc": "0.12.1"
+    },
+    "SALMON_QUANT": {
+      "salmon": "2.8.0"
+    },
+    "SAMPLE_QC": {
+      "multiqc": "1.35"
+    },
+    "STANDARDIZE_OUTPUT": {
+      "pandas": "3.0.6",
+      "python": "3.11.17"
+    },
+    "TRIM_FASTP": {
+      "fastp": "1.4.0"
+    },
+    "EMIT_MANIFEST": {
+      "python": "3.11.17"
+    }
+  },
+  "software_versions_not_captured": {
+    "RENDER_REPORT": "renders this manifest, so it runs afterwards; its versions.yml is published to rnaseq/reports/"
+  },
+  "container_engine": null,
+  "reference": {
+    "genome_assembly": "GCF_965363235.1",
+    "annotation_version": "GCF_965363235.1-RS_2025_08",
+    "transcript_fasta": "data/reference/GCF_965363235.1/rna.fna",
+    "gtf": "data/reference/GCF_965363235.1/genomic.gtf",
+    "tx2gene": "data/reference/GCF_965363235.1/tx2gene.tsv",
+    "salmon_index": "/Volumes/ST5/aree/reference/GCF_965363235.1/salmon_index",
+    "files": [
+      {
+        "name": "genomic.gtf",
+        "sha256": "ae791f793c258ffcae525545b92d79863dccc900d8ffe209e825f4475c175a41",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "reference_provenance.json",
+        "sha256": "54ee0a9c91cc6825f5e87bfd4fa058506ceb81be350a9cdec82bcedf5d6fed26"
+      },
+      {
+        "name": "rna.fna",
+        "sha256": "a523513d4dd124c508d81ffb692145adf5f1b24f600e85ec1f02a093c08d1b92",
+        "matches_bundle_provenance": true
+      },
+      {
+        "name": "tx2gene.tsv",
+        "sha256": "e91b242711b5ada2d812eea9150e91c3719b20b3a5d486d8edf156c309b8883a",
+        "matches_bundle_provenance": true
+      }
+    ],
+    "bundle": {
+      "bundle": "GCF_965363235.1",
+      "assembly_id": "xbMytGall1.hap1.1",
+      "ncbi_assembly_accession": "GCF_965363235.1",
+      "annotation_source": "NCBI RefSeq GCF_965363235.1-RS_2025_08",
+      "annotation_release_matches_registry": true,
+      "date_generated": "2026-11-26",
+      "bundler_version": "1.0.0"
+    }
+  },
+  "workflow_start": "2026-11-27T01:43:00.595288-08:00",
+  "qc_metrics": {
+    "mean_reads_per_sample": null,
+    "mean_mapping_rate_percent": null,
+    "n_samples": null,
+    "note": "QC metrics are not populated in processed_results_harmonization mode or in this unexecuted scaffold run."
+  },
+  "viral_load": null,
+  "warnings": []
+}
