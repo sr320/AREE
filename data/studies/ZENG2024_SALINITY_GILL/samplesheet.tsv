@@ -1,0 +1,10 @@
+sample_id	run_accession	sample_accession	sample_alias	condition	group	env_broad_scale	isolate	tissue	collection_date	library_layout	instrument_model	read_count
+hypersalinity_3	SRR30635633	SAMN43583617	hypersalinity_3	hypersalinity	hypersalinity	35 ppt	9	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	118896553
+hypersalinity_2	SRR30635634	SAMN43583616	hypersalinity_2	hypersalinity	hypersalinity	35 ppt	8	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	34761348
+hypersalinity_1	SRR30635635	SAMN43583615	hypersalinity_1	hypersalinity	hypersalinity	35 ppt	7	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	35156351
+control_3	SRR30635636	SAMN43583614	control_3	control	control	25 ppt	6	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	41022662
+control_2	SRR30635637	SAMN43583613	control_2	control	control	25 ppt	5	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	39106057
+control_1	SRR30635638	SAMN43583612	control_1	control	control	25 ppt	4	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	28621775
+hyposalinity_3	SRR30635639	SAMN43583611	hyposalinity_3	hyposalinity	hyposalinity	15 ppt	3	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	30293413
+hyposalinity_2	SRR30635640	SAMN43583610	hyposalinity_2	hyposalinity	hyposalinity	15 ppt	2	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	34172869
+hyposalinity_1	SRR30635641	SAMN43583609	hyposalinity_1	hyposalinity	hyposalinity	15 ppt	1	gill	2022-10-25	PAIRED	Illumina NovaSeq X Plus	34885009
