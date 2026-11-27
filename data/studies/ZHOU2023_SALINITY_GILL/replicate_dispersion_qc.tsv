@@ -1,0 +1,4 @@
+condition	n_samples	samples	n_genes	median_dispersion	passes
+CH	3	CH_1,CH_2,CH_3	5528	0.00947	True
+CL	3	CL_1,CL_2,CL_3	5335	0.02945	True
+NS	3	NS_1,NS_2,NS_3	6123	0.01538	True
