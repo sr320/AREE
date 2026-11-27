@@ -27,6 +27,7 @@
 # contrast. It covers only Laoting (BioSample geo_loc_name "China: Laoting");
 # LI2018's Bayuquan pair has no methylation data.
 #
+# RUN CLAIMED 2026-11-23 on Chlo (PR to follow).
 # REGISTERED, RUN PENDING (2026-10-18). Sample sheet, methylKit sheet, FASTQ
 # manifest and run configuration are generated; no FASTQ downloaded, no
 # workflow run, results_file null, both status fields not_started.
@@ -63,8 +64,8 @@ data_availability:
   status: "available"
   access_notes: "Raw paired-end FASTQ for all 12 runs are public in ENA/SRA under PRJNA562805 (first public 2020-05-30). No methylation calls or DMR tables are deposited; supplementary tables were not checked for gene-level DMR results. All 12 libraries share one BioSample (SAMN12651045, whose attributes describe the whole project: isolation source 'intertidal and subtidal area', isolate 'under heat shock and control conditions'), so the design comes from the run library_name (InC_1 ... SubH_3), which uses the paper's own group codes. Sequence data are not committed."
 
-qc_status: "not_started"
-analysis_status: "not_started"
+qc_status: "in_progress"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # Comparisons, prespecified 2026-10-18 before any AREE result was computed.
