@@ -1,0 +1,44 @@
+{
+  "study_id": "LSU2024_HYPOX_POP",
+  "bioproject": "PRJNA1153018",
+  "date_generated": "2026-11-27",
+  "generated_by": "src/intake/ena_samplesheet.py",
+  "queries": {
+    "run_report": "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJNA1153018&result=read_run&fields=run_accession,sample_accession,sample_alias,experiment_accession,library_strategy,library_layout,library_selection,instrument_model,read_count,base_count,fastq_ftp,fastq_md5,fastq_bytes,submitted_ftp,submitted_md5,submitted_bytes,submitted_format",
+    "sample_xml": "https://www.ebi.ac.uk/ena/browser/api/xml/<sample_accessions>"
+  },
+  "condition_attributes": [
+    "population",
+    "treatment"
+  ],
+  "n_runs": 48,
+  "n_samples": 48,
+  "library_strategies": [
+    "RNA-Seq"
+  ],
+  "library_layouts": [
+    "SINGLE"
+  ],
+  "group_sizes": {
+    "LA_control": 12,
+    "LA_hypoxia": 12,
+    "TX_control": 12,
+    "TX_hypoxia": 12
+  },
+  "min_group_size": 12,
+  "total_fastq_bytes": 13773524339,
+  "fastq_sources": {
+    "fastq_ftp": 48,
+    "submitted_ftp": 0
+  },
+  "outputs": {
+    "data/studies/LSU2024_HYPOX_POP/samplesheet.tsv": "08ca268fd54b179b9192d54aacfb226cb6a817f08b7e6afb0464e9aa9f5d4262",
+    "data/studies/LSU2024_HYPOX_POP/fastq_manifest.tsv": "80aa3cf04952cfa9779262347b3397fe9c85c49b1c8d7f52b5fb69b153320650"
+  },
+  "design_table": {
+    "path": "/Volumes/ugreen-2TB/GitHub/AREE-LSU2024_HYPOX_POP/data/studies/LSU2024_HYPOX_POP/design.tsv",
+    "sha256": "87772b4f32ed9d360a85fb717d01a7f3922fdde6c253c01e1b0a8633f8e7eaa1",
+    "join_attribute": "isolate",
+    "source": "Parsed from each BioSample's isolate attribute (e.g. 'LA day1 hypoxia_3'), PRJNA1153018, read 2026-11-27"
+  }
+}

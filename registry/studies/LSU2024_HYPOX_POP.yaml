@@ -1,0 +1,222 @@
+# Eastern oyster (Crassostrea virginica) gill under hypoxia, in two populations
+# the submitters describe as differing in hypoxia tolerance: a more tolerant
+# Texas (TX) and a less tolerant Louisiana (LA) population. Louisiana State
+# University deposit PRJNA1153018, public 2024-08-29. Listed in
+# docs/candidate_studies.md (2026-11-27 update) as the first public
+# hypoxia-tolerance transcriptome found for AREE.
+#
+# NO PUBLICATION. None is linked from the BioProject, and PubMed searches on
+# 2026-11-27 found none, so the study_id follows the institution + year
+# convention for unpublished deposits (cf. UW2020_*). Everything below is read
+# from the deposit: the design from each BioSample's `isolate` attribute (e.g.
+# "LA day1 hypoxia_3"), the tolerance difference from the BioProject
+# description only. The deposit gives no dissolved-oxygen level, temperature,
+# salinity, tank layout, animal size or source of the two populations.
+#
+# DESIGN. 2 populations x 2 treatments (hypoxia, control) x 3 sampling days,
+# 4 oysters per cell, one library per oyster (aliases such as A1.CY1.G carry a
+# distinct oyster number), 48 libraries. Day is fitted as a covariate in every
+# comparison; each arm has 4 oysters on each day.
+#
+# LIBRARY TYPE. 3' Tag-seq (QuantSeq FWD signature in a read sample; see the
+# config), so --tag_seq: no length correction in Salmon or DESeq2.
+#
+# RESULTS (reanalysed on Hete 2026-11-28, DESeq2 ~day + condition, 12 vs 12
+# oysters, residual df 20):
+#   la_hypoxia_vs_control: 5,276 of 25,302 genes at padj < 0.05 (2,695 up).
+#   tx_hypoxia_vs_control: 2,191 of 26,169 (1,159 up).
+#   tx_vs_la_hypoxia:      4,810 of 25,276 (1,972 higher in TX).
+#   tx_vs_la_control:      4,153 of 26,569 (1,716 higher in TX).
+#   1,581 genes respond to hypoxia in both populations, 1,580 in the same
+#   direction; Louisiana changes more than twice as many genes as Texas.
+#   Salmon mapping median 50.6% (46.5-55.5%), except C7.CO10.G (SRR30420650,
+#   TX control) at 22.0%; typical for 3' Tag-seq against RefSeq transcripts.
+#   Replicate dispersion passes in all four groups.
+qc_status: "passed_with_warnings"
+analysis_status: "harmonized"
+
+study_id: LSU2024_HYPOX_POP
+simulated: false
+
+accessions:
+  doi: null
+  bioproject: "PRJNA1153018"
+  geo: null
+  sra: "SRR30420622-SRR30420669"
+  ena: "PRJNA1153018"
+  proteomexchange: null
+  other: "48 BioSamples (e.g. SAMN43384936); design in each BioSample's isolate attribute"
+
+citation: "Louisiana State University (2024). Transcriptomic Responses to Hypoxia in two Populations of Eastern Oyster with Differing Tolerance. NCBI BioProject PRJNA1153018 (unpublished deposit; no linked publication as of 2026-11-27). https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1153018"
+
+species: "Crassostrea virginica"
+strain_or_population: "Two populations, Texas (TX; described by the submitters as more hypoxia tolerant) and Louisiana (LA; less tolerant). Origin, wild or hatchery, and rearing history are not deposited."
+
+genome_assembly: "GCF_053477285.1"
+annotation_version: "GCF_053477285.1-RS_2025_12"
+
+assay_type: ["rnaseq"]
+analysis_mode: "raw_reanalysis"
+platform: "Illumina HiSeq 2500, single-end 101 bp, 3' Tag-seq (QuantSeq FWD signature; ENA library_selection PCR, no protocol deposited), 5-8 M reads per library, 13.8 GB FASTQ for 48 runs"
+
+data_availability:
+  raw_data_available: true
+  processed_data_available: false
+  status: "available"
+  access_notes: "Raw single-end FASTQ for all 48 runs are public in ENA/SRA under PRJNA1153018. No count matrix, DE table or publication. Population, treatment, day and replicate are only in the BioSample isolate attribute; design.tsv splits them into columns. Sequence data are not committed."
+
+# ---------------------------------------------------------------------------
+# Comparisons, prespecified 2026-11-27 before any read was downloaded.
+#
+# condition = population_treatment; every comparison fits ~ day + condition.
+#
+# Exposure responses (within population): hypoxia vs control. LA is the
+# meta_analysis_primary for exposure_response, fixed now and arbitrary in the
+# sense that neither population is privileged by the deposit; it is the
+# less tolerant population, whose response is the one a tolerance contrast
+# is read against. TX's response is kept as its own comparison.
+#
+# Tolerance contrasts (between populations, TX = more tolerant as treatment
+# arm): under hypoxia (phenotype_difference_under_exposure) and under control
+# conditions (baseline_phenotype_difference). Each is the primary of its own
+# contrast type. The tolerance difference is the submitters' statement in the
+# BioProject description, not a measurement in the deposit, so both carry
+# ambiguous_phenotype_definition. Population is also every other difference
+# between the two sources (site, history, genetics), so these are
+# population-level associations with n = 1 population per arm.
+# ---------------------------------------------------------------------------
+comparisons:
+  - comparison_id: "la_hypoxia_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'hypoxia' vs 'control' (BioSample isolate), sampled on days 1, 2 and 3; dissolved oxygen level and exposure regime not deposited"
+    stressor_standardized: "hypoxia"
+    exposure_intensity: null
+    exposure_duration: "1-3 days (sampled on day 1, 2 and 3)"
+    exposure_timing: "continuous or repeated over 3 days (not deposited); day fitted as covariate"
+    control_condition: "Louisiana oysters, control, 4 per day x 3 days"
+    treatment_condition: "Louisiana oysters, hypoxia, 4 per day x 3 days"
+    phenotype: "hypoxia_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 24
+    biological_replicates: 12
+    meta_analysis_primary: true
+    results_file: "data/studies/LSU2024_HYPOX_POP/LSU2024_HYPOX_POP_la_hypoxia_vs_control_dge_standardized.tsv"
+
+  - comparison_id: "tx_hypoxia_vs_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "'hypoxia' vs 'control' (BioSample isolate), sampled on days 1, 2 and 3; dissolved oxygen level and exposure regime not deposited"
+    stressor_standardized: "hypoxia"
+    exposure_intensity: null
+    exposure_duration: "1-3 days (sampled on day 1, 2 and 3)"
+    exposure_timing: "continuous or repeated over 3 days (not deposited); day fitted as covariate"
+    control_condition: "Texas oysters, control, 4 per day x 3 days"
+    treatment_condition: "Texas oysters, hypoxia, 4 per day x 3 days"
+    phenotype: "hypoxia_tolerance"
+    phenotype_direction: "not_applicable"
+    phenotype_unit: null
+    resilience_classification: "stress_response"
+    contrast_type: "exposure_response"
+    sample_size: 24
+    biological_replicates: 12
+    results_file: "data/studies/LSU2024_HYPOX_POP/LSU2024_HYPOX_POP_tx_hypoxia_vs_control_dge_standardized.tsv"
+
+  - comparison_id: "tx_vs_la_hypoxia"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Population contrast under hypoxia: Texas ('more tolerant') vs Louisiana ('less tolerant') oysters, both in the hypoxia treatment, days 1-3 (BioProject description; BioSample isolate)"
+    stressor_standardized: "hypoxia"
+    exposure_intensity: null
+    exposure_duration: "1-3 days (sampled on day 1, 2 and 3)"
+    exposure_timing: "during hypoxia; day fitted as covariate"
+    control_condition: "Louisiana oysters (less tolerant), hypoxia, 4 per day x 3 days"
+    treatment_condition: "Texas oysters (more tolerant), hypoxia, 4 per day x 3 days"
+    phenotype: "hypoxia_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: "not deposited: the submitters' statement that the Texas population is more tolerant (BioProject description)"
+    resilience_classification: "resilience"
+    contrast_type: "phenotype_difference_under_exposure"
+    sample_size: 24
+    biological_replicates: 12
+    meta_analysis_primary: true
+    results_file: "data/studies/LSU2024_HYPOX_POP/LSU2024_HYPOX_POP_tx_vs_la_hypoxia_dge_standardized.tsv"
+
+  - comparison_id: "tx_vs_la_control"
+    tissue: "gill"
+    life_stage: "adult"
+    stressor_original: "Population contrast without hypoxia: Texas ('more tolerant') vs Louisiana ('less tolerant') oysters, both in the control treatment, days 1-3 (BioProject description; BioSample isolate)"
+    stressor_standardized: "hypoxia"
+    exposure_intensity: null
+    exposure_duration: null
+    exposure_timing: "baseline (control treatment, sampled alongside the hypoxia arms); day fitted as covariate"
+    control_condition: "Louisiana oysters (less tolerant), control, 4 per day x 3 days"
+    treatment_condition: "Texas oysters (more tolerant), control, 4 per day x 3 days"
+    phenotype: "hypoxia_tolerance"
+    phenotype_direction: "increase"
+    phenotype_unit: "not deposited: the submitters' statement that the Texas population is more tolerant (BioProject description)"
+    resilience_classification: "resilience"
+    contrast_type: "baseline_phenotype_difference"
+    sample_size: 24
+    biological_replicates: 12
+    meta_analysis_primary: true
+    results_file: "data/studies/LSU2024_HYPOX_POP/LSU2024_HYPOX_POP_tx_vs_la_control_dge_standardized.tsv"
+
+quality_flags:
+  - raw_data_available
+  - ambiguous_phenotype_definition   # tolerance difference stated, not measured in the deposit
+  - family_level_replication          # population contrasts: one population per arm
+
+limitations: >
+  (1) Unpublished deposit: no dissolved-oxygen level, temperature, exposure
+  regime, tank layout or population origin is available, so the hypoxia
+  dose is unknown and the comparisons cannot be checked against the
+  authors' own results. (2) The tolerance difference between the Texas and
+  Louisiana populations is the submitters' statement in the BioProject
+  description, not a measurement deposited here. (3) The population
+  contrasts compare one population with one other: anything else that
+  differs between the two sources (site, history, genetics) is confounded
+  with tolerance, so they are population-level associations, not
+  mechanisms. (4) If each treatment was held in its own tank, tank is
+  confounded with treatment; the deposit does not say. (5) 3' Tag-seq at
+  5-8 M reads per library measures gene-level expression only.
+  (6) Salmon maps about half the reads (median 50.6%), as expected when 3'
+  Tag-seq reads run past annotated transcript ends; one Texas control
+  library (C7.CO10.G) maps 22.0% and was kept, with 11 other oysters in
+  its group. (7) 3-10 genes per comparison have |log2FC| > 10, near zero
+  in one group; treat those magnitudes as on/off calls.
+
+provenance:
+  registered_by: "Steven Roberts"
+  date_registered: "2026-11-27"
+  curation_notes: >
+    Claimed on Hete with `aree start-study --accession PRJNA1153018 --study-id
+    LSU2024_HYPOX_POP` (draft PR sr320/AREE#133). Sample sheet and FASTQ
+    manifest from live ENA metadata with `aree fetch-samplesheet`, joining
+    design.tsv (parsed from each BioSample's isolate attribute) on isolate:
+    48 runs, 48 samples, 12 per population x treatment, 4 per day. Library
+    type read from a 20,000-read sample of SRR30420622. Comparisons, the
+    primary flags and the day covariate were fixed before any FASTQ was
+    downloaded.
+    DOWNLOAD (Hete, 2026-11-27/28): all 48 FASTQ (13.8 GB) from ENA with
+    `aree fetch-fastq`, each accepted only on a matching ENA MD5. ENA
+    dropped connections repeatedly, so it took five passes (4, 2, then 1
+    job); one full-size file with a wrong MD5 was deleted and re-fetched.
+    REANALYSIS (Hete, 2026-11-28): -profile local,workstation, work
+    directory on /Volumes/Monarch, --single_end --tag_seq --covariates day.
+    la_hypoxia_vs_control ran all 150 tasks (02:46-03:56, including the
+    Salmon index); the other three reused them with -resume (4 new tasks
+    each). No failures and no manifest warnings. Salmon 2.3.4, fastp 1.3.6,
+    FastQC 0.12.1, DESeq2 1.42.1 / tximport 1.30.0 on R 4.3.2, MultiQC 1.9.
+    Replicate dispersion (scripts/check_replicate_dispersion.py,
+    replicate_dispersion_qc.tsv) passes: median 0.029 (LA control), 0.052
+    (LA hypoxia), 0.113 (TX control), 0.051 (TX hypoxia) on 405-451 genes.
+    HARMONIZED against cvirg_gene_id_crosswalk.tsv (built on the same
+    GCF_053477285.1 annotation): all 103,316 records resolve exact; 22,211-
+    23,244 per comparison carry an orthogroup.
+  source_links:
+    - "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA1153018"
+    - "https://www.ebi.ac.uk/ena/browser/view/PRJNA1153018"
