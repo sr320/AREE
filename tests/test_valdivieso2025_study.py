@@ -142,9 +142,9 @@ def test_phenotype_and_classification_by_contrast(study):
             assert "susceptible" in c["control_condition"]
 
 
-def test_registered_but_not_run(study):
+def test_reanalysis_claimed_qc_pending(study):
     assert study["analysis_mode"] == "raw_reanalysis"
-    assert study["analysis_status"] == "not_started"
+    assert study["analysis_status"] == "in_progress"
     assert study["qc_status"] == "not_started"
     assert study["accessions"]["doi"] == "10.1016/j.scitotenv.2025.178385"
     # The phenotype is individual, not family-level.

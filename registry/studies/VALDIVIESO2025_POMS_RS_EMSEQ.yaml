@@ -50,7 +50,7 @@ data_availability:
   access_notes: "Raw paired-end FASTQ for all 40 runs are public in ENA under PRJEB81880 (first public 2024-11-06), all with ENA-generated FASTQ and MD5s. The paper's supplementary tables (S5-S18) list DSS DMRs and genes per comparison; they were not retrieved or inspected for this registration. They are significance-filtered DMR calls on cgigas_uk_roslin_v1 coordinates, so this study is registered for raw reanalysis. Sample sheet, methylKit sample sheet and FASTQ manifest were generated from ENA metadata; sequence data are not committed."
 
 qc_status: "not_started"
-analysis_status: "not_started"
+analysis_status: "in_progress"
 
 # ---------------------------------------------------------------------------
 # DESIGN AS DEPOSITED AND PUBLISHED. 40 libraries, parsed from
@@ -357,6 +357,14 @@ provenance:
     Open questions for the submitters (J. Vidal-Dupiol): the code-21
     duplication; how the 10 animals were chosen; per-animal T1 sampling times
     and viral loads; whether T1 biopsies were taken from the T0 site.
+    FIRST KLONE RUN LOST (found 2026-11-23): all eight comparisons ran on
+    Klone 2026-10-20..22, but outputs were published as symlinks into the
+    work directory on /gscratch/scrubbed, which purges files after 21 days.
+    The results, the run-only configs and the 624.9 GB of FASTQ were purged
+    before being copied or committed; no numbers from that run were
+    recorded. The re-run uses the same settings, now committed under
+    data/studies/VALDIVIESO2025_POMS_RS_EMSEQ/run/, and copies each
+    comparison's outputs off scrubbed as soon as it finishes (harvest.sh).
   source_links:
     - "https://www.ebi.ac.uk/ena/browser/view/PRJEB81880"
     - "https://doi.org/10.1016/j.scitotenv.2025.178385"
